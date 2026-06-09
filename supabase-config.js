@@ -7,3 +7,4 @@ window.MINECAPTURE_SUPABASE = {
   url: "https://vcvbexodpyqmmlqtgayu.supabase.co",
   publishableKey: "sb_publishable_qeovW-HD0Lqqxx56VDuqrg_FKnEiozO"
 };
+
