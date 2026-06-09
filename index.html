@@ -103,8 +103,10 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://vcvbexodpyqmmlqtgayu.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_qeovW-HD0Lqqxx56VDuqrg_FKnEiozO";
+
+    const SUPABASE_CONFIG = window.MINECAPTURE_SUPABASE || {};
+    const SUPABASE_URL = SUPABASE_CONFIG.url || "";
+    const SUPABASE_KEY = SUPABASE_CONFIG.publishableKey || "";
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
