@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Production Consumables Dashboard</title>
+    <style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #1f2933;
+}
+
+.app-header {
+  background: #182230;
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+#statusText {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+main {
+  padding: 20px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: white;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  align-items: end;
+}
+
+.toolbar button {
+  padding: 9px 14px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: #1d4ed8;
+}
+
+.toolbar label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.toolbar input {
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.panel {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 18px;
+}
+
+.consumable-total-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.consumable-total-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #2563eb;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.consumable-total-card span {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.consumable-total-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 24px;
+}
+
+.panel-section {
+  margin-bottom: 18px;
+  border: 1px solid #dbe3ec;
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.panel-title {
+  background: #182230;
+  color: white;
+  padding: 12px 16px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.panel-consumable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.panel-consumable-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.panel-consumable-card span {
+  display: block;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.panel-consumable-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 22px;
+}
+
+.panel-meta {
+  padding: 0 14px 14px 14px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  background: #e2e8f0;
+  text-align: left;
+  padding: 9px;
+  white-space: nowrap;
+}
+
+td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 9px;
+  white-space: nowrap;
+}
+
+.numeric {
+  text-align: right;
+}
+
+.empty-message {
+  padding: 16px;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.error-message {
+  padding: 16px;
+  color: #991b1b;
+  background: #fee2e2;
+  border-radius: 8px;
+}
+
+.chart-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.checkbox-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkbox-grid label {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.chart-wrap {
+  overflow-x: auto;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+#usageChartSvg {
+  width: 100%;
+  min-width: 700px;
+  height: 420px;
+}
+.multi-chart-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+}
+
+.consumable-chart-card {
+  background: #f8fafc;
+  border: 1px solid #dbe3ec;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.consumable-chart-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #182230;
+}
+
+.consumable-chart-svg {
+  width: 100%;
+  height: 260px;
+}
+
+.raw-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: end;
+}
+
+.raw-filter-row label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.raw-filter-row select {
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.raw-filter-row button {
+  padding: 9px 14px;
+  border: none;
+  background: #475569;
+  color: white;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.raw-table-wrap {
+  max-height: 520px;
+  overflow: auto;
+}
+
+#rawReportsTable th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+#rawReportsTable td:first-child,
+#rawReportsTable th:first-child {
+  position: sticky;
+  left: 0;
+  background: #f8fafc;
+  z-index: 1;
+}
+
+</style>
+
+<body>
+
+<header class="app-header">
+  <h1>Production Consumables Dashboard</h1>
+  <div id="statusText">Not loaded</div>
+</header>
+
+<main>
+
+  <section class="toolbar">
+    <button id="btnYesterday">Yesterday</button>
+    <button id="btnThisMonth">This Month</button>
+    <button id="btnLastMonth">Last Month</button>
+
+    <label>
+      From
+      <input type="date" id="fromDate">
+    </label>
+
+    <label>
+      To
+      <input type="date" id="toDate">
+    </label>
+
+    <button id="btnRefresh">Refresh</button>
+  </section>
+
+  <section class="panel">
+    <h2>Period Totals</h2>
+    <div id="periodTotalsGrid" class="consumable-total-grid"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Usage by Panel</h2>
+    <div id="panelUsageDashboard"></div>
+  </section>
+
+  <section class="panel">
+  <h2>Raw Shift Reports</h2>
+
+  <div class="raw-filter-row">
+    <label>
+      Shift
+      <select id="rawShiftFilter">
+        <option value="">All shifts</option>
+      </select>
+    </label>
+
+    <label>
+      Panel
+      <select id="rawPanelFilter">
+        <option value="">All panels</option>
+      </select>
+    </label>
+
+    <label>
+      Overseer
+      <select id="rawOverseerFilter">
+        <option value="">All overseers</option>
+      </select>
+    </label>
+
+    <button id="btnClearRawFilters">Clear Filters</button>
+  </div>
+
+  <div class="table-wrap raw-table-wrap">
+    <table id="rawReportsTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+  <section class="panel">
+  <h2>Consumable Usage Charts</h2>
+
+  <div class="chart-controls">
+    <div>
+      <h4>Filter Panels</h4>
+      <div id="chartPanelFilters" class="checkbox-grid"></div>
+    </div>
+  </div>
+
+  <div id="multiChartDashboard" class="multi-chart-dashboard"></div>
+</section>
+
+</main>
+  <script>
+
+const SUPABASE_URL = 'https://vcvbexodpyqmmlqtgayu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjdmJleG9kcHlxbW1scXRnYXl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NzgzNTIsImV4cCI6MjA3NjA1NDM1Mn0.FiUsPkobShkjwGQXwLPydOgRX1k5q4biuv9gZNwRP2E'
+
+
+let currentRows = [];
+let currentSummary = [];
+let currentConsumableNames = [];
+
+
+const PANEL_COLOURS = [
+  "#2563eb",
+  "#16a34a",
+  "#dc2626",
+  "#9333ea",
+  "#ea580c",
+  "#0891b2",
+  "#4f46e5",
+  "#65a30d",
+  "#be123c",
+  "#0f766e"
+];
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  wireEvents();
+  setThisMonth();
+  loadDashboard();
+});
+
+function wireEvents() {
+  document.getElementById("btnYesterday").addEventListener("click", () => {
+    setYesterday();
+    loadDashboard();
+  });
+
+  document.getElementById("btnThisMonth").addEventListener("click", () => {
+    setThisMonth();
+    loadDashboard();
+  });
+
+  document.getElementById("btnLastMonth").addEventListener("click", () => {
+    setLastMonth();
+    loadDashboard();
+  });
+
+  document.getElementById("btnRefresh").addEventListener("click", loadDashboard);
+}
+
+function toDateInputValue(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function setYesterday() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+
+  const value = toDateInputValue(d);
+  document.getElementById("fromDate").value = value;
+  document.getElementById("toDate").value = value;
+}
+
+function setThisMonth() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  document.getElementById("fromDate").value = toDateInputValue(start);
+  document.getElementById("toDate").value = toDateInputValue(end);
+}
+
+function setLastMonth() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const end = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  document.getElementById("fromDate").value = toDateInputValue(start);
+  document.getElementById("toDate").value = toDateInputValue(end);
+}
+
+async function loadDashboard() {
+  const fromDate = document.getElementById("fromDate").value;
+  const toDate = document.getElementById("toDate").value;
+
+  if (!fromDate || !toDate) {
+    alert("Select a from and to date.");
+    return;
+  }
+
+  setStatus("Loading...");
+
+  try {
+    const rows = await fetchConsumableDashboardRows(fromDate, toDate);
+
+    currentRows = Array.isArray(rows) ? rows : [];
+    currentSummary = buildPanelSummaryFromRpcRows(currentRows);
+    currentConsumableNames = getConsumableNamesFromRpcRows(currentRows);
+
+    renderPeriodTotals(currentRows);
+    renderPanelUsageDashboard(currentSummary, currentConsumableNames);
+    renderChartFilters();
+    renderRawReportsTable();
+
+    setStatus(`Loaded ${currentRows.length} usage row(s)`);
+  } catch (err) {
+    console.error(err);
+    setStatus("Load failed");
+    alert("Dashboard load failed. Check console.");
+  }
+}
+
+async function fetchConsumableDashboardRows(fromDate, toDate) {
+  const url = `${SUPABASE_URL}/rest/v1/rpc/get_consumable_usage_dashboard`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      p_from: fromDate,
+      p_to: toDate
+    })
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  return await res.json();
+}
+
+function buildPanelSummaryFromRpcRows(rows) {
+  const summaryMap = new Map();
+
+  rows.forEach(row => {
+    const panel = row.panel || `Panel ${row.panID || "Unknown"}`;
+    const consumable = String(row.consumable || "Unknown").trim();
+    const qty = Number(row.quantity || 0);
+
+    if (!summaryMap.has(panel)) {
+      summaryMap.set(panel, {
+        panel,
+        panID: row.panID,
+        total: 0,
+        consumables: {},
+        reportIDs: new Set()
+      });
+    }
+
+    const panelSummary = summaryMap.get(panel);
+
+    if (!panelSummary.consumables[consumable]) {
+      panelSummary.consumables[consumable] = 0;
+    }
+
+    panelSummary.consumables[consumable] += qty;
+    panelSummary.total += qty;
+
+    if (row.consumableReportID) {
+      panelSummary.reportIDs.add(row.consumableReportID);
+    }
+  });
+
+  return Array.from(summaryMap.values())
+    .map(row => ({
+      ...row,
+      shiftCount: row.reportIDs.size
+    }))
+    .sort((a, b) => String(a.panel).localeCompare(String(b.panel)));
+}
+
+function getConsumableNamesFromRpcRows(rows) {
+  return [...new Set(
+    rows.map(r => String(r.consumable || "").trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+}
+
+function buildPeriodTotals(rows) {
+  const totals = {};
+
+  rows.forEach(row => {
+    const name = String(row.consumable || "Unknown").trim();
+    const qty = Number(row.quantity || 0);
+    const unit = row.unit || "";
+
+    if (!totals[name]) {
+      totals[name] = {
+        consumable: name,
+        quantity: 0,
+        unit
+      };
+    }
+
+    totals[name].quantity += qty;
+  });
+
+  return Object.values(totals)
+    .sort((a, b) => a.consumable.localeCompare(b.consumable));
+}
+
+function renderPeriodTotals(rows) {
+  const grid = document.getElementById("periodTotalsGrid");
+  grid.innerHTML = "";
+
+  const totals = buildPeriodTotals(rows);
+
+  if (!totals.length) {
+    grid.innerHTML = `<div class="empty-message">No consumable usage found for this period.</div>`;
+    return;
+  }
+
+  totals.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "consumable-total-card";
+
+    card.innerHTML = `
+      <span>${escapeHtml(item.consumable)}${item.unit ? ` (${escapeHtml(item.unit)})` : ""}</span>
+      <strong>${formatNumber(item.quantity)}</strong>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+function renderPanelUsageDashboard(summary, consumableNames) {
+  const container = document.getElementById("panelUsageDashboard");
+  container.innerHTML = "";
+
+  if (!summary.length) {
+    container.innerHTML = `<div class="empty-message">No panel usage found for this period.</div>`;
+    return;
+  }
+
+  summary.forEach(panelRow => {
+    const section = document.createElement("div");
+    section.className = "panel-section";
+
+    const title = document.createElement("div");
+    title.className = "panel-title";
+    title.textContent = panelRow.panel;
+
+    const grid = document.createElement("div");
+    grid.className = "panel-consumable-grid";
+
+    consumableNames.forEach(name => {
+      const qty = Number(panelRow.consumables[name] || 0);
+
+      const card = document.createElement("div");
+      card.className = "panel-consumable-card";
+
+      card.innerHTML = `
+        <span>${escapeHtml(name)}</span>
+        <strong>${qty ? formatNumber(qty) : "-"}</strong>
+      `;
+
+      grid.appendChild(card);
+    });
+
+    const meta = document.createElement("div");
+    meta.className = "panel-meta";
+    meta.textContent = `Shift reports included: ${panelRow.shiftCount}`;
+
+    section.appendChild(title);
+    section.appendChild(grid);
+    section.appendChild(meta);
+
+    section.addEventListener("click", () => {
+      renderPanelDetail(panelRow.panel);
+    });
+
+    container.appendChild(section);
+  });
+}
+
+function renderPanelDetail(panel) {
+  const detailRows = currentRows
+    .filter(row => row.panel === panel)
+    .map(row => ({
+      onDate: row.onDate,
+      shift: row.shift,
+      overseer: row.overseer,
+      panel: row.panel,
+      consumable: String(row.consumable || "").trim(),
+      quantity: Number(row.quantity || 0),
+      unit: row.unit || ""
+    }))
+    .sort((a, b) => {
+      if (a.onDate !== b.onDate) return String(b.onDate).localeCompare(String(a.onDate));
+      return String(a.consumable).localeCompare(String(b.consumable));
+    });
+
+  document.getElementById("detailTitle").textContent = `Panel Details - ${panel}`;
+  renderDetailTable(detailRows);
+}
+
+function renderDetailTable(rows) {
+  const tbody = document.querySelector("#detailTable tbody");
+  tbody.innerHTML = "";
+
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${escapeHtml(row.onDate || "")}</td>
+      <td>${escapeHtml(row.shift || "")}</td>
+      <td>${escapeHtml(row.overseer || "")}</td>
+      <td>${escapeHtml(row.panel || "")}</td>
+      <td>${escapeHtml(row.consumable || "")}</td>
+      <td class="numeric">${formatNumber(row.quantity)}</td>
+      <td>${escapeHtml(row.unit || "")}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+function setStatus(text) {
+  document.getElementById("statusText").textContent = text;
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString("en-GB", {
+    maximumFractionDigits: 2
+  });
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderChartFilters() {
+  const panelWrap = document.getElementById("chartPanelFilters");
+  const panels = currentSummary.map(x => x.panel);
+
+  panelWrap.innerHTML = panels.map(panel => `
+    <label>
+      <input type="checkbox" class="chart-panel-check" value="${escapeHtml(panel)}" checked>
+      ${escapeHtml(panel)}
+    </label>
+  `).join("");
+
+  document.querySelectorAll(".chart-panel-check")
+    .forEach(cb => cb.addEventListener("change", renderAllConsumableCharts));
+
+  renderAllConsumableCharts();
+}
+
+function getCheckedValues(selector) {
+  return [...document.querySelectorAll(selector)]
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+}
+
+function renderAllConsumableCharts() {
+  const container = document.getElementById("multiChartDashboard");
+  container.innerHTML = "";
+
+  const selectedPanels = getCheckedValues(".chart-panel-check");
+
+  if (!selectedPanels.length) {
+    container.innerHTML = `<div class="empty-message">Select at least one panel.</div>`;
+    return;
+  }
+
+  currentConsumableNames.forEach(consumable => {
+    const data = currentSummary
+      .filter(panelRow => selectedPanels.includes(panelRow.panel))
+      .map(panelRow => ({
+        panel: panelRow.panel,
+        qty: Number(panelRow.consumables[consumable] || 0)
+      }))
+      .filter(row => row.qty > 0);
+
+    if (!data.length) return;
+
+    const card = document.createElement("div");
+    card.className = "consumable-chart-card";
+
+    card.innerHTML = `
+      <div class="consumable-chart-title">${escapeHtml(consumable)}</div>
+      <svg class="consumable-chart-svg"></svg>
+    `;
+
+    container.appendChild(card);
+
+    const svg = card.querySelector("svg");
+    drawSingleConsumableChart(svg, data);
+  });
+
+  if (!container.children.length) {
+    container.innerHTML = `<div class="empty-message">No usage found for the selected panel filter.</div>`;
+  }
+}
+
+function drawSingleConsumableChart(svg, data) {
+  svg.innerHTML = "";
+
+  const width = 520;
+  const height = 260;
+  const margin = { top: 20, right: 20, bottom: 70, left: 55 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const axisY = margin.top + plotHeight;
+
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  const maxQty = Math.max(...data.map(d => d.qty), 1);
+  const barGap = 12;
+  const barWidth = Math.max(28, (plotWidth / data.length) - barGap);
+
+  svg.innerHTML += `
+    <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${axisY}" stroke="#334155" />
+    <line x1="${margin.left}" y1="${axisY}" x2="${width - margin.right}" y2="${axisY}" stroke="#334155" />
+  `;
+
+  data.forEach((d, i) => {
+    const x = margin.left + i * (plotWidth / data.length) + barGap / 2;
+    const barHeight = (d.qty / maxQty) * plotHeight;
+    const y = axisY - barHeight;
+
+    svg.innerHTML += `
+      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="${getPanelColour(d.panel)}">
+      <title>${escapeHtml(d.panel)}: ${formatNumber(d.qty)}</title>
+     </rect>
+
+      <text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="12" fill="#1f2933">
+        ${formatNumber(d.qty)}
+      </text>
+
+      <text x="${x + barWidth / 2}" y="${axisY + 18}" text-anchor="middle" font-size="11" fill="#334155">
+        ${escapeHtml(d.panel)}
+      </text>
+    `;
+  });
+}
+
+function getCheckedValues(selector) {
+  return [...document.querySelectorAll(selector)]
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+}
+
+function renderUsageChart() {
+  const svg = document.getElementById("usageChartSvg");
+  svg.innerHTML = "";
+
+  const selectedPanels = getCheckedValues(".chart-panel-check");
+  const selectedConsumables = getCheckedValues(".chart-consumable-check");
+
+  const panelRows = currentSummary.filter(panelRow =>
+    selectedPanels.includes(panelRow.panel)
+  );
+
+  if (!panelRows.length || !selectedConsumables.length) {
+    svg.innerHTML = `<text x="20" y="40" fill="#64748b">No chart data for selected filters.</text>`;
+    return;
+  }
+
+  const groupedData = selectedConsumables.map(consumable => ({
+    consumable,
+    panels: panelRows.map(panelRow => ({
+      panel: panelRow.panel,
+      qty: Number(panelRow.consumables[consumable] || 0)
+    }))
+  }));
+
+  const maxQty = Math.max(
+    ...groupedData.flatMap(g => g.panels.map(p => p.qty)),
+    0
+  );
+
+  if (maxQty <= 0) {
+    svg.innerHTML = `<text x="20" y="40" fill="#64748b">No chart data for selected filters.</text>`;
+    return;
+  }
+
+  const width = Math.max(800, selectedConsumables.length * selectedPanels.length * 70);
+  const height = 460;
+  const margin = { top: 35, right: 30, bottom: 120, left: 60 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  const axisY = margin.top + plotHeight;
+  const groupWidth = plotWidth / groupedData.length;
+  const barGap = 6;
+  const barWidth = Math.max(
+    14,
+    (groupWidth - 20) / selectedPanels.length - barGap
+  );
+
+  const colours = [
+    "#2563eb",
+    "#16a34a",
+    "#dc2626",
+    "#9333ea",
+    "#ea580c",
+    "#0891b2",
+    "#4f46e5",
+    "#65a30d",
+    "#be123c",
+    "#0f766e"
+  ];
+
+  svg.innerHTML += `
+    <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${axisY}" stroke="#334155" />
+    <line x1="${margin.left}" y1="${axisY}" x2="${width - margin.right}" y2="${axisY}" stroke="#334155" />
+  `;
+
+  groupedData.forEach((group, groupIndex) => {
+    const groupX = margin.left + groupIndex * groupWidth;
+    const groupCentre = groupX + groupWidth / 2;
+
+    group.panels.forEach((panelData, panelIndex) => {
+      const qty = panelData.qty;
+      if (qty <= 0) return;
+
+      const x =
+        groupX +
+        10 +
+        panelIndex * (barWidth + barGap);
+
+      const barHeight = (qty / maxQty) * plotHeight;
+      const y = axisY - barHeight;
+      const colour = colours[panelIndex % colours.length];
+
+      svg.innerHTML += `
+        <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="${colour}">
+          <title>${escapeHtml(group.consumable)} - ${escapeHtml(panelData.panel)}: ${formatNumber(qty)}</title>
+        </rect>
+
+        <text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="11" fill="#1f2933">
+          ${formatNumber(qty)}
+        </text>
+      `;
+    });
+
+    svg.innerHTML += `
+      <text x="${groupCentre}" y="${axisY + 22}" text-anchor="middle" font-size="12" fill="#334155">
+        ${escapeHtml(group.consumable)}
+      </text>
+    `;
+  });
+
+  renderChartLegend(svg, selectedPanels, colours, width);
+}
+
+
+function getPanelColour(panel) {
+  const panels = currentSummary.map(x => x.panel).sort();
+  const index = panels.indexOf(panel);
+  return PANEL_COLOURS[index % PANEL_COLOURS.length];
+}
+
+function renderChartLegend(svg, panels, colours, width) {
+  const startX = 70;
+  const startY = 20;
+  const itemWidth = 150;
+
+  panels.forEach((panel, index) => {
+    const x = startX + index * itemWidth;
+    const colour = colours[index % colours.length];
+
+    svg.innerHTML += `
+      <rect x="${x}" y="${startY - 10}" width="12" height="12" fill="${colour}" rx="2"></rect>
+      <text x="${x + 18}" y="${startY}" font-size="12" fill="#334155">
+        ${escapeHtml(panel)}
+      </text>
+    `;
+  });
+}
+
+
+// raw shift data
+function buildRawReportRows(rows) {
+  const reportMap = new Map();
+
+  rows.forEach(row => {
+    const reportID = row.consumableReportID;
+    if (!reportID) return;
+
+    if (!reportMap.has(reportID)) {
+      reportMap.set(reportID, {
+        consumableReportID: reportID,
+        onDate: row.onDate || "",
+        shift: row.shift || "",
+        overseer: row.overseer || "",
+        panel: row.panel || "",
+        consumables: {}
+      });
+    }
+
+    const report = reportMap.get(reportID);
+    const consumable = String(row.consumable || "").trim();
+    const qty = Number(row.quantity || 0);
+
+    if (consumable) {
+      report.consumables[consumable] = qty;
+    }
+  });
+
+  return Array.from(reportMap.values())
+    .sort((a, b) => {
+      if (a.onDate !== b.onDate) return String(b.onDate).localeCompare(String(a.onDate));
+      if (a.shift !== b.shift) return String(a.shift).localeCompare(String(b.shift));
+      return String(a.panel).localeCompare(String(b.panel));
+    });
+}
+
+function populateRawFilters(rawRows) {
+  const shiftSelect = document.getElementById("rawShiftFilter");
+  const panelSelect = document.getElementById("rawPanelFilter");
+  const overseerSelect = document.getElementById("rawOverseerFilter");
+
+  const currentShift = shiftSelect.value;
+  const currentPanel = panelSelect.value;
+  const currentOverseer = overseerSelect.value;
+
+  const shifts = [...new Set(rawRows.map(r => r.shift).filter(Boolean))].sort();
+  const panels = [...new Set(rawRows.map(r => r.panel).filter(Boolean))].sort();
+  const overseers = [...new Set(rawRows.map(r => r.overseer).filter(Boolean))].sort();
+
+  shiftSelect.innerHTML = `<option value="">All shifts</option>` +
+    shifts.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+
+  panelSelect.innerHTML = `<option value="">All panels</option>` +
+    panels.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+
+  overseerSelect.innerHTML = `<option value="">All overseers</option>` +
+    overseers.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+
+  shiftSelect.value = currentShift;
+  panelSelect.value = currentPanel;
+  overseerSelect.value = currentOverseer;
+}
+
+function getFilteredRawRows(rawRows) {
+  const shift = document.getElementById("rawShiftFilter").value;
+  const panel = document.getElementById("rawPanelFilter").value;
+  const overseer = document.getElementById("rawOverseerFilter").value;
+
+  return rawRows.filter(row => {
+    if (shift && row.shift !== shift) return false;
+    if (panel && row.panel !== panel) return false;
+    if (overseer && row.overseer !== overseer) return false;
+    return true;
+  });
+}
+
+function renderRawReportsTable() {
+  const rawRows = buildRawReportRows(currentRows);
+  populateRawFilters(rawRows);
+
+  const filteredRows = getFilteredRawRows(rawRows);
+
+  const thead = document.querySelector("#rawReportsTable thead");
+  const tbody = document.querySelector("#rawReportsTable tbody");
+
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+  const headerRow = document.createElement("tr");
+  headerRow.innerHTML = `
+    <th>Date</th>
+    <th>Shift</th>
+    <th>Overseer</th>
+    <th>Panel</th>
+    ${currentConsumableNames.map(name => `<th class="numeric">${escapeHtml(name)}</th>`).join("")}
+  `;
+  thead.appendChild(headerRow);
+
+  filteredRows.forEach(row => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${escapeHtml(row.onDate)}</td>
+      <td>${escapeHtml(row.shift)}</td>
+      <td>${escapeHtml(row.overseer)}</td>
+      <td>${escapeHtml(row.panel)}</td>
+      ${currentConsumableNames.map(name => {
+        const qty = Number(row.consumables[name] || 0);
+        return `<td class="numeric">${qty ? formatNumber(qty) : ""}</td>`;
+      }).join("")}
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("rawShiftFilter").addEventListener("change", renderRawReportsTable);
+document.getElementById("rawPanelFilter").addEventListener("change", renderRawReportsTable);
+document.getElementById("rawOverseerFilter").addEventListener("change", renderRawReportsTable);
+
+document.getElementById("btnClearRawFilters").addEventListener("click", () => {
+  document.getElementById("rawShiftFilter").value = "";
+  document.getElementById("rawPanelFilter").value = "";
+  document.getElementById("rawOverseerFilter").value = "";
+  renderRawReportsTable();
+});
+
+
+</script>
+</body>
+
+
+
+</html>
