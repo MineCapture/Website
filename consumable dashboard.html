@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Production Consumables Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/supabase-config.js"></script>
+
     <style>
 body {
   margin: 0;
@@ -396,9 +400,10 @@ td {
 </main>
   <script>
 
-const SUPABASE_URL = 'https://vcvbexodpyqmmlqtgayu.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjdmJleG9kcHlxbW1scXRnYXl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NzgzNTIsImV4cCI6MjA3NjA1NDM1Mn0.FiUsPkobShkjwGQXwLPydOgRX1k5q4biuv9gZNwRP2E'
-
+const SUPABASE_CONFIG = window.MINECAPTURE_SUPABASE || {};
+const SUPABASE_URL = SUPABASE_CONFIG.url || "";
+const SUPABASE_KEY = SUPABASE_CONFIG.publishableKey || "";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentRows = [];
 let currentSummary = [];
