@@ -84,6 +84,44 @@
     .success {
       color: #047857;
     }
+
+    .download-panel {
+    margin-top: 24px;
+    padding: 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .download-panel h2 {
+    margin-top: 0;
+  }
+
+  .download-panel label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+
+  .download-panel select,
+  .download-panel button {
+    width: 100%;
+    max-width: 420px;
+    padding: 10px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+  }
+
+  .release-details {
+    margin: 12px 0;
+    color: #374151;
+    line-height: 1.4;
+  }
+
+  #appDownloadMessage {
+    color: #6b7280;
+  }
+
   </style>
 </head>
 
@@ -102,6 +140,24 @@
 
     <div id="loginMessage" class="message"></div>
   </div>
+
+  <!-- APP DOWNLOAD -->
+  <section id="appDownloadPanel" class="download-panel">
+    <h2>Download MineCapture Apps</h2>
+
+    <label for="appReleaseSelect">Select app</label>
+    <select id="appReleaseSelect">
+      <option value="">Loading apps...</option>
+    </select>
+
+    <div id="selectedReleaseDetails" class="release-details"></div>
+
+    <button id="downloadApkButton" type="button" disabled>
+      Download APK
+    </button>
+
+    <p id="appDownloadMessage"></p>
+  </section>
 
   <script>
 
@@ -166,6 +222,131 @@
         login();
       }
     });
+
+
+    // PUBLIC APP DOWNLOAD
+    let appReleases = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      setupAppDownloadEvents();
+      await loadAppReleases();
+    });
+
+    async function loadAppReleases() {
+      const select = document.getElementById("appReleaseSelect");
+      const details = document.getElementById("selectedReleaseDetails");
+      const button = document.getElementById("downloadApkButton");
+      const message = document.getElementById("appDownloadMessage");
+
+      select.innerHTML = `<option value="">Loading apps...</option>`;
+      details.innerHTML = "";
+      button.disabled = true;
+      message.textContent = "";
+
+      const { data, error } = await supabaseClient
+        .from("APP_Releases")
+        .select(`
+          ReleaseID,
+          AppKey,
+          AppName,
+          Version,
+          StorageBucket,
+          StoragePath,
+          ReleaseNotes,
+          IsLatest,
+          CreatedAt
+        `)
+        .eq("IsActive", true)
+        .eq("IsLatest", true)
+        .order("AppName", { ascending: true });
+
+      if (error) {
+        console.error("Error loading app releases:", error);
+        select.innerHTML = `<option value="">Could not load apps</option>`;
+        message.textContent = "Could not load app releases: " + error.message;
+        return;
+      }
+
+      appReleases = data || [];
+
+      if (appReleases.length === 0) {
+        select.innerHTML = `<option value="">No apps available</option>`;
+        message.textContent = "No active latest releases are available.";
+        return;
+      }
+
+      select.innerHTML = `<option value="">Select an app...</option>`;
+
+      appReleases.forEach(release => {
+        const option = document.createElement("option");
+        option.value = release.ReleaseID;
+        option.textContent = `${release.AppName} v${release.Version}`;
+        select.appendChild(option);
+      });
+    }
+
+    function setupAppDownloadEvents() {
+      const select = document.getElementById("appReleaseSelect");
+      const button = document.getElementById("downloadApkButton");
+      const details = document.getElementById("selectedReleaseDetails");
+      const message = document.getElementById("appDownloadMessage");
+
+      select.addEventListener("change", () => {
+        const releaseID = select.value;
+        const release = appReleases.find(r => r.ReleaseID === releaseID);
+
+        message.textContent = "";
+
+        if (!release) {
+          details.innerHTML = "";
+          button.disabled = true;
+          return;
+        }
+
+        details.innerHTML = `
+          <strong>${escapeHtml(release.AppName)}</strong><br>
+          Version: ${escapeHtml(release.Version)}<br>
+          ${release.ReleaseNotes ? `<br>${escapeHtml(release.ReleaseNotes)}` : ""}
+        `;
+
+        button.disabled = false;
+      });
+
+      button.addEventListener("click", downloadSelectedApk);
+    }
+
+    function downloadSelectedApk() {
+      const select = document.getElementById("appReleaseSelect");
+      const message = document.getElementById("appDownloadMessage");
+
+      const releaseID = select.value;
+      const release = appReleases.find(r => r.ReleaseID === releaseID);
+
+      if (!release) {
+        message.textContent = "Select an app first.";
+        return;
+      }
+
+      const { data } = supabaseClient.storage
+        .from(release.StorageBucket)
+        .getPublicUrl(release.StoragePath);
+
+      if (!data || !data.publicUrl) {
+        message.textContent = "Could not create APK download URL.";
+        return;
+      }
+
+      window.location.href = data.publicUrl;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
     checkExistingSession();
   </script>
