@@ -747,6 +747,8 @@ const SUPABASE_URL = SUPABASE_CONFIG.url || "";
 const SUPABASE_KEY = SUPABASE_CONFIG.publishableKey || "";
 const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/`;
 
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let dashboardRows = [];
 let sequenceRows = [];
 let miningPlan = [];
