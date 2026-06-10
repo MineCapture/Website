@@ -224,7 +224,7 @@
     });
 
 
-    // PUBLIC APP DOWNLOAD
+    // PUBLIC APP DOWNLOAD - GITHUB RELEASE LINKS ONLY
     let appReleases = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -250,8 +250,7 @@
           AppKey,
           AppName,
           Version,
-          StorageBucket,
-          StoragePath,
+          GithubDownloadUrl,
           ReleaseNotes,
           IsLatest,
           CreatedAt
@@ -293,7 +292,7 @@
 
       select.addEventListener("change", () => {
         const releaseID = select.value;
-        const release = appReleases.find(r => r.ReleaseID === releaseID);
+        const release = appReleases.find(r => String(r.ReleaseID) === String(releaseID));
 
         message.textContent = "";
 
@@ -309,7 +308,11 @@
           ${release.ReleaseNotes ? `<br>${escapeHtml(release.ReleaseNotes)}` : ""}
         `;
 
-        button.disabled = false;
+        button.disabled = !release.GithubDownloadUrl;
+
+        if (!release.GithubDownloadUrl) {
+          message.textContent = "No GitHub download URL has been configured for this app.";
+        }
       });
 
       button.addEventListener("click", downloadSelectedApk);
@@ -320,23 +323,19 @@
       const message = document.getElementById("appDownloadMessage");
 
       const releaseID = select.value;
-      const release = appReleases.find(r => r.ReleaseID === releaseID);
+      const release = appReleases.find(r => String(r.ReleaseID) === String(releaseID));
 
       if (!release) {
         message.textContent = "Select an app first.";
         return;
       }
 
-      const { data } = supabaseClient.storage
-        .from(release.StorageBucket)
-        .getPublicUrl(release.StoragePath);
-
-      if (!data || !data.publicUrl) {
-        message.textContent = "Could not create APK download URL.";
+      if (!release.GithubDownloadUrl) {
+        message.textContent = "No GitHub download URL has been configured for this app.";
         return;
       }
 
-      window.location.href = data.publicUrl;
+      window.location.href = release.GithubDownloadUrl;
     }
 
     function escapeHtml(value) {
