@@ -126,20 +126,7 @@
 </head>
 
 <body>
-  <div class="login-card">
-    <h1>MineCapture</h1>
-    <div class="subtitle">Sign in to continue</div>
 
-    <label for="email">Email</label>
-    <input id="email" type="email" autocomplete="email" />
-
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password" />
-
-    <button id="btnLogin">Login</button>
-
-    <div id="loginMessage" class="message"></div>
-  </div>
 
   <!-- APP DOWNLOAD -->
   <section id="appDownloadPanel" class="download-panel">
@@ -167,62 +154,7 @@
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-    const btnLogin = document.getElementById("btnLogin");
-    const loginMessage = document.getElementById("loginMessage");
-
-    async function checkExistingSession() {
-      const { data } = await supabaseClient.auth.getSession();
-
-      if (data.session) {
-        window.location.href = "nav.html";
-      }
-    }
-
-    async function login() {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-
-      loginMessage.textContent = "";
-      loginMessage.className = "message";
-
-      if (!email || !password) {
-        loginMessage.textContent = "Enter email and password.";
-        loginMessage.classList.add("error");
-        return;
-      }
-
-      btnLogin.disabled = true;
-      btnLogin.textContent = "Logging in...";
-
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      btnLogin.disabled = false;
-      btnLogin.textContent = "Login";
-
-      if (error) {
-        loginMessage.textContent = error.message;
-        loginMessage.classList.add("error");
-        return;
-      }
-
-      if (data.session) {
-        window.location.href = "nav.html";
-      }
-    }
-
-    btnLogin.addEventListener("click", login);
-
-    passwordInput.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        login();
-      }
-    });
-
+  
 
     // PUBLIC APP DOWNLOAD - GITHUB RELEASE LINKS ONLY
     let appReleases = [];
