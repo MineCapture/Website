@@ -884,6 +884,7 @@
 </head>
 <body>
   <audio id="bgMusic" src="assets/audio/theme.mp3" loop preload="auto" playsinline></audio>
+  <audio id="levelCompleteSound" src="assets/audio/level_complete.mp3" preload="auto" playsinline></audio>
 
   <div id="game">
     <div id="canvasWrap">
@@ -1027,6 +1028,7 @@
   <script>
 
     const bgMusic = document.getElementById("bgMusic");
+    const levelCompleteSound = document.getElementById("levelCompleteSound");
     let musicOn = false;
     let musicWanted = false;
 
@@ -1092,6 +1094,55 @@
       }
     }
 
+
+    async function playLevelCompleteSound() {
+      if (levelCompleteSound) {
+        try {
+          levelCompleteSound.currentTime = 0;
+          levelCompleteSound.volume = 0.75;
+          await levelCompleteSound.play();
+          return;
+        } catch (err) {
+          console.log("Level complete MP3 could not play, using fallback fanfare:", err.name || err);
+        }
+      }
+
+      playFallbackFanfare();
+    }
+
+    function playFallbackFanfare() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        const ac = new AudioContext();
+        const now = ac.currentTime;
+        const notes = [
+          [0.00, 523.25, 0.18],
+          [0.18, 659.25, 0.18],
+          [0.36, 783.99, 0.20],
+          [0.58, 1046.50, 0.35],
+          [0.98, 1318.51, 0.45]
+        ];
+
+        for (const [offset, freq, dur] of notes) {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.type = "triangle";
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.0001, now + offset);
+          gain.gain.exponentialRampToValueAtTime(0.16, now + offset + 0.025);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + dur);
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          osc.start(now + offset);
+          osc.stop(now + offset + dur + 0.02);
+        }
+      } catch (err) {
+        console.log("Fallback fanfare failed:", err);
+      }
+    }
+
     function retryMusicAfterUserGesture() {
       if (musicWanted && bgMusic && bgMusic.paused) {
         startMusic();
@@ -1133,33 +1184,23 @@
           effect: 'none'
         },
         {
+          category: 'Production',
+          text: 'The plan remains unchanged: mine the good blocks, avoid the bad blocks, and describe luck as leadership.',
+          effect: 'none'
+        },
+        {
+          category: 'Production',
+          text: 'Current output is acceptable, which is disappointing because it leaves less room for a recovery plan.',
+          effect: 'none'
+        },
+        {
           category: 'SLT',
           text: 'Parent company has frozen all CAPEX. Emergency spending must now be called strategic resilience.',
           effect: 'capexFreeze'
         },
         {
-          category: 'Geology',
-          text: 'Geology has reinterpreted the seam again. The good news is the model is now more colourful.',
-          effect: 'none'
-        },
-        {
-          category: 'Finance',
-          text: 'Finance has detected expenditure. Please explain why a mine requires assets.',
-          effect: 'cashPenalty'
-        },
-        {
-          category: 'Asset Reliability',
-          text: 'The continuous miner is making a new noise. Engineering has classified it as character.',
-          effect: 'machineWear'
-        },
-        {
-          category: 'HR',
-          text: 'HR would like to remind you that extra responsibility is a development opportunity, not a pay grade.',
-          effect: 'moraleDip'
-        },
-        {
-          category: 'Survey',
-          text: 'Survey confirms the panel is exactly where expected, plus or minus the usual amount of confidence.',
+          category: 'SLT',
+          text: 'Senior Leadership has reviewed the plan and confirmed that the target remains realistic because it has already been announced.',
           effect: 'none'
         },
         {
@@ -1169,8 +1210,93 @@
         },
         {
           category: 'Geology',
+          text: 'Geology has reinterpreted the seam again. The good news is the model is now more colourful.',
+          effect: 'none'
+        },
+        {
+          category: 'Geology',
+          text: 'Geology has confirmed that Goldilocks Grade remains theoretically present somewhere in the deposit.',
+          effect: 'none'
+        },
+        {
+          category: 'Geology',
           text: 'A low-grade patch has been described as a valuable learning zone.',
           effect: 'none'
+        },
+        {
+          category: 'Rock Engineering',
+          text: 'Rock Engineering recommends larger pillars. Production recommends smaller pillars. The compromise is a meeting.',
+          effect: 'none'
+        },
+        {
+          category: 'Rock Engineering',
+          text: 'Ground conditions have been classified as manageable, providing nobody asks what manageable means.',
+          effect: 'none'
+        },
+        {
+          category: 'Rock Engineering',
+          text: 'Support requirements have increased slightly, from none whatsoever to perhaps some would be nice.',
+          effect: 'machineWear'
+        },
+        {
+          category: 'Sales & Marketing',
+          text: 'Sales has promised customers consistent Goldilocks Grade. Please align the geology with the brochure.',
+          effect: 'none'
+        },
+        {
+          category: 'Sales & Marketing',
+          text: 'Marketing would like more pink material for the product photos. They are not currently concerned with mine design.',
+          effect: 'none'
+        },
+        {
+          category: 'Sales & Marketing',
+          text: 'A customer visit is possible. Please make the mine look less like a consequence.',
+          effect: 'moraleDip'
+        },
+        {
+          category: 'Mine Services',
+          text: 'Mine Services reports the conveyor is available, apart from the belt, rollers, drive, and several philosophical objections.',
+          effect: 'cashPenalty'
+        },
+        {
+          category: 'Mine Services',
+          text: 'The conveyor team has requested a planned outage immediately after you planned to use the conveyor.',
+          effect: 'machineWear'
+        },
+        {
+          category: 'Mine Services',
+          text: 'Services says air, power, water, and hope are all available at reduced pressure.',
+          effect: 'none'
+        },
+        {
+          category: 'Processing Plant',
+          text: 'The plant can process the material, provided it is the material the plant wanted rather than the material the mine produced.',
+          effect: 'none'
+        },
+        {
+          category: 'Processing Plant',
+          text: 'Processing has rejected the latest sample as too real-world and insufficiently aligned with the test programme.',
+          effect: 'moraleDip'
+        },
+        {
+          category: 'Processing Plant',
+          text: 'The plant is asking whether Goldilocks Grade means actual grade or the grade from the investor slide.',
+          effect: 'none'
+        },
+        {
+          category: 'Finance',
+          text: 'Finance has detected expenditure. Please explain why a mine requires assets.',
+          effect: 'cashPenalty'
+        },
+        {
+          category: 'Finance',
+          text: 'Finance has advised that breakdowns are cheaper when renamed deferred maintenance.',
+          effect: 'none'
+        },
+        {
+          category: 'Asset Reliability',
+          text: 'The continuous miner is making a new noise. Engineering has classified it as character.',
+          effect: 'machineWear'
         },
         {
           category: 'Maintenance',
@@ -1183,9 +1309,190 @@
           effect: 'none'
         },
         {
+          category: 'HR',
+          text: 'HR would like to remind you that extra responsibility is a development opportunity, not a pay grade.',
+          effect: 'moraleDip'
+        },
+        {
           category: 'Corporate',
           text: 'A consultant has recommended unlocking value by doing the same job with fewer people.',
           effect: 'moraleDip'
+        },
+        {
+          category: 'Survey',
+          text: 'Survey confirms the panel is exactly where expected, plus or minus the usual amount of confidence.',
+          effect: 'none'
+        }
+      ];
+
+
+      const staffBubbleTemplates = [
+        {
+          type: 'leave',
+          icon: '↗',
+          roles: ['miner', 'fitter', 'electrician', 'supervisor'],
+          quote: '“Any chance?”',
+          text: '{name} wants to leave early. HR advises supporting wellbeing unless it affects output, in which case HR advises output.',
+          buttons: [
+            { label: 'Let them go', style: 'good', choice: 'approveLeave' },
+            { label: 'Refuse', style: 'warn', choice: 'refuse' }
+          ]
+        },
+        {
+          type: 'pay',
+          icon: '£',
+          roles: ['miner', 'fitter', 'electrician', 'supervisor'],
+          traits: ['Pay'],
+          quote: '“I’ve had an offer.”',
+          text: '{name} claims A. Competitor will pay substantially more to sit in a cabin for 12 hours a day.',
+          buttons: [
+            { label: 'Offer raise', style: 'good', choice: 'raise' },
+            { label: 'Call bluff', style: 'warn', choice: 'bluff' }
+          ]
+        },
+        {
+          type: 'tea',
+          icon: '☕',
+          roles: ['miner', 'fitter', 'electrician', 'supervisor'],
+          traits: ['Tea'],
+          quote: '“Kettle’s down.”',
+          text: '{name} reports a welfare-critical tea supply issue.',
+          buttons: [
+            { label: 'Authorise tea solution', style: 'good', choice: 'tea' },
+            { label: 'Refer to procedure', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'maintenance',
+          icon: '🔧',
+          roles: ['fitter'],
+          quote: '“Seen worse.”',
+          text: '{name} thinks the miner would benefit from planned maintenance before it becomes a budget event.',
+          buttons: [
+            { label: 'Schedule maintenance', style: 'good', choice: 'maintain' },
+            { label: 'Keep running', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'electrical',
+          icon: '⚡',
+          roles: ['electrician'],
+          quote: '“This shouldn’t glow.”',
+          text: '{name} has noticed a panel light that is either diagnostic or decorative.',
+          buttons: [
+            { label: 'Reset carefully', style: 'good', choice: 'reset' },
+            { label: 'Pretend normal', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'conveyor',
+          icon: '↻',
+          roles: ['miner', 'fitter', 'electrician'],
+          quote: '“Belt’s wandering.”',
+          text: '{name} says the conveyor belt is travelling in a direction best described as aspirational.',
+          buttons: [
+            { label: 'Stop and sort it', style: 'good', choice: 'sortConveyor' },
+            { label: 'Let it find itself', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'ground',
+          icon: '⛏',
+          roles: ['miner', 'supervisor'],
+          quote: '“Roof sounds lively.”',
+          text: '{name} reports that the roof is making a noise normally reserved for expensive investigations.',
+          buttons: [
+            { label: 'Slow down and check', style: 'good', choice: 'slowForSupport' },
+            { label: 'Call it character', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'grade',
+          icon: '◆',
+          roles: ['miner', 'supervisor'],
+          quote: '“This looks a bit brown.”',
+          text: '{name} is concerned the current cut may not contain the advertised quantity of Goldilocks.',
+          buttons: [
+            { label: 'Follow the bright stuff', style: 'good', choice: 'followGrade' },
+            { label: 'Trust the model', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'plant',
+          icon: '🏭',
+          roles: ['miner', 'supervisor'],
+          quote: '“Plant won’t like this.”',
+          text: '{name} has received feedback from the processing plant, delivered through sighs and blocked screens.',
+          buttons: [
+            { label: 'Tidy the feed', style: 'good', choice: 'tidyFeed' },
+            { label: 'Send it anyway', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'services',
+          icon: '💡',
+          roles: ['electrician', 'fitter'],
+          quote: '“Services are stretched.”',
+          text: '{name} says power, water, air, and patience are all sharing the same cable tray.',
+          buttons: [
+            { label: 'Stabilise services', style: 'good', choice: 'stabiliseServices' },
+            { label: 'Add another adaptor', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'training',
+          icon: '📋',
+          roles: ['miner', 'fitter', 'electrician'],
+          quote: '“Have I been trained for this?”',
+          text: '{name} has asked a question that would be easier to answer if the training matrix had survived contact with operations.',
+          buttons: [
+            { label: 'Give quick coaching', style: 'good', choice: 'coach' },
+            { label: 'Point at induction record', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'tired',
+          icon: 'Z',
+          roles: ['miner', 'fitter', 'electrician', 'supervisor'],
+          quote: '“I’m hanging.”',
+          text: '{name} appears to be operating mainly on caffeine, resentment, and an ancient packet of mints.',
+          buttons: [
+            { label: 'Allow a breather', style: 'good', choice: 'breather' },
+            { label: 'Motivational speech', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'tools',
+          icon: '🔩',
+          roles: ['fitter'],
+          quote: '“I need the special tool.”',
+          text: '{name} needs a tool last seen in a different decade, possibly under a bench labelled do not tidy.',
+          buttons: [
+            { label: 'Buy replacement', style: 'good', choice: 'buyTool' },
+            { label: 'Use hammer logic', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'cable',
+          icon: '〰',
+          roles: ['electrician'],
+          quote: '“Who routed this?”',
+          text: '{name} has found a cable route that suggests electricity was asked to improvise.',
+          buttons: [
+            { label: 'Re-route properly', style: 'good', choice: 'rerouteCable' },
+            { label: 'Cable tie and pray', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'morale',
+          icon: '!',
+          roles: ['miner', 'fitter', 'electrician', 'supervisor'],
+          quote: '“Can I just say something?”',
+          text: '{name} has a concern. This has been classified as a learning opportunity.',
+          buttons: [
+            { label: 'Listen', style: 'good', choice: 'listen' },
+            { label: 'Create action tracker', style: 'warn', choice: 'ignore' }
+          ]
         }
       ];
 
@@ -1295,6 +1602,7 @@
         paused: false,
         setupComplete: false,
         setupApplied: false,
+        levelComplete: false,
         manager: null,
         day: 0,
         cash: 150000,
@@ -1576,10 +1884,76 @@
           if (Math.random() < 0.35) showRandomProductionComment();
 
           if (state.tonnes >= TARGET_TONNES && grade() >= TARGET_GRADE) {
-            state.paused = true;
-            openWindow('reports', true, 'Module Complete');
+            completeLevelOne();
           }
         }
+      }
+
+      function completeLevelOne() {
+        if (state.levelComplete) return;
+
+        state.levelComplete = true;
+        state.paused = true;
+        playLevelCompleteSound();
+        openLevelCompleteLetter();
+      }
+
+      function openLevelCompleteLetter() {
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Message from Senior Leadership';
+
+        const finalGrade = grade().toFixed(2);
+        const sampleTonnes = Math.round(state.tonnes).toLocaleString();
+
+        $('modalBody').innerHTML = `
+          <div class="letter">
+            <h2>Strategic Success Recognition Notice</h2>
+
+            <p>Dear Newly Validated Mine Manager,</p>
+
+            <p>
+              The Senior Leadership Team is pleased to confirm that you have successfully mined a
+              <strong>${sampleTonnes} tonne</strong> bulk sample at <strong>${finalGrade}% Goldilocks Grade</strong>.
+              This achievement proves that the target was always realistic and that our confidence in your under-resourced potential was fully justified.
+            </p>
+
+            <p>
+              We are especially pleased that we have been able to facilitate your success through strategic oversight,
+              remote encouragement, and the careful avoidance of operational interference.
+            </p>
+
+            <p>
+              In recognition of this success, the Senior Leadership Team has approved a collective
+              <strong>£50,000 performance bonus</strong> for itself. You will receive your union-mandated
+              <strong>+0.5% pay increase</strong> next year, subject to business conditions, payroll interpretation, and whether the form is submitted in blue ink.
+            </p>
+
+            <p>
+              Your achievement will now be used in future presentations as evidence that ManySalts trial mining is simple,
+              repeatable, and suitable for aggressive scale-up.
+            </p>
+
+            <p>
+              The SLT is pleased to assign you your next opportunity for professional development, in
+              <strong>Zone 1 of the ManySalts Mine</strong>, which comes with a significant salary increase to
+              <strong>£18,800</strong> and a designated parking space outside the mine gates.
+            </p>
+
+            <p class="sig">
+              Senior Leadership Team<br>
+              ManySalts Mine<br>
+              Delivering Value Through Other People
+            </p>
+          </div>
+
+          <div class="btnRow">
+            <button class="primary" data-close>Accept Next Opportunity</button>
+            <button data-window="reports">View Training Report</button>
+          </div>
+        `;
+
+        $('modalOverlay').classList.add('show');
       }
 
       function fitterOnCrew() {
@@ -3083,43 +3457,56 @@
       function maybeGenerateStaffBubble() {
         const available = state.staff.filter(s => !s.bubble);
         if (!available.length || Math.random() > 0.65) return;
+
         const s = available[Math.floor(Math.random() * available.length)];
-        const opts = [
-          { type: 'pay', icon: '£' }, { type: 'question', icon: '?' }, { type: 'tea', icon: '☕' },
-          { type: 'maintenance', icon: '🔧' }, { type: 'warning', icon: '⚠' }, { type: 'tired', icon: 'Z' }
-        ];
-        if (s.trait.includes('Pay')) s.bubble = { type: 'pay', icon: '£' };
-        else if (s.trait.includes('Tea')) s.bubble = { type: 'tea', icon: '☕' };
-        else if (s.role === 'fitter') s.bubble = { type: 'maintenance', icon: '🔧' };
-        else if (s.role === 'electrician') s.bubble = { type: 'electrical', icon: '⚡' };
-        else s.bubble = opts[Math.floor(Math.random() * opts.length)];
+        const template = chooseStaffBubbleTemplate(s);
+        if (!template) return;
+
+        s.bubble = { type: template.type, icon: template.icon };
+      }
+
+      function chooseStaffBubbleTemplate(staff) {
+        let weighted = [];
+
+        for (const t of staffBubbleTemplates) {
+          if (t.roles && !t.roles.includes(staff.role)) continue;
+
+          let weight = 1;
+
+          if (t.traits && t.traits.some(term => String(staff.trait || '').includes(term))) weight += 5;
+          if (staff.role === 'fitter' && t.type === 'maintenance') weight += 3;
+          if (staff.role === 'electrician' && t.type === 'electrical') weight += 3;
+          if (staff.attendance <= 2 && (t.type === 'leave' || t.type === 'tired')) weight += 2;
+          if (staff.morale <= 2 && (t.type === 'pay' || t.type === 'morale')) weight += 2;
+          if (staff.skill <= 2 && (t.type === 'training' || t.type === 'tools')) weight += 1;
+
+          for (let i = 0; i < weight; i++) weighted.push(t);
+        }
+
+        if (!weighted.length) return staffBubbleTemplates.find(t => t.type === 'morale');
+        return weighted[Math.floor(Math.random() * weighted.length)];
+      }
+
+      function staffBubbleTemplate(type) {
+        return staffBubbleTemplates.find(t => t.type === type) || staffBubbleTemplates.find(t => t.type === 'morale');
+      }
+
+      function renderStaffEventText(template, staff) {
+        return String(template.text || '').replaceAll('{name}', escapeHtml(staff.name));
       }
 
       function openStaffEvent(staffId) {
         const s = state.staff.find(x => x.id === staffId);
         if (!s || !s.bubble) return;
-        let title = s.name + ' — Staff Engagement Event';
-        let msg = '';
-        let buttons = '';
-        if (s.bubble.type === 'leave') {
-          msg = '<p><strong>“Any chance?”</strong></p><p>' + s.name + ' wants to leave early today. HR advises supporting wellbeing unless it affects output, in which case HR advises output.</p>';
-          buttons = `<button class="good" data-event-choice="${s.id}:approveLeave">Let them go</button><button class="warn" data-event-choice="${s.id}:refuse">Refuse</button>`;
-        } else if (s.bubble.type === 'pay') {
-          msg = '<p><strong>“I’ve had an offer.”</strong></p><p>' + s.name + ' claims A. Competitor will pay substantially more to sit in a cabin for 12 hours a day.</p>';
-          buttons = `<button class="good" data-event-choice="${s.id}:raise">Offer raise</button><button class="warn" data-event-choice="${s.id}:bluff">Call bluff</button>`;
-        } else if (s.bubble.type === 'maintenance') {
-          msg = '<p><strong>“Seen worse.”</strong></p><p>' + s.name + ' thinks the miner would benefit from planned maintenance before it becomes a budget event.</p>';
-          buttons = `<button class="good" data-event-choice="${s.id}:maintain">Schedule maintenance</button><button class="warn" data-event-choice="${s.id}:ignore">Keep running</button>`;
-        } else if (s.bubble.type === 'electrical') {
-          msg = '<p><strong>“This shouldn’t glow.”</strong></p><p>' + s.name + ' has noticed a panel light that is either diagnostic or decorative.</p>';
-          buttons = `<button class="good" data-event-choice="${s.id}:reset">Reset carefully</button><button class="warn" data-event-choice="${s.id}:ignore">Pretend normal</button>`;
-        } else if (s.bubble.type === 'tea') {
-          msg = '<p><strong>“Kettle’s down.”</strong></p><p>' + s.name + ' reports a welfare-critical tea supply issue.</p>';
-          buttons = `<button class="good" data-event-choice="${s.id}:tea">Authorise tea solution</button><button class="warn" data-event-choice="${s.id}:ignore">Refer to procedure</button>`;
-        } else {
-          msg = '<p><strong>“Can I just say something?”</strong></p><p>' + s.name + ' has a concern. This has been classified as a learning opportunity.</p>';
-          buttons = `<button class="good" data-event-choice="${s.id}:listen">Listen</button><button class="warn" data-event-choice="${s.id}:ignore">Create action tracker</button>`;
-        }
+
+        const template = staffBubbleTemplate(s.bubble.type);
+        const title = s.name + ' — Staff Engagement Event';
+        const quote = template.quote || '“Can I just say something?”';
+        const msg = '<p><strong>' + quote + '</strong></p><p>' + renderStaffEventText(template, s) + '</p>';
+        const buttons = (template.buttons || [])
+          .map(b => `<button class="${b.style || 'good'}" data-event-choice="${s.id}:${b.choice}">${b.label}</button>`)
+          .join('');
+
         $('modalTitle').textContent = title;
         const eventHeader = `<div class="eventHeader">${portraitHtml(s)}<div><h3>${s.name}</h3><p><span class="tag">${roleName(s.role)}</span> <span class="tag">${s.trait}</span></p></div></div>`;
         $('modalBody').innerHTML = eventHeader + msg + '<div class="btnRow">' + buttons + '<button data-close>Close</button></div>';
@@ -3130,15 +3517,48 @@
       function eventChoice(staffId, choice) {
         const s = state.staff.find(x => x.id === staffId);
         if (!s) return;
-        if (choice === 'raise') { s.salary = Math.round(s.salary * 1.12); s.morale = Math.min(5, s.morale + 1); state.cash -= 1000; }
-        if (choice === 'bluff') { s.morale = Math.max(1, s.morale - 1); }
-        if (choice === 'approveLeave') { s.morale = Math.min(5, s.morale + 1); state.cash -= 250; }
-        if (choice === 'refuse') { s.morale = Math.max(1, s.morale - 1); }
-        if (choice === 'maintain') { state.machine.condition = Math.min(100, state.machine.condition + 18); state.cash -= 2500; state.machine.warnedSmoking = false; state.machine.warnedCritical = false; }
-        if (choice === 'reset') { state.machine.condition = Math.min(100, state.machine.condition + 8); state.cash -= 900; }
-        if (choice === 'tea') { s.morale = Math.min(5, s.morale + 1); state.cash -= 150; }
-        if (choice === 'listen') { s.morale = Math.min(5, s.morale + 1); }
-        if (choice === 'ignore') { s.morale = Math.max(1, s.morale - 1); }
+
+        const improveMorale = (amount = 1) => { s.morale = Math.min(5, s.morale + amount); };
+        const reduceMorale = (amount = 1) => { s.morale = Math.max(1, s.morale - amount); };
+        const improveSkill = (amount = 1) => { s.skill = Math.min(5, s.skill + amount); };
+        const improveAttendance = (amount = 1) => { s.attendance = Math.min(5, s.attendance + amount); };
+        const reduceAttendance = (amount = 1) => { s.attendance = Math.max(1, s.attendance - amount); };
+        const improveMachine = (amount) => {
+          state.machine.condition = Math.min(100, state.machine.condition + amount);
+          state.machine.warnedSmoking = false;
+          state.machine.warnedCritical = false;
+        };
+        const wearMachine = (amount) => {
+          state.machine.condition = Math.max(0, state.machine.condition - amount);
+          if (state.machine.condition <= 0 && state.machine.status !== 'broken') breakdownMachine();
+        };
+
+        if (choice === 'raise') { s.salary = Math.round(s.salary * 1.12); improveMorale(1); state.cash -= 1000; }
+        if (choice === 'bluff') { reduceMorale(1); }
+        if (choice === 'approveLeave') { improveMorale(1); reduceAttendance(1); state.cash -= 250; }
+        if (choice === 'refuse') { reduceMorale(1); }
+        if (choice === 'maintain') { improveMachine(18); state.cash -= 2500; }
+        if (choice === 'reset') { improveMachine(8); state.cash -= 900; }
+        if (choice === 'tea') { improveMorale(1); state.cash -= 150; }
+        if (choice === 'listen') { improveMorale(1); }
+        if (choice === 'ignore') { reduceMorale(1); }
+
+        if (choice === 'sortConveyor') { improveMorale(1); state.cash -= 650; showProductionComment('Mine Services appreciates being contacted before the belt became a sculpture.', 'Mine Services'); }
+        if (choice === 'slowForSupport') { improveMorale(1); state.cash -= 500; showProductionComment('Rock Engineering has logged your caution as both prudent and inconvenient.', 'Rock Engineering'); }
+        if (choice === 'followGrade') { improveMorale(1); showProductionComment('Geology supports following the bright stuff, while reserving the right to reinterpret it later.', 'Geology'); }
+        if (choice === 'tidyFeed') { improveMorale(1); state.cash -= 400; showProductionComment('Processing Plant has downgraded its complaint from formal to muttered.', 'Processing Plant'); }
+        if (choice === 'stabiliseServices') { improveMachine(6); state.cash -= 700; showProductionComment('Mine Services has restored enough infrastructure for blame to continue moving.', 'Mine Services'); }
+        if (choice === 'coach') { improveSkill(1); improveMorale(1); state.cash -= 300; }
+        if (choice === 'breather') { improveMorale(1); reduceAttendance(1); }
+        if (choice === 'buyTool') { improveMachine(10); state.cash -= 1200; }
+        if (choice === 'rerouteCable') { improveMachine(7); state.cash -= 850; }
+
+        // Poor responses may keep the shift moving, but they leave residue.
+        if (choice === 'ignore') {
+          if (s.role === 'fitter' || s.role === 'electrician') wearMachine(2);
+          if (Math.random() < 0.25) reduceAttendance(1);
+        }
+
         s.bubble = null;
         $('modalOverlay').classList.remove('show');
         updatePanelCrewTiles(true);
@@ -3220,6 +3640,9 @@
 
           const setupBackBtn = e.target.closest('[data-setup-back]');
           if (setupBackBtn) { openManagerSetup(); return; }
+
+          const delegatedWindowBtn = e.target.closest('[data-window]');
+          if (delegatedWindowBtn) { openWindow(delegatedWindowBtn.dataset.window); return; }
 
           const callFitterBtn = e.target.closest('[data-call-fitter]');
           if (callFitterBtn) { startRepair(); return; }
