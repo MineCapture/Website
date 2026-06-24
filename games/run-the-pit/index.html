@@ -436,6 +436,7 @@
         <button class="toolBtn" data-window="finance">Finance</button>
         <button class="toolBtn" data-window="reports">Reports</button>
         <button class="toolBtn" id="pauseBtn">Pause</button>
+        <button class="toolBtn" id="musicBtn">Music: Off</button>
       </div>
     </footer>
   </div>
@@ -505,12 +506,37 @@
   <script>
 
     const bgMusic = document.getElementById("bgMusic");
-    bgMusic.volume = 0.35;
+    let musicOn = false;
 
-    function startMusic() {
-      bgMusic.play().catch(() => {
-        console.log("Music will start after user interaction.");
-      });
+    if (bgMusic) {
+      bgMusic.volume = 0.35;
+    }
+
+    async function startMusic() {
+      if (!bgMusic || musicOn) return;
+
+      try {
+        await bgMusic.play();
+        musicOn = true;
+
+        const musicBtn = document.getElementById("musicBtn");
+        if (musicBtn) musicBtn.textContent = "Music: On";
+      } catch (err) {
+        console.log("Music could not start yet:", err);
+      }
+    }
+
+    function toggleMusic() {
+      const musicBtn = document.getElementById("musicBtn");
+      if (!bgMusic) return;
+
+      if (!musicOn) {
+        startMusic();
+      } else {
+        bgMusic.pause();
+        musicOn = false;
+        if (musicBtn) musicBtn.textContent = "Music: Off";
+      }
     }
     
     (() => {
@@ -1421,6 +1447,7 @@
         canvas.addEventListener('click', canvasClick);
 
         $('beginTrainingBtn').addEventListener('click', () => {
+          startMusic();
           $('splashOverlay').classList.remove('show');
           $('letterOverlay').classList.add('show');
         });
@@ -1440,6 +1467,8 @@
           state.paused = !state.paused;
           $('pauseBtn').textContent = state.paused ? 'Resume' : 'Pause';
         });
+
+        $('musicBtn').addEventListener('click', toggleMusic);
 
         document.querySelectorAll('[data-window]').forEach(btn => btn.addEventListener('click', () => openWindow(btn.dataset.window)));
 
