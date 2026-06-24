@@ -98,6 +98,133 @@
       cursor: pointer;
     }
 
+    .productionManagerDock {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      display: grid;
+      grid-template-columns: 92px minmax(220px, 420px);
+      gap: 10px;
+      align-items: end;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .pmCharacter {
+      width: 92px;
+      height: 112px;
+      border-radius: 18px;
+      border: 2px solid rgba(251,191,36,0.42);
+      background: linear-gradient(180deg, #374151, #111827);
+      box-shadow: 0 12px 34px rgba(0,0,0,0.42), inset 0 -12px rgba(0,0,0,0.20);
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      place-items: center;
+      pointer-events: auto;
+    }
+
+    .pmPortrait {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pmPortraitFallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(251,191,36,0.25), transparent 45%),
+        linear-gradient(135deg, #fbbf24, #b45309);
+      color: #1f1300;
+      font-size: 30px;
+      font-weight: 900;
+      z-index: 1;
+    }
+
+    .pmSpeechBubble {
+      position: relative;
+      margin-bottom: 22px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 2px solid rgba(251,191,36,0.48);
+      background: linear-gradient(180deg, rgba(255,251,235,0.98), rgba(254,243,199,0.98));
+      color: #1f2937;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.42);
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+      transition: opacity 180ms ease, transform 180ms ease;
+      pointer-events: auto;
+    }
+
+    .pmSpeechBubble::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      bottom: 18px;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 14px solid rgba(251,191,36,0.48);
+    }
+
+    .pmSpeechBubble::after {
+      content: '';
+      position: absolute;
+      left: -10px;
+      bottom: 20px;
+      width: 0;
+      height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-right: 12px solid rgba(255,251,235,0.98);
+    }
+
+    .pmSpeechBubble.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .pmBubbleHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .pmBubbleHeader strong {
+      color: #92400e;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pmBubbleHeader button {
+      width: 22px;
+      height: 22px;
+      min-height: 22px;
+      padding: 0;
+      border-radius: 50%;
+      background: #92400e;
+      color: #fff7ed;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .pmSpeechBubble p {
+      margin: 0;
+      color: #1f2937;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
     #bottomBar {
       height: var(--toolbar-h);
       display: grid;
@@ -600,6 +727,16 @@
       :root { --toolbar-h: 126px; }
       #bottomBar { grid-template-columns: 1fr; align-content: start; }
       .toolbarButtons { justify-content: flex-start; }
+      .productionManagerDock {
+        left: 8px;
+        bottom: 8px;
+        grid-template-columns: 62px minmax(190px, calc(100vw - 92px));
+        gap: 8px;
+      }
+      .pmCharacter { width: 62px; height: 78px; border-radius: 14px; }
+      .pmPortraitFallback { font-size: 22px; }
+      .pmSpeechBubble { margin-bottom: 10px; padding: 8px 10px; }
+      .pmSpeechBubble p { font-size: 12px; }
       .toolBtn { min-width: auto; }
       .brand { align-items: flex-start; }
       .logoBox { width: 46px; height: 46px; font-size: 16px; }
@@ -621,6 +758,25 @@
   <div id="game">
     <div id="canvasWrap">
       <canvas id="gameCanvas"></canvas>
+      <div id="productionManagerDock" class="productionManagerDock">
+        <div class="pmCharacter" title="Production Manager">
+          <div class="pmPortraitFallback">PM</div>
+          <img
+            class="pmPortrait"
+            src="assets/characters/portraits/production_manager.png"
+            alt="Production Manager"
+            onerror="this.style.display='none';"
+          />
+        </div>
+
+        <div id="productionComment" class="pmSpeechBubble">
+          <div class="pmBubbleHeader">
+            <strong id="productionCommentCategory">Production Manager</strong>
+            <button id="pmBubbleClose" type="button" aria-label="Close production manager message">×</button>
+          </div>
+          <p id="productionCommentText">More tonnes. Less drama.</p>
+        </div>
+      </div>
     </div>
 
     <footer id="bottomBar">
@@ -813,6 +969,69 @@
       const TARGET_TONNES = 10000;
       const TARGET_GRADE = 14.0;
 
+      const productionManagerEvents = [
+        {
+          category: 'Production',
+          text: 'Good progress. Could we have more tonnes, less smoke, and no additional paperwork?',
+          effect: 'none'
+        },
+        {
+          category: 'SLT',
+          text: 'Parent company has frozen all CAPEX. Emergency spending must now be called strategic resilience.',
+          effect: 'capexFreeze'
+        },
+        {
+          category: 'Geology',
+          text: 'Geology has reinterpreted the seam again. The good news is the model is now more colourful.',
+          effect: 'none'
+        },
+        {
+          category: 'Finance',
+          text: 'Finance has detected expenditure. Please explain why a mine requires assets.',
+          effect: 'cashPenalty'
+        },
+        {
+          category: 'Asset Reliability',
+          text: 'The continuous miner is making a new noise. Engineering has classified it as character.',
+          effect: 'machineWear'
+        },
+        {
+          category: 'HR',
+          text: 'HR would like to remind you that extra responsibility is a development opportunity, not a pay grade.',
+          effect: 'moraleDip'
+        },
+        {
+          category: 'Survey',
+          text: 'Survey confirms the panel is exactly where expected, plus or minus the usual amount of confidence.',
+          effect: 'none'
+        },
+        {
+          category: 'SLT',
+          text: 'SLT has requested a stretch target. It is identical to the original target, but less achievable.',
+          effect: 'none'
+        },
+        {
+          category: 'Geology',
+          text: 'A low-grade patch has been described as a valuable learning zone.',
+          effect: 'none'
+        },
+        {
+          category: 'Maintenance',
+          text: 'Maintenance says the machine is fine if you stop looking directly at it.',
+          effect: 'machineWear'
+        },
+        {
+          category: 'Stores',
+          text: 'Stores has plenty of the wrong part and none of the right part. This is considered normal stock control.',
+          effect: 'none'
+        },
+        {
+          category: 'Corporate',
+          text: 'A consultant has recommended unlocking value by doing the same job with fewer people.',
+          effect: 'moraleDip'
+        }
+      ];
+
       const quadrants = [
         { id: 'NW', name: 'NW Panel', active: true },
         { id: 'NE', name: 'NE Panel', active: false },
@@ -934,8 +1153,14 @@
           target: null,
           progress: 0,
           condition: 78,
-          cutter: 0
+          cutter: 0,
+          repairProgress: 0,
+          warnedSmoking: false,
+          warnedCritical: false
         },
+        productionCommentTimer: 0,
+        capexFreezeUntil: 0,
+        randomEventCount: 0,
         staff: [],
         candidates: [],
         blocks: {}
@@ -1043,6 +1268,9 @@
       function update(dt) {
         anim += dt;
         updateParticles(dt);
+        updateProductionComment(dt);
+        updateMachineSmoke(dt);
+
         if (!state.running || state.paused) return;
 
         dayTimer += dt;
@@ -1050,12 +1278,73 @@
           dayTimer -= 1;
           state.day++;
           state.cash -= dailyWageCost();
+          if (state.day % 8 === 0) showRandomProductionComment();
           if (state.day % 12 === 0) maybeGenerateStaffBubble();
         }
 
         if (state.machine.status === 'mining') {
           mineUpdate(dt);
         }
+
+        if (state.machine.status === 'maintenance') {
+          repairUpdate(dt);
+        }
+      }
+
+      function showProductionComment(text, category = 'Production Manager', seconds = 6.5) {
+        const box = $('productionComment');
+        const textBox = $('productionCommentText');
+        const categoryBox = $('productionCommentCategory');
+        if (!box || !textBox) return;
+
+        textBox.textContent = text;
+        if (categoryBox) categoryBox.textContent = category;
+
+        state.productionCommentTimer = seconds;
+        box.classList.add('show');
+      }
+
+      function hideProductionComment() {
+        const box = $('productionComment');
+        if (box) box.classList.remove('show');
+        state.productionCommentTimer = 0;
+      }
+
+      function showRandomProductionComment() {
+        if (!productionManagerEvents.length) return;
+        const event = productionManagerEvents[Math.floor(Math.random() * productionManagerEvents.length)];
+        applyProductionManagerEvent(event);
+        showProductionComment(event.text, event.category, 7.5);
+      }
+
+      function applyProductionManagerEvent(event) {
+        state.randomEventCount++;
+
+        if (!event || event.effect === 'none') return;
+
+        if (event.effect === 'capexFreeze') {
+          state.capexFreezeUntil = Math.max(state.capexFreezeUntil, state.day + 24);
+        }
+
+        if (event.effect === 'cashPenalty') {
+          state.cash -= 750;
+        }
+
+        if (event.effect === 'machineWear') {
+          state.machine.condition = Math.max(0, state.machine.condition - 6);
+          if (state.machine.condition <= 0 && state.machine.status !== 'broken') breakdownMachine();
+        }
+
+        if (event.effect === 'moraleDip' && state.staff.length) {
+          const target = state.staff[Math.floor(Math.random() * state.staff.length)];
+          target.morale = Math.max(1, target.morale - 1);
+        }
+      }
+
+      function updateProductionComment(dt) {
+        if (state.productionCommentTimer <= 0) return;
+        state.productionCommentTimer -= dt;
+        if (state.productionCommentTimer <= 0) hideProductionComment();
       }
 
       function currentManager() {
@@ -1084,15 +1373,34 @@
       function mineUpdate(dt) {
         const target = blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c);
         if (!target) return;
+
         state.machine.cutter += dt * 13;
         const rate = mineSpeed() / riskMult(target.risk);
         target.progress += rate * dt;
         state.machine.progress = target.progress;
-        state.machine.condition = Math.max(0, state.machine.condition - 0.018 * dt * riskMult(target.risk));
+
+        const wearRate = 0.16 * riskMult(target.risk);
+        state.machine.condition = Math.max(0, state.machine.condition - wearRate * dt);
+
+        if (state.machine.condition < 45 && !state.machine.warnedSmoking) {
+          state.machine.warnedSmoking = true;
+          showProductionComment('The miner appears to be expressing itself through smoke. Please convert this into production.', 'Asset Reliability');
+        }
+
+        if (state.machine.condition < 20 && !state.machine.warnedCritical) {
+          state.machine.warnedCritical = true;
+          showProductionComment('Asset health is now in the exciting red part of the chart.', 'Asset Reliability');
+        }
 
         const pos = machinePos();
         if (Math.random() < 0.55) spawnRock(pos.x, pos.y, target);
         if (Math.random() < 0.28) spawnDust(pos.x, pos.y);
+        if (state.machine.condition < 45 && Math.random() < 0.42) spawnSmoke(pos.x, pos.y);
+
+        if (state.machine.condition <= 0) {
+          breakdownMachine();
+          return;
+        }
 
         if (target.progress >= 100) {
           target.status = 'void';
@@ -1107,12 +1415,94 @@
           state.machine.progress = 0;
           burst(pos.x, pos.y, target);
           showToast('Block mined: ' + target.tonnes.toLocaleString() + 't at ' + target.grade.toFixed(1) + '% K2O. Select the next adjacent block.');
+          if (Math.random() < 0.35) showRandomProductionComment();
 
           if (state.tonnes >= TARGET_TONNES && grade() >= TARGET_GRADE) {
             state.paused = true;
             openWindow('reports', true, 'Module Complete');
           }
         }
+      }
+
+      function fitterOnCrew() {
+        return state.staff.find(s => s.role === 'fitter') || null;
+      }
+
+      function fitterRepairRate() {
+        const fitter = fitterOnCrew();
+        if (!fitter) return 0;
+        return 18 + fitter.skill * 9;
+      }
+
+      function repairCost() {
+        return state.capexFreezeUntil > state.day ? 3750 : 2500;
+      }
+
+      function breakdownMachine() {
+        const target = state.machine.target ? blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c) : null;
+        if (target && target.status === 'mining') target.status = 'solid';
+
+        state.machine.status = 'broken';
+        state.machine.condition = 0;
+        state.machine.progress = 0;
+        state.machine.repairProgress = 0;
+        state.machine.target = null;
+
+        const pos = machinePos();
+        for (let i = 0; i < 18; i++) spawnSmoke(pos.x, pos.y);
+        showProductionComment('The continuous miner has entered a reflective period. Please click it and call the fitter.', 'Asset Event');
+        openMiniWindow('Asset Event', '<p><strong>Old Continuous Miner has broken down.</strong></p><p>Click the machine or open Assets to call the fitter.</p>', true);
+      }
+
+      function startRepair() {
+        const fitter = fitterOnCrew();
+        if (!fitter) {
+          openMiniWindow('No Fitter Available', '<p>No fitter is assigned to this crew. The machine remains committed to not working.</p>', true);
+          return;
+        }
+
+        if (state.machine.status === 'mining') {
+          openMiniWindow('Cannot Repair While Cutting', '<p>The fitter has declined to repair a machine while it is actively trying to eat the mine.</p>', true);
+          return;
+        }
+
+        if (state.machine.condition >= 100) {
+          openMiniWindow('Asset Reliability', '<p>The machine is already in unusually good condition. Please avoid drawing attention to this.</p>', true);
+          return;
+        }
+
+        state.machine.status = 'maintenance';
+        state.machine.repairProgress = 0;
+        const cost = repairCost();
+        state.cash -= cost;
+        showProductionComment((fitter.name || 'The fitter') + ' has been called. Finance has been informed against its will. Cost: ' + money(cost) + '.', 'Maintenance');
+        $('modalOverlay').classList.remove('show');
+      }
+
+      function repairUpdate(dt) {
+        state.machine.repairProgress += fitterRepairRate() * dt;
+
+        const pos = machinePos();
+        if (Math.random() < 0.20) spawnDust(pos.x + rand(-8, 8), pos.y + rand(-8, 8));
+        if (Math.random() < 0.06) spawnSmoke(pos.x, pos.y);
+
+        if (state.machine.repairProgress >= 100) {
+          state.machine.status = 'idle';
+          state.machine.condition = Math.max(state.machine.condition, 74);
+          state.machine.repairProgress = 0;
+          state.machine.warnedSmoking = false;
+          state.machine.warnedCritical = false;
+          showProductionComment('Repairs complete. The miner has been returned to a condition described as optimistic.', 'Maintenance');
+        }
+      }
+
+      function updateMachineSmoke(dt) {
+        if (!board) return;
+        if (state.machine.status !== 'broken' && state.machine.condition >= 45) return;
+
+        const pos = machinePos();
+        const chance = state.machine.status === 'broken' ? 0.35 : 0.10;
+        if (Math.random() < chance) spawnSmoke(pos.x + rand(-6, 6), pos.y - rand(4, 12));
       }
 
       function updateParticles(dt) {
@@ -1149,6 +1539,19 @@
           size: rand(6, 14),
           life: rand(0.7, 1.5),
           colour: 'rgba(156,163,175,0.42)',
+          rot: 0, spin: 0
+        });
+      }
+
+      function spawnSmoke(x, y) {
+        state.particles.push({
+          type: 'smoke',
+          x: x + rand(-8, 8), y: y + rand(-10, 3),
+          vx: rand(-12, 12), vy: rand(-34, -10),
+          gravity: -12,
+          size: rand(9, 20),
+          life: rand(1.0, 2.0),
+          colour: 'rgba(31,41,55,0.48)',
           rot: 0, spin: 0
         });
       }
@@ -1452,9 +1855,11 @@
 
       function drawMachine() {
         const p = machinePos();
+        const active = state.machine.status === 'mining' || state.machine.status === 'maintenance';
         const mining = state.machine.status === 'mining';
-        const shakeX = mining ? rand(-1.5, 1.5) : 0;
-        const shakeY = mining ? rand(-1.1, 1.1) : 0;
+        const broken = state.machine.status === 'broken';
+        const shakeX = active ? rand(-1.5, 1.5) : 0;
+        const shakeY = active ? rand(-1.1, 1.1) : 0;
         const size = board.cell * 0.76;
         machineHit = { x: p.x - size, y: p.y - size, w: size * 2, h: size * 2 };
 
@@ -1463,10 +1868,23 @@
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
         ctx.beginPath(); ctx.ellipse(0, size * 0.37, size * 0.70, size * 0.25, 0, 0, Math.PI * 2); ctx.fill();
 
-        ctx.fillStyle = state.machine.condition < 42 ? '#dc2626' : '#facc15';
+        let bodyColour = '#facc15';
+        if (state.machine.condition < 45) bodyColour = '#f97316';
+        if (state.machine.condition < 20 || broken) bodyColour = '#dc2626';
+        if (state.machine.status === 'maintenance') bodyColour = '#38bdf8';
+
+        ctx.fillStyle = bodyColour;
         roundRect(ctx, -size * 0.48, -size * 0.35, size * 0.96, size * 0.70, 6);
         ctx.fill();
-        ctx.fillStyle = '#ca8a04';
+
+        if (broken) {
+          ctx.strokeStyle = '#fecaca';
+          ctx.lineWidth = 3;
+          roundRect(ctx, -size * 0.53, -size * 0.40, size * 1.06, size * 0.80, 8);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = state.machine.status === 'maintenance' ? '#0369a1' : '#ca8a04';
         roundRect(ctx, -size * 0.35, -size * 0.23, size * 0.70, size * 0.46, 4);
         ctx.fill();
         ctx.fillStyle = '#111827';
@@ -1476,20 +1894,28 @@
         ctx.save();
         ctx.translate(0, -size * 0.50);
         ctx.rotate(state.machine.cutter);
-        ctx.fillStyle = '#6b7280';
+        ctx.fillStyle = broken ? '#374151' : '#6b7280';
         ctx.beginPath(); ctx.arc(0, 0, size * 0.23, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#fde68a'; ctx.lineWidth = 2;
+        ctx.strokeStyle = broken ? '#9ca3af' : '#fde68a'; ctx.lineWidth = 2;
         for (let i = 0; i < 8; i++) {
           ctx.rotate(Math.PI / 4);
           ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(size * 0.34, 0); ctx.stroke();
         }
         ctx.restore();
 
+        ctx.font = '800 10px Arial';
+        ctx.textAlign = 'center';
         if (state.machine.status === 'idle') {
           ctx.fillStyle = '#fbbf24';
-          ctx.font = '800 10px Arial';
-          ctx.textAlign = 'center';
-          ctx.fillText('IDLE', 0, size * 0.72);
+          ctx.fillText(state.machine.condition < 45 ? 'WORN' : 'IDLE', 0, size * 0.72);
+        }
+        if (state.machine.status === 'broken') {
+          ctx.fillStyle = '#fecaca';
+          ctx.fillText('BROKEN', 0, size * 0.72);
+        }
+        if (state.machine.status === 'maintenance') {
+          ctx.fillStyle = '#bae6fd';
+          ctx.fillText('REPAIR ' + Math.round(state.machine.repairProgress) + '%', 0, size * 0.72);
         }
         ctx.restore();
       }
@@ -1576,7 +2002,12 @@
         for (const hit of bubbleHits) {
           if (inside(x, y, hit.rect)) { openStaffEvent(hit.staffId); return; }
         }
-        if (machineHit && inside(x, y, machineHit)) { openWindow('assets'); return; }
+        if (machineHit && inside(x, y, machineHit)) {
+          if (state.machine.status === 'broken') { startRepair(); return; }
+          if (state.machine.status === 'idle' && state.machine.condition < 65) { openWindow('assets'); return; }
+          openWindow('assets');
+          return;
+        }
         for (const hit of blockHits) {
           if (inside(x, y, hit.rect)) { clickBlock(hit.q, hit.r, hit.c); return; }
         }
@@ -1655,18 +2086,38 @@
 
         if (type === 'assets') {
           title = 'Asset Reliability';
+          const fitter = fitterOnCrew();
+          const conditionTag = state.machine.status === 'broken'
+            ? 'Broken'
+            : state.machine.status === 'maintenance'
+              ? 'Under repair'
+              : state.machine.condition < 20
+                ? 'Critical'
+                : state.machine.condition < 45
+                  ? 'Smoking'
+                  : 'Operational';
+
+          const canCallFitter = fitter && state.machine.status !== 'mining' && state.machine.status !== 'maintenance' && state.machine.condition < 100;
+
           body = `<p><strong>Old Continuous Miner</strong></p>
             <div class="rows">
-              <div class="row"><div class="avatarDot" style="background:#facc15"></div><div><strong>Status</strong><span>${state.machine.status}</span></div><span class="tag">${Math.round(state.machine.progress)}%</span></div>
-              <div class="row"><div class="avatarDot" style="background:${state.machine.condition < 45 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.machine.condition.toFixed(1)}%</span></div><span class="tag">${state.machine.condition < 45 ? 'Smoking' : 'Operational'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${state.machine.status === 'broken' ? '#ef4444' : state.machine.status === 'maintenance' ? '#38bdf8' : '#facc15'}"></div><div><strong>Status</strong><span>${state.machine.status}</span></div><span class="tag">${Math.round(state.machine.progress)}%</span></div>
+              <div class="row"><div class="avatarDot" style="background:${state.machine.condition < 45 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.machine.condition.toFixed(1)}%</span></div><span class="tag">${conditionTag}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#111827"></div><div><strong>Assigned Fitter</strong><span>${fitter ? fitter.name + ' · Skill ' + fitter.skill + '/5' : 'No fitter assigned'}</span></div><span class="tag">${fitter ? 'Available' : 'Missing'}</span></div>
+              ${state.machine.status === 'maintenance' ? `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Repair Progress</strong><span>${Math.round(state.machine.repairProgress)}%</span></div><span class="tag">In progress</span></div>` : ''}
+              ${state.capexFreezeUntil > state.day ? `<div class="row"><div class="avatarDot" style="background:#ef4444"></div><div><strong>CAPEX Freeze</strong><span>Parent company has frozen normal spending until Day ${state.capexFreezeUntil}.</span></div><span class="tag">Emergency cost</span></div>` : ''}
             </div>
-            <p>This asset has been described as old, loyal, and statistically unlikely to improve.</p>`;
+            <p>This asset has been described as old, loyal, and statistically unlikely to improve.</p>
+            <div class="btnRow">
+              <button class="primary" data-call-fitter ${canCallFitter ? '' : 'disabled'}>${state.machine.status === 'broken' ? 'Call Fitter' : 'Call Fitter for Maintenance'} (${money(repairCost())})</button>
+            </div>`;
         }
 
         if (type === 'finance') {
           title = 'Finance';
           body = `<p>Budget remaining: <strong>${money(state.cash)}</strong></p>
                   <p>Daily wage burn: <strong>${money(dailyWageCost())}</strong></p>
+                  <p>CAPEX status: <strong>${state.capexFreezeUntil > state.day ? 'Frozen until Day ' + state.capexFreezeUntil : 'Nominally available'}</strong></p>
                   <p>Finance note: costs remain lower when people and machines do not do anything. Production note: this has disadvantages.</p>`;
         }
 
@@ -2078,7 +2529,7 @@
         if (choice === 'bluff') { s.morale = Math.max(1, s.morale - 1); }
         if (choice === 'approveLeave') { s.morale = Math.min(5, s.morale + 1); state.cash -= 250; }
         if (choice === 'refuse') { s.morale = Math.max(1, s.morale - 1); }
-        if (choice === 'maintain') { state.machine.condition = Math.min(100, state.machine.condition + 18); state.cash -= 2500; }
+        if (choice === 'maintain') { state.machine.condition = Math.min(100, state.machine.condition + 18); state.cash -= 2500; state.machine.warnedSmoking = false; state.machine.warnedCritical = false; }
         if (choice === 'reset') { state.machine.condition = Math.min(100, state.machine.condition + 8); state.cash -= 900; }
         if (choice === 'tea') { s.morale = Math.min(5, s.morale + 1); state.cash -= 150; }
         if (choice === 'listen') { s.morale = Math.min(5, s.morale + 1); }
@@ -2113,6 +2564,7 @@
       function bind() {
         window.addEventListener('resize', resize);
         canvas.addEventListener('click', canvasClick);
+        if ($('pmBubbleClose')) $('pmBubbleClose').addEventListener('click', hideProductionComment);
 
         $('beginTrainingBtn').addEventListener('click', () => {
           startMusic();
@@ -2135,6 +2587,7 @@
           state.paused = false;
           $('startBtn').textContent = 'Running';
           $('startBtn').disabled = true;
+          showProductionComment('Right. Let\'s turn mandatory leadership development into tonnes.', 'Production');
           showToast('Mandatory training clock started. Select one of the highlighted adjacent blocks in the NW Panel.');
         });
         $('pauseBtn').addEventListener('click', () => {
@@ -2161,6 +2614,9 @@
 
           const setupBackBtn = e.target.closest('[data-setup-back]');
           if (setupBackBtn) { openManagerSetup(); return; }
+
+          const callFitterBtn = e.target.closest('[data-call-fitter]');
+          if (callFitterBtn) { startRepair(); return; }
 
           const closeBtn = e.target.closest('[data-close]');
           if (closeBtn) {
