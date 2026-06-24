@@ -442,12 +442,76 @@
       gap: 5px;
     }
 
+    .crewRoleSection {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.12);
+      border-radius: 14px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .crewRoleHeader {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .crewRoleHeader h3 {
+      margin: 0;
+      color: #fde68a;
+      font-size: 16px;
+    }
+
+    .crewRoleHeader span {
+      color: #cbd5e1;
+      font-size: 12px;
+    }
+
+    .crewRoleGrid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .setupSummary {
       display: grid;
       gap: 7px;
       margin-top: 12px;
       border-top: 1px solid rgba(255,255,255,0.12);
       padding-top: 12px;
+    }
+
+    .crewSteps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .crewStep {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: #cbd5e1;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .crewStep.active {
+      background: rgba(251,191,36,0.18);
+      border-color: rgba(251,191,36,0.65);
+      color: #fde68a;
+    }
+
+    .crewStep.done {
+      background: rgba(34,197,94,0.13);
+      border-color: rgba(34,197,94,0.45);
+      color: #bbf7d0;
+    }
+
+    .crewSingleRoleGrid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .notice {
@@ -472,11 +536,12 @@
       .crest { height: 100px; }
       .gridCards { grid-template-columns: 1fr; }
       .choiceGrid { grid-template-columns: 1fr; }
+      .crewSingleRoleGrid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <audio id="bgMusic" src="assets/audio/theme.mp3" loop preload="auto"></audio>
+  <audio id="bgMusic" src="assets/audio/theme.mp3" loop preload="auto" playsinline></audio>
 
   <div id="game">
     <div id="canvasWrap">
@@ -578,37 +643,78 @@
 
     const bgMusic = document.getElementById("bgMusic");
     let musicOn = false;
+    let musicWanted = false;
 
     if (bgMusic) {
       bgMusic.volume = 0.35;
+      bgMusic.muted = false;
+
+      bgMusic.addEventListener("playing", () => {
+        musicOn = true;
+        updateMusicButton();
+      });
+
+      bgMusic.addEventListener("pause", () => {
+        musicOn = false;
+        updateMusicButton();
+      });
+
+      bgMusic.addEventListener("error", () => {
+        const err = bgMusic.error;
+        console.log("Music file error:", err ? err.code : "unknown");
+      });
+    }
+
+    function updateMusicButton() {
+      const musicBtn = document.getElementById("musicBtn");
+      if (!musicBtn) return;
+      musicBtn.textContent = musicOn ? "Music: On" : "Music: Off";
     }
 
     async function startMusic() {
-      if (!bgMusic || musicOn) return;
+      if (!bgMusic) return;
+
+      musicWanted = true;
+      bgMusic.muted = false;
+      bgMusic.volume = 0.35;
 
       try {
         await bgMusic.play();
         musicOn = true;
-
-        const musicBtn = document.getElementById("musicBtn");
-        if (musicBtn) musicBtn.textContent = "Music: On";
+        updateMusicButton();
       } catch (err) {
-        console.log("Music could not start yet:", err);
+        musicOn = false;
+        updateMusicButton();
+        console.log("Music could not start yet:", err.name || err, err.message || "");
       }
     }
 
+    function stopMusic() {
+      if (!bgMusic) return;
+      musicWanted = false;
+      bgMusic.pause();
+      musicOn = false;
+      updateMusicButton();
+    }
+
     function toggleMusic() {
-      const musicBtn = document.getElementById("musicBtn");
       if (!bgMusic) return;
 
       if (!musicOn) {
         startMusic();
       } else {
-        bgMusic.pause();
-        musicOn = false;
-        if (musicBtn) musicBtn.textContent = "Music: Off";
+        stopMusic();
       }
     }
+
+    function retryMusicAfterUserGesture() {
+      if (musicWanted && bgMusic && bgMusic.paused) {
+        startMusic();
+      }
+    }
+
+    document.addEventListener("pointerdown", retryMusicAfterUserGesture, true);
+    document.addEventListener("keydown", retryMusicAfterUserGesture, true);
     
     (() => {
       'use strict';
@@ -686,16 +792,30 @@
         }
       ];
 
+      const STARTING_CREW_SIZE = 5;
+
       const startingCrewPool = [
         { id: 's_clipboard', name: 'S. Clipboard', role: 'supervisor', model: 'A', salary: 56000, skill: 3, morale: 3, attendance: 5, trait: 'Meeting Generator' },
+        { id: 'm_meeting', name: 'M. Meeting', role: 'supervisor', model: 'B', salary: 59000, skill: 4, morale: 2, attendance: 4, trait: 'Procedure Collector' },
+        { id: 'r_radio', name: 'R. Radio', role: 'supervisor', model: 'D', salary: 52000, skill: 2, morale: 5, attendance: 5, trait: 'Morale Booster' },
+
         { id: 'a_slacker', name: 'A. Slacker', role: 'miner', model: 'C', salary: 31000, skill: 2, morale: 4, attendance: 1, trait: 'Any Chance Specialist' },
         { id: 'g_driver', name: 'G. Driver', role: 'miner', model: 'A', salary: 52000, skill: 5, morale: 4, attendance: 4, trait: 'Machine Whisperer' },
         { id: 'd_tea', name: 'D. Tea', role: 'miner', model: 'D', salary: 33000, skill: 2, morale: 5, attendance: 5, trait: 'Tea Dependent' },
+        { id: 'b_spender', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, trait: 'Pay Rise Enthusiast' },
+        { id: 'n_naylor', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, trait: 'Says Seen Worse' },
+
         { id: 'a_spanner', name: 'A. Spanner', role: 'fitter', model: 'F', salary: 56000, skill: 5, morale: 3, attendance: 4, trait: 'Says Seen Worse' },
-        { id: 'l_spark', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, trait: 'Likes Flashing Lights' }
+        { id: 'f_hammer', name: 'F. Hammer', role: 'fitter', model: 'F', salary: 43000, skill: 3, morale: 4, attendance: 3, trait: 'Hammer Specialist' },
+        { id: 't_temporary', name: 'T. Temporary', role: 'fitter', model: 'F', salary: 39000, skill: 2, morale: 3, attendance: 4, trait: 'Temporary Fixer' },
+
+        { id: 'l_spark', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, trait: 'Likes Flashing Lights' },
+        { id: 'p_cable', name: 'P. Cable', role: 'electrician', model: 'E', salary: 46000, skill: 3, morale: 4, attendance: 5, trait: 'Cable Whisperer' },
+        { id: 'v_volts', name: 'V. Volts', role: 'electrician', model: 'E', salary: 50000, skill: 4, morale: 2, attendance: 4, trait: 'Manual Reader' }
       ];
 
       let selectedCrewIds = [];
+      let crewSetupStep = 'supervisor';
 
       const state = {
         running: false,
@@ -720,10 +840,7 @@
           cutter: 0
         },
         staff: [],
-        candidates: [
-          { id: 'b_spender', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, trait: 'Pay Rise Enthusiast' },
-          { id: 'n_naylor', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, trait: 'Says Seen Worse' }
-        ],
+        candidates: [],
         blocks: {}
       };
 
@@ -1422,7 +1539,7 @@
             <p><strong>Module 1 objective:</strong> mine 10,000 tonnes of polyhalite test material at a weighted average grade of at least 14.0% K2O.</p>
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Shift Manager</strong><span>${state.manager ? state.manager.name + ' · ' + state.manager.title : 'Not selected'}</span></div><span class="tag">${state.setupComplete ? 'Assigned' : 'Required'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Starting Crew</strong><span>${state.staff.length ? state.staff.map(s => s.name).join(', ') : 'Not selected'}</span></div><span class="tag">${state.staff.length}/3</span></div>
+              <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Starting Crew</strong><span>${state.staff.length ? state.staff.map(s => s.name).join(', ') : 'Not selected'}</span></div><span class="tag">${state.staff.length}/${STARTING_CREW_SIZE}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Tonnage</strong><span>${Math.round(state.tonnes).toLocaleString()} / 10,000t</span></div><span class="tag">${Math.round(state.tonnes / TARGET_TONNES * 100)}%</span></div>
               <div class="row"><div class="avatarDot" style="background:#ec4899"></div><div><strong>Weighted grade</strong><span>${grade().toFixed(2)}% K2O / 14.00%</span></div><span class="tag">${grade() >= TARGET_GRADE ? 'Pass' : 'At risk'}</span></div>
             </div>`;
@@ -1500,6 +1617,86 @@
         return 'Miner';
       }
 
+      function activeSupervisorRequirement() {
+        return quadrants.filter(q => q.active).length;
+      }
+
+      function selectedCrew() {
+        return startingCrewPool.filter(c => selectedCrewIds.includes(c.id));
+      }
+
+      function selectedRoleCount(role) {
+        return selectedCrew().filter(c => c.role === role).length;
+      }
+
+      function crewRequirements() {
+        return {
+          supervisor: activeSupervisorRequirement(),
+          miner: 2,
+          fitter: 1,
+          electrician: 1
+        };
+      }
+
+      function crewRequirementMet(role) {
+        const req = crewRequirements();
+        return selectedRoleCount(role) >= req[role];
+      }
+
+      function allCrewRequirementsMet() {
+        const req = crewRequirements();
+        return selectedCrewIds.length === STARTING_CREW_SIZE &&
+          selectedRoleCount('supervisor') >= req.supervisor &&
+          selectedRoleCount('miner') >= req.miner &&
+          selectedRoleCount('fitter') >= req.fitter &&
+          selectedRoleCount('electrician') >= req.electrician;
+      }
+
+      function crewStepClass(step) {
+        if (crewSetupStep === step) return 'crewStep active';
+        if (step === 'supervisor' && selectedRoleCount('supervisor') >= crewRequirements().supervisor) return 'crewStep done';
+        if (step === 'miners' && selectedRoleCount('miner') >= crewRequirements().miner) return 'crewStep done';
+        if (step === 'trades' && selectedRoleCount('fitter') >= crewRequirements().fitter && selectedRoleCount('electrician') >= crewRequirements().electrician) return 'crewStep done';
+        return 'crewStep';
+      }
+
+      function crewStepHeader() {
+        return `<div class="crewSteps">
+          <span class="${crewStepClass('supervisor')}">1 · Supervisor</span>
+          <span class="${crewStepClass('miners')}">2 · Mining Crew</span>
+          <span class="${crewStepClass('trades')}">3 · Tradesmen</span>
+        </div>`;
+      }
+
+      function crewSummary() {
+        const selected = selectedCrew();
+        const summary = selected.length
+          ? selected.map(c => c.name + ' (' + roleName(c.role) + ')').join(', ')
+          : 'No staff selected.';
+
+        return `<div class="notice">
+          Selected: ${selected.length}/${STARTING_CREW_SIZE}<br>
+          Supervisors: ${selectedRoleCount('supervisor')}/${crewRequirements().supervisor} ·
+          Miners: ${selectedRoleCount('miner')}/2 ·
+          Fitters: ${selectedRoleCount('fitter')}/1 ·
+          Electricians: ${selectedRoleCount('electrician')}/1<br>
+          ${summary}
+        </div>`;
+      }
+
+      function roleSection(role, title, note) {
+        const req = crewRequirements()[role];
+        const count = selectedRoleCount(role);
+        const status = count >= req ? 'Complete' : count + '/' + req + ' required';
+        return `<section class="crewRoleSection">
+          <div class="crewRoleHeader">
+            <h3>${title}</h3>
+            <span>${status} · ${note}</span>
+          </div>
+          <div class="choiceGrid crewRoleGrid">${startingCrewPool.filter(c => c.role === role).map(crewCard).join('')}</div>
+        </section>`;
+      }
+
       function managerCard(m) {
         const selected = state.manager && state.manager.id === m.id;
         return `<div class="choiceCard ${selected ? 'selected' : ''}">
@@ -1534,27 +1731,68 @@
         $('modalOverlay').classList.add('show');
       }
 
-      function openCrewSetup() {
+      function openCrewSetup(step = crewSetupStep) {
+        crewSetupStep = step;
         setModalClosable(false);
         $('modalWindow').className = 'window';
-        $('modalTitle').textContent = 'Select Starting Crew';
-        const selected = startingCrewPool.filter(c => selectedCrewIds.includes(c.id));
-        const hasMiner = selected.some(c => c.role === 'miner');
-        const summary = selected.length
-          ? selected.map(c => c.name + ' (' + roleName(c.role) + ')').join(', ')
-          : 'No staff selected.';
-        $('modalBody').innerHTML = `
-          <div class="setupIntro">
-            <p><strong>Pick exactly 3 staff.</strong> At least one must be a miner. Fitters and electricians are optional, which is how avoidable incidents begin.</p>
-          </div>
-          <div class="choiceGrid">${startingCrewPool.map(crewCard).join('')}</div>
-          <div class="setupSummary">
-            <div class="notice">Selected: ${selected.length}/3 · Miner required: ${hasMiner ? 'Yes' : 'No'}<br>${summary}</div>
-            <div class="btnRow">
-              <button data-setup-back>Back to Manager</button>
-              <button class="primary" data-crew-confirm ${selected.length === 3 && hasMiner ? '' : 'disabled'}>Confirm Crew and Brief Module 1</button>
+
+        let title = 'Select Starting Crew';
+        let body = '';
+
+        if (crewSetupStep === 'supervisor') {
+          title = 'Choose Panel Supervisor';
+          body = `
+            ${crewStepHeader()}
+            <div class="setupIntro">
+              <p><strong>NW Panel requires one supervisor.</strong> Each active mining quadrant must have a supervisor before production can start.</p>
             </div>
-          </div>`;
+            <div class="choiceGrid crewSingleRoleGrid">${startingCrewPool.filter(c => c.role === 'supervisor').map(crewCard).join('')}</div>
+            <div class="setupSummary">
+              ${crewSummary()}
+              <div class="btnRow">
+                <button data-setup-back>Back to Manager</button>
+                <button class="primary" data-crew-step="miners" ${selectedRoleCount('supervisor') >= crewRequirements().supervisor ? '' : 'disabled'}>Next: Choose Mining Crew</button>
+              </div>
+            </div>`;
+        }
+
+        if (crewSetupStep === 'miners') {
+          title = 'Choose Mining Crew';
+          body = `
+            ${crewStepHeader()}
+            <div class="setupIntro">
+              <p><strong>Select at least two miners.</strong> The continuous miner needs a two-person minimum operating crew for Module 1.</p>
+            </div>
+            <div class="choiceGrid crewSingleRoleGrid">${startingCrewPool.filter(c => c.role === 'miner').map(crewCard).join('')}</div>
+            <div class="setupSummary">
+              ${crewSummary()}
+              <div class="btnRow">
+                <button data-crew-step="supervisor">Back: Supervisor</button>
+                <button class="primary" data-crew-step="trades" ${selectedRoleCount('miner') >= crewRequirements().miner ? '' : 'disabled'}>Next: Choose Tradesmen</button>
+              </div>
+            </div>`;
+        }
+
+        if (crewSetupStep === 'trades') {
+          title = 'Choose Tradesmen';
+          body = `
+            ${crewStepHeader()}
+            <div class="setupIntro">
+              <p><strong>Select one fitter and one electrician.</strong> This is the minimum support cover before the mine is allowed to discover what is wrong with the machine.</p>
+            </div>
+            ${roleSection('fitter', 'Fitters', 'minimum 1 required')}
+            ${roleSection('electrician', 'Electricians', 'minimum 1 required')}
+            <div class="setupSummary">
+              ${crewSummary()}
+              <div class="btnRow">
+                <button data-crew-step="miners">Back: Mining Crew</button>
+                <button class="primary" data-crew-confirm ${allCrewRequirementsMet() ? '' : 'disabled'}>Confirm Crew and Brief Module 1</button>
+              </div>
+            </div>`;
+        }
+
+        $('modalTitle').textContent = title;
+        $('modalBody').innerHTML = body;
         $('modalOverlay').classList.add('show');
       }
 
@@ -1562,31 +1800,62 @@
         const manager = managerOptions.find(m => m.id === id);
         if (!manager) return;
         state.manager = { ...manager };
-        openCrewSetup();
+        openCrewSetup('supervisor');
       }
 
       function toggleCrew(id) {
+        const crew = startingCrewPool.find(c => c.id === id);
+        if (!crew) return;
+
         const exists = selectedCrewIds.includes(id);
+
         if (exists) {
           selectedCrewIds = selectedCrewIds.filter(x => x !== id);
-        } else {
-          if (selectedCrewIds.length >= 3) {
-            openCrewSetup();
-            return;
-          }
-          selectedCrewIds.push(id);
-        }
-        openCrewSetup();
-      }
-
-      function confirmCrewSetup() {
-        const selected = startingCrewPool.filter(c => selectedCrewIds.includes(c.id));
-        const hasMiner = selected.some(c => c.role === 'miner');
-        if (selected.length !== 3 || !hasMiner) {
-          openCrewSetup();
+          openCrewSetup(crewSetupStep);
           return;
         }
 
+        if (crew.role === 'supervisor') {
+          selectedCrewIds = selectedCrewIds.filter(existingId => {
+            const existing = startingCrewPool.find(c => c.id === existingId);
+            return !existing || existing.role !== 'supervisor';
+          });
+          selectedCrewIds.push(id);
+          openCrewSetup(crewSetupStep);
+          return;
+        }
+
+        if (crew.role === 'miner' && selectedRoleCount('miner') >= crewRequirements().miner) {
+          openCrewSetup(crewSetupStep);
+          return;
+        }
+
+        if (crew.role === 'fitter' && selectedRoleCount('fitter') >= crewRequirements().fitter) {
+          openCrewSetup(crewSetupStep);
+          return;
+        }
+
+        if (crew.role === 'electrician' && selectedRoleCount('electrician') >= crewRequirements().electrician) {
+          openCrewSetup(crewSetupStep);
+          return;
+        }
+
+        if (selectedCrewIds.length >= STARTING_CREW_SIZE) {
+          openCrewSetup(crewSetupStep);
+          return;
+        }
+
+        selectedCrewIds.push(id);
+        openCrewSetup(crewSetupStep);
+      }
+
+      function confirmCrewSetup() {
+        if (!allCrewRequirementsMet()) {
+          openCrewSetup('trades');
+          return;
+        }
+
+        const selected = selectedCrew();
         state.staff = selected.map(c => ({ ...c, bubble: null }));
         const slacker = state.staff.find(s => s.id === 'a_slacker');
         if (slacker) slacker.bubble = { type: 'leave', icon: '⏰' };
@@ -1708,11 +1977,13 @@
           $('letterOverlay').classList.add('show');
         });
         $('acceptLetterBtn').addEventListener('click', () => {
+          startMusic();
           $('letterOverlay').classList.remove('show');
           openManagerSetup();
         });
 
         $('startBtn').addEventListener('click', () => {
+          startMusic();
           if (!state.setupComplete) {
             openManagerSetup();
             return;
@@ -1741,6 +2012,9 @@
 
           const crewConfirmBtn = e.target.closest('[data-crew-confirm]');
           if (crewConfirmBtn) { confirmCrewSetup(); return; }
+
+          const crewStepBtn = e.target.closest('[data-crew-step]');
+          if (crewStepBtn) { openCrewSetup(crewStepBtn.dataset.crewStep); return; }
 
           const setupBackBtn = e.target.closest('[data-setup-back]');
           if (setupBackBtn) { openManagerSetup(); return; }
