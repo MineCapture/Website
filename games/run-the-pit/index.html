@@ -405,6 +405,8 @@
   </style>
 </head>
 <body>
+  <audio id="bgMusic" src="assets/audio/theme.mp3" loop preload="auto"></audio>
+
   <div id="game">
     <div id="canvasWrap">
       <canvas id="gameCanvas"></canvas>
@@ -501,6 +503,16 @@
   </div>
 
   <script>
+
+    const bgMusic = document.getElementById("bgMusic");
+    bgMusic.volume = 0.35;
+
+    function startMusic() {
+      bgMusic.play().catch(() => {
+        console.log("Music will start after user interaction.");
+      });
+    }
+    
     (() => {
       'use strict';
 
@@ -562,6 +574,8 @@
         ],
         blocks: {}
       };
+
+
 
       function seeded(n) {
         const x = Math.sin(n * 999.123) * 10000;
