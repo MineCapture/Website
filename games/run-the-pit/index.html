@@ -228,8 +228,8 @@
     #bottomBar {
       height: var(--toolbar-h);
       display: grid;
-      grid-template-columns: minmax(280px, 0.85fr) minmax(380px, 1.05fr) minmax(360px, 0.90fr);
-      gap: 8px;
+      grid-template-columns: minmax(360px, 1fr) auto;
+      gap: 10px;
       align-items: center;
       padding: 8px 10px;
       background: linear-gradient(180deg, #1f2937, #0f172a);
@@ -856,16 +856,7 @@
       :root { --toolbar-h: 126px; }
       #bottomBar { grid-template-columns: 1fr; align-content: start; overflow-y: auto; }
       .toolbarButtons { justify-content: flex-start; }
-      .panelCrewTiles {
-        grid-template-columns: repeat(4, minmax(92px, 1fr));
-        overflow-x: auto;
-        padding-bottom: 2px;
-      }
-      .crewTile { min-height: 64px; }
-      .crewTileHeader strong { font-size: 9px; }
-      .crewTileHeader span { font-size: 8px; }
-      .portraitWrap.crewMiniPortrait { width: 28px; height: 28px; }
-      .crewMini { flex-basis: 30px; width: 30px; }
+
       .productionManagerDock {
         left: 8px;
         bottom: 8px;
@@ -933,9 +924,6 @@
           </div>
         </div>
       </div>
-
-      <div id="panelCrewTiles" class="panelCrewTiles" aria-label="Panel crew assignments"></div>
-
       <div class="toolbarButtons">
         <button class="toolBtn primary" id="startBtn" disabled>Start</button>
         <button class="toolBtn" data-window="targets">Targets</button>
@@ -1133,9 +1121,17 @@
       let dayTimer = 0;
       let lastPanelCrewTilesHtml = '';
       const portraitImageCache = new Map();
+      const machineImageCache = new Map();
 
       const TARGET_TONNES = 10000;
       const TARGET_GRADE = 14.0;
+
+      const machineSpritePaths = {
+        normal: 'assets/machines/continuous_miner_normal.png',
+        worn: 'assets/machines/continuous_miner_worn.png',
+        broken: 'assets/machines/continuous_miner_broken.png',
+        repair: 'assets/machines/continuous_miner_repair.png'
+      };
 
       const productionManagerEvents = [
         {
@@ -1315,7 +1311,7 @@
         selectedBlock: null,
         machine: {
           q: 'NW',
-          r: 9,
+          r: 8,
           c: 9,
           status: 'idle',
           target: null,
@@ -1344,7 +1340,7 @@
       function initBlocks() {
         for (const q of quadrants) {
           const list = [];
-          for (let r = 0; r < 10; r++) {
+          for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 10; c++) {
               const idx = r * 10 + c + (q.id.charCodeAt(0) + q.id.charCodeAt(1)) * 100;
               const localHighGrade = q.id === 'NW' && ((r < 4 && c < 4) || (r < 3 && c > 6));
@@ -1358,9 +1354,9 @@
           }
           state.blocks[q.id] = list;
         }
-        blockAt('NW', 9, 9).status = 'void';
-        blockAt('NW', 9, 9).tonnes = 0;
-        blockAt('NW', 9, 9).grade = 0;
+        blockAt('NW', 8, 9).status = 'void';
+        blockAt('NW', 8, 9).tonnes = 0;
+        blockAt('NW', 8, 9).grade = 0;
       }
 
       function blockAt(q, r, c) {
@@ -1740,12 +1736,12 @@
         drawBlocks();
         drawShaft();
         bubbleHits = [];
+        drawCrewBays();
         drawStaff();
         drawMachine();
         drawParticles();
         drawSideSpace();
         updateHud();
-        updatePanelCrewTiles();
       }
 
       function drawBackground() {
@@ -1895,7 +1891,139 @@
       }
 
       function drawCrewBays() {
-        // Panel crew is now rendered in the bottom toolbar, not on the mine canvas.
+        for (const q of quadrants) {
+          const qr = qRect(q.id);
+          const cs = qr.w / 10;
+          const bay = { x: qr.x, y: qr.y + cs * 9, w: qr.w, h: cs };
+          drawPanelCrewBay(q, bay, cs);
+        }
+      }
+
+      function drawPanelCrewBay(q, bay, cs) {
+        ctx.save();
+
+        ctx.fillStyle = q.active ? 'rgba(15,23,42,0.94)' : 'rgba(17,24,39,0.92)';
+        ctx.fillRect(bay.x, bay.y, bay.w, bay.h);
+
+        for (let c = 0; c < 10; c++) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+          ctx.strokeRect(bay.x + c * cs + 0.5, bay.y + 0.5, cs - 1, bay.h - 1);
+        }
+
+        ctx.strokeStyle = q.active ? 'rgba(251,191,36,0.74)' : 'rgba(156,163,175,0.38)';
+        ctx.lineWidth = q.active ? 2 : 1;
+        ctx.strokeRect(bay.x + 0.5, bay.y + 0.5, bay.w - 1, bay.h - 1);
+
+        const crew = panelCrew(q.id);
+        if (!q.active) {
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '800 ' + Math.max(8, cs * 0.20) + 'px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(q.id + ' CREW LOCKED', bay.x + bay.w / 2, bay.y + bay.h / 2);
+          ctx.restore();
+          return;
+        }
+
+        if (!crew.length) {
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '800 ' + Math.max(8, cs * 0.20) + 'px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(q.id + ' CREW PENDING', bay.x + bay.w / 2, bay.y + bay.h / 2);
+          ctx.restore();
+          return;
+        }
+
+        const slotW = bay.w / Math.max(5, crew.length);
+        crew.slice(0, 5).forEach((s, i) => {
+          const x = bay.x + i * slotW + 2;
+          const y = bay.y + 2;
+          const w = slotW - 4;
+          const h = bay.h - 4;
+          drawCrewBayTile(s, x, y, w, h, cs);
+        });
+
+        ctx.restore();
+      }
+
+      function drawCrewBayTile(s, x, y, w, h, cs) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        roundRect(ctx, x, y, w, h, Math.max(5, h * 0.18));
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = 1;
+        roundRect(ctx, x, y, w, h, Math.max(5, h * 0.18));
+        ctx.stroke();
+
+        const pSize = Math.min(h - 6, cs * 0.72, 34);
+        const px = x + 4;
+        const py = y + (h - pSize) / 2;
+        drawCrewPortrait(s, px, py, pSize);
+
+        const textX = px + pSize + 5;
+        const maxTextW = Math.max(18, w - (pSize + 11));
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+
+        ctx.fillStyle = '#f9fafb';
+        ctx.font = '800 ' + Math.max(7, Math.min(10, h * 0.28)) + 'px Arial';
+        clippedCanvasText(s.name, textX, y + h * 0.43, maxTextW);
+
+        ctx.fillStyle = roleColour(s.role);
+        ctx.font = '700 ' + Math.max(6, Math.min(8, h * 0.22)) + 'px Arial';
+        clippedCanvasText(roleName(s.role), textX, y + h * 0.70, maxTextW);
+
+        if (s.bubble) {
+          const bx = x + w - Math.max(14, cs * 0.18);
+          const by = y - Math.max(10, cs * 0.20);
+          drawCrewQuestionBubble(s, bx, by, cs);
+        }
+
+        ctx.restore();
+      }
+
+      function clippedCanvasText(text, x, y, maxW) {
+        let value = String(text || '');
+        while (value.length > 1 && ctx.measureText(value).width > maxW) {
+          value = value.slice(0, -2) + '…';
+        }
+        ctx.fillText(value, x, y);
+      }
+
+      function drawCrewQuestionBubble(s, x, y, cs) {
+        const w = Math.max(30, cs * 0.92);
+        const h = w * 0.76;
+        const r = Math.max(8, h * 0.28);
+
+        ctx.save();
+        ctx.fillStyle = '#fff7ed';
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = Math.max(2, cs * 0.055);
+        roundRect(ctx, x - w / 2, y - h / 2, w, h, r);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x - w * 0.18, y + h / 2 - 1);
+        ctx.lineTo(x - w * 0.02, y + h / 2 + h * 0.26);
+        ctx.lineTo(x + w * 0.10, y + h / 2 - 1);
+        ctx.closePath();
+        ctx.fillStyle = '#fff7ed';
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#92400e';
+        ctx.font = '900 ' + Math.floor(h * 0.64) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(s.bubble.icon || '?', x, y + 1);
+        ctx.restore();
+
+        bubbleHits.push({ staffId: s.id, rect: { x: x - w / 2, y: y - h / 2, w, h: h * 1.35 } });
       }
 
       function panelCrew(qid) {
@@ -1938,20 +2066,7 @@
       }
 
       function updatePanelCrewTiles(force = false) {
-        const holder = $('panelCrewTiles');
-        if (!holder) return;
-
-        const order = ['NW', 'NE', 'SE', 'SW'];
-        const html = order
-          .map(id => quadrants.find(q => q.id === id))
-          .filter(Boolean)
-          .map(panelCrewTileHtml)
-          .join('');
-
-        if (force || html !== lastPanelCrewTilesHtml) {
-          holder.innerHTML = html;
-          lastPanelCrewTilesHtml = html;
-        }
+        // Panel crew is rendered directly inside each quadrant's reserved bottom row.
       }
 
       function roleColour(role) {
@@ -2142,70 +2257,125 @@
         return '#166534';
       }
 
+      function machineSpriteState() {
+        if (state.machine.status === 'broken') return 'broken';
+        if (state.machine.status === 'maintenance') return 'repair';
+        if (state.machine.condition < 45) return 'worn';
+        return 'normal';
+      }
+
+      function getMachineImage() {
+        const key = machineSpriteState();
+        const src = machineSpritePaths[key] || machineSpritePaths.normal;
+
+        let item = machineImageCache.get(src);
+        if (!item) {
+          const img = new Image();
+          item = { img, loaded: false, failed: false };
+          img.onload = () => { item.loaded = true; draw(); };
+          img.onerror = () => { item.failed = true; };
+          img.src = src;
+          machineImageCache.set(src, item);
+        }
+
+        return item.loaded && !item.failed ? item.img : null;
+      }
+
       function drawMachine() {
         const p = machinePos();
         const active = state.machine.status === 'mining' || state.machine.status === 'maintenance';
-        const mining = state.machine.status === 'mining';
-        const broken = state.machine.status === 'broken';
         const shakeX = active ? rand(-1.5, 1.5) : 0;
         const shakeY = active ? rand(-1.1, 1.1) : 0;
-        const size = board.cell * 0.76;
-        machineHit = { x: p.x - size, y: p.y - size, w: size * 2, h: size * 2 };
+        const spriteSize = board.cell * 2.85;
+        const anchorX = 0.66;
+        const anchorY = 0.64;
+        const x = p.x - spriteSize * anchorX + shakeX;
+        const y = p.y - spriteSize * anchorY + shakeY;
+
+        machineHit = {
+          x: x + spriteSize * 0.10,
+          y: y + spriteSize * 0.12,
+          w: spriteSize * 0.78,
+          h: spriteSize * 0.76
+        };
 
         ctx.save();
-        ctx.translate(p.x + shakeX, p.y + shakeY);
+
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.beginPath(); ctx.ellipse(0, size * 0.37, size * 0.70, size * 0.25, 0, 0, Math.PI * 2); ctx.fill();
-
-        let bodyColour = '#facc15';
-        if (state.machine.condition < 45) bodyColour = '#f97316';
-        if (state.machine.condition < 20 || broken) bodyColour = '#dc2626';
-        if (state.machine.status === 'maintenance') bodyColour = '#38bdf8';
-
-        ctx.fillStyle = bodyColour;
-        roundRect(ctx, -size * 0.48, -size * 0.35, size * 0.96, size * 0.70, 6);
+        ctx.beginPath();
+        ctx.ellipse(p.x + board.cell * 0.08, p.y + board.cell * 0.42, spriteSize * 0.34, spriteSize * 0.13, -0.25, 0, Math.PI * 2);
         ctx.fill();
 
-        if (broken) {
-          ctx.strokeStyle = '#fecaca';
-          ctx.lineWidth = 3;
-          roundRect(ctx, -size * 0.53, -size * 0.40, size * 1.06, size * 0.80, 8);
+        const img = getMachineImage();
+        if (img) {
+          ctx.drawImage(img, x, y, spriteSize, spriteSize);
+        } else {
+          drawMachineFallback(p.x + shakeX, p.y + shakeY, board.cell);
+        }
+
+        if (state.machine.status === 'mining') {
+          ctx.strokeStyle = 'rgba(254,240,138,0.80)';
+          ctx.lineWidth = Math.max(2, board.cell * 0.06);
+          ctx.beginPath();
+          ctx.arc(p.x + shakeX, p.y + shakeY, board.cell * 0.34 + Math.sin(anim * 10) * board.cell * 0.04, 0, Math.PI * 2);
           ctx.stroke();
         }
 
-        ctx.fillStyle = state.machine.status === 'maintenance' ? '#0369a1' : '#ca8a04';
-        roundRect(ctx, -size * 0.35, -size * 0.23, size * 0.70, size * 0.46, 4);
+        if (state.machine.status === 'broken') {
+          drawMachineStatusLabel(p.x, p.y - board.cell * 1.05, 'BROKEN', '#fecaca', '#7f1d1d');
+        } else if (state.machine.status === 'maintenance') {
+          drawMachineStatusLabel(p.x, p.y - board.cell * 1.05, 'REPAIR ' + Math.round(state.machine.repairProgress) + '%', '#bae6fd', '#075985');
+        } else if (state.machine.condition < 45) {
+          drawMachineStatusLabel(p.x, p.y - board.cell * 1.05, 'WORN', '#fed7aa', '#9a3412');
+        }
+
+        ctx.restore();
+      }
+
+      function drawMachineStatusLabel(x, y, text, colour, bg) {
+        ctx.save();
+        ctx.font = '900 ' + Math.max(9, board.cell * 0.24) + 'px Arial';
+        const pad = Math.max(4, board.cell * 0.10);
+        const w = ctx.measureText(text).width + pad * 2;
+        const h = Math.max(16, board.cell * 0.38);
+        ctx.fillStyle = bg;
+        roundRect(ctx, x - w / 2, y - h / 2, w, h, 7);
         ctx.fill();
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(-size * 0.58, -size * 0.24, size * 0.15, size * 0.48);
-        ctx.fillRect(size * 0.43, -size * 0.24, size * 0.15, size * 0.48);
+        ctx.strokeStyle = 'rgba(255,255,255,0.38)';
+        ctx.stroke();
+        ctx.fillStyle = colour;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y + 1);
+        ctx.restore();
+      }
+
+      function drawMachineFallback(x, y, cell) {
+        const broken = state.machine.status === 'broken';
+        const repair = state.machine.status === 'maintenance';
+        const size = cell * 0.80;
 
         ctx.save();
-        ctx.translate(0, -size * 0.50);
+        ctx.translate(x, y);
+        ctx.fillStyle = broken ? '#dc2626' : repair ? '#38bdf8' : state.machine.condition < 45 ? '#f97316' : '#facc15';
+        roundRect(ctx, -size * 0.55, -size * 0.35, size * 1.10, size * 0.70, 6);
+        ctx.fill();
+
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(-size * 0.62, -size * 0.25, size * 0.18, size * 0.50);
+        ctx.fillRect(size * 0.44, -size * 0.25, size * 0.18, size * 0.50);
+
+        ctx.save();
+        ctx.translate(size * 0.10, -size * 0.52);
         ctx.rotate(state.machine.cutter);
-        ctx.fillStyle = broken ? '#374151' : '#6b7280';
-        ctx.beginPath(); ctx.arc(0, 0, size * 0.23, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = broken ? '#9ca3af' : '#fde68a'; ctx.lineWidth = 2;
+        ctx.fillStyle = '#6b7280';
+        ctx.beginPath(); ctx.arc(0, 0, size * 0.25, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#fde68a'; ctx.lineWidth = 2;
         for (let i = 0; i < 8; i++) {
           ctx.rotate(Math.PI / 4);
-          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(size * 0.34, 0); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(size * 0.38, 0); ctx.stroke();
         }
         ctx.restore();
-
-        ctx.font = '800 10px Arial';
-        ctx.textAlign = 'center';
-        if (state.machine.status === 'idle') {
-          ctx.fillStyle = '#fbbf24';
-          ctx.fillText(state.machine.condition < 45 ? 'WORN' : 'IDLE', 0, size * 0.72);
-        }
-        if (state.machine.status === 'broken') {
-          ctx.fillStyle = '#fecaca';
-          ctx.fillText('BROKEN', 0, size * 0.72);
-        }
-        if (state.machine.status === 'maintenance') {
-          ctx.fillStyle = '#bae6fd';
-          ctx.fillText('REPAIR ' + Math.round(state.machine.repairProgress) + '%', 0, size * 0.72);
-        }
         ctx.restore();
       }
 
@@ -2243,7 +2413,7 @@
         roundRect(ctx, x, y, w, 120, 14); ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.stroke();
         ctx.fillStyle = '#fde68a'; ctx.font = '800 13px Arial'; ctx.textAlign = 'left';
-        ctx.fillText('Miss Management', x + 12, y + 22);
+        ctx.fillText('Ms Management', x + 12, y + 22);
         ctx.fillStyle = '#cbd5e1'; ctx.font = '11px Arial';
         wrapText('Select adjacent blocks, keep the miner busy, and ensure the dashboard remains emotionally green.', x + 12, y + 43, w - 24, 15);
         ctx.restore();
