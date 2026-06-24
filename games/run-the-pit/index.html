@@ -1121,17 +1121,10 @@
       let dayTimer = 0;
       let lastPanelCrewTilesHtml = '';
       const portraitImageCache = new Map();
-      const machineImageCache = new Map();
 
       const TARGET_TONNES = 10000;
       const TARGET_GRADE = 14.0;
 
-      const machineSpritePaths = {
-        normal: 'assets/machines/continuous_miner_normal.png',
-        worn: 'assets/machines/continuous_miner_worn.png',
-        broken: 'assets/machines/continuous_miner_broken.png',
-        repair: 'assets/machines/continuous_miner_repair.png'
-      };
 
       const productionManagerEvents = [
         {
@@ -1318,6 +1311,7 @@
           progress: 0,
           condition: 78,
           cutter: 0,
+          facing: -Math.PI / 2,
           repairProgress: 0,
           warnedSmoking: false,
           warnedCritical: false
@@ -2257,76 +2251,230 @@
         return '#166534';
       }
 
-      function machineSpriteState() {
-        if (state.machine.status === 'broken') return 'broken';
-        if (state.machine.status === 'maintenance') return 'repair';
-        if (state.machine.condition < 45) return 'worn';
-        return 'normal';
-      }
+      function machineFacingAngle() {
+        const m = state.machine;
+        let q = m.q;
+        let r = m.r;
+        let c = m.c;
 
-      function getMachineImage() {
-        const key = machineSpriteState();
-        const src = machineSpritePaths[key] || machineSpritePaths.normal;
-
-        let item = machineImageCache.get(src);
-        if (!item) {
-          const img = new Image();
-          item = { img, loaded: false, failed: false };
-          img.onload = () => { item.loaded = true; draw(); };
-          img.onerror = () => { item.failed = true; };
-          img.src = src;
-          machineImageCache.set(src, item);
+        if (m.target) {
+          const dy = m.target.r - r;
+          const dx = m.target.c - c;
+          if (dx || dy) return Math.atan2(dy, dx);
         }
 
-        return item.loaded && !item.failed ? item.img : null;
+        return typeof m.facing === 'number' ? m.facing : -Math.PI / 2;
       }
 
       function drawMachine() {
         const p = machinePos();
         const active = state.machine.status === 'mining' || state.machine.status === 'maintenance';
-        const shakeX = active ? rand(-1.5, 1.5) : 0;
-        const shakeY = active ? rand(-1.1, 1.1) : 0;
-        const spriteSize = board.cell * 2.85;
-        const anchorX = 0.66;
-        const anchorY = 0.64;
-        const x = p.x - spriteSize * anchorX + shakeX;
-        const y = p.y - spriteSize * anchorY + shakeY;
+        const shakeX = active ? rand(-1.2, 1.2) : 0;
+        const shakeY = active ? rand(-0.9, 0.9) : 0;
+        const angle = machineFacingAngle();
 
+        const length = board.cell * 1.18;
+        const width = board.cell * 0.74;
         machineHit = {
-          x: x + spriteSize * 0.10,
-          y: y + spriteSize * 0.12,
-          w: spriteSize * 0.78,
-          h: spriteSize * 0.76
+          x: p.x - length * 0.62,
+          y: p.y - length * 0.62,
+          w: length * 1.24,
+          h: length * 1.24
         };
 
         ctx.save();
+        ctx.translate(p.x + shakeX, p.y + shakeY);
+        ctx.rotate(angle);
 
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        drawCompactContinuousMiner(length, width);
+
+        ctx.restore();
+
+        if (state.machine.status === 'broken') {
+          drawMachineStatusLabel(p.x, p.y - board.cell * 0.78, 'BROKEN', '#fecaca', '#7f1d1d');
+        } else if (state.machine.status === 'maintenance') {
+          drawMachineStatusLabel(p.x, p.y - board.cell * 0.78, 'REPAIR ' + Math.round(state.machine.repairProgress) + '%', '#bae6fd', '#075985');
+        } else if (state.machine.condition < 45) {
+          drawMachineStatusLabel(p.x, p.y - board.cell * 0.78, 'WORN', '#fed7aa', '#9a3412');
+        }
+      }
+
+      function drawCompactContinuousMiner(length, width) {
+        const broken = state.machine.status === 'broken';
+        const repair = state.machine.status === 'maintenance';
+        const worn = state.machine.condition < 45 || broken;
+        const mining = state.machine.status === 'mining';
+
+        const orange = broken ? '#c2410c' : worn ? '#ea580c' : '#f97316';
+        const orangeLight = broken ? '#f97316' : repair ? '#fb923c' : '#fb923c';
+        const orangeDark = broken ? '#7c2d12' : '#9a3412';
+        const accent = repair ? '#38bdf8' : broken ? '#ef4444' : '#fbbf24';
+
+        ctx.save();
+
+        // ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.34)';
         ctx.beginPath();
-        ctx.ellipse(p.x + board.cell * 0.08, p.y + board.cell * 0.42, spriteSize * 0.34, spriteSize * 0.13, -0.25, 0, Math.PI * 2);
+        ctx.ellipse(0, width * 0.08, length * 0.56, width * 0.42, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        const img = getMachineImage();
-        if (img) {
-          ctx.drawImage(img, x, y, spriteSize, spriteSize);
-        } else {
-          drawMachineFallback(p.x + shakeX, p.y + shakeY, board.cell);
-        }
+        // local dimensions: machine points to +X
+        const rearX = -length * 0.48;
+        const frontX = length * 0.40;
+        const bodyL = length * 0.78;
+        const bodyW = width * 0.58;
 
-        if (state.machine.status === 'mining') {
-          ctx.strokeStyle = 'rgba(254,240,138,0.80)';
-          ctx.lineWidth = Math.max(2, board.cell * 0.06);
+        // tracks
+        ctx.fillStyle = '#111827';
+        roundRect(ctx, rearX, -width * 0.47, bodyL * 0.78, width * 0.18, width * 0.04);
+        ctx.fill();
+        roundRect(ctx, rearX, width * 0.29, bodyL * 0.78, width * 0.18, width * 0.04);
+        ctx.fill();
+
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = Math.max(1, width * 0.025);
+        for (let i = 0; i < 5; i++) {
+          const x = rearX + i * bodyL * 0.13;
           ctx.beginPath();
-          ctx.arc(p.x + shakeX, p.y + shakeY, board.cell * 0.34 + Math.sin(anim * 10) * board.cell * 0.04, 0, Math.PI * 2);
+          ctx.moveTo(x, -width * 0.47);
+          ctx.lineTo(x + bodyL * 0.04, -width * 0.29);
+          ctx.moveTo(x, width * 0.47);
+          ctx.lineTo(x + bodyL * 0.04, width * 0.29);
           ctx.stroke();
         }
 
-        if (state.machine.status === 'broken') {
-          drawMachineStatusLabel(p.x, p.y - board.cell * 1.05, 'BROKEN', '#fecaca', '#7f1d1d');
-        } else if (state.machine.status === 'maintenance') {
-          drawMachineStatusLabel(p.x, p.y - board.cell * 1.05, 'REPAIR ' + Math.round(state.machine.repairProgress) + '%', '#bae6fd', '#075985');
-        } else if (state.machine.condition < 45) {
-          drawMachineStatusLabel(p.x, p.y - board.cell * 1.05, 'WORN', '#fed7aa', '#9a3412');
+        // main body
+        ctx.fillStyle = orange;
+        roundRect(ctx, rearX, -bodyW / 2, bodyL, bodyW, width * 0.08);
+        ctx.fill();
+        ctx.strokeStyle = '#431407';
+        ctx.lineWidth = Math.max(1.4, width * 0.035);
+        roundRect(ctx, rearX, -bodyW / 2, bodyL, bodyW, width * 0.08);
+        ctx.stroke();
+
+        // rear engine block
+        ctx.fillStyle = orangeDark;
+        roundRect(ctx, rearX - length * 0.07, -width * 0.31, length * 0.20, width * 0.62, width * 0.06);
+        ctx.fill();
+        ctx.stroke();
+
+        // raised centre panels
+        ctx.fillStyle = orangeLight;
+        roundRect(ctx, -length * 0.20, -width * 0.22, length * 0.34, width * 0.44, width * 0.06);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#7c2d12';
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(-length * 0.10 + i * length * 0.05, -width * 0.19, length * 0.022, width * 0.38);
+        }
+
+        // gathering arms / apron
+        ctx.fillStyle = orange;
+        ctx.beginPath();
+        ctx.moveTo(frontX - length * 0.08, -width * 0.35);
+        ctx.lineTo(frontX + length * 0.10, -width * 0.47);
+        ctx.lineTo(frontX + length * 0.18, -width * 0.28);
+        ctx.lineTo(frontX + length * 0.02, -width * 0.14);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(frontX - length * 0.08, width * 0.35);
+        ctx.lineTo(frontX + length * 0.10, width * 0.47);
+        ctx.lineTo(frontX + length * 0.18, width * 0.28);
+        ctx.lineTo(frontX + length * 0.02, width * 0.14);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#4b5563';
+        roundRect(ctx, frontX - length * 0.01, -width * 0.22, length * 0.23, width * 0.44, width * 0.05);
+        ctx.fill();
+        ctx.strokeStyle = '#1f2937';
+        ctx.stroke();
+
+        // cutter drum at front
+        const drumX = frontX + length * 0.23;
+        const drumR = width * 0.29;
+        ctx.save();
+        ctx.translate(drumX, 0);
+        if (mining) ctx.rotate(state.machine.cutter);
+        ctx.fillStyle = broken ? '#dc2626' : orange;
+        ctx.beginPath();
+        ctx.arc(0, 0, drumR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#431407';
+        ctx.lineWidth = Math.max(1.2, width * 0.03);
+        ctx.stroke();
+
+        ctx.fillStyle = '#9ca3af';
+        for (let i = 0; i < 12; i++) {
+          const a = i * Math.PI * 2 / 12;
+          const tx = Math.cos(a) * drumR * 0.94;
+          const ty = Math.sin(a) * drumR * 0.94;
+          ctx.save();
+          ctx.translate(tx, ty);
+          ctx.rotate(a);
+          ctx.beginPath();
+          ctx.moveTo(0, -width * 0.055);
+          ctx.lineTo(width * 0.15, 0);
+          ctx.lineTo(0, width * 0.055);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.fillStyle = orangeDark;
+        ctx.beginPath();
+        ctx.arc(0, 0, drumR * 0.48, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // bolts / detail
+        ctx.fillStyle = '#431407';
+        for (const [bx, by] of [
+          [rearX + length * 0.05, -width * 0.18],
+          [rearX + length * 0.05, width * 0.18],
+          [-length * 0.05, -width * 0.18],
+          [-length * 0.05, width * 0.18],
+          [frontX - length * 0.06, -width * 0.17],
+          [frontX - length * 0.06, width * 0.17]
+        ]) {
+          ctx.beginPath();
+          ctx.arc(bx, by, Math.max(1.5, width * 0.035), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // status accents
+        if (worn || broken) {
+          ctx.strokeStyle = broken ? '#7f1d1d' : '#78350f';
+          ctx.lineWidth = Math.max(1, width * 0.022);
+          ctx.beginPath();
+          ctx.moveTo(-length * 0.18, -width * 0.11);
+          ctx.lineTo(-length * 0.08, -width * 0.02);
+          ctx.lineTo(0, -width * 0.08);
+          ctx.stroke();
+
+          ctx.fillStyle = 'rgba(17,24,39,0.42)';
+          ctx.fillRect(-length * 0.36, -width * 0.16, length * 0.14, width * 0.07);
+          ctx.fillRect(length * 0.05, width * 0.08, length * 0.12, width * 0.07);
+        }
+
+        if (broken) {
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath(); ctx.arc(rearX - length * 0.02, -width * 0.20, width * 0.055, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(rearX - length * 0.02, width * 0.20, width * 0.055, 0, Math.PI * 2); ctx.fill();
+        }
+
+        if (repair) {
+          ctx.strokeStyle = accent;
+          ctx.lineWidth = Math.max(2, width * 0.04);
+          ctx.beginPath();
+          ctx.moveTo(-length * 0.30, -width * 0.30);
+          ctx.lineTo(-length * 0.18, -width * 0.18);
+          ctx.moveTo(-length * 0.30, width * 0.30);
+          ctx.lineTo(-length * 0.18, width * 0.18);
+          ctx.stroke();
         }
 
         ctx.restore();
@@ -2347,35 +2495,6 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(text, x, y + 1);
-        ctx.restore();
-      }
-
-      function drawMachineFallback(x, y, cell) {
-        const broken = state.machine.status === 'broken';
-        const repair = state.machine.status === 'maintenance';
-        const size = cell * 0.80;
-
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.fillStyle = broken ? '#dc2626' : repair ? '#38bdf8' : state.machine.condition < 45 ? '#f97316' : '#facc15';
-        roundRect(ctx, -size * 0.55, -size * 0.35, size * 1.10, size * 0.70, 6);
-        ctx.fill();
-
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(-size * 0.62, -size * 0.25, size * 0.18, size * 0.50);
-        ctx.fillRect(size * 0.44, -size * 0.25, size * 0.18, size * 0.50);
-
-        ctx.save();
-        ctx.translate(size * 0.10, -size * 0.52);
-        ctx.rotate(state.machine.cutter);
-        ctx.fillStyle = '#6b7280';
-        ctx.beginPath(); ctx.arc(0, 0, size * 0.25, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#fde68a'; ctx.lineWidth = 2;
-        for (let i = 0; i < 8; i++) {
-          ctx.rotate(Math.PI / 4);
-          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(size * 0.38, 0); ctx.stroke();
-        }
-        ctx.restore();
         ctx.restore();
       }
 
@@ -2493,6 +2612,7 @@
         block.progress = 0;
         state.machine.status = 'mining';
         state.machine.target = { q: block.q, r: block.r, c: block.c };
+        state.machine.facing = Math.atan2(block.r - state.machine.r, block.c - state.machine.c);
         state.machine.progress = 0;
         showToast('Mining ' + block.q + '-' + block.r + '-' + block.c + ': ' + block.tonnes.toLocaleString() + 't @ ' + block.grade.toFixed(1) + '% Goldilocks Grade.');
       }
