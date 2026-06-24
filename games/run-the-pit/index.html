@@ -789,7 +789,7 @@
             <div class="pill">Day <strong id="dayHud">0</strong></div>
             <div class="pill">Budget <strong id="cashHud">£150,000</strong></div>
             <div class="pill">Sample <strong id="tonnesHud">0 / 10,000t</strong></div>
-            <div class="pill">Grade <strong id="gradeHud">0.0%</strong></div>
+            <div class="pill">Goldilocks <strong id="gradeHud">0.0%</strong></div>
             <div class="pill">Machine <strong id="machineHud">Idle</strong></div>
           </div>
         </div>
@@ -1139,19 +1139,19 @@
         { id: 'r_tailer', portrait: 'assets/characters/portraits/r_tailer.png', name: 'R. Tailer', role: 'supervisor', model: 'C', salary: 45000, skill: 2, morale: 4, attendance: 4, trait: '+5% Morale · -5% Production', description: 'Keeps pet crabs in buckets and maintains strong views on their welfare, diet, and leadership potential. Best suited to salt mining, seafood logistics, or any operation where crabs are considered stakeholders.', effects: ['+5% Morale', '-5% Production'] },
         { id: 'm_camel', portrait: 'assets/characters/portraits/m_camel.png', name: 'M. Camel', role: 'supervisor', model: 'A', salary: 50000, skill: 4, morale: 3, attendance: 2, trait: '+5% Production · -5% Attendance', description: 'Productive, practical, and alarmingly efficient. Gets through the work quickly enough to run a respectable car-valeting empire on the side, then somehow returns smelling faintly of dashboard polish.', effects: ['+5% Production', '-5% Attendance'] },
 
-        { id: 'a_slacker', portrait: 'assets/characters/portraits/a_slacker.png', name: 'A. Slacker', role: 'miner', model: 'C', salary: 31000, skill: 2, morale: 4, attendance: 1, trait: 'Any Chance Specialist' },
-        { id: 'g_driver', portrait: 'assets/characters/portraits/g_driver.png', name: 'G. Driver', role: 'miner', model: 'A', salary: 52000, skill: 5, morale: 4, attendance: 4, trait: 'Machine Whisperer' },
-        { id: 'd_tea', portrait: 'assets/characters/portraits/d_tea.png', name: 'D. Tea', role: 'miner', model: 'D', salary: 33000, skill: 2, morale: 5, attendance: 5, trait: 'Tea Dependent' },
-        { id: 'b_spender', portrait: 'assets/characters/portraits/b_spender.png', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, trait: 'Pay Rise Enthusiast' },
-        { id: 'n_naylor', portrait: 'assets/characters/portraits/n_naylor.png', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, trait: 'Says Seen Worse' },
+        { id: 'a_slacker', portraitTier: 'very_bad', name: 'A. Slacker', role: 'miner', model: 'C', salary: 31000, skill: 2, morale: 4, attendance: 1, trait: 'Any Chance Specialist' },
+        { id: 'g_driver', portraitTier: 'good', name: 'G. Driver', role: 'miner', model: 'A', salary: 52000, skill: 5, morale: 4, attendance: 4, trait: 'Machine Whisperer' },
+        { id: 'd_tea', portraitTier: 'average', name: 'D. Tea', role: 'miner', model: 'D', salary: 33000, skill: 2, morale: 5, attendance: 5, trait: 'Tea Dependent' },
+        { id: 'b_spender', portraitTier: 'bad', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, trait: 'Pay Rise Enthusiast' },
+        { id: 'n_naylor', portraitTier: 'bad', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, trait: 'Says Seen Worse' },
 
-        { id: 'a_spanner', portrait: 'assets/characters/portraits/a_spanner.png', name: 'A. Spanner', role: 'fitter', model: 'F', salary: 56000, skill: 5, morale: 3, attendance: 4, trait: 'Says Seen Worse' },
-        { id: 'f_hammer', portrait: 'assets/characters/portraits/f_hammer.png', name: 'F. Hammer', role: 'fitter', model: 'F', salary: 43000, skill: 3, morale: 4, attendance: 3, trait: 'Hammer Specialist' },
-        { id: 't_temporary', portrait: 'assets/characters/portraits/t_temporary.png', name: 'T. Temporary', role: 'fitter', model: 'F', salary: 39000, skill: 2, morale: 3, attendance: 4, trait: 'Temporary Fixer' },
+        { id: 'a_spanner', portraitTier: 'good', name: 'A. Spanner', role: 'fitter', model: 'F', salary: 56000, skill: 5, morale: 3, attendance: 4, trait: 'Says Seen Worse' },
+        { id: 'f_hammer', portraitTier: 'average', name: 'F. Hammer', role: 'fitter', model: 'F', salary: 43000, skill: 3, morale: 4, attendance: 3, trait: 'Hammer Specialist' },
+        { id: 't_temporary', portraitTier: 'bad', name: 'T. Temporary', role: 'fitter', model: 'F', salary: 39000, skill: 2, morale: 3, attendance: 4, trait: 'Temporary Fixer' },
 
-        { id: 'l_spark', portrait: 'assets/characters/portraits/l_spark.png', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, trait: 'Likes Flashing Lights' },
-        { id: 'p_cable', portrait: 'assets/characters/portraits/p_cable.png', name: 'P. Cable', role: 'electrician', model: 'E', salary: 46000, skill: 3, morale: 4, attendance: 5, trait: 'Cable Whisperer' },
-        { id: 'v_volts', portrait: 'assets/characters/portraits/v_volts.png', name: 'V. Volts', role: 'electrician', model: 'E', salary: 50000, skill: 4, morale: 2, attendance: 4, trait: 'Manual Reader' }
+        { id: 'l_spark', portraitTier: 'good', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, trait: 'Likes Flashing Lights' },
+        { id: 'p_cable', portraitTier: 'average', name: 'P. Cable', role: 'electrician', model: 'E', salary: 46000, skill: 3, morale: 4, attendance: 5, trait: 'Cable Whisperer' },
+        { id: 'v_volts', portraitTier: 'bad', name: 'V. Volts', role: 'electrician', model: 'E', salary: 50000, skill: 4, morale: 2, attendance: 4, trait: 'Manual Reader' }
       ];
 
       let selectedCrewIds = [];
@@ -1438,7 +1438,7 @@
           state.machine.target = null;
           state.machine.progress = 0;
           burst(pos.x, pos.y, target);
-          showToast('Block mined: ' + target.tonnes.toLocaleString() + 't at ' + target.grade.toFixed(1) + '% K2O. Select the next adjacent block.');
+          showToast('Block mined: ' + target.tonnes.toLocaleString() + 't at ' + target.grade.toFixed(1) + '% Goldilocks Grade. Select the next adjacent block.');
           if (Math.random() < 0.35) showRandomProductionComment();
 
           if (state.tonnes >= TARGET_TONNES && grade() >= TARGET_GRADE) {
@@ -2059,7 +2059,7 @@
         state.machine.status = 'mining';
         state.machine.target = { q: block.q, r: block.r, c: block.c };
         state.machine.progress = 0;
-        showToast('Mining ' + block.q + '-' + block.r + '-' + block.c + ': ' + block.tonnes.toLocaleString() + 't @ ' + block.grade.toFixed(1) + '% K2O.');
+        showToast('Mining ' + block.q + '-' + block.r + '-' + block.c + ': ' + block.tonnes.toLocaleString() + 't @ ' + block.grade.toFixed(1) + '% Goldilocks Grade.');
       }
 
       function showToast(text) {
@@ -2088,12 +2088,12 @@
         if (type === 'targets') {
           title = 'Module Targets';
           body = `
-            <p><strong>Module 1 objective:</strong> mine 10,000 tonnes of polyhalite test material at a weighted average grade of at least 14.0% K2O.</p>
+            <p><strong>Module 1 objective:</strong> mine 10,000 tonnes of polyhalite test material at a weighted average grade of at least 14% Goldilocks Grade.</p>
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Shift Manager</strong><span>${state.manager ? state.manager.name + ' · ' + state.manager.title : 'Not selected'}</span></div><span class="tag">${state.setupComplete ? 'Assigned' : 'Required'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Starting Crew</strong><span>${state.staff.length ? state.staff.map(s => s.name).join(', ') : 'Not selected'}</span></div><span class="tag">${state.staff.length}/${STARTING_CREW_SIZE}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Tonnage</strong><span>${Math.round(state.tonnes).toLocaleString()} / 10,000t</span></div><span class="tag">${Math.round(state.tonnes / TARGET_TONNES * 100)}%</span></div>
-              <div class="row"><div class="avatarDot" style="background:#ec4899"></div><div><strong>Weighted grade</strong><span>${grade().toFixed(2)}% K2O / 14.00%</span></div><span class="tag">${grade() >= TARGET_GRADE ? 'Pass' : 'At risk'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#ec4899"></div><div><strong>Goldilocks Grade</strong><span>${grade().toFixed(2)}% / 14.00%</span></div><span class="tag">${grade() >= TARGET_GRADE ? 'Pass' : 'At risk'}</span></div>
             </div>`;
         }
 
@@ -2150,7 +2150,7 @@
           const pass = state.tonnes >= TARGET_TONNES && grade() >= TARGET_GRADE;
           body = `<p>${pass || forceReportComplete ? '<strong>Module outcome:</strong> Sufficient Readiness Demonstrated.' : '<strong>Module outcome:</strong> Development Opportunity In Progress.'}</p>
                   <p>Sample mined: <strong>${Math.round(state.tonnes).toLocaleString()}t</strong></p>
-                  <p>Weighted grade: <strong>${grade().toFixed(2)}% K2O</strong></p>
+                  <p>Goldilocks Grade: <strong>${grade().toFixed(2)}%</strong></p>
                   <p>Budget remaining: <strong>${money(state.cash)}</strong></p>
                   <p>${pass ? 'Congratulations. You may now be given more responsibility without additional resources.' : 'Continue mining adjacent blocks until the training evidence becomes defensible.'}</p>`;
         }
@@ -2166,7 +2166,7 @@
             ${portraitHtml(c)}
             <div class="portraitDetails">
               <h3>${c.name}</h3>
-              <p><span class="tag">${roleName(c.role)}</span> <span class="tag">${money(c.salary)}/yr</span></p>
+              <p><span class="tag">${roleName(c.role)}</span> ${workerTierTag(c)} <span class="tag">${money(c.salary)}/yr</span></p>
               ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
               <p>${c.trait}</p>
               <button class="primary" data-hire="${c.id}">Hire</button>
@@ -2178,7 +2178,7 @@
       function staffRow(s) {
         return `<div class="row">
           ${portraitHtml(s, 'staffRowPortrait')}
-          <div><strong>${s.name}</strong><span>${roleName(s.role)} · ${s.trait} · Skill ${s.skill}/5 · Morale ${s.morale}/5 · Attendance ${s.attendance}/5</span></div>
+          <div><strong>${s.name}</strong><span>${roleName(s.role)}${s.portraitTier ? ' · ' + workerTierName(s.portraitTier) : ''} · ${s.trait} · Skill ${s.skill}/5 · Morale ${s.morale}/5 · Attendance ${s.attendance}/5</span></div>
           <span class="tag">${money(s.salary)}/yr</span>
         </div>`;
       }
@@ -2290,10 +2290,36 @@
         return 'manager';
       }
 
+      function workerTierName(tier) {
+        if (tier === 'good') return 'Good Worker';
+        if (tier === 'average') return 'Average Worker';
+        if (tier === 'bad') return 'Bad Worker';
+        if (tier === 'very_bad') return 'Very Bad Worker';
+        return '';
+      }
+
+      function workerTierTag(person) {
+        if (!person || !person.portraitTier) return '';
+        return `<span class="tag">${workerTierName(person.portraitTier)}</span>`;
+      }
+
+      function portraitPath(person) {
+        if (!person) return '';
+        if (person.portrait) return person.portrait;
+
+        const sharedRoles = ['miner', 'fitter', 'electrician'];
+        if (sharedRoles.includes(person.role) && person.portraitTier) {
+          return `assets/characters/portraits/${person.role}_${person.portraitTier}.png`;
+        }
+
+        return '';
+      }
+
       function portraitHtml(person, extraClass = '') {
         const roleClass = portraitRoleClass(person);
-        const img = person && person.portrait
-          ? `<img class="portraitImg" src="${person.portrait}" alt="${escapeHtml(person.name)} portrait" onerror="this.style.display='none';">`
+        const path = portraitPath(person);
+        const img = path
+          ? `<img class="portraitImg" src="${path}" alt="${escapeHtml(person.name)} portrait" onerror="this.style.display='none';">`
           : '';
         return `<div class="portraitWrap ${extraClass}">
           <div class="portraitFallback ${roleClass}">${initials(person ? person.name : '?')}</div>
@@ -2326,7 +2352,7 @@
             ${portraitHtml(c)}
             <div class="portraitDetails">
               <h3>${c.name}</h3>
-              <p><span class="tag">${roleName(c.role)}</span> <span class="tag">${money(c.salary)}/yr</span></p>
+              <p><span class="tag">${roleName(c.role)}</span> ${workerTierTag(c)} <span class="tag">${money(c.salary)}/yr</span></p>
               ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
               ${blurb}
               ${effectTags}
