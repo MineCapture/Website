@@ -442,6 +442,78 @@
       gap: 5px;
     }
 
+    .portraitPanel {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .portraitWrap {
+      width: 82px;
+      height: 82px;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,0.18);
+      background: linear-gradient(180deg, #374151, #111827);
+      box-shadow: inset 0 -10px rgba(0,0,0,0.20);
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .portraitImg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      position: relative;
+      z-index: 2;
+    }
+
+    .portraitFallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: #111827;
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      z-index: 1;
+    }
+
+    .portraitFallback.supervisor { background: linear-gradient(135deg, #60a5fa, #1d4ed8); color: #eff6ff; }
+    .portraitFallback.miner { background: linear-gradient(135deg, #86efac, #15803d); color: #052e16; }
+    .portraitFallback.fitter { background: linear-gradient(135deg, #9ca3af, #111827); color: #f9fafb; }
+    .portraitFallback.electrician { background: linear-gradient(135deg, #fdba74, #ea580c); color: #431407; }
+    .portraitFallback.manager { background: linear-gradient(135deg, #fef3c7, #b45309); color: #1f1300; }
+
+    .portraitDetails {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .portraitDetails h3 {
+      margin: 0;
+    }
+
+    .eventHeader {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .staffRowPortrait {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+    }
+
     .crewRoleSection {
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(0,0,0,0.12);
@@ -536,6 +608,9 @@
       .crest { height: 100px; }
       .gridCards { grid-template-columns: 1fr; }
       .choiceGrid { grid-template-columns: 1fr; }
+      .portraitPanel { grid-template-columns: 64px 1fr; }
+      .portraitWrap { width: 64px; height: 64px; border-radius: 13px; }
+      .staffRowPortrait { width: 44px; height: 44px; }
       .crewSingleRoleGrid { grid-template-columns: 1fr; }
     }
   </style>
@@ -747,71 +822,93 @@
 
       const managerOptions = [
         {
-          id: 'former_miner',
-          name: 'Former Miner',
-          title: 'Practical Operations Candidate',
-          description: 'Knows which end of the continuous miner is loudest. Staff trust the intent, but HR suspects dangerous amounts of practical experience.',
-          effects: ['+10% mining speed', 'No budget bonus', 'Low corporate sparkle'],
-          miningSpeedMult: 1.10,
+          id: 'a_tower',
+          portrait: 'assets/characters/portraits/a_tower.png',
+          name: 'A. Tower',
+          title: 'Shift Manager',
+          description: 'Very tall and lanky. Diligent and safety orientated to the point of annoyance. Has a boring monotone voice.',
+          effects: ['+15% Safety', '-5% Production', '-5% Operator Skill'],
+          miningSpeedMult: 0.95,
           wageMult: 1.00,
           cashBonus: 0,
-          moraleAdjust: 0
+          moraleAdjust: 0,
+          safetyAdjust: 15,
+          productionAdjust: -5,
+          operatorSkillAdjust: -5,
+          attendanceAdjust: 0
         },
         {
-          id: 'spreadsheet_manager',
-          name: 'Spreadsheet Manager',
-          title: 'Data-Led Leadership Candidate',
-          description: 'Believes anything can be solved with conditional formatting. Finance approves. Operators have concerns.',
-          effects: ['-10% daily wage burn', 'No mining speed bonus', 'Morale unchanged'],
-          miningSpeedMult: 1.00,
-          wageMult: 0.90,
+          id: 'c_sek',
+          portrait: 'assets/characters/portraits/c_sek.png',
+          name: 'C. Sek',
+          title: 'Shift Manager',
+          description: 'Bald, short, big upper body, tiny legs. High confidence and charisma. Distracts operators with stories.',
+          effects: ['+10% Morale', '-5% Production', '-5% Operator Skill'],
+          miningSpeedMult: 0.95,
+          wageMult: 1.00,
           cashBonus: 0,
-          moraleAdjust: 0
+          moraleAdjust: 1,
+          safetyAdjust: 0,
+          productionAdjust: -5,
+          operatorSkillAdjust: -5,
+          attendanceAdjust: 0
         },
         {
-          id: 'eager_graduate',
-          name: 'Eager Graduate',
-          title: 'High-Potential Development Candidate',
-          description: 'Has completed several leadership modules and once saw a mine plan. Learns quickly. May overuse the word alignment.',
-          effects: ['+5% mining speed', '+1 staff morale', 'No extra budget'],
+          id: 'b_oyz',
+          portrait: 'assets/characters/portraits/b_oyz.png',
+          name: 'B. Oyz',
+          title: 'Shift Manager',
+          description: 'Experienced and knows his stuff. Prone to verbal outbursts. Does not work night shifts.',
+          effects: ['+10% Operator Skill', '-5% Attendance'],
           miningSpeedMult: 1.05,
           wageMult: 1.00,
           cashBonus: 0,
-          moraleAdjust: 1
+          moraleAdjust: 0,
+          safetyAdjust: 0,
+          productionAdjust: 0,
+          operatorSkillAdjust: 10,
+          attendanceAdjust: -5
         },
         {
-          id: 'nepotism_candidate',
-          name: 'Nepotism Candidate',
-          title: 'Strategic Family Continuity Candidate',
-          description: 'Nobody is entirely sure how they got the job. Starts with extra budget because confidence has already been expressed.',
-          effects: ['+£25,000 starting budget', '-1 staff morale', 'No skill bonus'],
-          miningSpeedMult: 1.00,
+          id: 's_cratter',
+          portrait: 'assets/characters/portraits/s_cratter.png',
+          name: 'S. Cratter',
+          title: 'Shift Manager',
+          description: 'Old-school miner. The old ways are the best. Production is king. Often on the sick.',
+          effects: ['+5% Production', '+5% Operator Skill', '+5% Morale', '-5% Attendance', '-5% Safety'],
+          miningSpeedMult: 1.05,
           wageMult: 1.00,
-          cashBonus: 25000,
-          moraleAdjust: -1
+          cashBonus: 0,
+          moraleAdjust: 1,
+          safetyAdjust: -5,
+          productionAdjust: 5,
+          operatorSkillAdjust: 5,
+          attendanceAdjust: -5
         }
       ];
 
       const STARTING_CREW_SIZE = 5;
 
       const startingCrewPool = [
-        { id: 's_clipboard', name: 'S. Clipboard', role: 'supervisor', model: 'A', salary: 56000, skill: 3, morale: 3, attendance: 5, trait: 'Meeting Generator' },
-        { id: 'm_meeting', name: 'M. Meeting', role: 'supervisor', model: 'B', salary: 59000, skill: 4, morale: 2, attendance: 4, trait: 'Procedure Collector' },
-        { id: 'r_radio', name: 'R. Radio', role: 'supervisor', model: 'D', salary: 52000, skill: 2, morale: 5, attendance: 5, trait: 'Morale Booster' },
+        { id: 's_ando', portrait: 'assets/characters/portraits/s_ando.png', name: 'S. Ando', role: 'supervisor', model: 'A', salary: 47000, skill: 2, morale: 5, attendance: 2, trait: '+5% Morale · -5% Attendance', description: 'Low intelligence but gives a high morale boost. Enjoys fishing, jet skiing and holiday selfies.', effects: ['+5% Morale', '-5% Attendance'] },
+        { id: 'd_entee', portrait: 'assets/characters/portraits/d_entee.png', name: 'D. Entee', role: 'supervisor', model: 'B', salary: 49000, skill: 3, morale: 4, attendance: 4, trait: '+5% Morale · -5% Production', description: 'Likes generating AI images in his spare time. Would be shift manager but cannot be bothered.', effects: ['+5% Morale', '-5% Production'] },
+        { id: 'a_cartwrong', portrait: 'assets/characters/portraits/a_cartwrong.png', name: 'A. Cartwrong', role: 'supervisor', model: 'D', salary: 52000, skill: 3, morale: 4, attendance: 4, trait: '+5% Safety · +5% Morale · -5% Production', description: 'Stickler for the rules. Wit sharp as a tack. Polishes bicycles in his spare time.', effects: ['+5% Safety', '+5% Morale', '-5% Production'] },
+        { id: 'r_tailer', portrait: 'assets/characters/portraits/r_tailer.png', name: 'R. Tailer', role: 'supervisor', model: 'C', salary: 45000, skill: 2, morale: 4, attendance: 4, trait: '+5% Morale · -5% Production', description: 'Loves the look, smell and taste of crabs. Makes a better fisherman than a miner. Only good for salt mining.', effects: ['+5% Morale', '-5% Production'] },
+        { id: 'm_camel', portrait: 'assets/characters/portraits/m_camel.png', name: 'M. Camel', role: 'supervisor', model: 'A', salary: 50000, skill: 4, morale: 3, attendance: 2, trait: '+5% Production · -5% Attendance', description: 'Cleans cars on the side. Known to sometimes get the hump.', effects: ['+5% Production', '-5% Attendance'] },
 
-        { id: 'a_slacker', name: 'A. Slacker', role: 'miner', model: 'C', salary: 31000, skill: 2, morale: 4, attendance: 1, trait: 'Any Chance Specialist' },
-        { id: 'g_driver', name: 'G. Driver', role: 'miner', model: 'A', salary: 52000, skill: 5, morale: 4, attendance: 4, trait: 'Machine Whisperer' },
-        { id: 'd_tea', name: 'D. Tea', role: 'miner', model: 'D', salary: 33000, skill: 2, morale: 5, attendance: 5, trait: 'Tea Dependent' },
-        { id: 'b_spender', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, trait: 'Pay Rise Enthusiast' },
-        { id: 'n_naylor', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, trait: 'Says Seen Worse' },
+        { id: 'a_slacker', portrait: 'assets/characters/portraits/a_slacker.png', name: 'A. Slacker', role: 'miner', model: 'C', salary: 31000, skill: 2, morale: 4, attendance: 1, trait: 'Any Chance Specialist' },
+        { id: 'g_driver', portrait: 'assets/characters/portraits/g_driver.png', name: 'G. Driver', role: 'miner', model: 'A', salary: 52000, skill: 5, morale: 4, attendance: 4, trait: 'Machine Whisperer' },
+        { id: 'd_tea', portrait: 'assets/characters/portraits/d_tea.png', name: 'D. Tea', role: 'miner', model: 'D', salary: 33000, skill: 2, morale: 5, attendance: 5, trait: 'Tea Dependent' },
+        { id: 'b_spender', portrait: 'assets/characters/portraits/b_spender.png', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, trait: 'Pay Rise Enthusiast' },
+        { id: 'n_naylor', portrait: 'assets/characters/portraits/n_naylor.png', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, trait: 'Says Seen Worse' },
 
-        { id: 'a_spanner', name: 'A. Spanner', role: 'fitter', model: 'F', salary: 56000, skill: 5, morale: 3, attendance: 4, trait: 'Says Seen Worse' },
-        { id: 'f_hammer', name: 'F. Hammer', role: 'fitter', model: 'F', salary: 43000, skill: 3, morale: 4, attendance: 3, trait: 'Hammer Specialist' },
-        { id: 't_temporary', name: 'T. Temporary', role: 'fitter', model: 'F', salary: 39000, skill: 2, morale: 3, attendance: 4, trait: 'Temporary Fixer' },
+        { id: 'a_spanner', portrait: 'assets/characters/portraits/a_spanner.png', name: 'A. Spanner', role: 'fitter', model: 'F', salary: 56000, skill: 5, morale: 3, attendance: 4, trait: 'Says Seen Worse' },
+        { id: 'f_hammer', portrait: 'assets/characters/portraits/f_hammer.png', name: 'F. Hammer', role: 'fitter', model: 'F', salary: 43000, skill: 3, morale: 4, attendance: 3, trait: 'Hammer Specialist' },
+        { id: 't_temporary', portrait: 'assets/characters/portraits/t_temporary.png', name: 'T. Temporary', role: 'fitter', model: 'F', salary: 39000, skill: 2, morale: 3, attendance: 4, trait: 'Temporary Fixer' },
 
-        { id: 'l_spark', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, trait: 'Likes Flashing Lights' },
-        { id: 'p_cable', name: 'P. Cable', role: 'electrician', model: 'E', salary: 46000, skill: 3, morale: 4, attendance: 5, trait: 'Cable Whisperer' },
-        { id: 'v_volts', name: 'V. Volts', role: 'electrician', model: 'E', salary: 50000, skill: 4, morale: 2, attendance: 4, trait: 'Manual Reader' }
+        { id: 'l_spark', portrait: 'assets/characters/portraits/l_spark.png', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, trait: 'Likes Flashing Lights' },
+        { id: 'p_cable', portrait: 'assets/characters/portraits/p_cable.png', name: 'P. Cable', role: 'electrician', model: 'E', salary: 46000, skill: 3, morale: 4, attendance: 5, trait: 'Cable Whisperer' },
+        { id: 'v_volts', portrait: 'assets/characters/portraits/v_volts.png', name: 'V. Volts', role: 'electrician', model: 'E', salary: 50000, skill: 4, morale: 2, attendance: 4, trait: 'Manual Reader' }
       ];
 
       let selectedCrewIds = [];
@@ -1590,17 +1687,22 @@
 
       function candidateCard(c) {
         return `<div class="card">
-          <h3>${c.name}</h3>
-          <p><span class="tag">${roleName(c.role)}</span> <span class="tag">${money(c.salary)}/yr</span></p>
-          ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
-          <p>${c.trait}</p>
-          <button class="primary" data-hire="${c.id}">Hire</button>
+          <div class="portraitPanel">
+            ${portraitHtml(c)}
+            <div class="portraitDetails">
+              <h3>${c.name}</h3>
+              <p><span class="tag">${roleName(c.role)}</span> <span class="tag">${money(c.salary)}/yr</span></p>
+              ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
+              <p>${c.trait}</p>
+              <button class="primary" data-hire="${c.id}">Hire</button>
+            </div>
+          </div>
         </div>`;
       }
 
       function staffRow(s) {
         return `<div class="row">
-          <div class="avatarDot" style="background:${helmetColour(s.role)}"></div>
+          ${portraitHtml(s, 'staffRowPortrait')}
           <div><strong>${s.name}</strong><span>${roleName(s.role)} · ${s.trait} · Skill ${s.skill}/5 · Morale ${s.morale}/5 · Attendance ${s.attendance}/5</span></div>
           <span class="tag">${money(s.salary)}/yr</span>
         </div>`;
@@ -1697,25 +1799,65 @@
         </section>`;
       }
 
+      function initials(name) {
+        return String(name || '?')
+          .split(/\s+/)
+          .filter(Boolean)
+          .map(part => part[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+      }
+
+      function portraitRoleClass(person) {
+        if (!person) return 'manager';
+        if (person.role) return person.role;
+        return 'manager';
+      }
+
+      function portraitHtml(person, extraClass = '') {
+        const roleClass = portraitRoleClass(person);
+        const img = person && person.portrait
+          ? `<img class="portraitImg" src="${person.portrait}" alt="${escapeHtml(person.name)} portrait" onerror="this.style.display='none';">`
+          : '';
+        return `<div class="portraitWrap ${extraClass}">
+          <div class="portraitFallback ${roleClass}">${initials(person ? person.name : '?')}</div>
+          ${img}
+        </div>`;
+      }
+
       function managerCard(m) {
         const selected = state.manager && state.manager.id === m.id;
         return `<div class="choiceCard ${selected ? 'selected' : ''}">
-          <h3>${m.name}</h3>
-          <p><strong>${m.title}</strong></p>
-          <p>${m.description}</p>
-          <div class="choiceMeta">${m.effects.map(e => `<span class="tag">${e}</span>`).join('')}</div>
-          <button class="primary" data-manager-choice="${m.id}">${selected ? 'Selected' : 'Choose Manager'}</button>
+          <div class="portraitPanel">
+            ${portraitHtml(m)}
+            <div class="portraitDetails">
+              <h3>${m.name}</h3>
+              <p><strong>${m.title}</strong></p>
+              <p>${m.description}</p>
+              <div class="choiceMeta">${m.effects.map(e => `<span class="tag">${e}</span>`).join('')}</div>
+              <button class="primary" data-manager-choice="${m.id}">${selected ? 'Selected' : 'Choose Manager'}</button>
+            </div>
+          </div>
         </div>`;
       }
 
       function crewCard(c) {
         const selected = selectedCrewIds.includes(c.id);
+        const effectTags = c.effects ? `<div class="choiceMeta">${c.effects.map(e => `<span class="tag">${e}</span>`).join('')}</div>` : '';
+        const blurb = c.description ? `<p>${c.description}</p>` : `<p>${c.trait}</p>`;
         return `<div class="choiceCard ${selected ? 'selected' : ''}">
-          <h3>${c.name}</h3>
-          <p><span class="tag">${roleName(c.role)}</span> <span class="tag">${money(c.salary)}/yr</span></p>
-          ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
-          <p>${c.trait}</p>
-          <button class="${selected ? 'warn' : 'primary'}" data-crew-toggle="${c.id}">${selected ? 'Remove' : 'Select'}</button>
+          <div class="portraitPanel">
+            ${portraitHtml(c)}
+            <div class="portraitDetails">
+              <h3>${c.name}</h3>
+              <p><span class="tag">${roleName(c.role)}</span> <span class="tag">${money(c.salary)}/yr</span></p>
+              ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
+              ${blurb}
+              ${effectTags}
+              <button class="${selected ? 'warn' : 'primary'}" data-crew-toggle="${c.id}">${selected ? 'Remove' : 'Select'}</button>
+            </div>
+          </div>
         </div>`;
       }
 
@@ -1923,7 +2065,8 @@
           buttons = `<button class="good" data-event-choice="${s.id}:listen">Listen</button><button class="warn" data-event-choice="${s.id}:ignore">Create action tracker</button>`;
         }
         $('modalTitle').textContent = title;
-        $('modalBody').innerHTML = msg + '<div class="btnRow">' + buttons + '<button data-close>Close</button></div>';
+        const eventHeader = `<div class="eventHeader">${portraitHtml(s)}<div><h3>${s.name}</h3><p><span class="tag">${roleName(s.role)}</span> <span class="tag">${s.trait}</span></p></div></div>`;
+        $('modalBody').innerHTML = eventHeader + msg + '<div class="btnRow">' + buttons + '<button data-close>Close</button></div>';
         $('modalWindow').className = 'window medium';
         $('modalOverlay').classList.add('show');
       }
