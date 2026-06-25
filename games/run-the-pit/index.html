@@ -694,6 +694,45 @@
     .machinePadBtn { width: 24px; height: 17px; min-height: 17px; border-radius: 6px; font-size: 11px; }
     .machinePadStop { font-size: 7px; }
 
+    .devToolGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .devToolCard {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      background: rgba(15,23,42,0.72);
+      padding: 10px;
+    }
+
+    .devToolCard h3 {
+      margin: 0 0 7px;
+      color: #fde68a;
+      font-size: 14px;
+    }
+
+    .devToolCard p {
+      margin: 0 0 8px;
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .devToolBtns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .devToolBtns button {
+      min-height: 32px;
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+
     .toolbarButtons {
       display: flex;
       align-items: center;
@@ -852,6 +891,344 @@
     }
 
     .overlay.show { display: flex; }
+
+    .safetyStanddownOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 42;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(251,191,36,0.10), transparent 35%),
+        rgba(4,7,12,0.72);
+      backdrop-filter: blur(2px);
+    }
+
+    .safetyStanddownOverlay.show {
+      display: flex;
+      animation: safetyBackdropPulse 420ms ease-out;
+    }
+
+    .safetyStanddownCard {
+      width: min(1120px, 96vw);
+      max-height: min(720px, 88vh);
+      display: grid;
+      grid-template-columns: minmax(240px, 360px) minmax(0, 1fr);
+      gap: 0;
+      align-items: stretch;
+      pointer-events: auto;
+      background:
+        linear-gradient(180deg, rgba(15,23,42,0.98), rgba(3,7,18,0.98));
+      color: #f8fafc;
+      border: 3px solid rgba(245,158,11,0.92);
+      border-radius: 22px;
+      box-shadow:
+        0 32px 100px rgba(0,0,0,0.72),
+        inset 0 2px rgba(255,255,255,0.10),
+        0 0 0 1px rgba(120,53,15,0.85);
+      overflow: hidden;
+      transform-origin: center;
+      animation: safetyPopIn 360ms cubic-bezier(.2,1.35,.2,1);
+    }
+
+    .safetyAdvisorPanel {
+      position: relative;
+      min-height: 480px;
+      background:
+        radial-gradient(circle at 48% 26%, rgba(255,255,255,0.12), transparent 28%),
+        linear-gradient(180deg, rgba(30,41,59,0.72), rgba(15,23,42,0.08));
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      border-right: 1px solid rgba(251,191,36,0.22);
+      overflow: hidden;
+    }
+
+    .safetyAdvisorPanel::after {
+      content: '';
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 0;
+      height: 42%;
+      background: linear-gradient(180deg, transparent, rgba(3,7,18,0.72));
+      pointer-events: none;
+    }
+
+    .safetyAdvisorPortraitImage {
+      position: relative;
+      z-index: 1;
+      width: min(104%, 390px);
+      height: auto;
+      max-height: 640px;
+      object-fit: contain;
+      object-position: bottom center;
+      filter: drop-shadow(0 18px 28px rgba(0,0,0,0.55));
+    }
+
+    .safetyAdvisorFallback {
+      display: none;
+      width: 78%;
+      height: 78%;
+      align-items: center;
+      justify-items: center;
+      text-align: center;
+      color: #fde68a;
+      font-weight: 900;
+      border: 2px dashed rgba(251,191,36,0.50);
+      border-radius: 18px;
+      background: rgba(15,23,42,0.65);
+      padding: 18px;
+    }
+
+    .safetyStanddownText {
+      padding: clamp(20px, 3vw, 32px);
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .safetyStanddownHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .safetyStanddownText h2 {
+      margin: 0;
+      color: #facc15;
+      font-size: clamp(36px, 5vw, 64px);
+      letter-spacing: -0.055em;
+      line-height: 0.92;
+      text-transform: uppercase;
+      text-shadow: 0 4px 0 rgba(120,53,15,0.62), 0 12px 25px rgba(0,0,0,0.48);
+    }
+
+    .safetyHelpBadge {
+      width: 36px;
+      height: 36px;
+      min-height: 36px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #fde68a;
+      background: rgba(15,23,42,0.88);
+      border: 2px solid rgba(250,204,21,0.75);
+      font-weight: 900;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .safetyAttentionLine {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fef3c7;
+      font-size: clamp(14px, 1.6vw, 18px);
+      font-weight: 900;
+    }
+
+    .safetyAttentionIcon {
+      font-size: 24px;
+      color: #facc15;
+    }
+
+    .safetyStanddownText h3 {
+      margin: 0;
+      color: #f59e0b;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+    }
+
+    .safetyMessagePanel {
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.20));
+      padding: clamp(16px, 2vw, 22px);
+      box-shadow: inset 0 1px rgba(255,255,255,0.08);
+      min-height: 190px;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+    }
+
+    .safetyStanddownText p {
+      margin: 0;
+      color: #fef3c7;
+      line-height: 1.48;
+      font-size: clamp(18px, 2.2vw, 26px);
+      font-weight: 600;
+    }
+
+    .safetyStanddownImpact {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .safetyStanddownImpact span {
+      min-height: 78px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 4px;
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 16px;
+      font-weight: 900;
+      text-align: center;
+      color: #fee2e2;
+      background: linear-gradient(180deg, rgba(127,29,29,0.76), rgba(69,10,10,0.72));
+      border: 1px solid rgba(248,113,113,0.70);
+      box-shadow: inset 0 1px rgba(255,255,255,0.10);
+    }
+
+    .safetyStanddownImpact span.positive {
+      color: #dcfce7;
+      background: linear-gradient(180deg, rgba(21,128,61,0.70), rgba(20,83,45,0.72));
+      border-color: rgba(34,197,94,0.65);
+    }
+
+    .safetyStanddownImpact span.cost {
+      color: #fecaca;
+      background: linear-gradient(180deg, rgba(153,27,27,0.78), rgba(69,10,10,0.78));
+      border-color: rgba(248,113,113,0.75);
+    }
+
+    .safetyStanddownImpact span.neutral {
+      color: #ffedd5;
+      background: linear-gradient(180deg, rgba(146,64,14,0.68), rgba(67,20,7,0.70));
+      border-color: rgba(251,146,60,0.62);
+    }
+
+    .safetyStanddownImpact span strong {
+      display: block;
+      font-size: clamp(20px, 2.2vw, 28px);
+      line-height: 1;
+    }
+
+    .safetyInstructionPanel {
+      border-top: 3px dashed rgba(250,204,21,0.88);
+      padding: 14px 10px 8px;
+      text-align: center;
+      color: #facc15;
+      font-weight: 900;
+      font-size: clamp(15px, 1.6vw, 18px);
+      line-height: 1.35;
+    }
+
+    .safetyStanddownHoldPanel {
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) minmax(230px, 0.95fr);
+      gap: 14px;
+      align-items: stretch;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      padding: 10px;
+    }
+
+    .safetyTimerPanel {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.26);
+      padding: 8px 12px;
+    }
+
+    .safetyTimerPanel span {
+      color: #fef3c7;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .safetyTimerPanel strong {
+      color: #facc15;
+      font-size: clamp(32px, 3.8vw, 44px);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .safetyStanddownClose {
+      min-height: 58px;
+      padding: 9px 14px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #f59e0b, #b45309);
+      color: #211400;
+      font-weight: 900;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .safetyStanddownClose.locked {
+      cursor: not-allowed;
+      color: #d1d5db;
+      background: linear-gradient(180deg, rgba(75,85,99,0.95), rgba(31,41,55,0.95));
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: inset 0 1px rgba(255,255,255,0.08);
+      opacity: 0.78;
+    }
+
+    .safetyHoldMessage {
+      min-height: 18px;
+      color: #fecaca;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 180ms ease;
+    }
+
+    .safetyHoldMessage.show {
+      opacity: 1;
+    }
+
+    @keyframes safetyPopIn {
+      from { transform: scale(0.84) translateY(18px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    @keyframes safetyBackdropPulse {
+      from { background-color: rgba(248,113,113,0.26); }
+      to { background-color: rgba(4,7,12,0.72); }
+    }
+
+    @media (max-width: 860px) {
+      .safetyStanddownCard {
+        grid-template-columns: 1fr;
+        overflow: auto;
+      }
+
+      .safetyAdvisorPanel {
+        min-height: 220px;
+        max-height: 240px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(251,191,36,0.22);
+      }
+
+      .safetyAdvisorPortraitImage {
+        width: min(78%, 280px);
+        max-height: 285px;
+      }
+
+      .safetyStanddownText {
+        grid-template-rows: auto;
+      }
+
+      .safetyStanddownHoldPanel {
+        grid-template-columns: 1fr;
+      }
+    }
+
 
     .window {
       width: min(920px, 100%);
@@ -1409,6 +1786,7 @@
         <button class="toolBtn" data-window="reports">Reports</button>
         <button class="toolBtn" id="pauseBtn">Pause</button>
         <button class="toolBtn" id="musicBtn">Music: Off</button>
+        <button class="toolBtn" data-window="dev">Dev</button>
       </div>
     </footer>
   </div>
@@ -1488,6 +1866,59 @@
 
         </div>
         <div class="btnRow"><button class="primary" id="acceptLetterBtn">Yes, I Accept</button></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="safetyStanddownOverlay" id="safetyStanddownOverlay" aria-live="assertive">
+    <div class="safetyStanddownCard" role="dialog" aria-modal="true" aria-labelledby="safetyStanddownTitle">
+      <div class="safetyAdvisorPanel">
+        <img
+          class="safetyAdvisorPortraitImage"
+          src="assets/characters/portraits/safety_advisor.png"
+          alt="Safety advisor wearing oversized safety glasses and holding a clipboard"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+        >
+        <div class="safetyAdvisorFallback">SAFETY<br>ADVISOR<br><span>portrait missing</span></div>
+      </div>
+
+      <div class="safetyStanddownText">
+        <div class="safetyStanddownHeader">
+          <h2 id="safetyStanddownTitle">Safety Standdown Alert</h2>
+          <button class="safetyHelpBadge" type="button" title="This is not optional">?</button>
+        </div>
+
+        <div>
+          <h3 id="safetyStanddownCategory">Safety Department</h3>
+          <div class="safetyAttentionLine">
+            <span class="safetyAttentionIcon">📣</span>
+            <span>The Safety Advisor requires your immediate, undivided attention.</span>
+          </div>
+        </div>
+
+        <div class="safetyMessagePanel">
+          <p id="safetyStanddownMessage">A safety professional has entered the area with a clipboard.</p>
+          <div class="safetyStanddownImpact" id="safetyStanddownImpact"></div>
+        </div>
+
+        <div class="safetyInstructionPanel">
+          ALL ACTIVITY IS STANDBY UNTIL THE SAFETY ADVISOR IS SATISFIED.<br>
+          Please listen carefully. It may save your career.
+        </div>
+
+        <div>
+          <div class="safetyStanddownHoldPanel">
+            <div class="safetyTimerPanel">
+              <span id="safetyStanddownStatus">Standdown in progress...</span>
+              <strong id="safetyStanddownTimer">00:10</strong>
+            </div>
+            <button class="safetyStanddownClose locked" data-safety-dismiss aria-disabled="true">
+              Return to Operational Uncertainty
+            </button>
+          </div>
+          <div class="safetyHoldMessage" id="safetyHoldMessage"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1617,6 +2048,72 @@
       }
     }
 
+
+    let sfxCtx = null;
+
+    function getSfxContext() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return null;
+        if (!sfxCtx) sfxCtx = new AudioContext();
+        if (sfxCtx.state === 'suspended') sfxCtx.resume();
+        return sfxCtx;
+      } catch (err) {
+        console.log('SFX unavailable:', err);
+        return null;
+      }
+    }
+
+    function playTone(freq, start, dur, type = 'sine', volume = 0.10) {
+      const ac = getSfxContext();
+      if (!ac) return;
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      const t0 = ac.currentTime + start;
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(volume, t0 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.02);
+    }
+
+    function playGameSound(kind) {
+      const ac = getSfxContext();
+      if (!ac) return;
+
+      if (kind === 'hr') {
+        playTone(880, 0.00, 0.10, 'triangle', 0.075);
+        playTone(1174, 0.11, 0.16, 'triangle', 0.065);
+        return;
+      }
+
+      if (kind === 'belt') {
+        playTone(180, 0.00, 0.20, 'sawtooth', 0.10);
+        playTone(120, 0.12, 0.30, 'square', 0.075);
+        playTone(80, 0.28, 0.22, 'sawtooth', 0.055);
+        return;
+      }
+
+      if (kind === 'miner') {
+        playTone(95, 0.00, 0.32, 'square', 0.12);
+        playTone(62, 0.16, 0.42, 'sawtooth', 0.10);
+        playTone(420, 0.02, 0.06, 'triangle', 0.05);
+        playTone(370, 0.10, 0.06, 'triangle', 0.045);
+        return;
+      }
+
+      if (kind === 'safety') {
+        playTone(740, 0.00, 0.16, 'square', 0.07);
+        playTone(520, 0.18, 0.16, 'square', 0.07);
+        playTone(740, 0.38, 0.16, 'square', 0.07);
+        playTone(520, 0.56, 0.22, 'square', 0.07);
+      }
+    }
+
     function retryMusicAfterUserGesture() {
       if (musicWanted && bgMusic && bgMusic.paused) {
         startMusic();
@@ -1653,6 +2150,7 @@
       const BASE_REVENUE_PER_TONNE = 1.25;
       const TRAM_COST = 75;
       const WAGE_ACCRUAL_FACTOR = 0.12;
+      const SAFETY_ROLL_INTERVAL_SECONDS = 120;
       const BASE_SHIFT_TRAIT = 75;
       const HR_TRAINING_IMAGE = 'assets/images/ms_bea_haviour_hr_training.png';
 
@@ -2179,6 +2677,7 @@
         floatTexts: [],
         selectedBlock: null,
         safetyTimer: 0,
+        safetyAlertTimeout: null,
         traits: { productivity: 70, skill: 70, morale: 70, safety: 70 },
         machine: {
           q: MINE_ID,
@@ -2459,7 +2958,7 @@
         if (!state.running || state.paused) return;
 
         state.safetyTimer += dt;
-        if (state.safetyTimer >= 13) {
+        if (state.safetyTimer >= SAFETY_ROLL_INTERVAL_SECONDS) {
           state.safetyTimer = 0;
           maybeSafetyEvent();
         }
@@ -2686,64 +3185,267 @@
         }
       }
 
+      function safetyEventChance() {
+        const safety = traitValue('safety');
+        return clamp(0.38 - safety * 0.0033, 0.045, 0.34);
+      }
+
+      function safetyPositiveChance() {
+        const safety = traitValue('safety');
+        return clamp((safety - 42) / 95, 0.08, 0.55);
+      }
+
+      function safetyEvents() {
+        return {
+          negative: [
+            {
+              category: 'Safety Department',
+              title: 'Safety Standdown Alert',
+              text: 'The Safety Department has created a new procedure to identify risks. Unfortunately, no one is trained in it, so the crew must complete the old one as well.',
+              cost: 0,
+              traits: { productivity: -5, safety: -5, morale: -1 }
+            },
+            {
+              category: 'Health and Safety Executive',
+              title: 'Safety Standdown Alert',
+              text: 'A visiting inspector has identified a serious absence of laminated signage. A fine has been issued and several managers have practised concerned faces.',
+              cost: 2600,
+              traits: { productivity: -2, safety: -4, morale: -2 }
+            },
+            {
+              category: 'Legal Department',
+              title: 'Safety Standdown Alert',
+              text: 'A minor trip involving a clipboard has become a major learning opportunity. Legal recommends paying off the lawsuit and not asking why the clipboard was there.',
+              cost: 4200,
+              traits: { productivity: -2, safety: -3, morale: -2 }
+            },
+            {
+              category: 'Crew Safety Behaviour',
+              title: 'Safety Standdown Alert',
+              text: 'The crew has decided it is safer not to do any work, particularly when the manager visits the panel. This is difficult to challenge because it sounds responsible.',
+              cost: 0,
+              traits: { productivity: -6, safety: 1, morale: 1 }
+            },
+            {
+              category: 'Graduate Mining Engineer',
+              title: 'Safety Standdown Alert',
+              text: 'The fresh mining engineer graduate thinks he knows a better way to do something the mine has done for decades. Production has paused while everyone explains why the old way was not technically wrong.',
+              cost: 350,
+              traits: { productivity: -5, morale: -2, skill: -1 }
+            },
+            {
+              category: 'Risk Assessment Review',
+              title: 'Safety Standdown Alert',
+              text: 'A risk assessment has been found with handwriting that cannot be interpreted by anyone outside the original shift. The document has been quarantined as a heritage artefact.',
+              cost: 600,
+              traits: { productivity: -3, safety: -2 }
+            }
+          ],
+          positive: [
+            {
+              category: 'Safety Department',
+              title: 'Safety Standdown Alert',
+              text: 'The Safety Department conducted an audit and could not find anything wrong. This helped because they got lost on the way from the shaft to the mining panel.',
+              award: 200,
+              traits: { safety: 3, morale: 2 }
+            },
+            {
+              category: 'Safe Working Award',
+              title: 'Safety Standdown Alert',
+              text: 'The crew has won this month’s safe working award. Finance has authorised a reward small enough not to set a precedent.',
+              award: 200,
+              traits: { morale: 3, safety: 2 }
+            },
+            {
+              category: 'Toolbox Talk',
+              title: 'Safety Standdown Alert',
+              text: 'A toolbox talk accidentally explained something useful. The crew briefly understood the hazard before the paperwork arrived.',
+              award: 0,
+              traits: { safety: 4, productivity: 1, skill: 1 }
+            },
+            {
+              category: 'Near Miss Reporting',
+              title: 'Safety Standdown Alert',
+              text: 'A near miss was reported early enough to fix the problem before it became a committee. This is rare and will be mentioned in six newsletters.',
+              award: 150,
+              traits: { safety: 4, morale: 1 }
+            }
+          ]
+        };
+      }
+
       function maybeSafetyEvent() {
         if (!state.running || state.paused || state.levelComplete) return;
 
-        const safety = traitValue('safety');
-        const baseChance = 0.18;
-        const chance = clamp(baseChance * (1.35 - safety / 100), 0.025, 0.22);
-
+        const chance = safetyEventChance();
         if (Math.random() > chance) return;
 
-        const events = [
-          {
-            category: 'Safety',
-            text: 'A cone has been placed around a puddle that everyone had already walked through. This is now a controlled hazard.',
-            cost: 120,
-            wear: 0,
-            morale: -1,
-            productivity: -2,
-            safety: -1
-          },
-          {
-            category: 'Safety',
-            text: 'A near miss has occurred involving a clipboard, a boot lace, and excessive confidence near a parked machine.',
-            cost: 250,
-            wear: 2,
-            morale: -2,
-            productivity: -3,
-            safety: -2
-          },
-          {
-            category: 'Rock Engineering',
-            text: 'A small flake has detached from the roof and been promoted to a geotechnical learning event.',
-            cost: 450,
-            wear: 0,
-            morale: -2,
-            productivity: -4,
-            safety: -3
-          },
-          {
-            category: 'Mine Services',
-            text: 'A services hose has achieved independence from its clips. It has been counselled and returned to duty.',
-            cost: 300,
-            wear: 3,
-            morale: -1,
-            productivity: -3,
-            safety: -2
-          }
-        ];
-
-        const e = events[Math.floor(Math.random() * events.length)];
-        spend(e.cost, 'Safety event');
-        state.machine.condition = Math.max(0, state.machine.condition - e.wear);
-        adjustTrait('morale', e.morale);
-        adjustTrait('productivity', e.productivity);
-        adjustTrait('safety', e.safety);
-        showProductionComment(e.text, e.category, 8);
-
-        if (state.machine.condition <= 0 && state.machine.status !== 'broken') breakdownMachine();
+        const pools = safetyEvents();
+        const positive = Math.random() < safetyPositiveChance();
+        const list = positive ? pools.positive : pools.negative;
+        const event = list[Math.floor(Math.random() * list.length)];
+        applySafetyEvent(event, positive);
       }
+
+      function applySafetyEvent(event, positive) {
+        if (!event) return;
+
+        const impacts = [];
+        if (event.cost) {
+          spend(event.cost, 'Safety event');
+          impacts.push('-' + money(event.cost));
+        }
+        if (event.award) {
+          earn(event.award, 'Safe working award');
+          impacts.push('+' + money(event.award));
+        }
+
+        for (const [trait, delta] of Object.entries(event.traits || {})) {
+          adjustTrait(trait, delta);
+          impacts.push((delta > 0 ? '+' : '') + delta + ' ' + traitLabel(trait));
+        }
+
+        playGameSound('safety');
+        showSafetyStanddown(event, impacts, positive);
+        showProductionComment(event.text, event.category, 9);
+      }
+
+      function traitLabel(trait) {
+        if (trait === 'productivity') return 'Productivity';
+        if (trait === 'skill') return 'Skill';
+        if (trait === 'morale') return 'Morale';
+        if (trait === 'safety') return 'Safety';
+        return trait;
+      }
+
+      function safetyImpactClass(text) {
+        const value = String(text || '');
+        if (value.includes('£') && value.trim().startsWith('-')) return 'cost';
+        if (value.trim().startsWith('+')) return 'positive';
+        if (value.trim().startsWith('-')) return 'neutral';
+        return 'neutral';
+      }
+
+      function safetyImpactHtml(text) {
+        const value = String(text || '');
+        let main = value;
+        let sub = 'Operational impact';
+
+        if (value.includes('£')) {
+          main = value;
+          sub = value.trim().startsWith('+') ? 'Award' : 'Additional Cost';
+        } else {
+          const parts = value.split(' ');
+          if (parts.length > 1 && /^[+-]?\d+/.test(parts[0])) {
+            main = parts[0];
+            sub = parts.slice(1).join(' ');
+          }
+        }
+
+        return '<span class="' + safetyImpactClass(value) + '"><strong>' + escapeHtml(main) + '</strong>' + escapeHtml(sub) + '</span>';
+      }
+
+      function formatSafetyTime(ms) {
+        const seconds = Math.max(0, Math.ceil(ms / 1000));
+        return '00:' + String(seconds).padStart(2, '0');
+      }
+
+      function updateSafetyStanddownHold() {
+        const overlay = $('safetyStanddownOverlay');
+        if (!overlay || !overlay.classList.contains('show')) return;
+
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        const timer = $('safetyStanddownTimer');
+        const status = $('safetyStanddownStatus');
+        const btn = document.querySelector('[data-safety-dismiss]');
+
+        if (timer) timer.textContent = formatSafetyTime(remaining);
+        if (status) status.textContent = remaining > 0 ? 'Standdown in progress...' : 'Hold point satisfied.';
+
+        if (btn) {
+          btn.classList.toggle('locked', remaining > 0);
+          btn.setAttribute('aria-disabled', remaining > 0 ? 'true' : 'false');
+        }
+
+        if (remaining <= 0 && state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+      }
+
+      function showSafetyHoldPointMessage() {
+        const msg = $('safetyHoldMessage');
+        if (!msg) return;
+
+        msg.textContent = 'Management have mandated this as a Safety HOLD POINT. You cannot return to work until the Safety Department feel they have been listened to and suitably important.';
+        msg.classList.add('show');
+        clearTimeout(state.safetyHoldMessageTimeout);
+        state.safetyHoldMessageTimeout = setTimeout(() => msg.classList.remove('show'), 4200);
+        playGameSound('safety');
+      }
+
+      function hideSafetyStanddown() {
+        const overlay = $('safetyStanddownOverlay');
+        if (overlay) overlay.classList.remove('show');
+
+        if (state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+
+        clearTimeout(state.safetyHoldMessageTimeout);
+
+        const msg = $('safetyHoldMessage');
+        if (msg) {
+          msg.textContent = '';
+          msg.classList.remove('show');
+        }
+
+        state.safetyHoldUntil = 0;
+        state.safetyStanddownActive = false;
+
+        if (state.safetyPausedBeforeStanddown === false && !state.levelComplete) {
+          state.paused = false;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+        } else if ($('pauseBtn')) {
+          $('pauseBtn').textContent = state.paused ? 'Resume' : 'Pause';
+        }
+      }
+
+      function showSafetyStanddown(event, impacts, positive) {
+        const overlay = $('safetyStanddownOverlay');
+        if (!overlay) return;
+
+        const cat = $('safetyStanddownCategory');
+        const msg = $('safetyStanddownMessage');
+        const impact = $('safetyStanddownImpact');
+
+        if (cat) cat.textContent = event.category || 'Safety Department';
+        if (msg) msg.textContent = event.text || 'A safety professional has entered the area with a clipboard.';
+        if (impact) {
+          impact.innerHTML = (impacts && impacts.length)
+            ? impacts.map(safetyImpactHtml).join('')
+            : '<span class="neutral"><strong>0</strong>No measurable improvement, recorded as success</span>';
+        }
+
+        state.safetyStanddownActive = true;
+        state.safetyPausedBeforeStanddown = state.paused;
+        state.safetyHoldUntil = Date.now() + 10000;
+
+        if (state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining) {
+          stopAutoMining('Safety standdown. The miner has stopped because a clipboard has entered the area.', 'Safety Department');
+        }
+
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+
+        overlay.classList.add('show');
+
+        clearInterval(state.safetyHoldInterval);
+        updateSafetyStanddownHold();
+        state.safetyHoldInterval = setInterval(updateSafetyStanddownHold, 250);
+      }
+
 
       function completeLevelOne() {
         if (state.levelComplete) return;
@@ -2896,6 +3598,7 @@
         state.conveyor.nextFaultDay = state.day + 14 + Math.floor(Math.random() * 14);
 
         stopAutoMining('Conveyor stopped. The miner has stopped automatically because mined tonnes cannot currently escape the consequences.', 'Mine Services');
+        playGameSound('belt');
         addBeltMoanBubble();
 
         showProductionComment(info.message, info.category, 8);
@@ -2914,6 +3617,7 @@
           type: Math.random() < 0.65 ? 'beltAvailability' : 'beltBlame',
           icon: '↻'
         };
+        playGameSound('hr');
       }
 
       function startConveyorFix() {
@@ -3010,6 +3714,7 @@
 
         const pos = machinePos();
         for (let i = 0; i < 18; i++) spawnSmoke(pos.x, pos.y);
+        playGameSound('miner');
         showProductionComment('The continuous miner has entered a reflective period. Please click it and call the fitter.', 'Asset Event');
         openMiniWindow('Asset Event', '<p><strong>Old Continuous Miner has broken down.</strong></p><p>Click the machine or open Assets to call the fitter.</p>', true);
       }
@@ -4351,6 +5056,7 @@
 
       function openMiniWindow(title, html, autoSmall) {
         setModalClosable(true);
+
         $('modalTitle').textContent = title;
         $('modalBody').innerHTML = html + '<div class="btnRow"><button class="primary" data-close>Continue</button></div>';
         $('modalWindow').className = 'window ' + (autoSmall ? 'small' : '');
@@ -4402,6 +5108,140 @@
           </div>
         `;
         $('modalOverlay').classList.add('show');
+      }
+
+      function randomItem(list) {
+        return list[Math.floor(Math.random() * list.length)];
+      }
+
+      function forceCrewBubble(type = null) {
+        if (!state.staff.length) {
+          openMiniWindow('Dev Tool', '<p>No crew has been selected yet. Complete recruitment first, or use a different debug tool.</p>', true);
+          return;
+        }
+
+        const available = state.staff.filter(s => !s.bubble);
+        const list = available.length ? available : state.staff;
+        const s = randomItem(list);
+
+        const template = type
+          ? staffBubbleTemplates.find(t => t.type === type)
+          : chooseStaffBubbleTemplate(s);
+
+        if (!template) {
+          openMiniWindow('Dev Tool', '<p>No matching HR event template was found.</p>', true);
+          return;
+        }
+
+        s.bubble = { type: template.type, icon: template.icon };
+        playGameSound('hr');
+        showProductionComment(s.name + ' has raised a staff engagement opportunity. Translation: there is now a bubble to click.', 'HR Debug', 5);
+      }
+
+      function forceSafetyEvent(mode = 'random') {
+        const pools = safetyEvents();
+        let positive = Math.random() < safetyPositiveChance();
+
+        if (mode === 'positive') positive = true;
+        if (mode === 'negative') positive = false;
+
+        const list = positive ? pools.positive : pools.negative;
+        applySafetyEvent(randomItem(list), positive);
+      }
+
+      function forceConveyorFault(type = 'random') {
+        if (!state.conveyor) return;
+
+        if (type === 'random') {
+          type = randomItem(['trip', 'buried', 'drive', 'mechanical']);
+        }
+
+        triggerConveyorFault(type);
+      }
+
+      function restoreConveyorDev() {
+        if (!state.conveyor) return;
+        state.conveyor.status = 'running';
+        state.conveyor.fault = null;
+        state.conveyor.progress = 0;
+        state.conveyor.condition = 100;
+        state.conveyor.nextFaultDay = state.day + 999;
+        playGameSound('belt');
+        showProductionComment('Dev reset: conveyor restored. Mine Services has declared victory and left before follow-up questions.', 'Dev Tools', 5);
+      }
+
+      function restoreMinerDev() {
+        const target = state.machine.target ? blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c) : null;
+        if (target && target.status === 'mining') target.status = 'solid';
+
+        state.machine.status = 'idle';
+        state.machine.autoMining = false;
+        state.machine.target = null;
+        state.machine.progress = 0;
+        state.machine.repairProgress = 0;
+        state.machine.condition = 100;
+        state.machine.warnedSmoking = false;
+        state.machine.warnedCritical = false;
+        showProductionComment('Dev reset: miner restored. Asset Reliability has updated the dashboard and claimed the trend was improving anyway.', 'Dev Tools', 5);
+      }
+
+      function resetTraitsDev() {
+        state.traits = {
+          productivity: 75,
+          skill: 75,
+          morale: 75,
+          safety: 75
+        };
+        showProductionComment('Dev reset: shift traits returned to respectable corporate optimism.', 'Dev Tools', 5);
+      }
+
+      function devAction(action) {
+        if (!action) return;
+
+        startMusic();
+
+        if (action === 'safety-random') forceSafetyEvent('random');
+        if (action === 'safety-negative') forceSafetyEvent('negative');
+        if (action === 'safety-positive') forceSafetyEvent('positive');
+
+        if (action === 'pm-random') showRandomProductionComment();
+        if (action === 'hr-random') forceCrewBubble();
+        if (action === 'hr-belt') {
+          addBeltMoanBubble();
+          showProductionComment('Dev trigger: someone is preparing to explain how belt availability personally affected their early finish.', 'HR Debug', 5);
+        }
+
+        if (action === 'miner-break') breakdownMachine();
+        if (action === 'miner-worn') {
+          state.machine.condition = 32;
+          state.machine.warnedSmoking = false;
+          state.machine.warnedCritical = false;
+          playGameSound('miner');
+          showProductionComment('Dev trigger: miner condition set to worn. It now has the mechanical confidence of a printer on deadline day.', 'Dev Tools', 5);
+        }
+        if (action === 'miner-restore') restoreMinerDev();
+
+        if (action === 'belt-random') forceConveyorFault('random');
+        if (action === 'belt-trip') forceConveyorFault('trip');
+        if (action === 'belt-buried') forceConveyorFault('buried');
+        if (action === 'belt-drive') forceConveyorFault('drive');
+        if (action === 'belt-mechanical') forceConveyorFault('mechanical');
+        if (action === 'belt-restore') restoreConveyorDev();
+
+        if (action === 'cash-add') {
+          earn(10000, 'Dev funding');
+          showProductionComment('Dev funding added. Finance has recorded this as a rounding error with potential.', 'Dev Tools', 5);
+        }
+        if (action === 'traits-reset') resetTraitsDev();
+        if (action === 'complete-level') {
+          state.tonnes = Math.max(state.tonnes, TARGET_TONNES);
+          state.k2oTonnes = Math.max(state.k2oTonnes, state.tonnes * Math.max(TARGET_GRADE, grade()));
+          completeLevelOne();
+        }
+
+        if ($('modalOverlay').classList.contains('show')) {
+          openWindow('dev');
+        }
       }
 
       function openWindow(type, forceReportComplete = false, customTitle = null) {
@@ -4513,6 +5353,69 @@
                   <p>Balance: <strong>${money(state.cash)}</strong></p><p>Revenue: <strong>${money(state.revenue)}</strong> · Expenditure: <strong>${money(state.expenditure)}</strong></p>
                   <p>${pass ? 'Congratulations. You may now be given more responsibility without additional resources.' : 'Continue mining adjacent blocks until the training evidence becomes defensible.'}</p>`;
         }
+
+
+        if (type === 'dev') {
+          title = 'Dev / Debug Tools';
+          body = `
+            <p><strong>Test controls.</strong> These trigger events immediately without waiting for normal random rolls. Use this to check visuals, sounds, repair flows, and balance/trait effects.</p>
+            <div class="devToolGrid">
+              <section class="devToolCard">
+                <h3>Safety Events</h3>
+                <p>Trigger the safety standdown overlay and safety-professional alert.</p>
+                <div class="devToolBtns">
+                  <button data-dev-action="safety-random">Random Safety</button>
+                  <button data-dev-action="safety-negative">Negative Safety</button>
+                  <button data-dev-action="safety-positive">Positive Safety</button>
+                </div>
+              </section>
+
+              <section class="devToolCard">
+                <h3>Production / HR Events</h3>
+                <p>Force speech bubbles and production manager comments.</p>
+                <div class="devToolBtns">
+                  <button data-dev-action="pm-random">Random PM Comment</button>
+                  <button data-dev-action="hr-random">Random HR Bubble</button>
+                  <button data-dev-action="hr-belt">Belt Moan Bubble</button>
+                </div>
+              </section>
+
+              <section class="devToolCard">
+                <h3>Continuous Miner</h3>
+                <p>Break or restore the miner without waiting for wear.</p>
+                <div class="devToolBtns">
+                  <button data-dev-action="miner-break">Break Miner</button>
+                  <button data-dev-action="miner-worn">Set Miner Worn</button>
+                  <button data-dev-action="miner-restore">Restore Miner</button>
+                </div>
+              </section>
+
+              <section class="devToolCard">
+                <h3>Conveyor Faults</h3>
+                <p>Test each belt availability state and the required repair role.</p>
+                <div class="devToolBtns">
+                  <button data-dev-action="belt-random">Random Belt Fault</button>
+                  <button data-dev-action="belt-trip">Electrical Trip</button>
+                  <button data-dev-action="belt-buried">Buried Belt</button>
+                  <button data-dev-action="belt-drive">Drive Fault</button>
+                  <button data-dev-action="belt-mechanical">Mechanical Fault</button>
+                  <button data-dev-action="belt-restore">Restore Belt</button>
+                </div>
+              </section>
+
+              <section class="devToolCard">
+                <h3>Game State</h3>
+                <p>Small helpers for repeat testing.</p>
+                <div class="devToolBtns">
+                  <button data-dev-action="cash-add">Add £10k</button>
+                  <button data-dev-action="traits-reset">Reset Traits</button>
+                  <button data-dev-action="complete-level">Trigger Level Win</button>
+                </div>
+              </section>
+            </div>
+          `;
+        }
+
 
         $('modalTitle').textContent = title;
         $('modalBody').innerHTML = body + '<div class="btnRow"><button class="primary" data-close>Close</button></div>';
@@ -5014,6 +5917,7 @@
         if (!template) return;
 
         s.bubble = { type: template.type, icon: template.icon };
+        playGameSound('hr');
       }
 
       function chooseStaffBubbleTemplate(staff) {
@@ -5250,8 +6154,22 @@
           const conveyorFixBtn = e.target.closest('[data-conveyor-fix]');
           if (conveyorFixBtn) { startConveyorFix(); return; }
 
+          const devActionBtn = e.target.closest('[data-dev-action]');
+          if (devActionBtn) { devAction(devActionBtn.dataset.devAction); return; }
+
           const staffEventBtn = e.target.closest('[data-staff-event]');
           if (staffEventBtn) { openStaffEvent(staffEventBtn.dataset.staffEvent); return; }
+
+          const safetyDismissBtn = e.target.closest('[data-safety-dismiss]');
+          if (safetyDismissBtn) {
+            const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+            if (remaining > 0) {
+              showSafetyHoldPointMessage();
+            } else {
+              hideSafetyStanddown();
+            }
+            return;
+          }
 
           const closeBtn = e.target.closest('[data-close]');
           if (closeBtn) {
