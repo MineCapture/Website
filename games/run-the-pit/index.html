@@ -1682,6 +1682,565 @@
       .staffRowPortrait { width: 44px; height: 44px; }
       .crewSingleRoleGrid { grid-template-columns: 1fr; }
     }
+  
+    /* Refactored base UI layout: mine in centre, PM top-left, crew right, metrics bottom-left, remote centre */
+    :root {
+      --toolbar-h: 116px;
+      --side-panel-w: clamp(230px, 15vw, 285px);
+      --left-panel-w: clamp(285px, 18vw, 330px);
+    }
+
+    #game {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) var(--toolbar-h);
+      overflow: hidden;
+    }
+
+    #canvasWrap {
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      background: #05080e;
+    }
+
+    #bottomBar {
+      height: var(--toolbar-h);
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto minmax(520px, 1fr);
+      gap: 18px;
+      align-items: center;
+      padding: 12px 26px;
+      background: linear-gradient(180deg, #1f2937, #0f172a);
+      border-top: 3px solid #5b3a16;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
+      position: relative;
+      z-index: 8;
+    }
+
+    .bottomBarSpacer {
+      min-width: 0;
+    }
+
+    #bottomBar .toolbarMachineRemote {
+      grid-column: 2;
+      justify-self: center;
+      align-self: center;
+      transform: translateY(-2px);
+    }
+
+    #bottomBar .toolbarButtons {
+      grid-column: 3;
+      justify-self: end;
+      align-self: center;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: min(760px, 100%);
+    }
+
+    #bottomBar .toolBtn {
+      min-height: 42px;
+      padding: 8px 13px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    #bottomBar [data-window="dev"] {
+      background: linear-gradient(180deg, #7e22ce, #581c87);
+      color: #f5d0fe;
+      border-color: rgba(216,180,254,0.45);
+    }
+
+    .productionManagerDock {
+      position: absolute;
+      left: 20px;
+      top: 22px;
+      bottom: auto;
+      display: grid;
+      grid-template-columns: 82px minmax(235px, 390px);
+      gap: 10px;
+      align-items: start;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .pmCharacter {
+      width: 82px;
+      height: 102px;
+      border-radius: 17px;
+      border: 2px solid rgba(251,191,36,0.52);
+      background: linear-gradient(180deg, #374151, #111827);
+      box-shadow: 0 12px 34px rgba(0,0,0,0.42), inset 0 -12px rgba(0,0,0,0.20);
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      place-items: center;
+      pointer-events: auto;
+    }
+
+    .pmPortraitFallback {
+      font-size: 28px;
+    }
+
+    .pmSpeechBubble {
+      position: relative;
+      margin: 10px 0 0;
+      padding: 11px 13px;
+      border-radius: 16px;
+      border: 2px solid rgba(251,191,36,0.58);
+      background: linear-gradient(180deg, rgba(255,251,235,0.99), rgba(254,243,199,0.99));
+      color: #1f2937;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.35);
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 180ms ease, transform 180ms ease;
+      pointer-events: auto;
+    }
+
+    .pmSpeechBubble.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .pmSpeechBubble:before {
+      content: '';
+      position: absolute;
+      left: -15px;
+      top: 22px;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 15px solid rgba(251,191,36,0.58);
+    }
+
+    .pmSpeechBubble:after {
+      content: '';
+      position: absolute;
+      left: -11px;
+      top: 24px;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-right: 12px solid rgba(255,251,235,0.99);
+    }
+
+    .pmBubbleHeader strong {
+      color: #92400e;
+      font-size: 12px;
+    }
+
+    .pmSpeechBubble p {
+      margin: 5px 0 0;
+      font-size: 13px;
+      line-height: 1.32;
+    }
+
+    .gradeKeyPanel,
+    .shiftCrewPanel,
+    .shiftDashboard {
+      position: absolute;
+      z-index: 4;
+      color: #f8fafc;
+      background: linear-gradient(180deg, rgba(17,24,39,0.84), rgba(15,23,42,0.88));
+      border: 1px solid rgba(251,191,36,0.42);
+      border-radius: 16px;
+      box-shadow: 0 18px 42px rgba(0,0,0,0.32), inset 0 1px rgba(255,255,255,0.06);
+      backdrop-filter: blur(2px);
+    }
+
+    .gradeKeyPanel {
+      top: 22px;
+      right: 24px;
+      width: var(--side-panel-w);
+      padding: 13px 15px 14px;
+    }
+
+    .gradeKeyPanel h2,
+    .shiftCrewHeader h2 {
+      margin: 0;
+      color: #fde68a;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .gradeKeyRows {
+      display: grid;
+      gap: 7px;
+      margin-top: 13px;
+      font-size: 12px;
+      color: #dbeafe;
+      font-weight: 700;
+    }
+
+    .gradeKeyRows div {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .gradeKeyRows span {
+      width: 20px;
+      height: 13px;
+      display: inline-block;
+      border-radius: 2px;
+      box-shadow: inset 0 1px rgba(255,255,255,0.20);
+    }
+
+    .shiftCrewPanel {
+      right: 24px;
+      top: 182px;
+      width: var(--side-panel-w);
+      max-height: calc(100% - 220px);
+      padding: 13px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .shiftCrewHeader {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      padding-bottom: 8px;
+    }
+
+    .shiftCrewHeader span {
+      color: #cbd5e1;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .shiftCrewList {
+      display: grid;
+      gap: 9px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .shiftCrewEmpty {
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .shiftCrewRow {
+      position: relative;
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      min-height: 66px;
+      padding: 8px 9px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(30,41,59,0.94), rgba(15,23,42,0.94));
+      box-shadow: inset 0 1px rgba(255,255,255,0.07);
+    }
+
+    .shiftCrewRow.hasBubble {
+      border-color: rgba(251,191,36,0.72);
+      box-shadow: 0 0 0 2px rgba(251,191,36,0.16), inset 0 1px rgba(255,255,255,0.08);
+    }
+
+    .shiftCrewRow .portraitWrap {
+      width: 54px;
+      height: 54px;
+      border-radius: 13px;
+      margin: 0;
+      border-width: 2px;
+    }
+
+    .shiftCrewRow .portraitFallback {
+      font-size: 16px;
+    }
+
+    .shiftCrewInfo {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .shiftCrewName {
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .shiftCrewRole {
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .shiftCrewTrait {
+      color: #cbd5e1;
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .shiftCrewBubble {
+      position: absolute;
+      right: 8px;
+      top: -13px;
+      width: 28px;
+      height: 28px;
+      min-height: 28px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      border: 2px solid rgba(251,191,36,0.92);
+      background: linear-gradient(180deg, #fff7ed, #fed7aa);
+      color: #9a3412;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 7px 18px rgba(0,0,0,0.36);
+      z-index: 2;
+    }
+
+    .shiftCrewBubble::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 10px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #fed7aa;
+    }
+
+    .shiftDashboard {
+      left: 24px;
+      bottom: 24px;
+      width: var(--left-panel-w);
+      padding: 14px 16px 15px;
+    }
+
+    .dashboardHeader {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 11px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .dashboardHeader .logoBox {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      font-size: 14px;
+      flex: none;
+    }
+
+    .dashboardTitle h1 {
+      margin: 0;
+      color: #fde68a;
+      font-size: 20px;
+      line-height: 1.05;
+    }
+
+    .dashboardTitle p {
+      margin: 4px 0 0;
+      color: #cbd5e1;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .dashboardHud {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 0;
+    }
+
+    .dashboardHud .pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 25px;
+      border-radius: 9px;
+      padding: 5px 8px;
+      font-size: 12px;
+      background: rgba(255,255,255,0.07);
+    }
+
+    .dashboardHud .pill.wide {
+      grid-column: span 2;
+    }
+
+    .dashboardHud .machinePill strong {
+      color: #fecaca;
+    }
+
+    .dashboardTraits {
+      grid-template-columns: 1fr;
+      gap: 7px;
+      margin-top: 11px;
+      max-width: none;
+    }
+
+    .dashboardTraits .traitBox {
+      padding: 5px 7px 6px;
+      background: rgba(0,0,0,0.22);
+    }
+
+    .dashboardTraits .traitBoxLabel {
+      font-size: 10px;
+    }
+
+    .dashboardTraits .traitTrack {
+      height: 8px;
+    }
+
+    /* Existing crew strip inside the mine is retired; crew is now a right-hand game panel. */
+    .panelCrewTiles,
+    .crewTile,
+    .crewMini {
+      display: none;
+    }
+
+    @media (max-width: 1120px) {
+      :root {
+        --toolbar-h: 152px;
+        --side-panel-w: 230px;
+        --left-panel-w: 285px;
+      }
+
+      #bottomBar {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 10px;
+      }
+
+      #bottomBar .toolbarMachineRemote {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+      }
+
+      #bottomBar .toolbarButtons {
+        grid-column: 1 / span 2;
+        grid-row: 2;
+        justify-self: start;
+        justify-content: flex-start;
+      }
+
+      .bottomBarSpacer {
+        display: none;
+      }
+
+      .productionManagerDock {
+        grid-template-columns: 68px minmax(200px, 330px);
+      }
+
+      .pmCharacter {
+        width: 68px;
+        height: 86px;
+      }
+
+      .shiftCrewPanel {
+        top: 165px;
+      }
+    }
+
+    @media (max-width: 820px) {
+      :root {
+        --toolbar-h: 190px;
+        --side-panel-w: 210px;
+        --left-panel-w: min(310px, calc(100vw - 24px));
+      }
+
+      #bottomBar {
+        grid-template-columns: 1fr;
+        align-content: start;
+        overflow-y: auto;
+        padding: 10px;
+      }
+
+      #bottomBar .toolbarMachineRemote,
+      #bottomBar .toolbarButtons {
+        grid-column: 1;
+        justify-self: start;
+      }
+
+      .toolbarMachineRemote {
+        grid-template-columns: 12px minmax(220px, 1fr) 12px;
+        width: min(360px, 100%);
+      }
+
+      .remoteHandle {
+        height: 64px;
+      }
+
+      .remotePlate {
+        grid-template-columns: 38px minmax(0, 1fr) 100px;
+      }
+
+      .productionManagerDock {
+        left: 10px;
+        top: 10px;
+        grid-template-columns: 58px minmax(180px, calc(100vw - 86px));
+        gap: 6px;
+      }
+
+      .pmCharacter {
+        width: 58px;
+        height: 72px;
+        border-radius: 13px;
+      }
+
+      .pmSpeechBubble {
+        margin-top: 3px;
+        padding: 8px 10px;
+      }
+
+      .pmSpeechBubble p {
+        font-size: 12px;
+      }
+
+      .gradeKeyPanel {
+        display: none;
+      }
+
+      .shiftCrewPanel {
+        right: 10px;
+        top: 104px;
+        width: 205px;
+        max-height: 45%;
+      }
+
+      .shiftDashboard {
+        left: 10px;
+        bottom: 10px;
+      }
+
+      .shiftCrewRow {
+        grid-template-columns: 44px minmax(0, 1fr);
+        min-height: 54px;
+        gap: 8px;
+      }
+
+      .shiftCrewRow .portraitWrap {
+        width: 42px;
+        height: 42px;
+      }
+    }
+
+
   </style>
 </head>
 <body>
@@ -1691,7 +2250,7 @@
   <div id="game">
     <div id="canvasWrap">
       <canvas id="gameCanvas"></canvas>
-      <div id="productionManagerDock" class="productionManagerDock">
+<div id="productionManagerDock" class="productionManagerDock">
         <div class="pmCharacter" title="Production Manager">
           <div class="pmPortraitFallback">PM</div>
           <img
@@ -1710,31 +2269,58 @@
           <p id="productionCommentText">More tonnes. Less drama.</p>
         </div>
       </div>
+      <section id="gradeKeyPanel" class="gradeKeyPanel" aria-label="Grade key">
+        <h2>Grade Key</h2>
+        <div class="gradeKeyRows">
+          <div><span style="background:#7e22ce"></span>15.8%+</div>
+          <div><span style="background:#c026d3"></span>15.0–15.8</div>
+          <div><span style="background:#ec4899"></span>14.2–15.0</div>
+          <div><span style="background:#f59e0b"></span>13.7–14.2</div>
+          <div><span style="background:#78350f"></span>&lt;13.0</div>
+        </div>
+      </section>
+
+      <aside id="shiftCrewPanel" class="shiftCrewPanel" aria-label="Shift crew">
+        <div class="shiftCrewHeader">
+          <h2>Shift Crew</h2>
+          <span id="shiftCrewStatus">Awaiting selection</span>
+        </div>
+        <div id="shiftCrewList" class="shiftCrewList">
+          <div class="shiftCrewEmpty">Complete recruitment to assign the people who will later blame the belt.</div>
+        </div>
+      </aside>
+
+      <section id="shiftDashboard" class="shiftDashboard" aria-label="Shift dashboard">
+        <div class="dashboardHeader">
+          <div class="logoBox">RTP</div>
+          <div class="dashboardTitle">
+            <h1>Run the Pit</h1>
+            <p>Cambourne School of Mines · Faculty of Operational Excuses · S.H.A.F.T.</p>
+          </div>
+        </div>
+
+        <div class="hud dashboardHud">
+          <div class="pill">Day <strong id="dayHud">0</strong></div>
+          <div class="pill">Balance <strong id="cashHud">£0</strong></div>
+          <div class="pill">Revenue <strong id="revenueHud">£0</strong></div>
+          <div class="pill">Spend <strong id="expenditureHud">£0</strong></div>
+          <div class="pill wide">Sample <strong id="tonnesHud">0 / 10,000t</strong></div>
+          <div class="pill wide">Goldilocks <strong id="gradeHud">0.0%</strong></div>
+          <div class="pill wide machinePill">Machine <strong id="machineHud">Idle</strong></div>
+        </div>
+
+        <div class="traitHud dashboardTraits">
+          <div class="traitBox"><div class="traitBoxLabel"><span>Productivity</span><strong id="productivityHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="productivityFill"></div></div></div>
+          <div class="traitBox"><div class="traitBoxLabel"><span>Skill</span><strong id="skillHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="skillFill"></div></div></div>
+          <div class="traitBox"><div class="traitBoxLabel"><span>Morale</span><strong id="moraleHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="moraleFill"></div></div></div>
+          <div class="traitBox"><div class="traitBoxLabel"><span>Safety</span><strong id="safetyHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="safetyFill"></div></div></div>
+        </div>
+      </section>
+
     </div>
 
     <footer id="bottomBar">
-      <div class="brand">
-        <div class="logoBox">RTP</div>
-        <div class="brandText">
-          <h1>Run the Pit</h1>
-          <p>Cambourne School of Mines · Faculty of Operational Excuses · S.H.A.F.T.</p>
-          <div class="hud">
-            <div class="pill">Day <strong id="dayHud">0</strong></div>
-            <div class="pill">Balance <strong id="cashHud">£0</strong></div>
-            <div class="pill">Revenue <strong id="revenueHud">£0</strong></div>
-            <div class="pill">Spend <strong id="expenditureHud">£0</strong></div>
-            <div class="pill">Sample <strong id="tonnesHud">0 / 10,000t</strong></div>
-            <div class="pill">Goldilocks <strong id="gradeHud">0.0%</strong></div>
-            <div class="pill">Machine <strong id="machineHud">Idle</strong></div>
-          </div>
-          <div class="traitHud">
-            <div class="traitBox"><div class="traitBoxLabel"><span>Productivity</span><strong id="productivityHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="productivityFill"></div></div></div>
-            <div class="traitBox"><div class="traitBoxLabel"><span>Skill</span><strong id="skillHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="skillFill"></div></div></div>
-            <div class="traitBox"><div class="traitBoxLabel"><span>Morale</span><strong id="moraleHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="moraleFill"></div></div></div>
-            <div class="traitBox"><div class="traitBoxLabel"><span>Safety</span><strong id="safetyHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="safetyFill"></div></div></div>
-          </div>
-        </div>
-      </div>
+      <div class="bottomBarSpacer" aria-hidden="true"></div>
 
       <div class="toolbarMachineRemote" aria-label="Continuous miner remote control">
         <div class="remoteHandle remoteHandleLeft" aria-hidden="true"></div>
@@ -1789,6 +2375,7 @@
         <button class="toolBtn" data-window="dev">Dev</button>
       </div>
     </footer>
+
   </div>
 
   <div class="overlay show" id="splashOverlay">
@@ -3881,12 +4468,10 @@
         drawBlocks();
         drawShaft();
         bubbleHits = [];
-        drawCrewBays();
         drawStaff();
         drawMachine();
         drawParticles();
         drawFloatingTexts();
-        drawSideSpace();
         updateHud();
       }
 
@@ -4346,8 +4931,36 @@
         </div>`;
       }
 
+      function shiftCrewRowHtml(s) {
+        const bubble = s.bubble
+          ? `<button class="shiftCrewBubble" data-staff-event="${s.id}" title="${escapeHtml(s.name)} has a question">${escapeHtml(s.bubble.icon || '?')}</button>`
+          : '';
+
+        return `<div class="shiftCrewRow ${s.bubble ? 'hasBubble' : ''}" title="${escapeHtml(s.name)} · ${roleName(s.role)}">
+          ${portraitHtml(s)}
+          <div class="shiftCrewInfo">
+            <div class="shiftCrewName">${escapeHtml(s.name)}</div>
+            <div class="shiftCrewRole" style="color:${roleColour(s.role)}">${escapeHtml(roleName(s.role))}</div>
+            <div class="shiftCrewTrait">${escapeHtml(s.trait || '')}</div>
+          </div>
+          ${bubble}
+        </div>`;
+      }
+
       function updatePanelCrewTiles(force = false) {
-        // Panel crew is rendered directly inside each quadrant's reserved bottom row.
+        const list = $('shiftCrewList');
+        const status = $('shiftCrewStatus');
+        if (!list) return;
+
+        const crew = panelCrew('SHIFT');
+        if (status) status.textContent = crew.length ? crew.length + ' assigned' : 'Awaiting selection';
+
+        if (!crew.length) {
+          list.innerHTML = '<div class="shiftCrewEmpty">Complete recruitment to assign the people who will later blame the belt.</div>';
+          return;
+        }
+
+        list.innerHTML = crew.map(shiftCrewRowHtml).join('');
       }
 
       function roleColour(role) {
@@ -4796,9 +5409,7 @@
       }
 
       function drawSideSpace() {
-        const b = board;
-        if (b.x > 120) drawAdviserPanel(16, 24, Math.min(230, b.x - 28));
-        if (W - (b.x + b.s) > 120) drawLegendPanel(b.x + b.s + 14, 24, Math.min(230, W - (b.x + b.s) - 28));
+        // Side UI is now rendered as HTML panels around the mine canvas.
       }
 
       function drawAdviserPanel(x, y, w) {
@@ -4855,6 +5466,7 @@
         updateTraitHud('morale');
         updateTraitHud('safety');
         updateMachinePadHud();
+        updatePanelCrewTiles();
       }
 
       function updateTraitHud(name) {
@@ -6053,6 +6665,7 @@
         spend(hireCost(c), 'Hiring/onboarding');
         adjustTrait('morale', 1);
         openWindow('hr');
+        updatePanelCrewTiles(true);
       }
 
       function escapeHtml(s) {
