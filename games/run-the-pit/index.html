@@ -21,7 +21,7 @@
       --pink: #f472b6;
       --paper: #fff4cf;
       --ink: #1f2937;
-      --toolbar-h: 112px;
+      --toolbar-h: 136px;
     }
 
     * { box-sizing: border-box; }
@@ -81,7 +81,7 @@
       width: 100vw;
       height: 100vh;
       display: grid;
-      grid-template-rows: 1fr var(--toolbar-h);
+      grid-template-rows: minmax(0, 1fr) var(--toolbar-h);
     }
 
     #canvasWrap {
@@ -195,7 +195,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 5px;
       margin-bottom: 4px;
     }
 
@@ -229,9 +229,9 @@
       height: var(--toolbar-h);
       display: grid;
       grid-template-columns: minmax(360px, 1fr) auto auto;
-      gap: 10px;
+      gap: 14px;
       align-items: center;
-      padding: 8px 10px;
+      padding: 12px 14px;
       background: linear-gradient(180deg, #1f2937, #0f172a);
       border-top: 3px solid #5b3a16;
       box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
@@ -242,33 +242,33 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 13px;
       min-width: 0;
     }
 
     .logoBox {
-      width: 58px;
-      height: 58px;
+      width: 62px;
+      height: 62px;
       border-radius: 14px;
       background: linear-gradient(135deg, #fbbf24, #b45309);
       color: #1f1300;
       display: grid;
       place-items: center;
       font-weight: 900;
-      font-size: 20px;
+      font-size: 15px;
       border: 2px solid rgba(255,255,255,0.25);
       box-shadow: inset 0 -8px rgba(0,0,0,0.12);
       flex: 0 0 auto;
     }
 
     .brandText { min-width: 0; }
-    .brandText h1 { margin: 0; font-size: 17px; line-height: 1.05; color: #fde68a; }
-    .brandText p { margin: 3px 0 0; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brandText h1 { margin: 0; font-size: 19px; line-height: 1.05; color: #fde68a; }
+    .brandText p { margin: 4px 0 0; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .hud {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 7px;
       margin-left: 4px;
     }
 
@@ -276,8 +276,8 @@
       border: 1px solid rgba(255,255,255,0.16);
       background: rgba(255,255,255,0.06);
       border-radius: 999px;
-      padding: 5px 8px;
-      font-size: 11px;
+      padding: 6px 10px;
+      font-size: 12px;
       color: #d1d5db;
       white-space: nowrap;
     }
@@ -289,10 +289,10 @@
 
     .traitHud {
       display: grid;
-      grid-template-columns: repeat(4, minmax(84px, 1fr));
-      gap: 6px;
-      margin-top: 6px;
-      max-width: 620px;
+      grid-template-columns: repeat(4, minmax(96px, 1fr));
+      gap: 7px;
+      margin-top: 8px;
+      max-width: 720px;
     }
 
     .traitBox {
@@ -308,7 +308,7 @@
       justify-content: space-between;
       gap: 5px;
       color: #cbd5e1;
-      font-size: 9px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.03em;
       margin-bottom: 3px;
@@ -320,7 +320,7 @@
     }
 
     .traitTrack {
-      height: 7px;
+      height: 8px;
       border-radius: 999px;
       background: rgba(255,255,255,0.13);
       overflow: hidden;
@@ -337,7 +337,7 @@
     .machineControls {
       display: grid;
       grid-template-columns: 74px 74px 74px;
-      gap: 8px;
+      gap: 5px;
       justify-content: start;
       align-items: center;
       margin: 12px 0;
@@ -351,7 +351,7 @@
       display: grid;
       place-items: center;
       font-weight: 900;
-      font-size: 18px;
+      font-size: 14px;
     }
 
     .machineControls .machineStartBtn {
@@ -429,7 +429,7 @@
     .hrTrainingPanel h2 {
       margin: 0 0 8px;
       color: #fef3c7;
-      font-size: 20px;
+      font-size: 13px;
     }
 
     .hrTrainingPanel p {
@@ -441,7 +441,7 @@
     .hrTrainingTraits {
       display: grid;
       grid-template-columns: repeat(4, minmax(120px, 1fr));
-      gap: 8px;
+      gap: 5px;
       margin-top: 12px;
     }
 
@@ -465,42 +465,210 @@
       line-height: 1.35;
     }
 
+    
+    .toolbarMachineRemote {
+      position: relative;
+      display: grid;
+      grid-template-columns: 16px minmax(190px, 220px) 16px;
+      align-items: center;
+      gap: 0;
+    }
+
+    .remoteHandle {
+      height: 54px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #1f2937, #0f172a);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 2px rgba(255,255,255,0.05), 0 8px 16px rgba(0,0,0,0.28);
+    }
+
+    .remoteHandleLeft {
+      transform: perspective(90px) rotateY(22deg);
+      transform-origin: right center;
+    }
+
+    .remoteHandleRight {
+      transform: perspective(90px) rotateY(-22deg);
+      transform-origin: left center;
+    }
+
+    .remoteShell {
+      padding: 4px 6px 5px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fb923c, #ea580c);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.15), 0 12px 22px rgba(0,0,0,0.28);
+    }
+
+    .remoteTopRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      margin-bottom: 3px;
+    }
+
+    .remoteBrand {
+      font-weight: 900;
+      font-size: 13px;
+      line-height: 1;
+      color: rgba(120,53,15,0.55);
+      letter-spacing: 0.08em;
+      text-shadow: 0 1px rgba(255,255,255,0.15);
+    }
+
+    .remoteStatusPill {
+      min-width: 48px;
+      text-align: center;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.75);
+      color: #e2e8f0;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .remotePlate {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 88px;
+      gap: 5px;
+      align-items: stretch;
+      padding: 4px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #cbd5e1, #94a3b8);
+      border: 1px solid rgba(15,23,42,0.26);
+      box-shadow: inset 0 1px rgba(255,255,255,0.35);
+    }
+
+    .remoteLeftCluster {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: 18px 1fr;
+      gap: 6px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .remoteMiniToggle {
+      width: 14px;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(180deg, #475569, #1e293b);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: inset 0 1px rgba(255,255,255,0.10);
+    }
+
+    .remoteJoystickDecor {
+      grid-column: 1 / span 2;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #475569, #0f172a 68%);
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.08);
+    }
+
+    .remoteJoystickStem {
+      position: absolute;
+      left: 12px;
+      top: 8px;
+      width: 5px;
+      height: 10px;
+      border-radius: 999px;
+      background: #0f172a;
+      transform: rotate(-22deg);
+      transform-origin: bottom center;
+    }
+
+    .remoteJoystickKnob {
+      position: absolute;
+      left: 9px;
+      top: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #111827, #000);
+      box-shadow: inset 0 1px rgba(255,255,255,0.12);
+    }
+
+    .remoteDisplay {
+      min-width: 0;
+      border-radius: 10px;
+      padding: 5px 7px;
+      background: linear-gradient(180deg, #0f172a, #1e293b);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 1px rgba(255,255,255,0.05);
+    }
+
+    .remoteDisplayLabel {
+      color: #93c5fd;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .remoteDisplayValue {
+      color: #d9f99d;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+
+    .remoteDisplaySub {
+      color: #cbd5e1;
+      font-size: 9px;
+      line-height: 1.2;
+    }
+
     .toolbarMachineControls {
       display: grid;
-      grid-template-columns: repeat(3, 38px);
-      grid-template-rows: repeat(3, 28px);
-      gap: 4px;
+      grid-template-columns: repeat(3, 25px);
+      grid-template-rows: repeat(3, 18px);
+      gap: 5px;
       align-items: center;
       justify-content: center;
-      padding: 4px 6px;
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 12px;
-      background: rgba(0,0,0,0.18);
-      box-shadow: inset 0 1px rgba(255,255,255,0.06);
+      justify-self: end;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
     }
 
     .machinePadBtn {
-      width: 38px;
-      height: 28px;
-      min-height: 28px;
+      width: 25px;
+      height: 18px;
+      min-height: 18px;
       padding: 0;
       border-radius: 8px;
       font-weight: 900;
-      font-size: 15px;
+      font-size: 12px;
       line-height: 1;
+      color: #f8fafc;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, #475569, #1e293b);
+      box-shadow: inset 0 1px rgba(255,255,255,0.10), 0 3px 6px rgba(0,0,0,0.22);
     }
 
     .machinePadBtn.active {
-      border-color: rgba(251,191,36,0.90);
-      background: linear-gradient(180deg, rgba(251,191,36,0.34), rgba(180,83,9,0.78));
+      border-color: rgba(254,240,138,0.88);
+      background: linear-gradient(180deg, #fbbf24, #d97706);
       color: #fff7ed;
-      box-shadow: 0 0 0 2px rgba(251,191,36,0.18);
+      box-shadow: inset 0 1px rgba(255,255,255,0.18), 0 0 0 2px rgba(251,191,36,0.18);
     }
 
     .machinePadStop {
-      font-size: 9px;
-      letter-spacing: 0.03em;
-      background: linear-gradient(180deg, #64748b, #334155);
+      font-size: 8px;
+      letter-spacing: 0.07em;
+      background: linear-gradient(180deg, #ef4444, #991b1b);
     }
 
     .machinePadSpacer {
@@ -508,12 +676,31 @@
       pointer-events: none;
     }
 
+    /* compact mining remote overrides */
+    .toolbarMachineRemote { grid-template-columns: 11px minmax(176px, 196px) 11px; }
+    .remoteHandle { height: 54px; }
+    .remoteShell { padding: 4px 6px 5px; }
+    .remoteTopRow { margin-bottom: 3px; }
+    .remoteBrand { font-size: 13px; }
+    .remoteStatusPill { min-width: 48px; padding: 2px 6px; font-size: 8px; }
+    .remotePlate { grid-template-columns: 32px minmax(0, 1fr) 84px; gap: 5px; padding: 4px; }
+    .remoteLeftCluster { gap: 3px; }
+    .remoteMiniToggle { width: 10px; height: 10px; border-radius: 4px; }
+    .remoteJoystickDecor { width: 26px; height: 26px; }
+    .remoteDisplay { padding: 5px 6px; }
+    .remoteDisplayLabel, .remoteDisplaySub { font-size: 8px; }
+    .remoteDisplayValue { font-size: 13px; }
+    .toolbarMachineControls { grid-template-columns: repeat(3, 24px); grid-template-rows: repeat(3, 17px); gap: 4px; }
+    .machinePadBtn { width: 24px; height: 17px; min-height: 17px; border-radius: 6px; font-size: 11px; }
+    .machinePadStop { font-size: 7px; }
+
     .toolbarButtons {
       display: flex;
       align-items: center;
       justify-content: flex-end;
       flex-wrap: wrap;
-      gap: 7px;
+      gap: 8px;
+      max-width: 720px;
     }
 
     .panelCrewTiles {
@@ -559,7 +746,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       color: #fde68a;
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 0.02em;
       text-transform: uppercase;
     }
@@ -587,7 +774,7 @@
     }
 
     .portraitWrap.crewMiniPortrait {
-      width: 30px;
+      width: 25px;
       height: 30px;
       border-radius: 9px;
       margin: 0 auto 2px;
@@ -595,7 +782,7 @@
     }
 
     .portraitWrap.crewMiniPortrait .portraitFallback {
-      font-size: 10px;
+      font-size: 9px;
     }
 
     .crewMiniName {
@@ -631,7 +818,7 @@
       border: 1px solid #92400e;
       background: #fef3c7;
       color: #92400e;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 900;
       line-height: 1;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
@@ -640,15 +827,16 @@
 
     .crewTileEmpty {
       color: #94a3b8;
-      font-size: 10px;
+      font-size: 9px;
       line-height: 1.2;
       padding-top: 5px;
     }
 
     .toolBtn {
-      min-width: 74px;
-      padding: 7px 9px;
-      font-size: 12px;
+      min-height: 40px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px;
     }
 
     .overlay {
@@ -690,7 +878,7 @@
 
     .windowTitle h2 {
       margin: 0;
-      font-size: 18px;
+      font-size: 14px;
       color: #fff7ed;
     }
 
@@ -785,7 +973,7 @@
     }
 
     .letter h2 { color: var(--ink); margin: 0 0 12px; }
-    .letter p { color: var(--ink); font-size: 16px; line-height: 1.55; }
+    .letter p { color: var(--ink); font-size: 13px; line-height: 1.55; }
     .letter .sig { margin-top: 20px; font-weight: 700; }
 
     .gridCards {
@@ -803,7 +991,7 @@
       gap: 7px;
     }
 
-    .card h3 { margin: 0; font-size: 16px; }
+    .card h3 { margin: 0; font-size: 13px; }
     .card p { margin: 0; font-size: 12px; color: #cbd5e1; }
 
     .tag {
@@ -820,7 +1008,7 @@
     .meterRow {
       display: grid;
       grid-template-columns: 76px 1fr;
-      gap: 8px;
+      gap: 5px;
       align-items: center;
       color: #a7b0be;
       font-size: 11px;
@@ -840,7 +1028,7 @@
       background: linear-gradient(90deg, #38bdf8, #22c55e);
     }
 
-    .rows { display: grid; gap: 8px; }
+    .rows { display: grid; gap: 5px; }
 
     .row {
       border: 1px solid rgba(255,255,255,0.12);
@@ -865,7 +1053,7 @@
     .row strong { display: block; }
     .row span { color: #a7b0be; font-size: 12px; }
 
-    .btnRow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .btnRow { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 12px; }
 
 
 
@@ -891,7 +1079,7 @@
       background: rgba(255,255,255,0.06);
       padding: 11px;
       display: grid;
-      gap: 8px;
+      gap: 5px;
       align-content: start;
     }
 
@@ -903,7 +1091,7 @@
     .choiceCard h3 {
       margin: 0;
       color: #fde68a;
-      font-size: 16px;
+      font-size: 13px;
     }
 
     .choiceCard p {
@@ -996,7 +1184,7 @@
       background: rgba(0,0,0,0.12);
       border-radius: 14px;
       padding: 10px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .crewRoleHeader {
@@ -1004,13 +1192,13 @@
       align-items: baseline;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 3px;
     }
 
     .crewRoleHeader h3 {
       margin: 0;
       color: #fde68a;
-      font-size: 16px;
+      font-size: 13px;
     }
 
     .crewRoleHeader span {
@@ -1074,17 +1262,27 @@
     }
 
     @media (max-width: 820px) {
-      :root { --toolbar-h: 172px; }
-      #bottomBar { grid-template-columns: 1fr; align-content: start; overflow-y: auto; }
+      :root { --toolbar-h: 178px; }
+      #bottomBar {
+        grid-template-columns: 1fr;
+        align-content: start;
+        overflow-y: auto;
+        padding: 10px;
+      }
       .toolbarButtons { justify-content: flex-start; }
-      .toolbarMachineControls { justify-content: start; width: fit-content; }
+      .toolbarMachineRemote { grid-template-columns: 12px minmax(0, 1fr) 12px; width: 100%; max-width: 360px; }
+      .remoteHandle { height: 78px; }
+      .remotePlate { grid-template-columns: 44px minmax(0, 1fr) 106px; }
+      .toolbarMachineControls { justify-content: start; width: fit-content; grid-template-columns: repeat(3, 31px); grid-template-rows: repeat(3, 23px); }
+      .machinePadBtn { width: 31px; height: 23px; min-height: 23px; font-size: 13px; }
+      .remoteDisplayValue { font-size: 13px; }
       .hrTrainingTraits { grid-template-columns: 1fr; }
 
       .productionManagerDock {
         left: 8px;
         bottom: 8px;
         grid-template-columns: 62px minmax(190px, calc(100vw - 92px));
-        gap: 8px;
+        gap: 5px;
       }
       .pmCharacter { width: 62px; height: 78px; border-radius: 14px; }
       .pmPortraitFallback { font-size: 22px; }
@@ -1092,8 +1290,8 @@
       .pmSpeechBubble p { font-size: 12px; }
       .toolBtn { min-width: auto; }
       .brand { align-items: flex-start; }
-      .logoBox { width: 46px; height: 46px; font-size: 16px; }
-      .brandText h1 { font-size: 15px; }
+      .logoBox { width: 46px; height: 46px; font-size: 13px; }
+      .brandText h1 { font-size: 12px; }
       .traitHud { grid-template-columns: repeat(2, minmax(120px, 1fr)); max-width: none; }
       .machineControls { grid-template-columns: repeat(3, 66px); }
       .machineControls .machineDirBtn,
@@ -1161,16 +1359,44 @@
         </div>
       </div>
 
-      <div class="toolbarMachineControls" aria-label="Continuous miner directional controls">
-        <button class="machinePadBtn machinePadSpacer" disabled></button>
-        <button class="machinePadBtn" data-machine-dir="up" title="Mine / tram up">↑</button>
-        <button class="machinePadBtn machinePadSpacer" disabled></button>
-        <button class="machinePadBtn" data-machine-dir="left" title="Mine / tram left">←</button>
-        <button class="machinePadBtn machinePadStop" data-machine-stop title="Stop mining">STOP</button>
-        <button class="machinePadBtn" data-machine-dir="right" title="Mine / tram right">→</button>
-        <button class="machinePadBtn machinePadSpacer" disabled></button>
-        <button class="machinePadBtn" data-machine-dir="down" title="Mine / tram down">↓</button>
-        <button class="machinePadBtn machinePadSpacer" disabled></button>
+      <div class="toolbarMachineRemote" aria-label="Continuous miner remote control">
+        <div class="remoteHandle remoteHandleLeft" aria-hidden="true"></div>
+        <div class="remoteShell">
+          <div class="remoteTopRow">
+            <div class="remoteBrand">JOY</div>
+            <div class="remoteStatusPill" id="machineRemoteStatus">IDLE</div>
+          </div>
+
+          <div class="remotePlate">
+            <div class="remoteLeftCluster" aria-hidden="true">
+              <div class="remoteMiniToggle"></div>
+              <div class="remoteMiniToggle"></div>
+              <div class="remoteJoystickDecor">
+                <div class="remoteJoystickStem"></div>
+                <div class="remoteJoystickKnob"></div>
+              </div>
+            </div>
+
+            <div class="remoteDisplay">
+              <div class="remoteDisplayLabel">Continuous Miner</div>
+              <div class="remoteDisplayValue" id="machineRemoteDir">UP</div>
+              <div class="remoteDisplaySub">Directional Control</div>
+            </div>
+
+            <div class="toolbarMachineControls" aria-label="Continuous miner directional controls">
+              <button class="machinePadBtn machinePadSpacer" disabled></button>
+              <button class="machinePadBtn" data-machine-dir="up" title="Mine / tram up">↑</button>
+              <button class="machinePadBtn machinePadSpacer" disabled></button>
+              <button class="machinePadBtn" data-machine-dir="left" title="Mine / tram left">←</button>
+              <button class="machinePadBtn machinePadStop" data-machine-stop title="Stop mining">STOP</button>
+              <button class="machinePadBtn" data-machine-dir="right" title="Mine / tram right">→</button>
+              <button class="machinePadBtn machinePadSpacer" disabled></button>
+              <button class="machinePadBtn" data-machine-dir="down" title="Mine / tram down">↓</button>
+              <button class="machinePadBtn machinePadSpacer" disabled></button>
+            </div>
+          </div>
+        </div>
+        <div class="remoteHandle remoteHandleRight" aria-hidden="true"></div>
       </div>
 
       <div class="toolbarButtons">
@@ -1639,6 +1865,28 @@
           ]
         },
         {
+          type: 'beltAvailability',
+          icon: '↻',
+          roles: ['miner', 'supervisor'],
+          quote: '“If only the belt would run…”',
+          text: '{name} has pointed out that if the belt had any interest in moving, the crew could have hit the target and gone home early.',
+          buttons: [
+            { label: 'Authorise belt recovery support', choice: 'beltRecoverySupport' },
+            { label: 'Log it as an opportunity', choice: 'beltOpportunity' }
+          ]
+        },
+        {
+          type: 'beltBlame',
+          icon: '!',
+          roles: ['miner', 'fitter', 'electrician', 'supervisor'],
+          quote: '“Is the belt meant to sound like that?”',
+          text: '{name} believes the conveyor has entered the blame-allocation phase of its lifecycle.',
+          buttons: [
+            { label: 'Resource the fix properly', choice: 'beltProperFix' },
+            { label: 'Ask the crew to be more resilient', choice: 'beltResilience' }
+          ]
+        },
+        {
           type: 'conveyor',
           icon: '↻',
           roles: ['miner', 'fitter', 'electrician'],
@@ -1813,12 +2061,12 @@
         waitApproval: { tone: 'negative', text: '+1 Safety, -2 Productivity, machine wears, free' }
       };
 
-      const quadrants = [
-        { id: 'NW', name: 'NW Panel', active: true },
-        { id: 'NE', name: 'NE Panel', active: false },
-        { id: 'SW', name: 'SW Panel', active: false },
-        { id: 'SE', name: 'SE Panel', active: false }
-      ];
+      const MINE_ID = 'MINE';
+      const MINE_COLS = 18;
+      const MINE_ROWS = 18;
+      const LOCKED_ROWS = 6;
+      const START_COL = Math.floor(MINE_COLS / 2);
+      const START_ROW = MINE_ROWS - 2;
 
       const managerOptions = [
         {
@@ -1933,9 +2181,9 @@
         safetyTimer: 0,
         traits: { productivity: 70, skill: 70, morale: 70, safety: 70 },
         machine: {
-          q: 'NW',
-          r: 8,
-          c: 9,
+          q: MINE_ID,
+          r: START_ROW,
+          c: START_COL,
           status: 'idle',
           autoMining: false,
           dir: 'up',
@@ -1947,6 +2195,15 @@
           repairProgress: 0,
           warnedSmoking: false,
           warnedCritical: false
+        },
+        conveyor: {
+          status: 'running',
+          fault: null,
+          condition: 92,
+          progress: 0,
+          anim: 0,
+          nextFaultDay: 18,
+          faultCount: 0
         },
         productionCommentTimer: 0,
         capexFreezeUntil: 0,
@@ -1964,29 +2221,47 @@
       }
 
       function initBlocks() {
-        for (const q of quadrants) {
-          const list = [];
-          for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 10; c++) {
-              const idx = r * 10 + c + (q.id.charCodeAt(0) + q.id.charCodeAt(1)) * 100;
-              const localHighGrade = q.id === 'NW' && ((r < 4 && c < 4) || (r < 3 && c > 6));
-              let grade = 12.2 + seeded(idx) * 3.6;
-              if (localHighGrade) grade += 0.9;
-              const tonnes = 520 + Math.round(seeded(idx + 17) * 760);
-              const riskVal = seeded(idx + 31);
-              const risk = riskVal > 0.77 ? 'High' : riskVal > 0.43 ? 'Medium' : 'Low';
-              list.push({ q: q.id, r, c, grade, tonnes, risk, status: 'solid', progress: 0 });
-            }
+        const list = [];
+
+        for (let r = 0; r < MINE_ROWS; r++) {
+          for (let c = 0; c < MINE_COLS; c++) {
+            const idx = r * MINE_COLS + c + 8843;
+            const unlocked = r >= LOCKED_ROWS;
+            const sweetSpot = unlocked && ((r >= LOCKED_ROWS + 1 && r <= LOCKED_ROWS + 5 && c >= 4 && c <= 8) || (r >= LOCKED_ROWS + 2 && r <= LOCKED_ROWS + 7 && c >= 11 && c <= 15));
+            const lowerDilution = unlocked && r > MINE_ROWS - 5;
+
+            let grade = 12.1 + seeded(idx) * 3.55;
+            if (sweetSpot) grade += 0.85;
+            if (lowerDilution) grade -= 0.25;
+
+            const tonnes = 520 + Math.round(seeded(idx + 17) * 760);
+            const riskVal = seeded(idx + 31);
+            const risk = riskVal > 0.78 ? 'High' : riskVal > 0.44 ? 'Medium' : 'Low';
+
+            list.push({
+              q: MINE_ID,
+              r, c,
+              grade,
+              tonnes,
+              risk,
+              status: unlocked ? 'solid' : 'locked',
+              progress: 0
+            });
           }
-          state.blocks[q.id] = list;
         }
-        blockAt('NW', 8, 9).status = 'void';
-        blockAt('NW', 8, 9).tonnes = 0;
-        blockAt('NW', 8, 9).grade = 0;
+
+        state.blocks[MINE_ID] = list;
+
+        const start = blockAt(MINE_ID, START_ROW, START_COL);
+        if (start) {
+          start.status = 'void';
+          start.tonnes = 0;
+          start.grade = 0;
+        }
       }
 
       function blockAt(q, r, c) {
-        return (state.blocks[q] || []).find(b => b.r === r && b.c === c);
+        return (state.blocks[MINE_ID] || []).find(b => b.r === r && b.c === c);
       }
 
       function resize() {
@@ -2004,29 +2279,46 @@
       }
 
       function computeBoard() {
-        const side = Math.floor(Math.min(H * 0.96, W * 0.86));
+        const marginX = Math.max(12, W * 0.035);
+        const marginY = Math.max(10, H * 0.035);
+        const infraRows = 2.85;
+
+        const cell = Math.floor(Math.max(16, Math.min(
+          (W - marginX * 2) / MINE_COLS,
+          (H - marginY * 2) / (MINE_ROWS + infraRows)
+        )));
+
+        const gridW = cell * MINE_COLS;
+        const gridH = cell * MINE_ROWS;
+        const infraH = cell * infraRows;
+        const totalH = gridH + infraH;
+
         board = {
-          x: Math.floor((W - side) / 2),
-          y: Math.floor((H - side) / 2),
-          s: side,
-          q: side / 2,
-          cell: side / 20
+          x: Math.floor((W - gridW) / 2),
+          y: Math.floor((H - totalH) / 2),
+          w: gridW,
+          h: gridH,
+          s: Math.max(gridW, gridH),
+          q: gridW,
+          cell,
+          cols: MINE_COLS,
+          rows: MINE_ROWS,
+          infraY: Math.floor((H - totalH) / 2 + gridH),
+          infraH
         };
       }
 
+      function mineRect() {
+        return { x: board.x, y: board.y, w: board.w, h: board.h };
+      }
+
       function qRect(qid) {
-        const b = board;
-        const q = b.q;
-        if (qid === 'NW') return { x: b.x, y: b.y, w: q, h: q };
-        if (qid === 'NE') return { x: b.x + q, y: b.y, w: q, h: q };
-        if (qid === 'SW') return { x: b.x, y: b.y + q, w: q, h: q };
-        return { x: b.x + q, y: b.y + q, w: q, h: q };
+        return mineRect();
       }
 
       function cellRect(qid, r, c) {
-        const qr = qRect(qid);
-        const cs = qr.w / 10;
-        return { x: qr.x + c * cs, y: qr.y + r * cs, w: cs, h: cs };
+        const cs = board.cell;
+        return { x: board.x + c * cs, y: board.y + r * cs, w: cs, h: cs };
       }
 
       function machinePos() {
@@ -2044,7 +2336,13 @@
 
       function isMineable(block) {
         const next = nextMachineBlock();
-        return next && block && block.q === next.q && block.r === next.r && block.c === next.c && state.machine.status === 'idle';
+        return next &&
+          block &&
+          block.status === 'solid' &&
+          block.q === next.q &&
+          block.r === next.r &&
+          block.c === next.c &&
+          state.machine.status === 'idle';
       }
 
       function grade() {
@@ -2140,7 +2438,7 @@
 
       function nextMachineBlock() {
         const d = dirDelta();
-        return blockAt(state.machine.q, state.machine.r + d.r, state.machine.c + d.c);
+        return blockAt(MINE_ID, state.machine.r + d.r, state.machine.c + d.c);
       }
 
       function directionLabel(dir = state.machine.dir) {
@@ -2156,6 +2454,7 @@
         updateFloatingTexts(dt);
         updateProductionComment(dt);
         updateMachineSmoke(dt);
+        if (state.running && !state.paused) updateConveyor(dt);
 
         if (!state.running || state.paused) return;
 
@@ -2172,6 +2471,7 @@
           spend(dailyWageCost(), 'Crew salary');
           if (state.day % 16 === 0) showRandomProductionComment();
           if (state.day % 24 === 0) maybeGenerateStaffBubble();
+          maybeConveyorFault();
         }
 
         if (state.machine.status === 'mining') {
@@ -2273,6 +2573,11 @@
       }
 
       function mineUpdate(dt) {
+        if (!isConveyorAvailable()) {
+          stopAutoMining('Conveyor stopped mid-cut. The miner has paused before the shift becomes a loading problem.', 'Mine Services');
+          return;
+        }
+
         const target = blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c);
         if (!target) {
           stopAutoMining('The miner has run out of mine in that direction.');
@@ -2349,6 +2654,11 @@
       }
 
       function tramUpdate(dt) {
+        if (!isConveyorAvailable()) {
+          stopAutoMining('Conveyor stopped while tramming. The miner is parked until Mine Services finishes explaining itself.', 'Mine Services');
+          return;
+        }
+
         const target = blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c);
         if (!target) {
           stopAutoMining('The miner has nowhere useful to tram.');
@@ -2502,6 +2812,178 @@
         $('modalOverlay').classList.add('show');
       }
 
+      function isConveyorAvailable() {
+        return state.conveyor && state.conveyor.status === 'running';
+      }
+
+      function conveyorFaultInfo(fault = state.conveyor.fault) {
+        const map = {
+          trip: {
+            label: 'Electrical trip',
+            role: 'electrician',
+            action: 'Reset Conveyor Trip',
+            cost: 350,
+            category: 'Mine Services',
+            message: 'The conveyor has tripped. Electrical believes it is either a protection device or a personality trait.'
+          },
+          buried: {
+            label: 'Buried tail end',
+            role: 'miner',
+            action: 'Dig Out Belt',
+            cost: 200,
+            category: 'Production',
+            message: 'The conveyor tail end is buried. The belt is unavailable until someone relocates the mine from around it.'
+          },
+          drive: {
+            label: 'Drive fault',
+            role: 'fitter',
+            action: 'Maintain Drive',
+            cost: 1100,
+            category: 'Maintenance',
+            message: 'The conveyor drive has developed mechanical uncertainty. Maintenance has requested time, tools, and fewer questions.'
+          },
+          mechanical: {
+            label: 'Mechanical stoppage',
+            role: 'fitter',
+            action: 'Repair Conveyor',
+            cost: 1600,
+            category: 'Maintenance',
+            message: 'The belt has stopped for mechanical reasons, which is a technical term meaning the expensive bit is unhappy.'
+          }
+        };
+        return map[fault] || map.mechanical;
+      }
+
+      function crewByRole(role) {
+        return state.staff.find(s => s.role === role) || null;
+      }
+
+      function conveyorWorkerForFault(fault = state.conveyor.fault) {
+        const info = conveyorFaultInfo(fault);
+        if (info.role === 'miner') return crewByRole('miner');
+        if (info.role === 'electrician') return crewByRole('electrician');
+        return crewByRole('fitter');
+      }
+
+      function conveyorFixRate() {
+        const worker = conveyorWorkerForFault();
+        const skill = worker ? worker.skill : 1;
+        return 20 + skill * 11;
+      }
+
+      function maybeConveyorFault() {
+        if (!state.running || state.paused || state.levelComplete) return;
+        if (!state.conveyor || state.conveyor.status !== 'running') return;
+        if (state.day < state.conveyor.nextFaultDay) return;
+        if (state.machine.status !== 'mining' && state.machine.status !== 'tramming') return;
+
+        if (Math.random() < 0.36) {
+          const faults = ['trip', 'buried', 'drive', 'mechanical'];
+          const type = faults[Math.floor(Math.random() * faults.length)];
+          triggerConveyorFault(type);
+        } else {
+          state.conveyor.nextFaultDay = state.day + 10 + Math.floor(Math.random() * 12);
+        }
+      }
+
+      function triggerConveyorFault(type) {
+        const info = conveyorFaultInfo(type);
+        state.conveyor.status = 'stopped';
+        state.conveyor.fault = type;
+        state.conveyor.progress = 0;
+        state.conveyor.faultCount++;
+        state.conveyor.condition = Math.max(0, state.conveyor.condition - (type === 'trip' ? 5 : type === 'buried' ? 8 : 15));
+        state.conveyor.nextFaultDay = state.day + 14 + Math.floor(Math.random() * 14);
+
+        stopAutoMining('Conveyor stopped. The miner has stopped automatically because mined tonnes cannot currently escape the consequences.', 'Mine Services');
+        addBeltMoanBubble();
+
+        showProductionComment(info.message, info.category, 8);
+      }
+
+      function addBeltMoanBubble() {
+        const candidates = state.staff.filter(s =>
+          !s.bubble && ['miner', 'supervisor', 'fitter', 'electrician'].includes(s.role)
+        );
+        if (!candidates.length) return;
+
+        const preferred = candidates.filter(s => s.role === 'miner' || s.role === 'supervisor');
+        const list = preferred.length ? preferred : candidates;
+        const s = list[Math.floor(Math.random() * list.length)];
+        s.bubble = {
+          type: Math.random() < 0.65 ? 'beltAvailability' : 'beltBlame',
+          icon: '↻'
+        };
+      }
+
+      function startConveyorFix() {
+        if (!state.conveyor || state.conveyor.status === 'running') {
+          openMiniWindow('Conveyor Availability', '<p>The conveyor is currently running. Mine Services recommends not touching it until it changes its mind.</p>', true);
+          return;
+        }
+
+        if (state.conveyor.status === 'maintenance') {
+          openMiniWindow('Conveyor Availability', '<p>The conveyor intervention is already in progress. Please allow the relevant trade to mutter in peace.</p>', true);
+          return;
+        }
+
+        const info = conveyorFaultInfo();
+        const worker = conveyorWorkerForFault();
+
+        if (!worker) {
+          openMiniWindow('No Suitable Crew Available', '<p>The required person is not on shift. The conveyor remains stopped and smug.</p><p>Required: <strong>' + roleName(info.role) + '</strong>.</p>', true);
+          return;
+        }
+
+        state.conveyor.status = 'maintenance';
+        state.conveyor.progress = 0;
+        spend(info.cost, 'Conveyor ' + info.label);
+        showProductionComment(worker.name + ' is dealing with the conveyor. Cost: ' + money(info.cost) + '. Productivity has entered a waiting pattern.', 'Mine Services');
+        $('modalOverlay').classList.remove('show');
+      }
+
+      function updateConveyor(dt) {
+        if (!state.conveyor) return;
+
+        if (state.conveyor.status === 'running') {
+          state.conveyor.anim += dt * (state.machine.status === 'mining' || state.machine.status === 'tramming' ? 2.6 : 1.1);
+          return;
+        }
+
+        if (state.conveyor.status === 'stopped') {
+          if (state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining) {
+            stopAutoMining('Conveyor unavailable. The miner has been stopped before the stockpile became a geological feature.', 'Mine Services');
+          }
+          return;
+        }
+
+        if (state.conveyor.status === 'maintenance') {
+          state.conveyor.progress += conveyorFixRate() * dt;
+
+          if (Math.random() < 0.08) {
+            const belt = conveyorVisualPoints();
+            if (belt) spawnDust(belt.x + rand(-12, 12), belt.y + rand(-6, 6));
+          }
+
+          if (state.conveyor.progress >= 100) {
+            state.conveyor.status = 'running';
+            state.conveyor.fault = null;
+            state.conveyor.progress = 0;
+            state.conveyor.condition = Math.min(100, Math.max(state.conveyor.condition, 70));
+            showProductionComment('Conveyor available. Mine Services has restarted the belt and several arguments.', 'Mine Services');
+          }
+        }
+      }
+
+      function conveyorVisualPoints() {
+        if (!board) return null;
+        const startRect = cellRect(MINE_ID, START_ROW, START_COL);
+        return {
+          x: (board.x + board.cell * 2.2 + startRect.x + startRect.w / 2) / 2,
+          y: (board.infraY + board.infraH * 0.52 + startRect.y + startRect.h * 0.98) / 2
+        };
+      }
+
       function fitterOnCrew() {
         return state.staff.find(s => s.role === 'fitter') || null;
       }
@@ -2539,8 +3021,8 @@
           return;
         }
 
-        if (state.machine.status === 'mining') {
-          openMiniWindow('Cannot Repair While Cutting', '<p>The fitter has declined to repair a machine while it is actively trying to eat the mine.</p>', true);
+        if (state.machine.status === 'mining' || state.machine.status === 'tramming') {
+          openMiniWindow('Cannot Repair While Moving', '<p>The fitter has declined to repair a machine while it is actively trying to eat or cross the mine.</p>', true);
           return;
         }
 
@@ -2727,78 +3209,126 @@
         const b = board;
         ctx.save();
         ctx.fillStyle = 'rgba(0,0,0,0.42)';
-        roundRect(ctx, b.x - 7, b.y + 9, b.s + 14, b.s + 14, 18);
+        roundRect(ctx, b.x - 8, b.y + 10, b.w + 16, b.h + b.infraH + 14, 18);
         ctx.fill();
         ctx.restore();
       }
 
       function drawQuadrants() {
-        for (const q of quadrants) {
-          const r = qRect(q.id);
-          ctx.save();
-          ctx.fillStyle = q.active ? '#3b2618' : '#111827';
-          ctx.fillRect(r.x, r.y, r.w, r.h);
-          ctx.strokeStyle = q.active ? 'rgba(245,158,11,0.9)' : 'rgba(156,163,175,0.38)';
-          ctx.lineWidth = q.active ? 3 : 2;
-          ctx.strokeRect(r.x, r.y, r.w, r.h);
+        const b = board;
+        ctx.save();
 
-          ctx.fillStyle = q.active ? '#fde68a' : '#9ca3af';
-          ctx.font = '800 13px Arial';
-          ctx.textAlign = 'left';
-          ctx.fillText(q.name, r.x + 8, r.y + 18);
-          if (!q.active) {
-            ctx.fillStyle = 'rgba(0,0,0,0.38)';
-            ctx.fillRect(r.x, r.y, r.w, r.h);
-            ctx.fillStyle = 'rgba(255,255,255,0.72)';
-            ctx.font = '800 14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('ACCESS NOT DEVELOPED', r.x + r.w / 2, r.y + r.h / 2);
-          }
-          ctx.restore();
-        }
+        const bg = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+        bg.addColorStop(0, '#2b211c');
+        bg.addColorStop(0.38, '#3b2618');
+        bg.addColorStop(1, '#27170f');
+        ctx.fillStyle = bg;
+        roundRect(ctx, b.x, b.y, b.w, b.h + b.infraH, 16);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(245,158,11,0.78)';
+        ctx.lineWidth = 3;
+        roundRect(ctx, b.x, b.y, b.w, b.h + b.infraH, 16);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fde68a';
+        ctx.font = '900 ' + Math.max(13, b.cell * 0.34) + 'px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('ManySalts Trial Area — Zone 0', b.x + 10, b.y + 8);
+
+        ctx.fillStyle = 'rgba(15,23,42,0.54)';
+        ctx.fillRect(b.x, b.infraY, b.w, b.infraH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.infraY);
+        ctx.lineTo(b.x + b.w, b.infraY);
+        ctx.stroke();
+
+        ctx.restore();
       }
 
       function drawBlocks() {
         blockHits = [];
-        for (const q of quadrants) {
-          for (const block of state.blocks[q.id]) {
-            const r = cellRect(block.q, block.r, block.c);
-            blockHits.push({ q: block.q, r: block.r, c: block.c, rect: r });
+        const blocks = state.blocks[MINE_ID] || [];
 
-            if (block.status === 'void') {
-              ctx.fillStyle = '#05070b';
-              ctx.fillRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
-              ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-              ctx.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
-              continue;
-            }
+        for (const block of blocks) {
+          const r = cellRect(block.q, block.r, block.c);
+          blockHits.push({ q: block.q, r: block.r, c: block.c, rect: r });
 
+          if (block.status === 'locked') {
             ctx.save();
-            ctx.globalAlpha = q.active ? 1 : 0.32;
-            ctx.fillStyle = q.active ? gradeColour(block.grade) : '#6b7280';
+            ctx.fillStyle = '#334155';
             ctx.fillRect(r.x + 0.6, r.y + 0.6, r.w - 1.2, r.h - 1.2);
-
-            const accessible = isMineable(block);
-            if (accessible) {
-              ctx.strokeStyle = '#fef08a';
-              ctx.lineWidth = Math.max(1.5, r.w * 0.06);
-              ctx.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
-            }
-
-            if (block.status === 'mining') {
-              drawCracks(r, block.progress);
-              ctx.fillStyle = 'rgba(0,0,0,0.34)';
-              ctx.fillRect(r.x, r.y + r.h * (block.progress / 100), r.w, r.h * (1 - block.progress / 100));
-              ctx.fillStyle = 'rgba(255,255,255,0.24)';
-              ctx.fillRect(r.x + 3, r.y + r.h - 6, (r.w - 6) * block.progress / 100, 3);
-            }
-
-            ctx.strokeStyle = 'rgba(0,0,0,0.30)';
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(r.x + 3, r.y + 3, r.w - 6, r.h - 6);
+            ctx.strokeStyle = 'rgba(255,255,255,0.09)';
             ctx.lineWidth = 1;
             ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
             ctx.restore();
+            continue;
           }
+
+          if (block.status === 'void') {
+            ctx.fillStyle = '#05070b';
+            ctx.fillRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+            continue;
+          }
+
+          ctx.save();
+          ctx.fillStyle = gradeColour(block.grade);
+          ctx.fillRect(r.x + 0.6, r.y + 0.6, r.w - 1.2, r.h - 1.2);
+
+          const accessible = isMineable(block);
+          if (accessible) {
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = Math.max(1.5, r.w * 0.06);
+            ctx.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+          }
+
+          if (block.status === 'mining') {
+            drawCracks(r, block.progress);
+            ctx.fillStyle = 'rgba(0,0,0,0.34)';
+            ctx.fillRect(r.x, r.y + r.h * (block.progress / 100), r.w, r.h * (1 - block.progress / 100));
+            ctx.fillStyle = 'rgba(255,255,255,0.24)';
+            ctx.fillRect(r.x + 3, r.y + r.h - 6, (r.w - 6) * block.progress / 100, 3);
+          }
+
+          ctx.strokeStyle = 'rgba(0,0,0,0.30)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+          ctx.restore();
         }
+
+        drawLockedExplorationNotice();
+      }
+
+      function drawLockedExplorationNotice() {
+        const b = board;
+        const h = LOCKED_ROWS * b.cell;
+        ctx.save();
+        ctx.fillStyle = 'rgba(15,23,42,0.48)';
+        ctx.fillRect(b.x, b.y, b.w, h);
+
+        ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+        ctx.setLineDash([8, 5]);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(b.x + 6, b.y + 6, b.w - 12, h - 12);
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = '900 ' + Math.max(13, b.cell * 0.36) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('AREA LOCKED', b.x + b.w / 2, b.y + h / 2 - b.cell * 0.32);
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '700 ' + Math.max(10, b.cell * 0.23) + 'px Arial';
+        ctx.fillText('Requires exploration drilling', b.x + b.w / 2, b.y + h / 2 + b.cell * 0.16);
+        ctx.fillText('Future module: hire drillers, geologists, and someone to take the blame', b.x + b.w / 2, b.y + h / 2 + b.cell * 0.54);
+        ctx.restore();
       }
 
       function gradeColour(g) {
@@ -2828,78 +3358,166 @@
 
       function drawShaft() {
         const b = board;
-        const size = Math.max(48, b.cell * 2.15);
-        const x = b.x + b.s / 2 - size / 2;
-        const y = b.y + b.s / 2 - size / 2;
+        const startRect = cellRect(MINE_ID, START_ROW, START_COL);
+        const shaftR = Math.max(20, b.cell * 0.72);
+        const shaftX = b.x + b.cell * 2.2;
+        const shaftY = b.infraY + b.infraH * 0.52;
+
+        drawConveyorBelt(shaftX + shaftR * 0.85, shaftY, startRect.x + startRect.w / 2, startRect.y + startRect.h * 0.98);
+
         ctx.save();
         ctx.fillStyle = '#0f172a';
-        roundRect(ctx, x, y, size, size, 12);
+        ctx.beginPath();
+        ctx.arc(shaftX, shaftY, shaftR, 0, Math.PI * 2);
         ctx.fill();
+
         ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 3;
-        roundRect(ctx, x + 3, y + 3, size - 6, size - 6, 10);
+        ctx.lineWidth = Math.max(3, b.cell * 0.09);
+        ctx.beginPath();
+        ctx.arc(shaftX, shaftY, shaftR - 3, 0, Math.PI * 2);
         ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.beginPath();
+        ctx.arc(shaftX, shaftY, shaftR * 0.62, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(148,163,184,0.55)';
+        ctx.lineWidth = 1.5;
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+          ctx.beginPath();
+          ctx.moveTo(shaftX, shaftY);
+          ctx.lineTo(shaftX + Math.cos(a) * shaftR * 0.80, shaftY + Math.sin(a) * shaftR * 0.80);
+          ctx.stroke();
+        }
+
         ctx.fillStyle = '#bae6fd';
-        ctx.font = '800 12px Arial';
+        ctx.font = '900 ' + Math.max(9, b.cell * 0.24) + 'px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('SHAFT', x + size / 2, y + size / 2 - 4);
-        ctx.font = '9px Arial';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SHAFT', shaftX, shaftY - 2);
+        ctx.font = '700 ' + Math.max(7, b.cell * 0.17) + 'px Arial';
         ctx.fillStyle = '#cbd5e1';
-        ctx.fillText('Training Hub', x + size / 2, y + size / 2 + 11);
+        ctx.fillText('Surface-ish', shaftX, shaftY + shaftR * 0.42);
+        ctx.restore();
+      }
+
+      function drawConveyorBelt(x1, y1, x2, y2) {
+        ctx.save();
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+
+        ctx.translate(x1, y1);
+        ctx.rotate(angle);
+
+        const beltH = Math.max(10, board.cell * 0.25);
+        const running = state.conveyor && state.conveyor.status === 'running';
+        const maintenance = state.conveyor && state.conveyor.status === 'maintenance';
+        const stopped = state.conveyor && state.conveyor.status === 'stopped';
+
+        ctx.fillStyle = stopped ? '#450a0a' : maintenance ? '#0c4a6e' : '#111827';
+        roundRect(ctx, 0, -beltH / 2, len, beltH, beltH / 2);
+        ctx.fill();
+
+        ctx.strokeStyle = stopped ? '#ef4444' : maintenance ? '#38bdf8' : '#64748b';
+        ctx.lineWidth = stopped ? 3 : 2;
+        roundRect(ctx, 0, -beltH / 2, len, beltH, beltH / 2);
+        ctx.stroke();
+
+        const spacing = Math.max(12, board.cell * 0.38);
+        const offset = running ? (state.conveyor.anim * spacing) % spacing : 0;
+        ctx.strokeStyle = running ? 'rgba(250,204,21,0.72)' : maintenance ? 'rgba(186,230,253,0.72)' : 'rgba(248,113,113,0.72)';
+        ctx.lineWidth = 1.5;
+        for (let x = 8 - offset; x < len - 6; x += spacing) {
+          ctx.beginPath();
+          ctx.moveTo(x, -beltH * 0.42);
+          ctx.lineTo(x + beltH * 0.55, beltH * 0.42);
+          ctx.stroke();
+        }
+
+        if (running) {
+          ctx.fillStyle = 'rgba(250,204,21,0.85)';
+          for (let x = ((state.conveyor.anim * 32) % spacing); x < len; x += spacing * 1.7) {
+            ctx.beginPath();
+            ctx.arc(x, 0, Math.max(2, beltH * 0.17), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        const label = stopped
+          ? 'BELT STOPPED'
+          : maintenance
+            ? 'BELT INTERVENTION ' + Math.round(state.conveyor.progress) + '%'
+            : 'CONVEYOR OF CONSEQUENCES';
+
+        ctx.fillStyle = stopped ? '#fecaca' : maintenance ? '#bae6fd' : '#f59e0b';
+        ctx.font = '900 ' + Math.max(7, board.cell * 0.16) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, len * 0.50, -beltH * 1.45);
+
+        if (stopped) {
+          ctx.fillStyle = 'rgba(127,29,29,0.78)';
+          roundRect(ctx, len * 0.42, -beltH * 1.05, len * 0.16, beltH * 0.75, 6);
+          ctx.fill();
+          ctx.fillStyle = '#fff7ed';
+          ctx.font = '900 ' + Math.max(9, board.cell * 0.18) + 'px Arial';
+          ctx.fillText('!', len * 0.50, -beltH * 0.68);
+        }
+
         ctx.restore();
       }
 
       function drawCrewBays() {
-        for (const q of quadrants) {
-          const qr = qRect(q.id);
-          const cs = qr.w / 10;
-          const bay = { x: qr.x, y: qr.y + cs * 9, w: qr.w, h: cs };
-          drawPanelCrewBay(q, bay, cs);
-        }
+        const b = board;
+        const bayW = Math.min(b.w * 0.66, b.cell * 12.0);
+        const bayH = Math.min(b.infraH * 0.86, Math.max(b.cell * 1.85, 58));
+        const bay = {
+          x: b.x + b.w - bayW - b.cell * 0.22,
+          y: b.infraY + (b.infraH - bayH) / 2,
+          w: bayW,
+          h: bayH
+        };
+        drawPanelCrewBay({ id: 'SHIFT', active: true }, bay, b.cell);
       }
 
       function drawPanelCrewBay(q, bay, cs) {
         ctx.save();
 
-        ctx.fillStyle = q.active ? 'rgba(15,23,42,0.94)' : 'rgba(17,24,39,0.92)';
-        ctx.fillRect(bay.x, bay.y, bay.w, bay.h);
+        ctx.fillStyle = 'rgba(15,23,42,0.94)';
+        roundRect(ctx, bay.x, bay.y, bay.w, bay.h, 12);
+        ctx.fill();
 
-        for (let c = 0; c < 10; c++) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-          ctx.strokeRect(bay.x + c * cs + 0.5, bay.y + 0.5, cs - 1, bay.h - 1);
-        }
+        ctx.strokeStyle = 'rgba(251,191,36,0.74)';
+        ctx.lineWidth = 2;
+        roundRect(ctx, bay.x + 0.5, bay.y + 0.5, bay.w - 1, bay.h - 1, 12);
+        ctx.stroke();
 
-        ctx.strokeStyle = q.active ? 'rgba(251,191,36,0.74)' : 'rgba(156,163,175,0.38)';
-        ctx.lineWidth = q.active ? 2 : 1;
-        ctx.strokeRect(bay.x + 0.5, bay.y + 0.5, bay.w - 1, bay.h - 1);
+        ctx.fillStyle = '#fde68a';
+        ctx.font = '900 ' + Math.max(8, cs * 0.20) + 'px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('SHIFT CREW', bay.x + 8, bay.y + 5);
 
         const crew = panelCrew(q.id);
-        if (!q.active) {
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '800 ' + Math.max(8, cs * 0.20) + 'px Arial';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(q.id + ' CREW LOCKED', bay.x + bay.w / 2, bay.y + bay.h / 2);
-          ctx.restore();
-          return;
-        }
-
         if (!crew.length) {
           ctx.fillStyle = '#cbd5e1';
-          ctx.font = '800 ' + Math.max(8, cs * 0.20) + 'px Arial';
+          ctx.font = '800 ' + Math.max(8, cs * 0.18) + 'px Arial';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(q.id + ' CREW PENDING', bay.x + bay.w / 2, bay.y + bay.h / 2);
+          ctx.fillText('Awaiting S.H.A.F.T. selection', bay.x + bay.w / 2, bay.y + bay.h / 2 + 6);
           ctx.restore();
           return;
         }
 
-        const slotW = bay.w / Math.max(5, crew.length);
+        const slotW = (bay.w - 14) / Math.max(5, crew.length);
         crew.slice(0, 5).forEach((s, i) => {
-          const x = bay.x + i * slotW + 2;
-          const y = bay.y + 2;
-          const w = slotW - 4;
-          const h = bay.h - 4;
+          const x = bay.x + 7 + i * slotW + 1;
+          const y = bay.y + Math.max(18, bay.h * 0.27);
+          const w = slotW - 3;
+          const h = bay.h - (y - bay.y) - 5;
           drawCrewBayTile(s, x, y, w, h, cs);
         });
 
@@ -2917,7 +3535,7 @@
         roundRect(ctx, x, y, w, h, Math.max(5, h * 0.18));
         ctx.stroke();
 
-        const pSize = Math.min(h - 6, cs * 0.72, 34);
+        const pSize = Math.min(h - 8, cs * 1.02, 48);
         const px = x + 4;
         const py = y + (h - pSize) / 2;
         drawCrewPortrait(s, px, py, pSize);
@@ -2986,7 +3604,6 @@
       }
 
       function panelCrew(qid) {
-        if (qid !== 'NW') return [];
         const order = { supervisor: 0, miner: 1, fitter: 2, electrician: 3 };
         return state.staff.slice().sort((a, b) => (order[a.role] ?? 9) - (order[b.role] ?? 9));
       }
@@ -3525,7 +4142,7 @@
         $('tonnesHud').textContent = Math.round(state.tonnes).toLocaleString() + ' / 10,000t';
         $('gradeHud').textContent = grade().toFixed(1) + '%';
 
-        let machineText = state.paused ? 'Paused' : state.machine.status === 'mining' ? 'Mining ' + directionLabel() : state.machine.status === 'tramming' ? 'Tramming ' + directionLabel() : state.machine.status === 'maintenance' ? 'Repair' : state.machine.status === 'broken' ? 'Broken' : 'Idle ' + directionLabel();
+        let machineText = state.paused ? 'Paused' : !isConveyorAvailable() ? 'Belt stopped' : state.machine.status === 'mining' ? 'Mining ' + directionLabel() : state.machine.status === 'tramming' ? 'Tramming ' + directionLabel() : state.machine.status === 'maintenance' ? 'Repair' : state.machine.status === 'broken' ? 'Broken' : 'Idle ' + directionLabel();
         $('machineHud').textContent = machineText;
 
         updateTraitHud('productivity');
@@ -3557,6 +4174,28 @@
         document.querySelectorAll('[data-machine-dir]').forEach(btn => {
           btn.classList.toggle('active', btn.dataset.machineDir === state.machine.dir);
         });
+
+        const dirEl = document.getElementById('machineRemoteDir');
+        const statusEl = document.getElementById('machineRemoteStatus');
+
+        if (dirEl) dirEl.textContent = directionLabel().toUpperCase();
+
+        if (statusEl) {
+          let status = 'IDLE';
+          if (!isConveyorAvailable()) status = state.conveyor.status === 'maintenance' ? 'BELT FIX' : 'BELT STOP';
+          else if (state.machine.status === 'mining') status = 'MINING';
+          else if (state.machine.status === 'tramming') status = 'TRAM';
+          else if (state.machine.status === 'maintenance') status = 'REPAIR';
+          else if (state.machine.status === 'broken') status = 'BROKEN';
+          statusEl.textContent = status;
+          statusEl.style.background =
+            status === 'BROKEN' ? 'rgba(127,29,29,0.92)' :
+            status === 'REPAIR' || status === 'BELT FIX' ? 'rgba(3,105,161,0.92)' :
+            status === 'BELT STOP' ? 'rgba(127,29,29,0.92)' :
+            status === 'MINING' ? 'rgba(21,128,61,0.92)' :
+            status === 'TRAM' ? 'rgba(180,83,9,0.92)' :
+            'rgba(15,23,42,0.75)';
+        }
       }
 
       function canvasClick(e) {
@@ -3574,7 +4213,7 @@
         }
         for (const hit of blockHits) {
           if (inside(x, y, hit.rect)) {
-            showProductionComment('Blocks are no longer selected manually. Tap the continuous miner and tell it which way to embarrass itself.', 'Training');
+            showProductionComment('Blocks are no longer selected manually. Use the remote to send the miner towards the next operational misunderstanding.', 'Training');
             return;
           }
         }
@@ -3597,6 +4236,12 @@
           return;
         }
 
+        if (!isConveyorAvailable()) {
+          showProductionComment('The conveyor is unavailable. The miner refuses to create a stockpile unless someone signs for it.', 'Mine Services');
+          openWindow('assets');
+          return;
+        }
+
         state.machine.autoMining = true;
 
         if (state.machine.status === 'idle') {
@@ -3606,7 +4251,7 @@
         }
       }
 
-      function stopAutoMining() {
+      function stopAutoMining(message = 'Mining stopped. The machine is now awaiting further leadership.', category = 'Production') {
         state.machine.autoMining = false;
 
         if (state.machine.status === 'mining') {
@@ -3620,10 +4265,17 @@
           state.machine.progress = 0;
         }
 
-        showProductionComment('Mining stopped. The machine is now awaiting further leadership.', 'Production');
+        showProductionComment(message, category);
       }
 
       function beginNextMachineStep() {
+        if (!isConveyorAvailable()) {
+          state.machine.autoMining = false;
+          state.machine.status = 'idle';
+          showProductionComment('Conveyor unavailable. Production cannot continue until the belt returns to work.', 'Mine Services');
+          return;
+        }
+
         const next = nextMachineBlock();
 
         if (!next) {
@@ -3631,7 +4283,16 @@
           state.machine.status = 'idle';
           state.machine.target = null;
           state.machine.progress = 0;
-          showProductionComment('The miner has reached the edge of the authorised trial area. Please do not discover a new reserve by accident.', 'Survey');
+          showProductionComment('The miner has reached the edge of the mapped training area. Please wait for a future module before discovering more mine.', 'Survey');
+          return;
+        }
+
+        if (next.status === 'locked') {
+          state.machine.autoMining = false;
+          state.machine.status = 'idle';
+          state.machine.target = null;
+          state.machine.progress = 0;
+          showProductionComment('Area locked. Exploration drilling is required before anyone is allowed to turn this into a production promise.', 'Exploration');
           return;
         }
 
@@ -3676,7 +4337,7 @@
         $('startBtn').textContent = 'Running';
         $('startBtn').disabled = true;
         hideProductionComment();
-        showProductionComment('Right. Directional mining is live. Use the arrow pad in the toolbar to move, tram, and mine. Tap the machine only when it needs attention.', 'Production');
+        showProductionComment('Right. Directional mining is live. Use the remote in the toolbar to move up, left, or right through the explored area. The locked grey zone is tomorrow’s funding problem.', 'Production');
       }
 
       function showToast(text) {
@@ -3703,9 +4364,11 @@
 
         const next = nextMachineBlock();
         const nextText = next
-          ? next.status === 'void'
-            ? 'Next block is mined ground: tramming will cost ' + money(TRAM_COST) + '.'
-            : 'Next block: ' + next.tonnes.toLocaleString() + 't at modelled ' + next.grade.toFixed(1) + '% Goldilocks Grade.'
+          ? next.status === 'locked'
+            ? 'Next block is locked. Exploration drilling is required before this can become a promise.'
+            : next.status === 'void'
+              ? 'Next block is mined ground: tramming will cost ' + money(TRAM_COST) + '.'
+              : 'Next block: ' + next.tonnes.toLocaleString() + 't at modelled ' + next.grade.toFixed(1) + '% Goldilocks Grade.'
           : 'No block in this direction. Further progress would require a more optimistic map.';
 
         const isRunning = state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining;
@@ -3756,7 +4419,7 @@
               <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Starting Crew</strong><span>${state.staff.length ? state.staff.map(s => s.name).join(', ') : 'Not selected'}</span></div><span class="tag">${state.staff.length}/${STARTING_CREW_SIZE}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Tonnage</strong><span>${Math.round(state.tonnes).toLocaleString()} / 10,000t</span></div><span class="tag">${Math.round(state.tonnes / TARGET_TONNES * 100)}%</span></div>
               <div class="row"><div class="avatarDot" style="background:#ec4899"></div><div><strong>Goldilocks Grade</strong><span>${grade().toFixed(2)}% / 14.00%</span></div><span class="tag">${grade() >= TARGET_GRADE ? 'Pass' : 'At risk'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Machine Control</strong><span>Tap the miner, choose a direction, then start mining. Mined ground is used for tramming and costs ${money(TRAM_COST)} per block.</span></div><span class="tag">Directional</span></div>
+              <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Machine Control</strong><span>Use the remote to tram through mined ground and cut into the explored block area. The grey zone is locked until future exploration drilling. Tramming costs ${money(TRAM_COST)} per block.</span></div><span class="tag">Directional</span></div>
             </div>
             ${state.setupComplete && !state.running ? '<div class="btnRow"><button class="primary" data-accept-objective>Accept Objective and Start Shift</button></div>' : ''}`;
           if (state.setupComplete && !state.running) setModalClosable(false);
@@ -3776,6 +4439,9 @@
         if (type === 'assets') {
           title = 'Asset Reliability';
           const fitter = fitterOnCrew();
+          const electrician = crewByRole('electrician');
+          const miner = crewByRole('miner');
+
           const conditionTag = state.machine.status === 'broken'
             ? 'Broken'
             : state.machine.status === 'maintenance'
@@ -3786,7 +4452,16 @@
                   ? 'Smoking'
                   : 'Operational';
 
-          const canCallFitter = fitter && state.machine.status !== 'mining' && state.machine.status !== 'maintenance' && state.machine.condition < 100;
+          const canCallFitter = fitter && state.machine.status !== 'mining' && state.machine.status !== 'tramming' && state.machine.status !== 'maintenance' && state.machine.condition < 100;
+
+          const conveyorInfo = conveyorFaultInfo();
+          const conveyorWorker = conveyorWorkerForFault();
+          const conveyorStatus =
+            state.conveyor.status === 'running'
+              ? 'Running'
+              : state.conveyor.status === 'maintenance'
+                ? 'Intervention in progress'
+                : conveyorInfo.label;
 
           body = `<p><strong>Old Continuous Miner</strong></p>
             <div class="rows">
@@ -3799,6 +4474,20 @@
             <p>This asset has been described as old, loyal, and statistically unlikely to improve.</p>
             <div class="btnRow">
               <button class="primary" data-call-fitter ${canCallFitter ? '' : 'disabled'}>${state.machine.status === 'broken' ? 'Call Fitter' : 'Call Fitter for Maintenance'} (${money(repairCost())})</button>
+            </div>
+
+            <hr style="border:0;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">
+
+            <p><strong>Conveyor Belt</strong></p>
+            <div class="rows">
+              <div class="row"><div class="avatarDot" style="background:${state.conveyor.status === 'running' ? '#22c55e' : state.conveyor.status === 'maintenance' ? '#38bdf8' : '#ef4444'}"></div><div><strong>Status</strong><span>${conveyorStatus}</span></div><span class="tag">${state.conveyor.status}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${state.conveyor.condition < 55 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.conveyor.condition.toFixed(1)}%</span></div><span class="tag">${state.conveyor.condition < 55 ? 'Fragile' : 'Usable'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Required Response</strong><span>${state.conveyor.status === 'running' ? 'No immediate action required. This is suspicious.' : conveyorInfo.action + ' · Required: ' + roleName(conveyorInfo.role)}</span></div><span class="tag">${state.conveyor.status === 'running' ? 'Available' : money(conveyorInfo.cost)}</span></div>
+              ${state.conveyor.status === 'maintenance' ? `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Intervention Progress</strong><span>${Math.round(state.conveyor.progress)}%</span></div><span class="tag">${conveyorWorker ? conveyorWorker.name : 'Searching'}</span></div>` : ''}
+            </div>
+            <p>If the conveyor stops, the miner stops automatically. Production describes this as a dependency; Finance describes it as proof that one belt was too many.</p>
+            <div class="btnRow">
+              <button class="primary" data-conveyor-fix ${state.conveyor.status === 'stopped' && conveyorWorker ? '' : 'disabled'}>${state.conveyor.status === 'stopped' ? conveyorInfo.action + ' (' + money(conveyorInfo.cost) + ')' : state.conveyor.status === 'maintenance' ? 'Intervention in Progress' : 'Conveyor Running'}</button>
             </div>`;
         }
 
@@ -3869,7 +4558,7 @@
       }
 
       function activeSupervisorRequirement() {
-        return quadrants.filter(q => q.active).length;
+        return 1;
       }
 
       function selectedCrew() {
@@ -4118,7 +4807,7 @@
           body = `
             ${crewStepHeader()}
             <div class="setupIntro">
-              <p><strong>NW Panel requires one supervisor.</strong> Each active mining quadrant must have a supervisor before production can start.</p>
+              <p><strong>Zone 0 requires one supervisor.</strong> The trial area needs someone formally responsible before production can start.</p>
             </div>
             <div class="choiceGrid crewSingleRoleGrid">${startingCrewPool.filter(c => c.role === 'supervisor').map(crewCard).join('')}</div>
             <div class="setupSummary">
@@ -4436,6 +5125,11 @@
         if (choice === 'quickFix') { improveMachine(12); spend(350, 'Cheap proactive fix'); adjustTrait('productivity', 2); adjustTrait('safety', 2); }
         if (choice === 'waitApproval') { adjustTrait('safety', 1); adjustTrait('productivity', -2); wearMachine(3); }
 
+        if (choice === 'beltRecoverySupport') { spend(500, 'Belt recovery support'); adjustTrait('morale', 3); adjustTrait('productivity', 2); showProductionComment('The crew appreciates the rare decision to treat belt availability as related to production.', 'Mine Services'); }
+        if (choice === 'beltOpportunity') { adjustTrait('morale', -3); adjustTrait('productivity', -2); showProductionComment('The stoppage has been logged as an opportunity. Nobody feels improved.', 'HR'); }
+        if (choice === 'beltProperFix') { spend(800, 'Proper belt fix'); adjustTrait('safety', 2); adjustTrait('productivity', 2); state.conveyor.condition = Math.min(100, state.conveyor.condition + 10); }
+        if (choice === 'beltResilience') { adjustTrait('morale', -2); adjustTrait('productivity', -3); }
+
         if (choice === 'ignore') {
           if (s.role === 'fitter' || s.role === 'electrician') wearMachine(2);
           if (Math.random() < 0.25) reduceAttendance(1);
@@ -4552,6 +5246,9 @@
 
           const callFitterBtn = e.target.closest('[data-call-fitter]');
           if (callFitterBtn) { startRepair(); return; }
+
+          const conveyorFixBtn = e.target.closest('[data-conveyor-fix]');
+          if (conveyorFixBtn) { startConveyorFix(); return; }
 
           const staffEventBtn = e.target.closest('[data-staff-event]');
           if (staffEventBtn) { openStaffEvent(staffEventBtn.dataset.staffEvent); return; }
