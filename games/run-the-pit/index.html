@@ -21,7 +21,7 @@
       --pink: #f472b6;
       --paper: #fff4cf;
       --ink: #1f2937;
-      --toolbar-h: 84px;
+      --toolbar-h: 112px;
     }
 
     * { box-sizing: border-box; }
@@ -228,7 +228,7 @@
     #bottomBar {
       height: var(--toolbar-h);
       display: grid;
-      grid-template-columns: minmax(360px, 1fr) auto;
+      grid-template-columns: minmax(360px, 1fr) auto auto;
       gap: 10px;
       align-items: center;
       padding: 8px 10px;
@@ -285,6 +285,227 @@
     .pill strong {
       color: #fff;
       font-variant-numeric: tabular-nums;
+    }
+
+    .traitHud {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(84px, 1fr));
+      gap: 6px;
+      margin-top: 6px;
+      max-width: 620px;
+    }
+
+    .traitBox {
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.18);
+      padding: 4px 6px 5px;
+    }
+
+    .traitBoxLabel {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      color: #cbd5e1;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 3px;
+    }
+
+    .traitBoxLabel strong {
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .traitTrack {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.13);
+      overflow: hidden;
+    }
+
+    .traitFill {
+      height: 100%;
+      width: 70%;
+      border-radius: inherit;
+      background: #fbbf24;
+      transition: width 180ms ease;
+    }
+
+    .machineControls {
+      display: grid;
+      grid-template-columns: 74px 74px 74px;
+      gap: 8px;
+      justify-content: start;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    .machineControls .machineDirBtn,
+    .machineControls .machineStartBtn {
+      width: 74px;
+      height: 54px;
+      min-height: 54px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .machineControls .machineStartBtn {
+      grid-column: 2;
+      grid-row: 2;
+      font-size: 12px;
+      line-height: 1.15;
+    }
+
+    .machineDirBtn.active {
+      border-color: rgba(251,191,36,0.9);
+      box-shadow: 0 0 0 2px rgba(251,191,36,0.18), inset 0 0 20px rgba(251,191,36,0.18);
+      color: #fde68a;
+    }
+
+    .eventChoiceBtn {
+      min-width: 190px;
+      text-align: left;
+      display: grid;
+      gap: 3px;
+      background: linear-gradient(180deg, #475569, #1f2937);
+    }
+
+    .eventChoiceBtn strong {
+      display: block;
+      color: #f9fafb;
+      font-size: 13px;
+    }
+
+    .eventChoiceBtn span {
+      display: block;
+      color: #cbd5e1;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .eventChoiceBtn.positive {
+      border-color: rgba(34,197,94,0.48);
+      background: linear-gradient(180deg, rgba(34,197,94,0.24), rgba(31,41,55,0.96));
+    }
+
+    .eventChoiceBtn.positive span {
+      color: #bbf7d0;
+    }
+
+    .eventChoiceBtn.negative {
+      border-color: rgba(251,146,60,0.54);
+      background: linear-gradient(180deg, rgba(251,146,60,0.25), rgba(31,41,55,0.96));
+    }
+
+    .eventChoiceBtn.negative span {
+      color: #fed7aa;
+    }
+
+    .hrTrainingHero {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 12px 34px rgba(0,0,0,0.35);
+      margin-bottom: 14px;
+      background: #111827;
+    }
+
+    .hrTrainingPanel {
+      background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(30,41,59,0.96));
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 14px;
+      color: #e5e7eb;
+    }
+
+    .hrTrainingPanel h2 {
+      margin: 0 0 8px;
+      color: #fef3c7;
+      font-size: 20px;
+    }
+
+    .hrTrainingPanel p {
+      color: #e5e7eb;
+      line-height: 1.48;
+      margin: 9px 0;
+    }
+
+    .hrTrainingTraits {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .hrTraitCard {
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 9px;
+    }
+
+    .hrTraitCard strong {
+      display: block;
+      color: #fff7ed;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .hrTraitCard span {
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .toolbarMachineControls {
+      display: grid;
+      grid-template-columns: repeat(3, 38px);
+      grid-template-rows: repeat(3, 28px);
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 6px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.18);
+      box-shadow: inset 0 1px rgba(255,255,255,0.06);
+    }
+
+    .machinePadBtn {
+      width: 38px;
+      height: 28px;
+      min-height: 28px;
+      padding: 0;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .machinePadBtn.active {
+      border-color: rgba(251,191,36,0.90);
+      background: linear-gradient(180deg, rgba(251,191,36,0.34), rgba(180,83,9,0.78));
+      color: #fff7ed;
+      box-shadow: 0 0 0 2px rgba(251,191,36,0.18);
+    }
+
+    .machinePadStop {
+      font-size: 9px;
+      letter-spacing: 0.03em;
+      background: linear-gradient(180deg, #64748b, #334155);
+    }
+
+    .machinePadSpacer {
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .toolbarButtons {
@@ -853,9 +1074,11 @@
     }
 
     @media (max-width: 820px) {
-      :root { --toolbar-h: 126px; }
+      :root { --toolbar-h: 172px; }
       #bottomBar { grid-template-columns: 1fr; align-content: start; overflow-y: auto; }
       .toolbarButtons { justify-content: flex-start; }
+      .toolbarMachineControls { justify-content: start; width: fit-content; }
+      .hrTrainingTraits { grid-template-columns: 1fr; }
 
       .productionManagerDock {
         left: 8px;
@@ -871,6 +1094,10 @@
       .brand { align-items: flex-start; }
       .logoBox { width: 46px; height: 46px; font-size: 16px; }
       .brandText h1 { font-size: 15px; }
+      .traitHud { grid-template-columns: repeat(2, minmax(120px, 1fr)); max-width: none; }
+      .machineControls { grid-template-columns: repeat(3, 66px); }
+      .machineControls .machineDirBtn,
+      .machineControls .machineStartBtn { width: 66px; height: 50px; min-height: 50px; }
       .splashBody { grid-template-columns: 1fr; }
       .crest { height: 100px; }
       .gridCards { grid-template-columns: 1fr; }
@@ -918,13 +1145,34 @@
           <p>Cambourne School of Mines · Faculty of Operational Excuses · S.H.A.F.T.</p>
           <div class="hud">
             <div class="pill">Day <strong id="dayHud">0</strong></div>
-            <div class="pill">Budget <strong id="cashHud">£150,000</strong></div>
+            <div class="pill">Balance <strong id="cashHud">£0</strong></div>
+            <div class="pill">Revenue <strong id="revenueHud">£0</strong></div>
+            <div class="pill">Spend <strong id="expenditureHud">£0</strong></div>
             <div class="pill">Sample <strong id="tonnesHud">0 / 10,000t</strong></div>
             <div class="pill">Goldilocks <strong id="gradeHud">0.0%</strong></div>
             <div class="pill">Machine <strong id="machineHud">Idle</strong></div>
           </div>
+          <div class="traitHud">
+            <div class="traitBox"><div class="traitBoxLabel"><span>Productivity</span><strong id="productivityHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="productivityFill"></div></div></div>
+            <div class="traitBox"><div class="traitBoxLabel"><span>Skill</span><strong id="skillHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="skillFill"></div></div></div>
+            <div class="traitBox"><div class="traitBoxLabel"><span>Morale</span><strong id="moraleHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="moraleFill"></div></div></div>
+            <div class="traitBox"><div class="traitBoxLabel"><span>Safety</span><strong id="safetyHud">70</strong></div><div class="traitTrack"><div class="traitFill" id="safetyFill"></div></div></div>
+          </div>
         </div>
       </div>
+
+      <div class="toolbarMachineControls" aria-label="Continuous miner directional controls">
+        <button class="machinePadBtn machinePadSpacer" disabled></button>
+        <button class="machinePadBtn" data-machine-dir="up" title="Mine / tram up">↑</button>
+        <button class="machinePadBtn machinePadSpacer" disabled></button>
+        <button class="machinePadBtn" data-machine-dir="left" title="Mine / tram left">←</button>
+        <button class="machinePadBtn machinePadStop" data-machine-stop title="Stop mining">STOP</button>
+        <button class="machinePadBtn" data-machine-dir="right" title="Mine / tram right">→</button>
+        <button class="machinePadBtn machinePadSpacer" disabled></button>
+        <button class="machinePadBtn" data-machine-dir="down" title="Mine / tram down">↓</button>
+        <button class="machinePadBtn machinePadSpacer" disabled></button>
+      </div>
+
       <div class="toolbarButtons">
         <button class="toolBtn primary" id="startBtn" disabled>Start</button>
         <button class="toolBtn" data-window="targets">Targets</button>
@@ -1175,6 +1423,12 @@
 
       const TARGET_TONNES = 10000;
       const TARGET_GRADE = 14.0;
+
+      const BASE_REVENUE_PER_TONNE = 1.25;
+      const TRAM_COST = 75;
+      const WAGE_ACCRUAL_FACTOR = 0.12;
+      const BASE_SHIFT_TRAIT = 75;
+      const HR_TRAINING_IMAGE = 'assets/images/ms_bea_haviour_hr_training.png';
 
 
       const productionManagerEvents = [
@@ -1484,6 +1738,42 @@
           ]
         },
         {
+          type: 'goodDrive',
+          icon: '★',
+          roles: ['miner'],
+          positive: true,
+          quote: '“I can make that cut cleaner.”',
+          text: '{name} has found a smoother way to drive the miner. This may be genuine skill or simply confidence at speed.',
+          buttons: [
+            { label: 'Adopt the method', choice: 'adoptDrive' },
+            { label: 'Ask for a formal trial first', choice: 'formalTrial' }
+          ]
+        },
+        {
+          type: 'teamRhythm',
+          icon: '✓',
+          roles: ['miner', 'supervisor'],
+          positive: true,
+          quote: '“We’ve got a rhythm going.”',
+          text: '{name} says the crew has found a productive rhythm. This is rare and should be handled carefully before management improves it.',
+          buttons: [
+            { label: 'Leave them to it', choice: 'protectRhythm' },
+            { label: 'Capture it in a spreadsheet', choice: 'spreadsheetRhythm' }
+          ]
+        },
+        {
+          type: 'quickFix',
+          icon: '⚙',
+          roles: ['fitter', 'electrician'],
+          positive: true,
+          quote: '“I can sort that before it fails.”',
+          text: '{name} has spotted a cheap fix before it becomes an expensive story.',
+          buttons: [
+            { label: 'Let them fix it now', choice: 'quickFix' },
+            { label: 'Wait for formal approval', choice: 'waitApproval' }
+          ]
+        },
+        {
           type: 'morale',
           icon: '!',
           roles: ['miner', 'fitter', 'electrician', 'supervisor'],
@@ -1495,6 +1785,33 @@
           ]
         }
       ];
+
+      const choiceImpactMeta = {
+        raise: { tone: 'positive', text: '+4 Morale, +1 Productivity, -£950' },
+        bluff: { tone: 'negative', text: '-4 Morale, -1 Productivity, free' },
+        approveLeave: { tone: 'positive', text: '+2 Morale, -2 Productivity, -£200' },
+        refuse: { tone: 'negative', text: '-3 Morale, free' },
+        maintain: { tone: 'positive', text: '+2 Safety, -2 Productivity, -£2,500' },
+        reset: { tone: 'positive', text: '+1 Safety, -£900' },
+        tea: { tone: 'positive', text: '+3 Morale, +1 Productivity, -£100' },
+        listen: { tone: 'positive', text: '+2 Morale, +1 Safety, free' },
+        ignore: { tone: 'negative', text: '-2 Morale, -1 Productivity, free' },
+        sortConveyor: { tone: 'positive', text: '+2 Productivity, +1 Safety, -£650' },
+        slowForSupport: { tone: 'positive', text: '+4 Safety, -2 Productivity, -£500' },
+        followGrade: { tone: 'positive', text: '+2 Skill, +1 Productivity, free' },
+        tidyFeed: { tone: 'positive', text: '+2 Productivity, -£400' },
+        stabiliseServices: { tone: 'positive', text: '+2 Safety, machine condition improves, -£700' },
+        coach: { tone: 'positive', text: '+3 Skill, +1 Morale, -£300' },
+        breather: { tone: 'positive', text: '+3 Morale, -2 Productivity, free' },
+        buyTool: { tone: 'positive', text: '+2 Productivity, machine condition improves, -£1,200' },
+        rerouteCable: { tone: 'positive', text: '+3 Safety, machine condition improves, -£850' },
+        adoptDrive: { tone: 'positive', text: '+5 Productivity, +2 Skill, free' },
+        formalTrial: { tone: 'negative', text: '+1 Skill, -1 Productivity, -£150' },
+        protectRhythm: { tone: 'positive', text: '+3 Morale, +3 Productivity, free' },
+        spreadsheetRhythm: { tone: 'negative', text: '-1 Morale, +1 Productivity, -£75' },
+        quickFix: { tone: 'positive', text: '+2 Productivity, +2 Safety, -£350' },
+        waitApproval: { tone: 'negative', text: '+1 Safety, -2 Productivity, machine wears, free' }
+      };
 
       const quadrants = [
         { id: 'NW', name: 'NW Panel', active: true },
@@ -1573,25 +1890,25 @@
       const STARTING_CREW_SIZE = 5;
 
       const startingCrewPool = [
-        { id: 's_ando', portrait: 'assets/characters/portraits/s_ando.png', name: 'S. Ando', role: 'supervisor', model: 'A', salary: 47000, skill: 2, morale: 5, attendance: 2, trait: '+5% Morale · -5% Attendance', description: 'Not the sharpest crayon in the drawer, but somehow the drawer is happier when he is in it. Improves morale with fishing stories, jet ski updates, and holiday selfies taken at heroic arm’s length.', effects: ['+5% Morale', '-5% Attendance'] },
-        { id: 'd_entee', portrait: 'assets/characters/portraits/d_entee.png', name: 'D. Entee', role: 'supervisor', model: 'B', salary: 49000, skill: 3, morale: 4, attendance: 4, trait: '+5% Morale · -5% Production', description: 'Relaxed but competent, with the energy of a man who could be shift manager if the application form was shorter. Generates AI images in his spare time and occasionally in his working time if morale requires it.', effects: ['+5% Morale', '-5% Production'] },
-        { id: 'a_cartwrong', portrait: 'assets/characters/portraits/a_cartwrong.png', name: 'A. Cartwrong', role: 'supervisor', model: 'D', salary: 52000, skill: 3, morale: 4, attendance: 4, trait: '+5% Safety · +5% Morale · -5% Production', description: 'A walking procedure with excellent timing. Improves safety by knowing every rule, every exception, and the correct way to polish a bicycle until it can be seen from space.', effects: ['+5% Safety', '+5% Morale', '-5% Production'] },
-        { id: 'r_tailer', portrait: 'assets/characters/portraits/r_tailer.png', name: 'R. Tailer', role: 'supervisor', model: 'C', salary: 45000, skill: 2, morale: 4, attendance: 4, trait: '+5% Morale · -5% Production', description: 'Keeps pet crabs in buckets and maintains strong views on their welfare, diet, and leadership potential. Best suited to salt mining, seafood logistics, or any operation where crabs are considered stakeholders.', effects: ['+5% Morale', '-5% Production'] },
-        { id: 'm_camel', portrait: 'assets/characters/portraits/m_camel.png', name: 'M. Camel', role: 'supervisor', model: 'A', salary: 50000, skill: 4, morale: 3, attendance: 2, trait: '+5% Production · -5% Attendance', description: 'Productive, practical, and alarmingly efficient. Gets through the work quickly enough to run a respectable car-valeting empire on the side, then somehow returns smelling faintly of dashboard polish.', effects: ['+5% Production', '-5% Attendance'] },
+        { id: 's_ando', portrait: 'assets/characters/portraits/s_ando.png', name: 'S. Ando', role: 'supervisor', model: 'A', salary: 47000, skill: 2, morale: 5, attendance: 2, safety: 2, trait: '+5% Morale · -5% Attendance', description: 'Not the sharpest crayon in the drawer, but somehow the drawer is happier when he is in it. Improves morale with fishing stories, jet ski updates, and holiday selfies taken at heroic arm’s length.', effects: ['+5% Morale', '-5% Attendance'] },
+        { id: 'd_entee', portrait: 'assets/characters/portraits/d_entee.png', name: 'D. Entee', role: 'supervisor', model: 'B', salary: 49000, skill: 3, morale: 4, attendance: 4, safety: 3, trait: '+5% Morale · -5% Production', description: 'Relaxed but competent, with the energy of a man who could be shift manager if the application form was shorter. Generates AI images in his spare time and occasionally in his working time if morale requires it.', effects: ['+5% Morale', '-5% Production'] },
+        { id: 'a_cartwrong', portrait: 'assets/characters/portraits/a_cartwrong.png', name: 'A. Cartwrong', role: 'supervisor', model: 'D', salary: 52000, skill: 3, morale: 4, attendance: 4, safety: 5, trait: '+5% Safety · +5% Morale · -5% Production', description: 'A walking procedure with excellent timing. Improves safety by knowing every rule, every exception, and the correct way to polish a bicycle until it can be seen from space.', effects: ['+5% Safety', '+5% Morale', '-5% Production'] },
+        { id: 'r_tailer', portrait: 'assets/characters/portraits/r_tailer.png', name: 'R. Tailer', role: 'supervisor', model: 'C', salary: 45000, skill: 2, morale: 4, attendance: 4, safety: 3, trait: '+5% Morale · -5% Production', description: 'Keeps pet crabs in buckets and maintains strong views on their welfare, diet, and leadership potential. Best suited to salt mining, seafood logistics, or any operation where crabs are considered stakeholders.', effects: ['+5% Morale', '-5% Production'] },
+        { id: 'm_camel', portrait: 'assets/characters/portraits/m_camel.png', name: 'M. Camel', role: 'supervisor', model: 'A', salary: 50000, skill: 4, morale: 3, attendance: 2, safety: 2, trait: '+5% Production · -5% Attendance', description: 'Productive, practical, and alarmingly efficient. Gets through the work quickly enough to run a respectable car-valeting empire on the side, then somehow returns smelling faintly of dashboard polish.', effects: ['+5% Production', '-5% Attendance'] },
 
-        { id: 'a_slacker', portraitTier: 'very_bad', name: 'A. Slacker', role: 'miner', model: 'C', salary: 31000, skill: 2, morale: 4, attendance: 1, trait: 'Any Chance Specialist' },
-        { id: 'g_driver', portraitTier: 'good', name: 'G. Driver', role: 'miner', model: 'A', salary: 52000, skill: 5, morale: 4, attendance: 4, trait: 'Machine Whisperer' },
-        { id: 'd_tea', portraitTier: 'average', name: 'D. Tea', role: 'miner', model: 'D', salary: 33000, skill: 2, morale: 5, attendance: 5, trait: 'Tea Dependent' },
-        { id: 'b_spender', portraitTier: 'bad', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, trait: 'Pay Rise Enthusiast' },
-        { id: 'n_naylor', portraitTier: 'bad', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, trait: 'Says Seen Worse' },
+        { id: 'a_slacker', portraitTier: 'very_bad', name: 'A. Slacker', role: 'miner', model: 'C', salary: 31000, skill: 2, morale: 4, attendance: 1, safety: 1, trait: 'Any Chance Specialist' },
+        { id: 'g_driver', portraitTier: 'good', name: 'G. Driver', role: 'miner', model: 'A', salary: 52000, skill: 5, morale: 4, attendance: 4, safety: 4, trait: 'Machine Whisperer' },
+        { id: 'd_tea', portraitTier: 'average', name: 'D. Tea', role: 'miner', model: 'D', salary: 33000, skill: 2, morale: 5, attendance: 5, safety: 3, trait: 'Tea Dependent' },
+        { id: 'b_spender', portraitTier: 'bad', name: 'B. Spender', role: 'miner', model: 'B', salary: 47000, skill: 4, morale: 2, attendance: 3, safety: 2, trait: 'Pay Rise Enthusiast' },
+        { id: 'n_naylor', portraitTier: 'bad', name: 'N. Naylor', role: 'miner', model: 'D', salary: 30000, skill: 1, morale: 3, attendance: 5, safety: 3, trait: 'Says Seen Worse' },
 
-        { id: 'a_spanner', portraitTier: 'good', name: 'A. Spanner', role: 'fitter', model: 'F', salary: 56000, skill: 5, morale: 3, attendance: 4, trait: 'Says Seen Worse' },
-        { id: 'f_hammer', portraitTier: 'average', name: 'F. Hammer', role: 'fitter', model: 'F', salary: 43000, skill: 3, morale: 4, attendance: 3, trait: 'Hammer Specialist' },
-        { id: 't_temporary', portraitTier: 'bad', name: 'T. Temporary', role: 'fitter', model: 'F', salary: 39000, skill: 2, morale: 3, attendance: 4, trait: 'Temporary Fixer' },
+        { id: 'a_spanner', portraitTier: 'good', name: 'A. Spanner', role: 'fitter', model: 'F', salary: 56000, skill: 5, morale: 3, attendance: 4, safety: 4, trait: 'Says Seen Worse' },
+        { id: 'f_hammer', portraitTier: 'average', name: 'F. Hammer', role: 'fitter', model: 'F', salary: 43000, skill: 3, morale: 4, attendance: 3, safety: 3, trait: 'Hammer Specialist' },
+        { id: 't_temporary', portraitTier: 'bad', name: 'T. Temporary', role: 'fitter', model: 'F', salary: 39000, skill: 2, morale: 3, attendance: 4, safety: 2, trait: 'Temporary Fixer' },
 
-        { id: 'l_spark', portraitTier: 'good', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, trait: 'Likes Flashing Lights' },
-        { id: 'p_cable', portraitTier: 'average', name: 'P. Cable', role: 'electrician', model: 'E', salary: 46000, skill: 3, morale: 4, attendance: 5, trait: 'Cable Whisperer' },
-        { id: 'v_volts', portraitTier: 'bad', name: 'V. Volts', role: 'electrician', model: 'E', salary: 50000, skill: 4, morale: 2, attendance: 4, trait: 'Manual Reader' }
+        { id: 'l_spark', portraitTier: 'good', name: 'L. Spark', role: 'electrician', model: 'E', salary: 54000, skill: 5, morale: 4, attendance: 3, safety: 4, trait: 'Likes Flashing Lights' },
+        { id: 'p_cable', portraitTier: 'average', name: 'P. Cable', role: 'electrician', model: 'E', salary: 46000, skill: 3, morale: 4, attendance: 5, safety: 3, trait: 'Cable Whisperer' },
+        { id: 'v_volts', portraitTier: 'bad', name: 'V. Volts', role: 'electrician', model: 'E', salary: 50000, skill: 4, morale: 2, attendance: 4, safety: 2, trait: 'Manual Reader' }
       ];
 
       let selectedCrewIds = [];
@@ -1605,16 +1922,23 @@
         levelComplete: false,
         manager: null,
         day: 0,
-        cash: 150000,
+        cash: 0,
+        revenue: 0,
+        expenditure: 0,
         tonnes: 0,
         k2oTonnes: 0,
         particles: [],
+        floatTexts: [],
         selectedBlock: null,
+        safetyTimer: 0,
+        traits: { productivity: 70, skill: 70, morale: 70, safety: 70 },
         machine: {
           q: 'NW',
           r: 8,
           c: 9,
           status: 'idle',
+          autoMining: false,
+          dir: 'up',
           target: null,
           progress: 0,
           condition: 78,
@@ -1708,7 +2032,7 @@
       function machinePos() {
         const m = state.machine;
         const target = m.target ? blockAt(m.target.q, m.target.r, m.target.c) : null;
-        const b = target && m.status === 'mining' ? target : blockAt(m.q, m.r, m.c);
+        const b = target && (m.status === 'mining' || m.status === 'tramming') ? target : blockAt(m.q, m.r, m.c);
         const cr = cellRect(b.q, b.r, b.c);
         return { x: cr.x + cr.w / 2, y: cr.y + cr.h / 2, size: cr.w };
       }
@@ -1719,7 +2043,8 @@
       }
 
       function isMineable(block) {
-        return block && block.q === 'NW' && block.status === 'solid' && state.machine.status === 'idle' && isAdjacentToMachine(block);
+        const next = nextMachineBlock();
+        return next && block && block.q === next.q && block.r === next.r && block.c === next.c && state.machine.status === 'idle';
       }
 
       function grade() {
@@ -1731,25 +2056,130 @@
         return sign + '£' + Math.abs(Math.round(v)).toLocaleString();
       }
 
+      function spend(amount, reason = 'Expenditure', pos = null) {
+        amount = Math.max(0, Number(amount) || 0);
+        state.cash -= amount;
+        state.expenditure += amount;
+        if (pos) spawnFloatingText(pos.x, pos.y, ['-' + money(amount), reason], '#fecaca');
+      }
+
+      function earn(amount, reason = 'Revenue', pos = null) {
+        amount = Math.max(0, Number(amount) || 0);
+        state.cash += amount;
+        state.revenue += amount;
+        if (pos) spawnFloatingText(pos.x, pos.y, ['+' + money(amount), reason], '#bbf7d0');
+      }
+
+      function interpolate(x, x0, y0, x1, y1) {
+        if (x1 === x0) return y0;
+        const t = clamp((x - x0) / (x1 - x0), 0, 1);
+        return y0 + (y1 - y0) * t;
+      }
+
+      function gradeRevenueFactor(g) {
+        if (g <= 12) return 0.50;
+        if (g <= 13) return interpolate(g, 12, 0.50, 13, 0.75);
+        if (g <= 14) return interpolate(g, 13, 0.75, 14, 1.00);
+        if (g <= 15) return interpolate(g, 14, 1.00, 15, 2.00);
+        return Math.min(2.40, 2.00 + (g - 15) * 0.20);
+      }
+
+      function blockRevenue(tonnes, recoveredGrade) {
+        return tonnes * BASE_REVENUE_PER_TONNE * gradeRevenueFactor(recoveredGrade);
+      }
+
+      function traitValue(name) {
+        return clamp(state.traits[name] ?? 70, 0, 100);
+      }
+
+      function adjustTrait(name, delta) {
+        if (!state.traits || typeof state.traits[name] !== 'number') return;
+        state.traits[name] = clamp(state.traits[name] + delta, 0, 100);
+      }
+
+      function productivityFactor() {
+        return clamp(0.65 + traitValue('productivity') / 100 * 0.55, 0.55, 1.25);
+      }
+
+      function moraleFactor() {
+        return clamp(0.85 + traitValue('morale') / 100 * 0.25, 0.75, 1.12);
+      }
+
+      function skillGradeFactor() {
+        return clamp(0.94 + traitValue('skill') / 100 * 0.12, 0.90, 1.08);
+      }
+
+      function recoveredGradeForBlock(block) {
+        return Math.max(0, block.grade * skillGradeFactor());
+      }
+
+      function setMachineDirection(dir) {
+        if (!['up', 'right', 'down', 'left'].includes(dir)) return;
+        state.machine.dir = dir;
+        state.machine.facing = dirToAngle(dir);
+      }
+
+      function driveMachineDirection(dir) {
+        setMachineDirection(dir);
+        startAutoMining();
+      }
+
+      function dirToAngle(dir) {
+        if (dir === 'right') return 0;
+        if (dir === 'down') return Math.PI / 2;
+        if (dir === 'left') return Math.PI;
+        return -Math.PI / 2;
+      }
+
+      function dirDelta(dir = state.machine.dir) {
+        if (dir === 'right') return { r: 0, c: 1 };
+        if (dir === 'down') return { r: 1, c: 0 };
+        if (dir === 'left') return { r: 0, c: -1 };
+        return { r: -1, c: 0 };
+      }
+
+      function nextMachineBlock() {
+        const d = dirDelta();
+        return blockAt(state.machine.q, state.machine.r + d.r, state.machine.c + d.c);
+      }
+
+      function directionLabel(dir = state.machine.dir) {
+        if (dir === 'up') return 'Up';
+        if (dir === 'down') return 'Down';
+        if (dir === 'left') return 'Left';
+        return 'Right';
+      }
+
       function update(dt) {
         anim += dt;
         updateParticles(dt);
+        updateFloatingTexts(dt);
         updateProductionComment(dt);
         updateMachineSmoke(dt);
 
         if (!state.running || state.paused) return;
 
+        state.safetyTimer += dt;
+        if (state.safetyTimer >= 13) {
+          state.safetyTimer = 0;
+          maybeSafetyEvent();
+        }
+
         dayTimer += dt;
         while (dayTimer >= 1) {
           dayTimer -= 1;
           state.day++;
-          state.cash -= dailyWageCost();
-          if (state.day % 8 === 0) showRandomProductionComment();
-          if (state.day % 12 === 0) maybeGenerateStaffBubble();
+          spend(dailyWageCost(), 'Crew salary');
+          if (state.day % 16 === 0) showRandomProductionComment();
+          if (state.day % 24 === 0) maybeGenerateStaffBubble();
         }
 
         if (state.machine.status === 'mining') {
           mineUpdate(dt);
+        }
+
+        if (state.machine.status === 'tramming') {
+          tramUpdate(dt);
         }
 
         if (state.machine.status === 'maintenance') {
@@ -1793,7 +2223,7 @@
         }
 
         if (event.effect === 'cashPenalty') {
-          state.cash -= 750;
+          spend(750, 'Finance adjustment');
         }
 
         if (event.effect === 'machineWear') {
@@ -1804,6 +2234,8 @@
         if (event.effect === 'moraleDip' && state.staff.length) {
           const target = state.staff[Math.floor(Math.random() * state.staff.length)];
           target.morale = Math.max(1, target.morale - 1);
+          adjustTrait('morale', -2);
+          adjustTrait('productivity', -1);
         }
       }
 
@@ -1820,7 +2252,7 @@
       function dailyWageCost() {
         const manager = currentManager();
         const wageMult = manager ? manager.wageMult : 1;
-        return state.staff.reduce((sum, s) => sum + s.salary / 365, 0) * wageMult;
+        return state.staff.reduce((sum, s) => sum + (s.salary / 365) * WAGE_ACCRUAL_FACTOR, 0) * wageMult;
       }
 
       function mineSpeed() {
@@ -1829,7 +2261,11 @@
         const avgSkill = miners.reduce((sum, s) => sum + s.skill, 0) / miners.length;
         const manager = currentManager();
         const managerMult = manager ? manager.miningSpeedMult : 1;
-        return (4.5 + avgSkill * 0.9) * managerMult;
+        return (4.5 + avgSkill * 0.9) * managerMult * productivityFactor() * moraleFactor();
+      }
+
+      function tramSpeed() {
+        return 42 * productivityFactor();
       }
 
       function riskMult(risk) {
@@ -1838,14 +2274,18 @@
 
       function mineUpdate(dt) {
         const target = blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c);
-        if (!target) return;
+        if (!target) {
+          stopAutoMining('The miner has run out of mine in that direction.');
+          return;
+        }
 
         state.machine.cutter += dt * 13;
         const rate = mineSpeed() / riskMult(target.risk);
         target.progress += rate * dt;
         state.machine.progress = target.progress;
 
-        const wearRate = 0.16 * riskMult(target.risk);
+        const safetyWear = clamp(1.15 - traitValue('safety') / 130, 0.45, 1.25);
+        const wearRate = 0.16 * riskMult(target.risk) * safetyWear;
         state.machine.condition = Math.max(0, state.machine.condition - wearRate * dt);
 
         if (state.machine.condition < 45 && !state.machine.warnedSmoking) {
@@ -1869,24 +2309,130 @@
         }
 
         if (target.progress >= 100) {
-          target.status = 'void';
-          target.progress = 100;
-          state.tonnes += target.tonnes;
-          state.k2oTonnes += target.tonnes * target.grade;
+          completeMiningBlock(target, pos);
+        }
+      }
+
+      function completeMiningBlock(target, pos) {
+        target.status = 'void';
+        target.progress = 100;
+
+        const recoveredGrade = recoveredGradeForBlock(target);
+        const revenue = blockRevenue(target.tonnes, recoveredGrade);
+
+        state.tonnes += target.tonnes;
+        state.k2oTonnes += target.tonnes * recoveredGrade;
+        earn(revenue, 'Ore revenue');
+
+        state.machine.q = target.q;
+        state.machine.r = target.r;
+        state.machine.c = target.c;
+        state.machine.status = 'idle';
+        state.machine.target = null;
+        state.machine.progress = 0;
+
+        burst(pos.x, pos.y, target);
+        spawnFloatingText(pos.x, pos.y - board.cell * 0.2, [
+          '+' + Math.round(target.tonnes).toLocaleString() + 't',
+          '+' + money(revenue),
+          recoveredGrade.toFixed(1) + '% Grade'
+        ], '#fef3c7');
+
+        if (Math.random() < 0.14) showRandomProductionComment();
+
+        if (state.tonnes >= TARGET_TONNES && grade() >= TARGET_GRADE) {
+          completeLevelOne();
+          return;
+        }
+
+        if (state.machine.autoMining) beginNextMachineStep();
+      }
+
+      function tramUpdate(dt) {
+        const target = blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c);
+        if (!target) {
+          stopAutoMining('The miner has nowhere useful to tram.');
+          return;
+        }
+
+        state.machine.progress += tramSpeed() * dt;
+        state.machine.cutter += dt * 3;
+
+        const pos = machinePos();
+        if (Math.random() < 0.10) spawnDust(pos.x, pos.y);
+
+        if (state.machine.progress >= 100) {
           state.machine.q = target.q;
           state.machine.r = target.r;
           state.machine.c = target.c;
           state.machine.status = 'idle';
           state.machine.target = null;
           state.machine.progress = 0;
-          burst(pos.x, pos.y, target);
-          showToast('Block mined: ' + target.tonnes.toLocaleString() + 't at ' + target.grade.toFixed(1) + '% Goldilocks Grade. Select the next adjacent block.');
-          if (Math.random() < 0.35) showRandomProductionComment();
 
-          if (state.tonnes >= TARGET_TONNES && grade() >= TARGET_GRADE) {
-            completeLevelOne();
-          }
+          spend(TRAM_COST, 'Tramming', pos);
+          spawnFloatingText(pos.x, pos.y - board.cell * 0.1, ['TRAM', '-' + money(TRAM_COST)], '#bfdbfe');
+
+          if (state.machine.autoMining) beginNextMachineStep();
         }
+      }
+
+      function maybeSafetyEvent() {
+        if (!state.running || state.paused || state.levelComplete) return;
+
+        const safety = traitValue('safety');
+        const baseChance = 0.18;
+        const chance = clamp(baseChance * (1.35 - safety / 100), 0.025, 0.22);
+
+        if (Math.random() > chance) return;
+
+        const events = [
+          {
+            category: 'Safety',
+            text: 'A cone has been placed around a puddle that everyone had already walked through. This is now a controlled hazard.',
+            cost: 120,
+            wear: 0,
+            morale: -1,
+            productivity: -2,
+            safety: -1
+          },
+          {
+            category: 'Safety',
+            text: 'A near miss has occurred involving a clipboard, a boot lace, and excessive confidence near a parked machine.',
+            cost: 250,
+            wear: 2,
+            morale: -2,
+            productivity: -3,
+            safety: -2
+          },
+          {
+            category: 'Rock Engineering',
+            text: 'A small flake has detached from the roof and been promoted to a geotechnical learning event.',
+            cost: 450,
+            wear: 0,
+            morale: -2,
+            productivity: -4,
+            safety: -3
+          },
+          {
+            category: 'Mine Services',
+            text: 'A services hose has achieved independence from its clips. It has been counselled and returned to duty.',
+            cost: 300,
+            wear: 3,
+            morale: -1,
+            productivity: -3,
+            safety: -2
+          }
+        ];
+
+        const e = events[Math.floor(Math.random() * events.length)];
+        spend(e.cost, 'Safety event');
+        state.machine.condition = Math.max(0, state.machine.condition - e.wear);
+        adjustTrait('morale', e.morale);
+        adjustTrait('productivity', e.productivity);
+        adjustTrait('safety', e.safety);
+        showProductionComment(e.text, e.category, 8);
+
+        if (state.machine.condition <= 0 && state.machine.status !== 'broken') breakdownMachine();
       }
 
       function completeLevelOne() {
@@ -2006,7 +2552,7 @@
         state.machine.status = 'maintenance';
         state.machine.repairProgress = 0;
         const cost = repairCost();
-        state.cash -= cost;
+        spend(cost, 'Repair cost');
         showProductionComment((fitter.name || 'The fitter') + ' has been called. Finance has been informed against its will. Cost: ' + money(cost) + '.', 'Maintenance');
         $('modalOverlay').classList.remove('show');
       }
@@ -2047,6 +2593,50 @@
           p.size *= 1 - dt * 0.05;
         }
         state.particles = state.particles.filter(p => p.life > 0 && p.size > 0.5);
+      }
+
+      function updateFloatingTexts(dt) {
+        for (const t of state.floatTexts) {
+          t.life -= dt;
+          t.y -= t.speed * dt;
+          t.alpha = clamp(t.life / t.maxLife, 0, 1);
+        }
+        state.floatTexts = state.floatTexts.filter(t => t.life > 0);
+      }
+
+      function spawnFloatingText(x, y, lines, colour = '#fef3c7') {
+        state.floatTexts.push({
+          x, y,
+          lines: Array.isArray(lines) ? lines : [String(lines)],
+          colour,
+          life: 1.8,
+          maxLife: 1.8,
+          speed: 26,
+          alpha: 1
+        });
+      }
+
+      function drawFloatingTexts() {
+        for (const t of state.floatTexts) {
+          ctx.save();
+          ctx.globalAlpha = t.alpha;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = '900 ' + Math.max(11, board.cell * 0.26) + 'px Arial';
+          const lineH = Math.max(12, board.cell * 0.26);
+          const widest = Math.max(...t.lines.map(line => ctx.measureText(line).width));
+          const boxH = lineH * t.lines.length + 8;
+          ctx.fillStyle = 'rgba(15,23,42,0.72)';
+          roundRect(ctx, t.x - widest / 2 - 8, t.y - boxH / 2, widest + 16, boxH, 8);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+          ctx.stroke();
+          ctx.fillStyle = t.colour;
+          t.lines.forEach((line, i) => {
+            ctx.fillText(line, t.x, t.y + (i - (t.lines.length - 1) / 2) * lineH);
+          });
+          ctx.restore();
+        }
       }
 
       function spawnRock(x, y, block) {
@@ -2108,6 +2698,7 @@
         drawStaff();
         drawMachine();
         drawParticles();
+        drawFloatingTexts();
         drawSideSpace();
         updateHud();
       }
@@ -2535,20 +3126,7 @@
       }
 
       function staffPositions() {
-        const positions = [];
-        let nearMachine = 0;
-
-        for (const s of state.staff) {
-          if (s.role === 'miner' && state.machine.status === 'mining' && nearMachine < 2) {
-            const mp = machinePos();
-            const x = mp.x - board.cell * 0.46 + nearMachine * board.cell * 0.92;
-            const y = mp.y + board.cell * 0.72;
-            positions.push({ staff: s, x, y });
-            nearMachine++;
-          }
-        }
-
-        return positions;
+        return [];
       }
 
       function drawStaff() {
@@ -2637,12 +3215,13 @@
           if (dx || dy) return Math.atan2(dy, dx);
         }
 
+        if (m.dir) return dirToAngle(m.dir);
         return typeof m.facing === 'number' ? m.facing : -Math.PI / 2;
       }
 
       function drawMachine() {
         const p = machinePos();
-        const active = state.machine.status === 'mining' || state.machine.status === 'maintenance';
+        const active = state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.status === 'maintenance';
         const shakeX = active ? rand(-1.2, 1.2) : 0;
         const shakeY = active ? rand(-0.9, 0.9) : 0;
         const angle = machineFacingAngle();
@@ -2677,7 +3256,7 @@
         const broken = state.machine.status === 'broken';
         const repair = state.machine.status === 'maintenance';
         const worn = state.machine.condition < 45 || broken;
-        const mining = state.machine.status === 'mining';
+        const mining = state.machine.status === 'mining' || state.machine.status === 'tramming';
 
         const orange = broken ? '#c2410c' : worn ? '#ea580c' : '#f97316';
         const orangeLight = broken ? '#f97316' : repair ? '#fb923c' : '#fb923c';
@@ -2941,9 +3520,43 @@
       function updateHud() {
         $('dayHud').textContent = state.day;
         $('cashHud').textContent = money(state.cash);
+        const revHud = $('revenueHud'); if (revHud) revHud.textContent = money(state.revenue);
+        const expHud = $('expenditureHud'); if (expHud) expHud.textContent = money(state.expenditure);
         $('tonnesHud').textContent = Math.round(state.tonnes).toLocaleString() + ' / 10,000t';
         $('gradeHud').textContent = grade().toFixed(1) + '%';
-        $('machineHud').textContent = state.paused ? 'Paused' : state.machine.status === 'mining' ? 'Mining' : 'Idle';
+
+        let machineText = state.paused ? 'Paused' : state.machine.status === 'mining' ? 'Mining ' + directionLabel() : state.machine.status === 'tramming' ? 'Tramming ' + directionLabel() : state.machine.status === 'maintenance' ? 'Repair' : state.machine.status === 'broken' ? 'Broken' : 'Idle ' + directionLabel();
+        $('machineHud').textContent = machineText;
+
+        updateTraitHud('productivity');
+        updateTraitHud('skill');
+        updateTraitHud('morale');
+        updateTraitHud('safety');
+        updateMachinePadHud();
+      }
+
+      function updateTraitHud(name) {
+        const value = Math.round(traitValue(name));
+        const label = $(name + 'Hud');
+        const fill = $(name + 'Fill');
+        if (label) label.textContent = value;
+        if (fill) {
+          fill.style.width = value + '%';
+          fill.style.background = traitColour(value);
+        }
+      }
+
+      function traitColour(value) {
+        if (value >= 75) return '#22c55e';
+        if (value >= 50) return '#fbbf24';
+        if (value >= 30) return '#fb923c';
+        return '#ef4444';
+      }
+
+      function updateMachinePadHud() {
+        document.querySelectorAll('[data-machine-dir]').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.machineDir === state.machine.dir);
+        });
       }
 
       function canvasClick(e) {
@@ -2956,39 +3569,114 @@
         }
         if (machineHit && inside(x, y, machineHit)) {
           if (state.machine.status === 'broken') { startRepair(); return; }
-          if (state.machine.status === 'idle' && state.machine.condition < 65) { openWindow('assets'); return; }
           openWindow('assets');
           return;
         }
         for (const hit of blockHits) {
-          if (inside(x, y, hit.rect)) { clickBlock(hit.q, hit.r, hit.c); return; }
+          if (inside(x, y, hit.rect)) {
+            showProductionComment('Blocks are no longer selected manually. Tap the continuous miner and tell it which way to embarrass itself.', 'Training');
+            return;
+          }
         }
       }
 
       function inside(x, y, r) { return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h; }
 
       function clickBlock(q, r, c) {
-        const quad = quadrants.find(x => x.id === q);
-        const block = blockAt(q, r, c);
-        if (!quad.active) {
-          showToast(q + ' Panel access has not been developed. Please raise a CAPEX request and wait until retirement.');
+        showProductionComment('Manual block picking has been replaced by directional machine control. This is described as progress.', 'Training');
+      }
+
+      function startAutoMining() {
+        if (!state.running) startGame();
+        if (state.machine.status === 'broken') {
+          openWindow('assets');
           return;
         }
-        if (block.status === 'void') { showToast('This block is already mined. The miner is standing in the consequence.'); return; }
-        if (state.machine.status !== 'idle') { showToast('The miner is already working. Multi-tasking is not covered by this training module.'); return; }
-        if (!isAdjacentToMachine(block)) { showToast('The miner can only cut an adjacent block from the current void. No teleport mining.'); return; }
-        startMining(block);
+        if (state.machine.status === 'maintenance') {
+          showProductionComment('The miner is currently being repaired. Starting it now would be bold even by ManySalts standards.', 'Maintenance');
+          return;
+        }
+
+        state.machine.autoMining = true;
+
+        if (state.machine.status === 'idle') {
+          beginNextMachineStep();
+        } else if (state.machine.status === 'mining' || state.machine.status === 'tramming') {
+          showProductionComment('Direction queued. The miner will finish this block-sized mistake before changing course.', 'Production', 3.8);
+        }
+      }
+
+      function stopAutoMining() {
+        state.machine.autoMining = false;
+
+        if (state.machine.status === 'mining') {
+          const target = state.machine.target ? blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c) : null;
+          if (target && target.status === 'mining') target.status = 'solid';
+        }
+
+        if (state.machine.status === 'mining' || state.machine.status === 'tramming') {
+          state.machine.status = 'idle';
+          state.machine.target = null;
+          state.machine.progress = 0;
+        }
+
+        showProductionComment('Mining stopped. The machine is now awaiting further leadership.', 'Production');
+      }
+
+      function beginNextMachineStep() {
+        const next = nextMachineBlock();
+
+        if (!next) {
+          state.machine.autoMining = false;
+          state.machine.status = 'idle';
+          state.machine.target = null;
+          state.machine.progress = 0;
+          showProductionComment('The miner has reached the edge of the authorised trial area. Please do not discover a new reserve by accident.', 'Survey');
+          return;
+        }
+
+        if (next.status === 'void') {
+          startTramming(next);
+          return;
+        }
+
+        if (next.status === 'solid') {
+          startMining(next);
+          return;
+        }
+
+        if (next.status === 'mining') {
+          startMining(next);
+        }
+      }
+
+      function startTramming(block) {
+        state.machine.status = 'tramming';
+        state.machine.target = { q: block.q, r: block.r, c: block.c };
+        state.machine.progress = 0;
+        state.machine.facing = dirToAngle(state.machine.dir);
       }
 
       function startMining(block) {
-        if (!state.running) state.running = true;
         block.status = 'mining';
-        block.progress = 0;
+        block.progress = block.progress || 0;
         state.machine.status = 'mining';
         state.machine.target = { q: block.q, r: block.r, c: block.c };
-        state.machine.facing = Math.atan2(block.r - state.machine.r, block.c - state.machine.c);
-        state.machine.progress = 0;
-        showToast('Mining ' + block.q + '-' + block.r + '-' + block.c + ': ' + block.tonnes.toLocaleString() + 't @ ' + block.grade.toFixed(1) + '% Goldilocks Grade.');
+        state.machine.facing = dirToAngle(state.machine.dir);
+        state.machine.progress = block.progress;
+      }
+
+      function startGame() {
+        if (!state.setupComplete) {
+          openManagerSetup();
+          return;
+        }
+        state.running = true;
+        state.paused = false;
+        $('startBtn').textContent = 'Running';
+        $('startBtn').disabled = true;
+        hideProductionComment();
+        showProductionComment('Right. Directional mining is live. Use the arrow pad in the toolbar to move, tram, and mine. Tap the machine only when it needs attention.', 'Production');
       }
 
       function showToast(text) {
@@ -3008,6 +3696,51 @@
         $('modalOverlay').classList.add('show');
       }
 
+      function openMachineControl() {
+        setModalClosable(true);
+        $('modalWindow').className = 'window small';
+        $('modalTitle').textContent = 'Continuous Miner Control';
+
+        const next = nextMachineBlock();
+        const nextText = next
+          ? next.status === 'void'
+            ? 'Next block is mined ground: tramming will cost ' + money(TRAM_COST) + '.'
+            : 'Next block: ' + next.tonnes.toLocaleString() + 't at modelled ' + next.grade.toFixed(1) + '% Goldilocks Grade.'
+          : 'No block in this direction. Further progress would require a more optimistic map.';
+
+        const isRunning = state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining;
+        const canRepair = state.machine.status !== 'mining' && state.machine.status !== 'tramming' && state.machine.status !== 'maintenance' && state.machine.condition < 100;
+
+        $('modalBody').innerHTML = `
+          <p><strong>Old Continuous Miner</strong></p>
+          <p>Status: <strong>${state.machine.status}</strong> · Direction: <strong>${directionLabel()}</strong> · Condition: <strong>${state.machine.condition.toFixed(0)}%</strong></p>
+          <p>${nextText}</p>
+
+          <div class="machineControls">
+            <div></div>
+            <button class="machineDirBtn ${state.machine.dir === 'up' ? 'active' : ''}" data-machine-dir="up">↑</button>
+            <div></div>
+
+            <button class="machineDirBtn ${state.machine.dir === 'left' ? 'active' : ''}" data-machine-dir="left">←</button>
+            ${isRunning
+              ? '<button class="machineStartBtn warn" data-machine-stop>Stop<br>Mining</button>'
+              : '<button class="machineStartBtn primary" data-machine-start>Start<br>Mining</button>'}
+            <button class="machineDirBtn ${state.machine.dir === 'right' ? 'active' : ''}" data-machine-dir="right">→</button>
+
+            <div></div>
+            <button class="machineDirBtn ${state.machine.dir === 'down' ? 'active' : ''}" data-machine-dir="down">↓</button>
+            <div></div>
+          </div>
+
+          <div class="btnRow">
+            ${canRepair ? '<button data-call-fitter>Call Fitter</button>' : ''}
+            <button data-window="assets">Asset Details</button>
+            <button data-close>Close</button>
+          </div>
+        `;
+        $('modalOverlay').classList.add('show');
+      }
+
       function openWindow(type, forceReportComplete = false, customTitle = null) {
         setModalClosable(true);
         let title = customTitle || '';
@@ -3015,7 +3748,7 @@
         $('modalWindow').className = 'window';
 
         if (type === 'targets') {
-          title = 'Module Targets';
+          title = customTitle || 'Module Targets';
           body = `
             <p><strong>Module 1 objective:</strong> mine 10,000 tonnes of polyhalite test material at a weighted average grade of at least 14% Goldilocks Grade.</p>
             <div class="rows">
@@ -3023,7 +3756,10 @@
               <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Starting Crew</strong><span>${state.staff.length ? state.staff.map(s => s.name).join(', ') : 'Not selected'}</span></div><span class="tag">${state.staff.length}/${STARTING_CREW_SIZE}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Tonnage</strong><span>${Math.round(state.tonnes).toLocaleString()} / 10,000t</span></div><span class="tag">${Math.round(state.tonnes / TARGET_TONNES * 100)}%</span></div>
               <div class="row"><div class="avatarDot" style="background:#ec4899"></div><div><strong>Goldilocks Grade</strong><span>${grade().toFixed(2)}% / 14.00%</span></div><span class="tag">${grade() >= TARGET_GRADE ? 'Pass' : 'At risk'}</span></div>
-            </div>`;
+              <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Machine Control</strong><span>Tap the miner, choose a direction, then start mining. Mined ground is used for tramming and costs ${money(TRAM_COST)} per block.</span></div><span class="tag">Directional</span></div>
+            </div>
+            ${state.setupComplete && !state.running ? '<div class="btnRow"><button class="primary" data-accept-objective>Accept Objective and Start Shift</button></div>' : ''}`;
+          if (state.setupComplete && !state.running) setModalClosable(false);
         }
 
         if (type === 'hr') {
@@ -3068,8 +3804,13 @@
 
         if (type === 'finance') {
           title = 'Finance';
-          body = `<p>Budget remaining: <strong>${money(state.cash)}</strong></p>
-                  <p>Daily wage burn: <strong>${money(dailyWageCost())}</strong></p>
+          body = `<p>Finance now describes the situation as a <strong>balance</strong>, because budget sounded too controllable.</p>
+                  <div class="rows">
+                    <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Revenue</strong><span>Generated mainly by mining tonnes. Higher Goldilocks Grade earns a stronger multiplier.</span></div><span class="tag">${money(state.revenue)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#ef4444"></div><div><strong>Expenditure</strong><span>Wages, repairs, tramming, contractors, tools, and other operational surprises.</span></div><span class="tag">${money(state.expenditure)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Current Balance</strong><span>Revenue minus expenditure.</span></div><span class="tag">${money(state.cash)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Current Wage Accrual</strong><span>Charged every game day while the shift is running.</span></div><span class="tag">${money(dailyWageCost())}/day</span></div>
+                  </div>
                   <p>CAPEX status: <strong>${state.capexFreezeUntil > state.day ? 'Frozen until Day ' + state.capexFreezeUntil : 'Nominally available'}</strong></p>
                   <p>Finance note: costs remain lower when people and machines do not do anything. Production note: this has disadvantages.</p>`;
         }
@@ -3080,13 +3821,17 @@
           body = `<p>${pass || forceReportComplete ? '<strong>Module outcome:</strong> Sufficient Readiness Demonstrated.' : '<strong>Module outcome:</strong> Development Opportunity In Progress.'}</p>
                   <p>Sample mined: <strong>${Math.round(state.tonnes).toLocaleString()}t</strong></p>
                   <p>Goldilocks Grade: <strong>${grade().toFixed(2)}%</strong></p>
-                  <p>Budget remaining: <strong>${money(state.cash)}</strong></p>
+                  <p>Balance: <strong>${money(state.cash)}</strong></p><p>Revenue: <strong>${money(state.revenue)}</strong> · Expenditure: <strong>${money(state.expenditure)}</strong></p>
                   <p>${pass ? 'Congratulations. You may now be given more responsibility without additional resources.' : 'Continue mining adjacent blocks until the training evidence becomes defensible.'}</p>`;
         }
 
         $('modalTitle').textContent = title;
         $('modalBody').innerHTML = body + '<div class="btnRow"><button class="primary" data-close>Close</button></div>';
         $('modalOverlay').classList.add('show');
+      }
+
+      function hireCost(c) {
+        return 500 + Math.round((c.salary || 0) * 0.01);
       }
 
       function candidateCard(c) {
@@ -3096,9 +3841,9 @@
             <div class="portraitDetails">
               <h3>${c.name}</h3>
               <p><span class="tag">${roleName(c.role)}</span> ${workerTierTag(c)} <span class="tag">${money(c.salary)}/yr</span></p>
-              ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
+              ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Safety', c.safety || 3)}${meter('Attendance', c.attendance)}
               <p>${c.trait}</p>
-              <button class="primary" data-hire="${c.id}">Hire</button>
+              <button class="primary" data-hire="${c.id}">Hire · Onboard ${money(hireCost(c))}</button>
             </div>
           </div>
         </div>`;
@@ -3107,7 +3852,7 @@
       function staffRow(s) {
         return `<div class="row">
           ${portraitHtml(s, 'staffRowPortrait')}
-          <div><strong>${s.name}</strong><span>${roleName(s.role)}${s.portraitTier ? ' · ' + workerTierName(s.portraitTier) : ''} · ${s.trait} · Skill ${s.skill}/5 · Morale ${s.morale}/5 · Attendance ${s.attendance}/5</span></div>
+          <div><strong>${s.name}</strong><span>${roleName(s.role)}${s.portraitTier ? ' · ' + workerTierName(s.portraitTier) : ''} · ${s.trait} · Skill ${s.skill}/5 · Morale ${s.morale}/5 · Safety ${s.safety || 3}/5 · Attendance ${s.attendance}/5</span></div>
           <span class="tag">${money(s.salary)}/yr</span>
         </div>`;
       }
@@ -3174,6 +3919,22 @@
         </div>`;
       }
 
+      function traitDelta(v) {
+        return (v >= 0 ? '+' : '') + v;
+      }
+
+      function traitBreakdownHtml() {
+        const b = shiftTraitBreakdown();
+        return `<div class="notice">
+          <strong>Projected starting shift traits</strong><br>
+          Base case: ${b.base}/100. Attendance contributes to Productivity; Safety is now its own crew trait.<br>
+          Productivity: ${b.base} ${traitDelta(b.managerMods.productivity)} Manager ${traitDelta(b.supervisorMods.productivity)} Supervisor ${traitDelta(b.crewMods.productivity)} Crew = <strong>${Math.round(b.total.productivity)}</strong><br>
+          Skill: ${b.base} ${traitDelta(b.managerMods.skill)} Manager ${traitDelta(b.supervisorMods.skill)} Supervisor ${traitDelta(b.crewMods.skill)} Crew = <strong>${Math.round(b.total.skill)}</strong><br>
+          Morale: ${b.base} ${traitDelta(b.managerMods.morale)} Manager ${traitDelta(b.supervisorMods.morale)} Supervisor ${traitDelta(b.crewMods.morale)} Crew = <strong>${Math.round(b.total.morale)}</strong><br>
+          Safety: ${b.base} ${traitDelta(b.managerMods.safety)} Manager ${traitDelta(b.supervisorMods.safety)} Supervisor ${traitDelta(b.crewMods.safety)} Crew = <strong>${Math.round(b.total.safety)}</strong>
+        </div>`;
+      }
+
       function crewSummary() {
         const selected = selectedCrew();
         const summary = selected.length
@@ -3187,7 +3948,8 @@
           Fitters: ${selectedRoleCount('fitter')}/1 ·
           Electricians: ${selectedRoleCount('electrician')}/1<br>
           ${summary}
-        </div>`;
+        </div>
+        ${selected.length ? traitBreakdownHtml() : ''}`;
       }
 
       function roleSection(role, title, note) {
@@ -3256,6 +4018,46 @@
         </div>`;
       }
 
+      function openHiringPolicyTraining() {
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Mandatory HR Training — Recruitment Excellence';
+
+        $('modalBody').innerHTML = `
+          <img class="hrTrainingHero" src="${HR_TRAINING_IMAGE}" alt="Ms Bea Haviour delivering mandatory HR recruitment training while the mining crew tries to stay awake.">
+
+          <div class="hrTrainingPanel">
+            <h2>Presented by Ms Bea Haviour</h2>
+
+            <p>
+              Human Resources is required to provide training in the company’s evidence-based recruitment process.
+              Often the best candidates are the ones you already know, such as your brother-in-law, father, childhood friend,
+              or someone who might offer favours in exchange for a job. This is not nepotism. This is stakeholder-aligned
+              talent sourcing with reduced onboarding uncertainty.
+            </p>
+
+            <p>
+              Whilst HR is committed to assisting in the hiring process, we may not always be available due to working from home,
+              eating biscuits, attending culture workshops, or protecting the organisation from employees. Please note that
+              while HR retains all power and the right of final refusal, you will be held accountable should your hiring choice
+              lead to an incident, poor performance, low morale, excessive competence, or any other outcome requiring a meeting.
+            </p>
+
+            <div class="hrTrainingTraits">
+              <div class="hrTraitCard"><strong>Productivity</strong><span>How quickly the crew turns vague ambition into mined tonnes.</span></div>
+              <div class="hrTraitCard"><strong>Skill</strong><span>How well the crew converts the model into actual Goldilocks Grade.</span></div>
+              <div class="hrTraitCard"><strong>Morale</strong><span>How often people help you rather than becoming an HR-shaped problem.</span></div>
+              <div class="hrTraitCard"><strong>Safety</strong><span>How often the shift avoids becoming a learning event with a cost code.</span></div>
+            </div>
+          </div>
+
+          <div class="btnRow">
+            <button class="primary" data-hiring-training-continue>Confirm Understanding and Begin Blame Allocation</button>
+          </div>
+        `;
+        $('modalOverlay').classList.add('show');
+      }
+
       function managerCard(m) {
         const selected = state.manager && state.manager.id === m.id;
         return `<div class="choiceCard ${selected ? 'selected' : ''}">
@@ -3282,7 +4084,7 @@
             <div class="portraitDetails">
               <h3>${c.name}</h3>
               <p><span class="tag">${roleName(c.role)}</span> ${workerTierTag(c)} <span class="tag">${money(c.salary)}/yr</span></p>
-              ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Attendance', c.attendance)}
+              ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Safety', c.safety || 3)}${meter('Attendance', c.attendance)}
               ${blurb}
               ${effectTags}
               <button class="${selected ? 'warn' : 'primary'}" data-crew-toggle="${c.id}">${selected ? 'Remove' : 'Select'}</button>
@@ -3421,6 +4223,65 @@
         openCrewSetup(crewSetupStep);
       }
 
+      function effectTraitAdjustments(person) {
+        const result = { productivity: 0, skill: 0, morale: 0, safety: 0 };
+        const effects = Array.isArray(person?.effects) ? person.effects : [];
+
+        for (const effect of effects) {
+          const match = String(effect).match(/([+-])\s*(\d+)%\s*(.+)/i);
+          if (!match) continue;
+
+          const sign = match[1] === '-' ? -1 : 1;
+          const amount = sign * Number(match[2]);
+          const label = match[3].toLowerCase();
+
+          if (label.includes('production')) result.productivity += amount;
+          else if (label.includes('attendance')) result.productivity += amount;
+          else if (label.includes('operator skill') || label.includes('skill')) result.skill += amount;
+          else if (label.includes('morale')) result.morale += amount;
+          else if (label.includes('safety')) result.safety += amount;
+        }
+
+        return result;
+      }
+
+      function crewTraitAdjustment(staff, field) {
+        const crew = staff.filter(s => s.role !== 'supervisor');
+        if (!crew.length) return 0;
+
+        const avg = crew.reduce((sum, s) => sum + (Number(s[field]) || 3), 0) / crew.length;
+        return Math.round((avg - 3) * 5);
+      }
+
+      function shiftTraitBreakdown() {
+        const manager = currentManager();
+        const staff = state.staff.length ? state.staff : selectedCrew();
+        const supervisor = staff.find(s => s.role === 'supervisor') || null;
+        const managerMods = effectTraitAdjustments(manager);
+        const supervisorMods = effectTraitAdjustments(supervisor);
+
+        const crewMods = {
+          productivity: crewTraitAdjustment(staff, 'attendance'),
+          skill: crewTraitAdjustment(staff, 'skill'),
+          morale: crewTraitAdjustment(staff, 'morale'),
+          safety: crewTraitAdjustment(staff, 'safety')
+        };
+
+        const total = {
+          productivity: clamp(BASE_SHIFT_TRAIT + managerMods.productivity + supervisorMods.productivity + crewMods.productivity, 20, 100),
+          skill: clamp(BASE_SHIFT_TRAIT + managerMods.skill + supervisorMods.skill + crewMods.skill, 20, 100),
+          morale: clamp(BASE_SHIFT_TRAIT + managerMods.morale + supervisorMods.morale + crewMods.morale, 20, 100),
+          safety: clamp(BASE_SHIFT_TRAIT + managerMods.safety + supervisorMods.safety + crewMods.safety, 20, 100)
+        };
+
+        return { base: BASE_SHIFT_TRAIT, managerMods, supervisorMods, crewMods, total };
+      }
+
+      function applyInitialShiftTraits() {
+        const breakdown = shiftTraitBreakdown();
+        state.traits = { ...breakdown.total };
+      }
+
       function confirmCrewSetup() {
         if (!allCrewRequirementsMet()) {
           openCrewSetup('trades');
@@ -3448,10 +4309,11 @@
           if (!existingIds.has(reserve.id)) state.candidates.push(reserve);
         }
 
+        applyInitialShiftTraits();
         state.setupComplete = true;
         $('startBtn').disabled = false;
         $('modalOverlay').classList.remove('show');
-        openWindow('targets');
+        openWindow('targets', false, 'Objective Review');
       }
 
       function maybeGenerateStaffBubble() {
@@ -3467,11 +4329,19 @@
 
       function chooseStaffBubbleTemplate(staff) {
         let weighted = [];
+        const morale = traitValue('morale');
 
         for (const t of staffBubbleTemplates) {
           if (t.roles && !t.roles.includes(staff.role)) continue;
 
           let weight = 1;
+
+          if (t.positive) {
+            weight += Math.max(0, Math.floor((morale - 55) / 10));
+            if (morale < 45) weight = 0;
+          } else {
+            weight += Math.max(0, Math.floor((65 - morale) / 12));
+          }
 
           if (t.traits && t.traits.some(term => String(staff.trait || '').includes(term))) weight += 5;
           if (staff.role === 'fitter' && t.type === 'maintenance') weight += 3;
@@ -3504,12 +4374,16 @@
         const quote = template.quote || '“Can I just say something?”';
         const msg = '<p><strong>' + quote + '</strong></p><p>' + renderStaffEventText(template, s) + '</p>';
         const buttons = (template.buttons || [])
-          .map(b => `<button class="${b.style || 'good'}" data-event-choice="${s.id}:${b.choice}">${b.label}</button>`)
+          .map(b => {
+            const impact = choiceImpactMeta[b.choice] || { tone: 'negative', text: 'Operational impact uncertain' };
+            return `<button class="eventChoiceBtn ${impact.tone}" data-event-choice="${s.id}:${b.choice}"><strong>${b.label}</strong><span>${impact.text}</span></button>`;
+          })
           .join('');
 
+        setModalClosable(false);
         $('modalTitle').textContent = title;
         const eventHeader = `<div class="eventHeader">${portraitHtml(s)}<div><h3>${s.name}</h3><p><span class="tag">${roleName(s.role)}</span> <span class="tag">${s.trait}</span></p></div></div>`;
-        $('modalBody').innerHTML = eventHeader + msg + '<div class="btnRow">' + buttons + '<button data-close>Close</button></div>';
+        $('modalBody').innerHTML = eventHeader + msg + '<div class="btnRow">' + buttons + '</div>';
         $('modalWindow').className = 'window medium';
         $('modalOverlay').classList.add('show');
       }
@@ -3533,33 +4407,42 @@
           if (state.machine.condition <= 0 && state.machine.status !== 'broken') breakdownMachine();
         };
 
-        if (choice === 'raise') { s.salary = Math.round(s.salary * 1.12); improveMorale(1); state.cash -= 1000; }
-        if (choice === 'bluff') { reduceMorale(1); }
-        if (choice === 'approveLeave') { improveMorale(1); reduceAttendance(1); state.cash -= 250; }
-        if (choice === 'refuse') { reduceMorale(1); }
-        if (choice === 'maintain') { improveMachine(18); state.cash -= 2500; }
-        if (choice === 'reset') { improveMachine(8); state.cash -= 900; }
-        if (choice === 'tea') { improveMorale(1); state.cash -= 150; }
-        if (choice === 'listen') { improveMorale(1); }
-        if (choice === 'ignore') { reduceMorale(1); }
+        if (choice === 'raise') { s.salary = Math.round(s.salary * 1.08); improveMorale(1); spend(950, 'Retention adjustment'); adjustTrait('morale', 4); adjustTrait('productivity', 1); }
+        if (choice === 'bluff') { reduceMorale(1); adjustTrait('morale', -4); adjustTrait('productivity', -1); }
 
-        if (choice === 'sortConveyor') { improveMorale(1); state.cash -= 650; showProductionComment('Mine Services appreciates being contacted before the belt became a sculpture.', 'Mine Services'); }
-        if (choice === 'slowForSupport') { improveMorale(1); state.cash -= 500; showProductionComment('Rock Engineering has logged your caution as both prudent and inconvenient.', 'Rock Engineering'); }
-        if (choice === 'followGrade') { improveMorale(1); showProductionComment('Geology supports following the bright stuff, while reserving the right to reinterpret it later.', 'Geology'); }
-        if (choice === 'tidyFeed') { improveMorale(1); state.cash -= 400; showProductionComment('Processing Plant has downgraded its complaint from formal to muttered.', 'Processing Plant'); }
-        if (choice === 'stabiliseServices') { improveMachine(6); state.cash -= 700; showProductionComment('Mine Services has restored enough infrastructure for blame to continue moving.', 'Mine Services'); }
-        if (choice === 'coach') { improveSkill(1); improveMorale(1); state.cash -= 300; }
-        if (choice === 'breather') { improveMorale(1); reduceAttendance(1); }
-        if (choice === 'buyTool') { improveMachine(10); state.cash -= 1200; }
-        if (choice === 'rerouteCable') { improveMachine(7); state.cash -= 850; }
+        if (choice === 'approveLeave') { improveMorale(1); reduceAttendance(1); spend(200, 'Cover arrangement'); adjustTrait('morale', 2); adjustTrait('productivity', -2); }
+        if (choice === 'refuse') { reduceMorale(1); adjustTrait('morale', -3); adjustTrait('productivity', 1); }
 
-        // Poor responses may keep the shift moving, but they leave residue.
+        if (choice === 'maintain') { improveMachine(18); spend(2500, 'Planned maintenance'); adjustTrait('safety', 2); adjustTrait('productivity', -2); }
+        if (choice === 'reset') { improveMachine(8); spend(900, 'Electrical reset'); adjustTrait('safety', 1); }
+        if (choice === 'tea') { improveMorale(1); spend(100, 'Tea contractor'); adjustTrait('morale', 3); adjustTrait('productivity', 1); }
+        if (choice === 'listen') { improveMorale(1); adjustTrait('morale', 2); adjustTrait('safety', 1); }
+        if (choice === 'ignore') { reduceMorale(1); adjustTrait('morale', -2); adjustTrait('productivity', -1); }
+
+        if (choice === 'sortConveyor') { improveMorale(1); spend(650, 'Conveyor intervention'); adjustTrait('productivity', 2); adjustTrait('safety', 1); showProductionComment('Mine Services appreciates being contacted before the belt became a sculpture.', 'Mine Services'); }
+        if (choice === 'slowForSupport') { improveMorale(1); spend(500, 'Support check'); adjustTrait('safety', 4); adjustTrait('productivity', -2); showProductionComment('Rock Engineering has logged your caution as both prudent and inconvenient.', 'Rock Engineering'); }
+        if (choice === 'followGrade') { improveMorale(1); adjustTrait('skill', 2); adjustTrait('productivity', 1); showProductionComment('Geology supports following the bright stuff, while reserving the right to reinterpret it later.', 'Geology'); }
+        if (choice === 'tidyFeed') { improveMorale(1); spend(400, 'Feed management'); adjustTrait('productivity', 2); showProductionComment('Processing Plant has downgraded its complaint from formal to muttered.', 'Processing Plant'); }
+        if (choice === 'stabiliseServices') { improveMachine(6); spend(700, 'Services stabilisation'); adjustTrait('safety', 2); showProductionComment('Mine Services has restored enough infrastructure for blame to continue moving.', 'Mine Services'); }
+        if (choice === 'coach') { improveSkill(1); improveMorale(1); spend(300, 'Shift coaching'); adjustTrait('skill', 3); adjustTrait('morale', 1); }
+        if (choice === 'breather') { improveMorale(1); reduceAttendance(1); adjustTrait('morale', 3); adjustTrait('productivity', -2); }
+        if (choice === 'buyTool') { improveMachine(10); spend(1200, 'Replacement tool'); adjustTrait('productivity', 2); }
+        if (choice === 'rerouteCable') { improveMachine(7); spend(850, 'Cable reroute'); adjustTrait('safety', 3); }
+
+        if (choice === 'adoptDrive') { improveSkill(1); adjustTrait('productivity', 5); adjustTrait('skill', 2); showProductionComment(s.name + ' has found a better line. Production has decided this was always the plan.', 'Production'); }
+        if (choice === 'formalTrial') { spend(150, 'Form printed in triplicate'); adjustTrait('skill', 1); adjustTrait('productivity', -1); }
+        if (choice === 'protectRhythm') { adjustTrait('morale', 3); adjustTrait('productivity', 3); }
+        if (choice === 'spreadsheetRhythm') { spend(75, 'Spreadsheet governance'); adjustTrait('morale', -1); adjustTrait('productivity', 1); }
+        if (choice === 'quickFix') { improveMachine(12); spend(350, 'Cheap proactive fix'); adjustTrait('productivity', 2); adjustTrait('safety', 2); }
+        if (choice === 'waitApproval') { adjustTrait('safety', 1); adjustTrait('productivity', -2); wearMachine(3); }
+
         if (choice === 'ignore') {
           if (s.role === 'fitter' || s.role === 'electrician') wearMachine(2);
           if (Math.random() < 0.25) reduceAttendance(1);
         }
 
         s.bubble = null;
+        setModalClosable(true);
         $('modalOverlay').classList.remove('show');
         updatePanelCrewTiles(true);
       }
@@ -3569,6 +4452,8 @@
         if (idx < 0) return;
         const c = state.candidates.splice(idx, 1)[0];
         state.staff.push({ ...c, bubble: null });
+        spend(hireCost(c), 'Hiring/onboarding');
+        adjustTrait('morale', 1);
         openWindow('hr');
       }
 
@@ -3600,21 +4485,12 @@
         $('acceptLetterBtn').addEventListener('click', () => {
           startMusic();
           $('letterOverlay').classList.remove('show');
-          openManagerSetup();
+          openHiringPolicyTraining();
         });
 
         $('startBtn').addEventListener('click', () => {
           startMusic();
-          if (!state.setupComplete) {
-            openManagerSetup();
-            return;
-          }
-          state.running = true;
-          state.paused = false;
-          $('startBtn').textContent = 'Running';
-          $('startBtn').disabled = true;
-          showProductionComment('Right. Let\'s turn mandatory leadership development into tonnes.', 'Production');
-          showToast('Mandatory training clock started. Select one of the highlighted adjacent blocks in the NW Panel.');
+          startGame();
         });
         $('pauseBtn').addEventListener('click', () => {
           state.paused = !state.paused;
@@ -3626,6 +4502,9 @@
         document.querySelectorAll('[data-window]').forEach(btn => btn.addEventListener('click', () => openWindow(btn.dataset.window)));
 
         document.body.addEventListener('click', (e) => {
+          const hiringTrainingBtn = e.target.closest('[data-hiring-training-continue]');
+          if (hiringTrainingBtn) { openManagerSetup(); return; }
+
           const managerBtn = e.target.closest('[data-manager-choice]');
           if (managerBtn) { chooseManager(managerBtn.dataset.managerChoice); return; }
 
@@ -3640,6 +4519,33 @@
 
           const setupBackBtn = e.target.closest('[data-setup-back]');
           if (setupBackBtn) { openManagerSetup(); return; }
+
+          const acceptObjectiveBtn = e.target.closest('[data-accept-objective]');
+          if (acceptObjectiveBtn) {
+            $('modalOverlay').classList.remove('show');
+            startMusic();
+            startGame();
+            return;
+          }
+
+          const machineDirBtn = e.target.closest('[data-machine-dir]');
+          if (machineDirBtn) {
+            driveMachineDirection(machineDirBtn.dataset.machineDir);
+            return;
+          }
+
+          const machineStartBtn = e.target.closest('[data-machine-start]');
+          if (machineStartBtn) {
+            startAutoMining();
+            openMachineControl();
+            return;
+          }
+
+          const machineStopBtn = e.target.closest('[data-machine-stop]');
+          if (machineStopBtn) {
+            stopAutoMining();
+            return;
+          }
 
           const delegatedWindowBtn = e.target.closest('[data-window]');
           if (delegatedWindowBtn) { openWindow(delegatedWindowBtn.dataset.window); return; }
