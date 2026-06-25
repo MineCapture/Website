@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Run the Pit</title>
   <style>
     :root {
@@ -2706,6 +2706,297 @@
     }
 
 
+  
+    /* Forced phone mode. This is class-driven instead of only media-query driven,
+       because some Android browsers/GitHub-hosted pages can behave like a wider layout viewport. */
+    body.phoneLayout #game {
+      height: 100dvh !important;
+      grid-template-rows: minmax(0, 1fr) 94px !important;
+      overflow: hidden !important;
+    }
+
+    body.phoneLayout #canvasWrap {
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    body.phoneLayout .gradeKeyPanel,
+    body.phoneLayout .shiftCrewPanel {
+      display: none !important;
+    }
+
+    body.phoneLayout .productionManagerDock {
+      left: 6px !important;
+      top: 6px !important;
+      bottom: auto !important;
+      grid-template-columns: 42px minmax(0, 1fr) !important;
+      gap: 5px !important;
+      max-width: calc(100vw - 12px) !important;
+      z-index: 10 !important;
+    }
+
+    body.phoneLayout .pmCharacter {
+      width: 42px !important;
+      height: 50px !important;
+      border-radius: 10px !important;
+    }
+
+    body.phoneLayout .pmPortraitFallback {
+      font-size: 17px !important;
+    }
+
+    body.phoneLayout .pmSpeechBubble {
+      margin: 0 !important;
+      max-width: calc(100vw - 62px) !important;
+      padding: 6px 8px !important;
+      border-radius: 11px !important;
+      border-width: 1px !important;
+    }
+
+    body.phoneLayout .pmSpeechBubble:before,
+    body.phoneLayout .pmSpeechBubble:after {
+      display: none !important;
+    }
+
+    body.phoneLayout .pmBubbleHeader strong {
+      font-size: 9px !important;
+    }
+
+    body.phoneLayout .pmBubbleHeader button {
+      width: 20px !important;
+      height: 20px !important;
+      min-height: 20px !important;
+      padding: 0 !important;
+      font-size: 11px !important;
+    }
+
+    body.phoneLayout .pmSpeechBubble p {
+      font-size: 10px !important;
+      line-height: 1.22 !important;
+      max-height: 36px !important;
+      overflow: hidden !important;
+    }
+
+    body.phoneLayout .shiftDashboard {
+      left: 6px !important;
+      right: 6px !important;
+      top: 60px !important;
+      bottom: auto !important;
+      width: auto !important;
+      height: 58px !important;
+      max-height: 58px !important;
+      padding: 5px 6px !important;
+      border-radius: 11px !important;
+      z-index: 9 !important;
+      overflow: hidden !important;
+    }
+
+    body.phoneLayout .dashboardHeader {
+      display: none !important;
+    }
+
+    body.phoneLayout .dashboardHud {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 4px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      padding-bottom: 2px !important;
+      margin: 0 !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body.phoneLayout .dashboardHud .pill,
+    body.phoneLayout .dashboardHud .pill.wide {
+      flex: 0 0 auto !important;
+      grid-column: auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      min-height: 21px !important;
+      padding: 3px 6px !important;
+      font-size: 9.5px !important;
+      border-radius: 999px !important;
+      white-space: nowrap !important;
+    }
+
+    body.phoneLayout .dashboardTraits {
+      display: none !important;
+    }
+
+    body.phoneLayout #bottomBar {
+      height: 94px !important;
+      display: grid !important;
+      grid-template-columns: 148px minmax(0, 1fr) !important;
+      grid-template-rows: 1fr !important;
+      gap: 5px !important;
+      align-items: center !important;
+      padding: 5px 6px calc(5px + env(safe-area-inset-bottom)) !important;
+      overflow: hidden !important;
+    }
+
+    body.phoneLayout .bottomBarSpacer {
+      display: none !important;
+    }
+
+    body.phoneLayout #bottomBar .toolbarMachineRemote {
+      grid-column: 1 !important;
+      justify-self: start !important;
+      align-self: center !important;
+      width: 146px !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      transform: none !important;
+    }
+
+    body.phoneLayout .toolbarMachineRemote .remoteHandle {
+      display: none !important;
+    }
+
+    body.phoneLayout .remoteShell {
+      padding: 3px 4px !important;
+      border-radius: 12px !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 6px 12px rgba(0,0,0,0.25) !important;
+    }
+
+    body.phoneLayout .remoteTopRow {
+      margin-bottom: 2px !important;
+    }
+
+    body.phoneLayout .remoteBrand {
+      font-size: 10px !important;
+    }
+
+    body.phoneLayout .remoteStatusPill {
+      min-width: 38px !important;
+      padding: 1px 4px !important;
+      font-size: 7px !important;
+    }
+
+    body.phoneLayout .remotePlate {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 62px !important;
+      gap: 3px !important;
+      padding: 3px !important;
+      border-radius: 9px !important;
+    }
+
+    body.phoneLayout .remoteLeftCluster {
+      display: none !important;
+    }
+
+    body.phoneLayout .remoteDisplay {
+      padding: 4px 5px !important;
+      min-width: 0 !important;
+    }
+
+    body.phoneLayout .remoteDisplayLabel {
+      font-size: 7px !important;
+    }
+
+    body.phoneLayout .remoteDisplayValue {
+      font-size: 13px !important;
+      line-height: 1.05 !important;
+    }
+
+    body.phoneLayout .remoteDisplaySub {
+      display: none !important;
+    }
+
+    body.phoneLayout .toolbarMachineControls {
+      display: grid !important;
+      grid-template-columns: repeat(3, 18px) !important;
+      grid-template-rows: repeat(3, 15px) !important;
+      gap: 2px !important;
+      width: fit-content !important;
+      justify-content: start !important;
+    }
+
+    body.phoneLayout .machinePadBtn {
+      width: 18px !important;
+      height: 15px !important;
+      min-height: 15px !important;
+      padding: 0 !important;
+      border-radius: 5px !important;
+      font-size: 9px !important;
+      line-height: 1 !important;
+    }
+
+    body.phoneLayout .machinePadStop {
+      font-size: 6px !important;
+      letter-spacing: 0 !important;
+    }
+
+    body.phoneLayout #bottomBar .toolbarButtons {
+      grid-column: 2 !important;
+      justify-self: stretch !important;
+      align-self: center !important;
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      justify-content: flex-start !important;
+      gap: 4px !important;
+      max-width: none !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      padding-bottom: 2px !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body.phoneLayout #bottomBar .toolBtn {
+      flex: 0 0 auto !important;
+      min-width: 45px !important;
+      min-height: 30px !important;
+      padding: 4px 6px !important;
+      border-radius: 8px !important;
+      font-size: 9px !important;
+    }
+
+    body.phoneLayout #bottomBar .toolBtn.primary {
+      min-width: 62px !important;
+    }
+
+    @media (max-width: 390px) {
+      body.phoneLayout #game {
+        grid-template-rows: minmax(0, 1fr) 88px !important;
+      }
+
+      body.phoneLayout .shiftDashboard {
+        height: 52px !important;
+        max-height: 52px !important;
+      }
+
+      body.phoneLayout #bottomBar {
+        height: 88px !important;
+        grid-template-columns: 132px minmax(0, 1fr) !important;
+      }
+
+      body.phoneLayout #bottomBar .toolbarMachineRemote {
+        width: 130px !important;
+      }
+
+      body.phoneLayout .remotePlate {
+        grid-template-columns: minmax(0, 1fr) 58px !important;
+      }
+
+      body.phoneLayout .toolbarMachineControls {
+        grid-template-columns: repeat(3, 17px) !important;
+        grid-template-rows: repeat(3, 14px) !important;
+      }
+
+      body.phoneLayout .machinePadBtn {
+        width: 17px !important;
+        height: 14px !important;
+        min-height: 14px !important;
+      }
+
+      body.phoneLayout #bottomBar .toolBtn {
+        min-width: 42px !important;
+        min-height: 28px !important;
+      }
+    }
+
+
   </style>
 </head>
 <body>
@@ -3815,7 +4106,18 @@
         return (state.blocks[MINE_ID] || []).find(b => b.r === r && b.c === c);
       }
 
+      function applyResponsiveLayout() {
+        const vv = window.visualViewport;
+        const vw = vv ? vv.width : window.innerWidth;
+        const vh = vv ? vv.height : window.innerHeight;
+        const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        const portrait = vh >= vw;
+        const isPhone = coarse && portrait && Math.min(vw, window.innerWidth || vw) <= 900;
+        document.body.classList.toggle('phoneLayout', !!isPhone);
+      }
+
       function resize() {
+        applyResponsiveLayout();
         const rect = wrap.getBoundingClientRect();
         W = Math.max(360, Math.floor(rect.width));
         H = Math.max(320, Math.floor(rect.height));
@@ -3830,14 +4132,15 @@
       }
 
       function computeBoard() {
-        const phoneLayout = W <= 760;
-        const marginX = Math.max(10, W * (phoneLayout ? 0.025 : 0.035));
-        const topReserve = phoneLayout ? Math.min(118, Math.max(86, H * 0.18)) : 0;
-        const marginY = Math.max(10, H * 0.035);
-        const infraRows = phoneLayout ? 2.15 : 2.85;
-        const availableH = Math.max(260, H - topReserve - marginY);
+        const forcedPhone = document.body && document.body.classList.contains('phoneLayout');
+        const phoneLayout = forcedPhone || (W <= 820 && H >= W);
+        const marginX = Math.max(8, W * (phoneLayout ? 0.02 : 0.035));
+        const topReserve = phoneLayout ? Math.min(92, Math.max(68, H * 0.14)) : 0;
+        const marginY = Math.max(8, H * (phoneLayout ? 0.018 : 0.035));
+        const infraRows = phoneLayout ? 1.85 : 2.85;
+        const availableH = Math.max(230, H - topReserve - marginY);
 
-        const cell = Math.floor(Math.max(12, Math.min(
+        const cell = Math.floor(Math.max(phoneLayout ? 10 : 12, Math.min(
           (W - marginX * 2) / MINE_COLS,
           (availableH - marginY) / (MINE_ROWS + infraRows)
         )));
@@ -7175,7 +7478,9 @@
       }
 
       function bind() {
+        applyResponsiveLayout();
         window.addEventListener('resize', resize);
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
         canvas.addEventListener('click', canvasClick);
         if ($('pmBubbleClose')) $('pmBubbleClose').addEventListener('click', hideProductionComment);
 
