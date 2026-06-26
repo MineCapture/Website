@@ -4138,6 +4138,168 @@
       .remoteMachineToggle { font-size: 7px; padding-inline: 5px; }
     }
 
+
+    /* KPI, belt-line, staff and exploration polish */
+    .kpiTrackerGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 8px;
+      margin: 12px 0 14px;
+    }
+
+    .kpiTrackerCard {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 13px;
+      background: rgba(15,23,42,0.52);
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .kpiTrackerCard strong {
+      color: #fef3c7;
+      font-size: 13px;
+    }
+
+    .kpiTrackerCard span {
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .kpiProgressTrack {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+
+    .kpiProgressFill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f59e0b, #22c55e);
+    }
+
+    .kpiProgressFill.atRisk {
+      background: linear-gradient(90deg, #7f1d1d, #ef4444);
+    }
+
+    .pipStatusPanel {
+      border: 2px solid rgba(251,191,36,0.42);
+      background: linear-gradient(180deg, rgba(251,191,36,0.12), rgba(15,23,42,0.36));
+      border-radius: 13px;
+      padding: 10px 12px;
+      margin: 10px 0 14px;
+      color: #fde68a;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .pipStatusPanel.active {
+      border-color: rgba(248,113,113,0.72);
+      background: linear-gradient(180deg, rgba(127,29,29,0.38), rgba(15,23,42,0.44));
+      color: #fecaca;
+    }
+
+    .sltReviewBox {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 10px 0 12px;
+    }
+
+    .sltReviewBox .reviewPanel {
+      border: 1px solid rgba(31,41,55,0.24);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,0.42);
+      color: #1f2937;
+    }
+
+    .sltReviewBox .reviewPanel h3 {
+      margin: 0 0 6px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #92400e;
+    }
+
+    .beltStatusMini {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(251,191,36,0.28);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(15,23,42,0.56);
+      color: #fde68a;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .staffTabBar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 12px;
+    }
+
+    .staffTabBar span {
+      border: 1px solid rgba(251,191,36,0.28);
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: rgba(15,23,42,0.46);
+      color: #fde68a;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .roleCoverageGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 7px;
+      margin: 8px 0 12px;
+    }
+
+    .roleCoverageItem {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 8px;
+      background: rgba(0,0,0,0.16);
+      color: #cbd5e1;
+      font-size: 11px;
+    }
+
+    .roleCoverageItem strong { display: block; color: #f8fafc; margin-bottom: 3px; }
+    .roleCoverageItem.missing { border-color: rgba(248,113,113,0.45); color: #fecaca; }
+    .roleCoverageItem.ok { border-color: rgba(34,197,94,0.38); }
+
+    .explorationStatusStrip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin: 10px 0 12px;
+    }
+
+    .explorationStatusStrip div {
+      border: 1px solid rgba(56,189,248,0.28);
+      border-radius: 11px;
+      background: rgba(8,47,73,0.28);
+      padding: 8px;
+      color: #bae6fd;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .explorationStatusStrip strong { display: block; color: #f0f9ff; margin-bottom: 3px; }
+
+    @media (max-width: 620px) {
+      .sltReviewBox { grid-template-columns: 1fr; }
+      .kpiTrackerGrid { grid-template-columns: 1fr; }
+    }
+
   </style>
 </head>
 <body>
@@ -5167,7 +5329,9 @@
         { id: 'j_unior', portraitTier: 'good', name: 'J. Unior', role: 'miningEngineer', model: 'M', salary: 54000, skill: 4, morale: 3, attendance: 4, safety: 4, tier: 'Junior', trait: 'Actually Listens Underground', description: 'Still believes reality should influence plans. This may pass with experience.' },
         { id: 's_enior', portraitTier: 'average', name: 'S. Enior', role: 'miningEngineer', model: 'M', salary: 76000, skill: 3, morale: 3, attendance: 3, safety: 3, tier: 'Senior', trait: 'Has Seen This Before', description: 'Confident, costly, and capable of explaining why the previous recommendation was correct in a different context.' },
         { id: 'r_doctor', portraitTier: 'good', name: 'R. Doctor', role: 'rockDoctor', model: 'R', salary: 68000, skill: 5, morale: 3, attendance: 4, safety: 5, trait: 'Pillar Whisperer', description: 'Can diagnose a failing pillar by listening to the sound of Production asking for more tonnes.' },
-        { id: 'c_rack', portraitTier: 'average', name: 'C. Rack', role: 'rockDoctor', model: 'R', salary: 52000, skill: 3, morale: 4, attendance: 4, safety: 3, trait: 'Sees Manageable Ground', description: 'Uses the word manageable often enough for it to become concerning.' }
+        { id: 'c_rack', portraitTier: 'average', name: 'C. Rack', role: 'rockDoctor', model: 'R', salary: 52000, skill: 3, morale: 4, attendance: 4, safety: 3, trait: 'Sees Manageable Ground', description: 'Uses the word manageable often enough for it to become concerning.' },
+        { id: 's_traight', portraitTier: 'average', name: 'S. Traight', role: 'surveyor', model: 'S', salary: 48000, skill: 4, morale: 3, attendance: 4, safety: 3, trait: 'Line Keeper', description: 'Keeps belt lines, drawings, and production promises roughly in the same coordinate system.' },
+        { id: 'o_ffset', portraitTier: 'bad', name: 'O. Ffset', role: 'surveyor', model: 'S', salary: 39000, skill: 2, morale: 4, attendance: 4, safety: 2, trait: 'Close Enough Grid', description: 'Believes every line is straight if viewed from a sufficiently strategic altitude.' }
       ];
 
       let selectedCrewIds = [];
@@ -5196,6 +5360,11 @@
         k2oTonnes: 0,
         premiumTonnes: 0,
         premiumK2oTonnes: 0,
+        yearIntroShown: {},
+        rockDoctorHoldActive: false,
+        pillarSplittingUnlocked: false,
+        hrCooldown: 0,
+        hrQueueCap: 5,
         particles: [],
         floatTexts: [],
         selectedBlock: null,
@@ -5253,6 +5422,9 @@
           discoveredRowsThisYear: 0,
           lastCompletedRow: null
         },
+        technicalHiresThisYear: 0,
+        beltExtensionsThisYear: 0,
+        pillarSplitTonnesThisYear: 0,
         engineeringTimer: 0,
         groundTimer: 0,
         productionCommentTimer: 0,
@@ -5436,6 +5608,7 @@
           block.q === next.q &&
           block.r === next.r &&
           block.c === next.c &&
+          (!block.isPillar || featureUnlocked('pillarSplitting')) &&
           state.machine.status === 'idle';
       }
 
@@ -5456,6 +5629,34 @@
         return Math.max(0, state.day - (state.yearStartDay || 0));
       }
 
+      function lifeOfMineMetrics() {
+        const discovered = (state.blocks[MINE_ID] || []).filter(b => b.status !== 'locked' && b.status !== 'void' && typeof b.estimatedGrade === 'number' && b.tonnes > 0);
+        const tonnes = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
+        const gradeT = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade) || 0), 0);
+        return { tonnes, grade: tonnes > 0 ? gradeT / tonnes : 0, blocks: discovered.length };
+      }
+
+      function targetsForYear(year) {
+        const y = Math.max(1, Number(year) || 1);
+        const base = {
+          1: { tonnes: 10000, grade: 14.0, discoveredRows: 0, safetyMin: 45, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
+          2: { tonnes: 13000, grade: 14.0, discoveredRows: 3, safetyMin: 48, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
+          3: { tonnes: 17500, grade: 14.1, discoveredRows: 2, safetyMin: 52, technicalHires: 2, beltExtensions: 0, pillarSplitTonnes: 0 },
+          4: { tonnes: 23500, grade: 14.2, discoveredRows: 2, safetyMin: 56, technicalHires: 0, beltExtensions: 2, pillarSplitTonnes: 0 },
+          5: { tonnes: 31000, grade: 14.35, discoveredRows: 2, safetyMin: 60, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 2500 }
+        };
+        if (base[y]) return { ...base[y] };
+        return {
+          tonnes: Math.round(31000 * Math.pow(1.18, y - 5)),
+          grade: Math.min(15.4, 14.35 + (y - 5) * 0.12),
+          discoveredRows: Math.min(4, 2 + Math.floor((y - 5) / 3)),
+          safetyMin: Math.min(75, 60 + (y - 5) * 2),
+          technicalHires: 0,
+          beltExtensions: 1 + Math.floor((y - 5) / 2),
+          pillarSplitTonnes: Math.round(2500 * Math.pow(1.12, y - 5))
+        };
+      }
+
       function geologistOnCrew() {
         return state.staff.find(s => s.role === 'geologist') || null;
       }
@@ -5472,6 +5673,42 @@
         return state.staff.find(s => s.role === 'rockDoctor') || null;
       }
 
+      function surveyorOnCrew() {
+        return state.staff.find(s => s.role === 'surveyor') || null;
+      }
+
+      function technicalTeamCoverage() {
+        return (miningEngineerOnCrew() ? 1 : 0) + (rockDoctorOnCrew() ? 1 : 0);
+      }
+
+      function featureUnlocked(name) {
+        const y = Number(state.year) || 1;
+        if (name === 'exploration') return y >= 2;
+        if (name === 'technicalTeam') return y >= 3;
+        if (name === 'groundSupport') return y >= 3;
+        if (name === 'beltAdvancement') return y >= 4;
+        if (name === 'pillarSplitting') return y >= 5 || !!state.pillarSplittingUnlocked;
+        return true;
+      }
+
+      function operatingScaleFactor() {
+        const y = Math.max(1, Number(state.year) || 1);
+        if (y <= 1) return 1.00;
+        if (y === 2) return 1.25;
+        if (y === 3) return 1.60;
+        if (y === 4) return 2.10;
+        if (y === 5) return 2.80;
+        return Math.min(5.0, 3.5 + (y - 6) * 0.28);
+      }
+
+      function scaledCost(amount) {
+        return Math.round((Number(amount) || 0) * operatingScaleFactor());
+      }
+
+      function scaledRevenue(amount) {
+        return Math.round((Number(amount) || 0) * (1 + (operatingScaleFactor() - 1) * 0.55));
+      }
+
       function money(v) {
         const sign = v < 0 ? '-' : '';
         return sign + '£' + Math.abs(Math.round(v)).toLocaleString();
@@ -5479,6 +5716,8 @@
 
       function spend(amount, reason = 'Expenditure', pos = null) {
         amount = Math.max(0, Number(amount) || 0);
+        const unscaledReasons = ['Crew salary'];
+        if (!unscaledReasons.includes(reason)) amount = scaledCost(amount);
         state.cash -= amount;
         state.expenditure += amount;
         if (pos) spawnFloatingText(pos.x, pos.y, ['-' + money(amount), reason], '#fecaca');
@@ -5486,6 +5725,7 @@
 
       function earn(amount, reason = 'Revenue', pos = null) {
         amount = Math.max(0, Number(amount) || 0);
+        amount = scaledRevenue(amount);
         state.cash += amount;
         state.revenue += amount;
         if (pos) spawnFloatingText(pos.x, pos.y, ['+' + money(amount), reason], '#bbf7d0');
@@ -5573,6 +5813,28 @@
         return blockAt(MINE_ID, state.machine.r + d.r, state.machine.c + d.c);
       }
 
+      function machinePreviewOrigin(machine = state.machine) {
+        if (machine && machine.target && (machine.status === 'mining' || machine.status === 'tramming' || machine.status === 'bolting')) {
+          const target = blockAt(machine.target.q, machine.target.r, machine.target.c);
+          if (target) return target;
+        }
+        return blockAt(MINE_ID, machine.r, machine.c);
+      }
+
+      function minerPreviewTargetBlock() {
+        const origin = machinePreviewOrigin(state.machine);
+        if (!origin) return null;
+        const d = dirDelta(state.machine.dir);
+        return blockAt(MINE_ID, origin.r + d.r, origin.c + d.c);
+      }
+
+      function bolterPreviewTargetBlock() {
+        const origin = machinePreviewOrigin(state.bolter);
+        if (!origin) return null;
+        const d = dirDelta(state.bolter.dir);
+        return blockAt(MINE_ID, origin.r + d.r, origin.c + d.c);
+      }
+
       function directionLabel(dir = state.machine.dir) {
         if (dir === 'up') return 'Up';
         if (dir === 'down') return 'Down';
@@ -5618,11 +5880,15 @@
       }
 
       function isBolterSupportable(block = bolterTargetBlock()) {
-        if (!state.assets.bolterOwned || !rockDoctorOnCrew()) return false;
+        if (!featureUnlocked('groundSupport') || !state.assets.bolterOwned || !rockDoctorOnCrew()) return false;
         return !!(block && block.isPillar && block.status === 'solid' && !block.support && block.pillarState !== 'failed');
       }
 
       function driveBolterDirection(dir) {
+        if (!featureUnlocked('groundSupport')) {
+          openMiniWindow('Bolter Not Yet Authorised', '<p>Bolter controls unlock in Year 3 when ground support becomes formal enough to interrupt production.</p>', true);
+          return;
+        }
         if (!state.assets.bolterOwned) {
           openWindow('assets');
           return;
@@ -5643,6 +5909,10 @@
           return;
         }
         if (next.status === 'void') {
+          if (isActiveBeltCell(next)) {
+            showProductionComment('The bolter cannot tram through active belt infrastructure. Mine Services has described the belt as immovable, mainly because it is in the way.', 'Mine Services', 4.8);
+            return;
+          }
           startBolterTram(next);
           return;
         }
@@ -5728,13 +5998,13 @@
         state.bolter.target = null;
         state.bolter.progress = 0;
         adjustTrait('safety', 2);
-        spawnFloatingText(p.x, p.y - board.cell * 0.6, ['BOLTED', '-' + money(PILLAR_SUPPORT_COST)], '#bfdbfe');
+        spawnFloatingText(p.x, p.y - board.cell * 0.6, ['BOLTED', '-' + money(scaledCost(PILLAR_SUPPORT_COST))], '#bfdbfe');
         pushQueueEvent({
           tone: 'good',
           icon: '⛏',
           label: 'GND',
           title: 'Pillar Supported',
-          body: `<p>${rockDoc.name} has authorised and installed support on a pillar using the bolter.</p><p><strong>Impact:</strong> +2 Safety, ${money(PILLAR_SUPPORT_COST)} support cost.</p>`
+          body: `<p>${rockDoc.name} has authorised and installed support on a pillar using the bolter.</p><p><strong>Impact:</strong> +2 Safety, ${money(scaledCost(PILLAR_SUPPORT_COST))} support cost.</p>`
         });
       }
 
@@ -5753,6 +6023,8 @@
           state.safetyTimer = 0;
           maybeSafetyEvent();
         }
+
+        if (state.hrCooldown > 0) state.hrCooldown = Math.max(0, state.hrCooldown - dt);
 
         dayTimer += dt;
         while (dayTimer >= 1) {
@@ -5881,12 +6153,13 @@
         }
 
         state.machine.cutter += dt * 13;
-        const rate = mineSpeed() / riskMult(target.risk);
+        const beltFactor = beltMiningSpeedFactor(target);
+        const rate = (mineSpeed() * beltFactor) / riskMult(target.risk);
         target.progress += rate * dt;
         state.machine.progress = target.progress;
 
         const safetyWear = clamp(1.15 - traitValue('safety') / 130, 0.45, 1.25);
-        const wearRate = 0.16 * riskMult(target.risk) * safetyWear;
+        const wearRate = 0.16 * riskMult(target.risk) * safetyWear * beltWearFactor(target);
         state.machine.condition = Math.max(0, state.machine.condition - wearRate * dt);
 
         if (state.machine.condition < 45 && !state.machine.warnedSmoking) {
@@ -5920,6 +6193,7 @@
 
         const recoveredGrade = reconcileMinedGrade(target);
         const revenue = blockRevenue(target.tonnes, recoveredGrade);
+        const displayedRevenue = scaledRevenue(revenue);
 
         state.tonnes += target.tonnes;
         state.k2oTonnes += target.tonnes * recoveredGrade;
@@ -5927,6 +6201,7 @@
 
         if (target.isPillar) {
           state.pillarsMined = (state.pillarsMined || 0) + 1;
+          state.pillarSplitTonnesThisYear = (state.pillarSplitTonnesThisYear || 0) + (Number(target.tonnes) || 0);
           adjustTrait('safety', -2);
           if (state.pillarsMined >= 2 && Math.random() < Math.min(0.75, 0.18 * state.pillarsMined)) {
             pushQueueEvent({
@@ -5949,7 +6224,7 @@
         burst(pos.x, pos.y, target);
         spawnFloatingText(pos.x, pos.y - board.cell * 0.2, [
           '+' + Math.round(target.tonnes).toLocaleString() + 't',
-          '+' + money(revenue),
+          '+' + money(displayedRevenue),
           recoveredGrade.toFixed(1) + '% Grade'
         ], '#fef3c7');
 
@@ -5984,8 +6259,9 @@
           state.machine.target = null;
           state.machine.progress = 0;
 
-          spend(TRAM_COST, 'Tramming', pos);
-          spawnFloatingText(pos.x, pos.y - board.cell * 0.1, ['TRAM', '-' + money(TRAM_COST)], '#bfdbfe');
+          const tramCost = adjustedTramCost(target);
+          spend(tramCost, 'Tramming', pos);
+          spawnFloatingText(pos.x, pos.y - board.cell * 0.1, ['TRAM', '-' + money(tramCost)], '#bfdbfe');
 
           if (state.machine.autoMining) beginNextMachineStep();
         }
@@ -6448,7 +6724,7 @@
         state.conveyor.status = 'maintenance';
         state.conveyor.progress = 0;
         spend(info.cost, 'Conveyor ' + info.label);
-        showProductionComment(worker.name + ' is dealing with the conveyor. Cost: ' + money(info.cost) + '. Productivity has entered a waiting pattern.', 'Mine Services');
+        showProductionComment(worker.name + ' is dealing with the conveyor. Cost: ' + money(scaledCost(info.cost)) + '. Productivity has entered a waiting pattern.', 'Mine Services');
         $('modalOverlay').classList.remove('show');
       }
 
@@ -6487,11 +6763,105 @@
 
       function conveyorVisualPoints() {
         if (!board) return null;
-        const startRect = cellRect(MINE_ID, START_ROW, START_COL);
+        const head = Math.min(Math.max(beltHeadRow(), 0), START_ROW);
+        const startRect = cellRect(MINE_ID, head, beltColumn());
         return {
-          x: (board.x + board.cell * 2.2 + startRect.x + startRect.w / 2) / 2,
-          y: (board.infraY + board.infraH * 0.52 + startRect.y + startRect.h * 0.98) / 2
+          x: startRect.x + startRect.w / 2,
+          y: startRect.y + startRect.h / 2
         };
+      }
+
+
+      function beltColumn() {
+        return START_COL;
+      }
+
+      function beltHeadRow() {
+        return typeof state.conveyor.beltExtendedToRow === 'number' ? state.conveyor.beltExtendedToRow : START_ROW + 1;
+      }
+
+      function isActiveBeltCell(block) {
+        if (!block) return false;
+        return block.c === beltColumn() && block.status === 'void' && block.r >= beltHeadRow() && block.r <= START_ROW;
+      }
+
+      function beltHeadLabel() {
+        const head = beltHeadRow();
+        if (head > START_ROW) return 'Just south of the first mined block';
+        return 'Row ' + (head + 1) + ', Column ' + (beltColumn() + 1);
+      }
+
+      function nextBeltExtensionRow() {
+        const next = beltHeadRow() - 1;
+        return next >= 0 ? next : null;
+      }
+
+      function machineOccupiesCell(r, c) {
+        if (state.machine && state.machine.r === r && state.machine.c === c) return true;
+        if (state.assets.bolterOwned && state.bolter && state.bolter.r === r && state.bolter.c === c) return true;
+        return false;
+      }
+
+      function beltExtensionStatus() {
+        const next = nextBeltExtensionRow();
+        if (next === null) return { canExtend: false, reason: 'Belt line fully extended through known mine.', row: null, block: null };
+        const block = blockAt(MINE_ID, next, beltColumn());
+        if (!block) return { canExtend: false, reason: 'No surveyed ground exists on the centreline.', row: next, block };
+        if (block.status === 'locked') return { canExtend: false, reason: 'Centreline ahead is not discovered. Exploration must create the next future problem first.', row: next, block };
+        if (block.status !== 'void') return { canExtend: false, reason: 'Belt extension stops at unmined centreline ground. Mine the centre block first.', row: next, block };
+        if (machineOccupiesCell(next, beltColumn())) return { canExtend: false, reason: 'A machine is parked on the proposed belt line. Move it before Mine Services pours concrete around it.', row: next, block };
+        return { canExtend: true, reason: 'Centreline ground is mined out and available for belt extension.', row: next, block };
+      }
+
+      function extendBeltLine() {
+        if (!featureUnlocked('beltAdvancement')) {
+          openMiniWindow('Belt Advancement Not Yet Authorised', '<p>Belt advancement becomes available in Year 4, after the Mining Engineer completes a detailed study discovering the belt is too far away.</p>', true);
+          return;
+        }
+        if (!surveyorOnCrew()) {
+          openMiniWindow('Survey Required', '<p>A Surveyor is required before Mine Services will extend the belt line. Someone needs to make sure the expensive line remains approximately a line.</p>', true);
+          return;
+        }
+        const status = beltExtensionStatus();
+        if (!status.canExtend) {
+          openMiniWindow('Belt Extension Blocked', '<p>' + escapeHtml(status.reason) + '</p><p>The belt can only extend from the current belt head along the centreline, and only through mined-out ground.</p>', true);
+          return;
+        }
+        spend(BELT_EXTENSION_COST, 'Belt extension');
+        state.conveyor.beltExtendedToRow = status.row;
+        state.beltExtensionsThisYear = (state.beltExtensionsThisYear || 0) + 1;
+        adjustTrait('productivity', 1);
+        showProductionComment('Mine Services has extended the belt along the mined-out centreline. The miner may no longer cross that belt cell, which everyone agrees is obvious now.', 'Mine Services', 6.2);
+        pushQueueEvent({
+          tone: 'info',
+          icon: '↻',
+          label: 'BELT',
+          title: 'Belt Line Extended',
+          body: `<p>The conveyor has been advanced to Row ${status.row + 1} along the centreline.</p><p><strong>Rule:</strong> active belt cells are now physical infrastructure. The miner and bolter must go around the front of the belt, not through it.</p>`
+        });
+        openWindow('assets');
+      }
+
+      function beltServiceDistance(block) {
+        if (!block) return 0;
+        const rowDistance = Math.max(0, beltHeadRow() - block.r);
+        const crossDistance = Math.abs(block.c - beltColumn());
+        return rowDistance + Math.max(0, crossDistance - 1) * 0.35;
+      }
+
+      function beltMiningSpeedFactor(block) {
+        const d = beltServiceDistance(block);
+        return clamp(1 - d * 0.055, 0.62, 1);
+      }
+
+      function beltWearFactor(block) {
+        const d = beltServiceDistance(block);
+        return clamp(1 + d * 0.045, 1, 1.45);
+      }
+
+      function adjustedTramCost(block) {
+        const d = beltServiceDistance(block);
+        return Math.round(TRAM_COST * clamp(1 + d * 0.09, 1, 1.9));
       }
 
       function fitterOnCrew() {
@@ -6685,6 +7055,7 @@
         drawBoardShadow();
         drawQuadrants();
         drawBlocks();
+        drawMinerTargetHighlight();
         drawBolterTargetHighlight();
         drawShaft();
         drawExplorationDrill();
@@ -6915,7 +7286,7 @@
         const shaftX = b.x + b.cell * 2.2;
         const shaftY = b.infraY + b.infraH * 0.52;
 
-        drawConveyorBelt(shaftX + shaftR * 0.85, shaftY, startRect.x + startRect.w / 2, startRect.y + startRect.h * 0.98);
+        drawConveyorNetwork(shaftX + shaftR * 0.85, shaftY);
 
         ctx.save();
         ctx.fillStyle = '#0f172a';
@@ -7020,6 +7391,55 @@
         }
 
         ctx.restore();
+      }
+
+
+      function drawConveyorNetwork(shaftX, shaftY) {
+        if (!board) return;
+        const beltCol = beltColumn();
+        const startRect = cellRect(MINE_ID, START_ROW, beltCol);
+        const infraJoinX = startRect.x + startRect.w / 2;
+        const infraJoinY = board.infraY + board.infraH * 0.62;
+
+        drawConveyorBelt(shaftX, shaftY, infraJoinX, infraJoinY);
+
+        const head = beltHeadRow();
+        const bottomY = startRect.y + startRect.h * 0.98;
+        const topY = head <= START_ROW
+          ? cellRect(MINE_ID, head, beltCol).y + cellRect(MINE_ID, head, beltCol).h * 0.08
+          : bottomY;
+        drawConveyorBelt(infraJoinX, infraJoinY, infraJoinX, bottomY);
+
+        if (head <= START_ROW) {
+          drawConveyorBelt(infraJoinX, bottomY, infraJoinX, topY);
+          for (let r = head; r <= START_ROW; r++) {
+            const cell = cellRect(MINE_ID, r, beltCol);
+            ctx.save();
+            ctx.fillStyle = 'rgba(15,23,42,0.36)';
+            roundRect(ctx, cell.x + cell.w * 0.16, cell.y + cell.h * 0.08, cell.w * 0.68, cell.h * 0.84, Math.max(3, cell.w * 0.12));
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(251,191,36,0.70)';
+            ctx.lineWidth = Math.max(1.2, cell.w * 0.035);
+            ctx.stroke();
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '900 ' + Math.max(7, cell.w * 0.16) + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BELT', cell.x + cell.w / 2, cell.y + cell.h / 2);
+            ctx.restore();
+          }
+        }
+
+        const status = beltExtensionStatus();
+        if (status.row !== null) {
+          const nextCell = cellRect(MINE_ID, status.row, beltCol);
+          ctx.save();
+          ctx.strokeStyle = status.canExtend ? 'rgba(34,197,94,0.72)' : 'rgba(248,113,113,0.58)';
+          ctx.lineWidth = Math.max(1.2, nextCell.w * 0.04);
+          ctx.setLineDash([Math.max(3, nextCell.w * 0.12), Math.max(3, nextCell.w * 0.08)]);
+          ctx.strokeRect(nextCell.x + 4, nextCell.y + 4, nextCell.w - 8, nextCell.h - 8);
+          ctx.restore();
+        }
       }
 
       function drawCrewBays() {
@@ -7447,9 +7867,29 @@
         return dirToAngle(b.dir || 'up');
       }
 
+
+      function drawMinerTargetHighlight() {
+        if (activeMachineName() !== 'miner') return;
+        const target = minerPreviewTargetBlock();
+        if (!target) return;
+        const r = cellRect(MINE_ID, target.r, target.c);
+        ctx.save();
+        if (target.status === 'solid' || target.status === 'mining') {
+          ctx.strokeStyle = target.isPillar ? '#facc15' : '#fef3c7';
+          ctx.lineWidth = Math.max(2, r.w * 0.07);
+          ctx.setLineDash([Math.max(4, r.w * 0.15), Math.max(3, r.w * 0.10)]);
+          ctx.strokeRect(r.x + 3, r.y + 3, r.w - 6, r.h - 6);
+        } else if (target.status === 'void') {
+          ctx.strokeStyle = isActiveBeltCell(target) ? 'rgba(248,113,113,0.78)' : 'rgba(254,243,199,0.44)';
+          ctx.lineWidth = Math.max(1.4, r.w * 0.045);
+          ctx.strokeRect(r.x + 5, r.y + 5, r.w - 10, r.h - 10);
+        }
+        ctx.restore();
+      }
+
       function drawBolterTargetHighlight() {
         if (!state.assets.bolterOwned || activeMachineName() !== 'bolter') return;
-        const target = bolterTargetBlock();
+        const target = bolterPreviewTargetBlock();
         if (!target) return;
         const r = cellRect(MINE_ID, target.r, target.c);
         ctx.save();
@@ -8007,6 +8447,10 @@
       }
 
       function startExplorationProgram() {
+        if (!featureUnlocked('exploration')) {
+          openMiniWindow('Exploration Not Yet Authorised', '<p>Exploration becomes available in Year 2, after the SLT has already declared what it needs exploration to confirm.</p>', true);
+          return;
+        }
         const row = nextExplorationRow();
         const geo = geologistOnCrew();
         const drillers = drillersOnCrew();
@@ -8132,7 +8576,7 @@
 
       function updateEngineeringResearch(dt) {
         const eng = miningEngineerOnCrew();
-        if (!eng || !state.running || state.paused) return;
+        if (!featureUnlocked('technicalTeam') || !eng || !state.running || state.paused) return;
         state.engineeringTimer += dt;
         const interval = interpolate(clamp(eng.skill || 3, 1, 5), 1, 80, 5, 45);
         if (state.engineeringTimer >= interval) {
@@ -8161,6 +8605,42 @@
         updateMobileEventQueue(true);
       }
 
+
+      function pct(value, target) {
+        if (!target) return 100;
+        return clamp((value / target) * 100, 0, 160);
+      }
+
+      function kpiCardHtml(title, valueText, pctValue, ok, detail) {
+        const p = Math.round(clamp(pctValue, 0, 100));
+        return `<div class="kpiTrackerCard"><strong>${title}</strong><span>${valueText}</span><div class="kpiProgressTrack"><div class="kpiProgressFill ${ok ? '' : 'atRisk'}" style="width:${p}%"></div></div><span>${detail}</span></div>`;
+      }
+
+      function annualKpiTrackerHtml() {
+        const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        const techHires = technicalTeamCoverage();
+        const beltExt = state.beltExtensionsThisYear || 0;
+        const pillarSplit = state.pillarSplitTonnesThisYear || 0;
+        const lom = lifeOfMineMetrics();
+        const gradePct = target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100;
+        const safetyPct = target.safetyMin ? clamp((traitValue('safety') / target.safetyMin) * 100, 0, 120) : 100;
+        const optionalCards = [];
+        if (target.technicalHires) optionalCards.push(kpiCardHtml('Technical Team', `${techHires} / ${target.technicalHires}`, pct(techHires, target.technicalHires), techHires >= target.technicalHires, 'Mining Engineer and Rock Doctor required'));
+        if (target.beltExtensions) optionalCards.push(kpiCardHtml('Belt Advancement', `${beltExt} / ${target.beltExtensions}`, pct(beltExt, target.beltExtensions), beltExt >= target.beltExtensions, 'Survey-controlled infrastructure promise'));
+        if (target.pillarSplitTonnes) optionalCards.push(kpiCardHtml('Pillar Splitting', `${Math.round(pillarSplit).toLocaleString()} / ${Math.round(target.pillarSplitTonnes).toLocaleString()}t`, pct(pillarSplit, target.pillarSplitTonnes), pillarSplit >= target.pillarSplitTonnes, 'Consultant-recovered value'));
+        return `<div class="kpiTrackerGrid">
+          ${kpiCardHtml('Annual Tonnes', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t`, pct(yrTonnes, target.tonnes), yrTonnes >= (target.tonnes || 0), yrTonnes >= (target.tonnes || 0) ? 'On or above KPI' : 'Behind KPI')}
+          ${kpiCardHtml('Goldilocks Grade', `${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%`, gradePct, yrGrade >= (target.grade || 0), 'Reconciled when mined')}
+          ${kpiCardHtml('Exploration', `${exp} / ${target.discoveredRows || 0} rows`, pct(exp, target.discoveredRows || 1), exp >= (target.discoveredRows || 0), (target.discoveredRows || 0) ? 'Required by SLT' : 'No formal requirement')}
+          ${kpiCardHtml('Safety Floor', `${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}`, safetyPct, traitValue('safety') >= (target.safetyMin || 0), 'Safety must survive year end')}
+          ${kpiCardHtml('Life of Mine', `${Math.round(lom.tonnes).toLocaleString()}t @ ${lom.grade.toFixed(2)}%`, Math.min(100, lom.tonnes / Math.max(1, target.tonnes) * 100), lom.tonnes >= Math.max(1, target.tonnes * 0.8), 'Estimated explored reserve')}
+          ${optionalCards.join('')}
+        </div>`;
+      }
+
       function updateAnnualReviewTriggers() {
         const doy = dayOfYear();
         if (!state.midYearReviewDone && doy >= Math.floor(YEAR_LENGTH_DAYS / 2)) {
@@ -8178,26 +8658,46 @@
         return annualTonnes() >= (t.tonnes || TARGET_TONNES) &&
           annualGrade() >= (t.grade || TARGET_GRADE) &&
           (state.exploration.discoveredRowsThisYear || 0) >= (t.discoveredRows || 0) &&
+          technicalTeamCoverage() >= (t.technicalHires || 0) &&
+          (state.beltExtensionsThisYear || 0) >= (t.beltExtensions || 0) &&
+          (state.pillarSplitTonnesThisYear || 0) >= (t.pillarSplitTonnes || 0) &&
           traitValue('safety') >= (t.safetyMin || 0);
       }
 
       function triggerMidYearReview() {
         const t = state.annualTargets;
-        let changeText = '';
+        const original = {
+          tonnes: t.tonnes,
+          grade: t.grade,
+          discoveredRows: t.discoveredRows || 0,
+          safetyMin: t.safetyMin || 0
+        };
+        let reason = '';
         if (annualTonnes() > t.tonnes * 0.55) {
           t.tonnes = Math.round(t.tonnes * 1.18);
-          t.grade = Math.max(t.grade, TARGET_GRADE + 0.25);
-          changeText = `Because production is ahead of plan, the original plan has been reclassified as insufficiently ambitious. Annual tonnage is now ${t.tonnes.toLocaleString()}t and minimum Goldilocks Grade is ${t.grade.toFixed(2)}%.`;
-        } else {
+          t.grade = Math.max(t.grade, TARGET_GRADE + (state.year <= 1 ? 0.10 : 0.25));
+          reason = 'Production is ahead of plan, so the original plan has been reclassified as insufficiently ambitious.';
+        } else if (featureUnlocked('exploration')) {
           t.discoveredRows = Math.max(t.discoveredRows || 0, 1);
-          changeText = 'Sales and Marketing have announced a product stream requiring improved confidence in future supply. This could not have been anticipated, except by anyone aware R&D began three years ago. Discover at least one new row before year end.';
+          reason = 'Sales and Marketing have announced a product stream requiring improved confidence in future supply. This could not have been anticipated, except by anyone aware R&D began three years ago.';
+        } else {
+          t.tonnes = Math.round(t.tonnes * 1.08);
+          reason = 'The bulk sample has generated enough confidence for the SLT to request a larger bulk sample while continuing to describe it as a trial.';
         }
+        const revised = {
+          tonnes: t.tonnes,
+          grade: t.grade,
+          discoveredRows: t.discoveredRows || 0,
+          safetyMin: t.safetyMin || 0
+        };
+        const originalHtml = `<h3>Original KPI</h3><p>${Math.round(original.tonnes).toLocaleString()}t at ${original.grade.toFixed(2)}% Goldilocks Grade<br>${original.discoveredRows} exploration rows<br>Safety floor ${original.safetyMin}</p>`;
+        const revisedHtml = `<h3>Revised KPI</h3><p>${Math.round(revised.tonnes).toLocaleString()}t at ${revised.grade.toFixed(2)}% Goldilocks Grade<br>${revised.discoveredRows} exploration rows<br>Safety floor ${revised.safetyMin}</p>`;
         pushQueueEvent({
           tone: 'warning',
           icon: 'SLT',
           label: 'SLT',
           title: 'Mid-Year Alignment Review',
-          body: `<p><strong>Issued by the Superior Leadership Team.</strong></p><p>${changeText}</p><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p>`
+          body: `<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p><div class="sltReviewBox"><div class="reviewPanel">${originalHtml}</div><div class="reviewPanel">${revisedHtml}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div>`
         });
       }
 
@@ -8262,7 +8762,10 @@
             <p><strong>Annual tonnes:</strong> ${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t<br>
                <strong>Annual Goldilocks Grade:</strong> ${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%<br>
                <strong>Safety:</strong> ${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}<br>
-               <strong>Exploration rows:</strong> ${state.exploration.discoveredRowsThisYear || 0} / ${target.discoveredRows || 0}</p>
+               <strong>Exploration rows:</strong> ${state.exploration.discoveredRowsThisYear || 0} / ${target.discoveredRows || 0}<br>
+               <strong>Technical team:</strong> ${technicalTeamCoverage()} / ${target.technicalHires || 0}<br>
+               <strong>Belt advancements:</strong> ${state.beltExtensionsThisYear || 0} / ${target.beltExtensions || 0}<br>
+               <strong>Pillar splitting tonnes:</strong> ${Math.round(state.pillarSplitTonnesThisYear || 0).toLocaleString()} / ${Math.round(target.pillarSplitTonnes || 0).toLocaleString()}t</p>
             ${pipText}
             <p>${rating === 'successful'
               ? 'Your success confirms the targets were realistic and may therefore have been insufficiently ambitious.'
@@ -8278,7 +8781,6 @@
 
       function advanceToNextYear() {
         if (state.gameOver) return;
-        const old = state.year;
         state.year += 1;
         state.yearStartDay = state.day;
         state.yearStartTonnes = state.tonnes;
@@ -8286,19 +8788,55 @@
         state.midYearReviewDone = false;
         state.yearReviewDue = false;
         state.exploration.discoveredRowsThisYear = 0;
-        state.annualTargets = {
-          tonnes: Math.round((state.annualTargets.tonnes || TARGET_TONNES) * 1.35),
-          grade: Math.min(15.3, (state.annualTargets.grade || TARGET_GRADE) + 0.18),
-          discoveredRows: Math.min(4, old),
-          safetyMin: Math.min(70, (state.annualTargets.safetyMin || 45) + 5)
-        };
-        state.paused = false;
-        $('pauseBtn').textContent = 'Pause';
+        state.technicalHiresThisYear = 0;
+        state.beltExtensionsThisYear = 0;
+        state.pillarSplitTonnesThisYear = 0;
+        state.annualTargets = targetsForYear(state.year);
+        if (state.year >= 5) state.pillarSplittingUnlocked = true;
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
         $('modalOverlay').classList.remove('show');
-        openWindow('targets', false, 'New Annual KPI Notice');
+        openYearStartBriefing(state.year);
+      }
+
+      function yearStartBriefingHtml(year) {
+        if (year === 2) {
+          return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a 10,000 tonne bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now be converted into a scalable mining operation.</p><p>Unfortunately, no exploration programme was completed before this commitment was made. Exploration is needed to confirm what the SLT has already declared to the board.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock three new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
+        }
+        if (year === 3) {
+          return `<div class="letter"><h2>Year 3 KPI Notice — Technical Legitimacy</h2><p>The Superior Leadership Team has approved production ramp-up from an area originally described as temporary. As no feasibility study was completed before this decision, a technical team is now required to make the decision appear planned.</p><p><strong>New requirements:</strong> hire a Mining Engineer and a Rock Doctor. Once the Rock Doctor is legally attached to the ground conditions, production may be interrupted until a bolter is purchased.</p><p class="sig">Superior Leadership Team<br>Professional Oversight After Commitment</p></div>`;
+        }
+        if (year === 4) {
+          return `<div class="letter"><h2>Year 4 KPI Notice — Infrastructure Realisation</h2><p>The Mining Engineer has concluded a detailed study and discovered that the belt is too far away from the working area.</p><p>This conclusion has produced a radical technical recommendation: install more belt closer to the mining. A Surveyor is recommended to keep the belt line straight enough for the drawing to survive scrutiny.</p><p><strong>New requirement:</strong> advance the belt through mined-out centreline ground.</p><p class="sig">Mining Engineering Department<br>Radical Solutions Using Existing Concepts</p></div>`;
+        }
+        if (year === 5) {
+          return `<div class="letter"><h2>Year 5 KPI Notice — Pillar Splitting Initiative</h2><p>The Superior Leadership Team has commissioned an external consultant to review mining efficiency. The consultant has identified that previous technical caution left viable mining grade behind in pillars.</p><p>This has been branded <strong>Pillar Splitting</strong>. Pillar extraction is now permitted where operational value can be recovered faster than concern can be documented.</p><p><strong>New requirement:</strong> recover tonnes from pillar splitting zones while pretending ground-control risk has been optimised.</p><p class="sig">External Technical Consultant<br>Value Recovery From Previous Competence</p></div>`;
+        }
+        return `<div class="letter"><h2>Operating Year ${year} KPI Notice</h2><p>All major systems are now active. Continued success has confirmed that future targets should be larger, more specific, and less forgiving.</p><p>The game will continue until two consecutive Needs Improvement ratings demonstrate a need for your career to explore external opportunities.</p><p class="sig">Superior Leadership Team<br>Escalation Based on Demonstrated Capability</p></div>`;
+      }
+
+      function openYearStartBriefing(year) {
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Annual KPI Notice';
+        $('modalBody').innerHTML = yearStartBriefingHtml(year) + '<div class="btnRow"><button class="primary" data-open-targets-after-briefing>Review Annual KPIs</button></div>';
+        $('modalOverlay').classList.add('show');
+      }
+
+
+      function openRockDoctorBolterHold() {
+        state.rockDoctorHoldActive = true;
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Ground Control Hold Point';
+        $('modalBody').innerHTML = `<div class="letter"><h2>Production Hold — Rock Doctor Intervention</h2><p>“I do not know how you have been getting away with this, but now that my name is attached to the ground conditions, we are going to monitor pillar condition and install support before everyone starts calling this predictable.”</p><p><strong>Requirement:</strong> purchase a bolter. Move the bolter through mined-out ground, face an adjacent pillar, then press <strong>BOLT</strong> on the HOPE remote.</p><p>Production remains paused until ground support equipment exists in more than a PowerPoint sense.</p><p class="sig">Rock Doctor<br>Legally Interested in the Roof</p></div><div class="btnRow"><button class="primary" data-window="assets">Purchase Bolter</button></div>`;
+        $('modalOverlay').classList.add('show');
       }
 
       function updateExposedPillarsOneDay() {
+        if (!featureUnlocked('groundSupport')) return;
         const blocks = state.blocks[MINE_ID] || [];
         for (const b of blocks) {
           if (!b.isPillar || b.status === 'void' || b.support || b.pillarState === 'failed') continue;
@@ -8336,7 +8874,7 @@
         const groups = [
           ['Production', ['supervisor', 'miner', 'fitter', 'electrician']],
           ['Exploration', ['geologist', 'driller']],
-          ['Technical', ['miningEngineer', 'rockDoctor']]
+          ['Technical', ['miningEngineer', 'rockDoctor', 'surveyor']]
         ];
         return groups.map(([title, roles]) => {
           const cards = state.candidates.filter(c => roles.includes(c.role)).map(c => candidateCard(c)).join('') || '<p>No candidates currently available. S.H.A.F.T. is checking whether anyone still answers unknown numbers.</p>';
@@ -8346,11 +8884,33 @@
 
       function staffHierarchyHtml() {
         const managerName = state.manager ? state.manager.name : 'Vacant';
-        return `<div class="staffHierarchy">
-          <div class="hierarchyNode slt"><strong>Superior Leadership Team</strong><br><span class="tag">Faceless</span> <span class="tag">Remote</span> <span class="tag">Available during success</span></div>
-          <div class="hierarchyNode"><strong>Mine Manager</strong><br><span>You. Accountable for geology, machinery, people, belt behaviour, and targets set elsewhere.</span></div>
-          <div class="hierarchyNode"><strong>Shift Manager</strong><br><span>${escapeHtml(managerName)}</span></div>
-        </div>`;
+        return `<div class="staffTabBar"><span>Hierarchy</span><span>Production</span><span>Exploration</span><span>Technical</span><span>Former Staff</span></div>
+          <div class="staffHierarchy">
+            <div class="hierarchyNode slt"><strong>Superior Leadership Team</strong><br><span class="tag">Faceless</span> <span class="tag">Remote</span> <span class="tag">Available during success</span><br><span>Sets targets, revises targets, and owns the word strategy.</span></div>
+            <div class="hierarchyNode"><strong>Mine Manager</strong><br><span>You. Accountable for geology, machinery, people, belt behaviour, and targets set elsewhere.</span></div>
+            <div class="hierarchyGrid">
+              <div class="hierarchyNode"><strong>Shift Manager</strong><br><span>${escapeHtml(managerName)}</span></div>
+              <div class="hierarchyNode"><strong>Production Crew</strong><br><span>${staffGroup('miner').length} miners · ${staffGroup('fitter').length} fitter · ${staffGroup('electrician').length} electrician</span></div>
+              <div class="hierarchyNode"><strong>Exploration Crew</strong><br><span>${staffGroup('geologist').length} geologist · ${staffGroup('driller').length} drillers</span></div>
+              <div class="hierarchyNode"><strong>Technical Crew</strong><br><span>${staffGroup('miningEngineer').length} mining engineer · ${staffGroup('rockDoctor').length} Rock Doctor · ${staffGroup('surveyor').length} surveyor</span></div>
+            </div>
+          </div>
+          ${roleCoverageHtml()}`;
+      }
+
+      function roleCoverageHtml() {
+        const checks = [
+          ['Supervisor', staffGroup('supervisor').length >= 1, 'Controls shift noise and takes blame downward.'],
+          ['Miner', staffGroup('miner').length >= 1, 'Required for meaningful production.'],
+          ['Fitter', staffGroup('fitter').length >= 1, 'Required for machine repairs.'],
+          ['Electrician', staffGroup('electrician').length >= 1, 'Required for electrical belt faults.'],
+          ['Geologist', staffGroup('geologist').length >= 1, 'Improves exploration grade estimates.'],
+          ['Drillers', staffGroup('driller').length >= 2, 'Two named drillers required for exploration.'],
+          ['Mining Engineer', staffGroup('miningEngineer').length >= 1, 'Unlocks research, analysis, and preventable meetings.'],
+          ['Rock Doctor', staffGroup('rockDoctor').length >= 1, 'Required for bolter support decisions.'],
+          ['Surveyor', staffGroup('surveyor').length >= 1, 'Required from Year 4 to advance the belt line straight enough for audit.']
+        ];
+        return `<div class="roleCoverageGrid">${checks.map(([name, ok, note]) => `<div class="roleCoverageItem ${ok ? 'ok' : 'missing'}"><strong>${ok ? '✓' : '×'} ${name}</strong>${note}</div>`).join('')}</div>`;
       }
 
       function staffRosterHtml() {
@@ -8359,7 +8919,7 @@
           ['Management', ['supervisor']],
           ['Production Crew', ['miner', 'fitter', 'electrician']],
           ['Exploration Crew', ['geologist', 'driller']],
-          ['Technical Crew', ['miningEngineer', 'rockDoctor']]
+          ['Technical Crew', ['miningEngineer', 'rockDoctor', 'surveyor']]
         ];
         const html = groups.map(([title, roles]) => {
           const rows = state.staff.filter(s => roles.includes(s.role)).map(staffRow).join('') || '<p>No named staff in this group.</p>';
@@ -8367,7 +8927,7 @@
         }).join('');
         const former = state.formerStaff && state.formerStaff.length
           ? `<section class="crewRoleSection"><div class="crewRoleHeader"><h3>Former Staff</h3><span>Evidence retained where HR did not lose it</span></div><div class="rows">${state.formerStaff.map(s => `<div class="row"><div class="avatarDot" style="background:#64748b"></div><div><strong>${escapeHtml(s.name)}</strong><span>${roleName(s.role)} · ${escapeHtml(s.exitReason || 'Former employee')}</span></div><span class="tag">Former</span></div>`).join('')}</div></section>`
-          : '';
+          : '<section class="crewRoleSection"><div class="crewRoleHeader"><h3>Former Staff</h3><span>No one has yet escaped the organisation</span></div><p>Empty, pending normal HR process.</p></section>';
         return html + former;
       }
 
@@ -8412,9 +8972,16 @@
       }
 
       function buyBolter() {
+        if (!featureUnlocked('groundSupport')) {
+          openMiniWindow('Bolter Not Yet Authorised', '<p>Ground support equipment becomes available in Year 3, after the company hires someone qualified enough to stop pretending pillars are decorative.</p>', true);
+          return;
+        }
         if (state.assets.bolterOwned) return;
         spend(BOLTER_PURCHASE_COST, 'Bolter purchase');
         state.assets.bolterOwned = true;
+        state.rockDoctorHoldActive = false;
+        state.paused = false;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
         state.bolter.q = MINE_ID;
         state.bolter.r = START_ROW;
         state.bolter.c = START_COL;
@@ -8430,6 +8997,10 @@
       }
 
       function buyDrill() {
+        if (!featureUnlocked('exploration')) {
+          openMiniWindow('Exploration Not Yet Authorised', '<p>The drill purchase is unavailable until Year 2, when the business discovers it needs reserves to support the reserves it already announced.</p>', true);
+          return;
+        }
         if (state.assets.drillOwned) return;
         spend(DRILL_PURCHASE_COST, 'Exploration drill');
         state.assets.drillOwned = true;
@@ -8660,11 +9231,23 @@
         }
 
         if (next.status === 'void') {
+          if (isActiveBeltCell(next)) {
+            state.machine.autoMining = false;
+            state.machine.status = 'idle';
+            showProductionComment('Active belt infrastructure blocks the route. The miner must go around the front of the belt rather than through Mine Services property.', 'Mine Services');
+            return;
+          }
           startTramming(next);
           return;
         }
 
         if (next.status === 'solid') {
+          if (next.isPillar && !featureUnlocked('pillarSplitting')) {
+            state.machine.autoMining = false;
+            state.machine.status = 'idle';
+            showProductionComment('Pillar mining is not currently authorised. The mine design is considered safe providing nobody mines the bits holding it up.', 'Ground Control');
+            return;
+          }
           startMining(next);
           return;
         }
@@ -8695,6 +9278,10 @@
           openManagerSetup();
           return;
         }
+        if (state.rockDoctorHoldActive && !state.assets.bolterOwned) {
+          openRockDoctorBolterHold();
+          return;
+        }
         state.running = true;
         state.paused = false;
         $('startBtn').textContent = 'Running';
@@ -8705,6 +9292,14 @@
 
       function showToast(text) {
         openMiniWindow('Training Message', '<p>' + escapeHtml(text) + '</p>', true);
+      }
+
+      function isModalOpen() {
+        const overlay = $('modalOverlay');
+        const splash = $('splashOverlay');
+        const letter = $('letterOverlay');
+        const safety = $('safetyStanddownOverlay');
+        return !!((overlay && overlay.classList.contains('show')) || (splash && splash.classList.contains('show')) || (letter && letter.classList.contains('show')) || (safety && safety.classList.contains('show')));
       }
 
       function setModalClosable(isClosable) {
@@ -8752,7 +9347,7 @@
         }
         $('modalTitle').textContent = 'Continuous Miner Control';
 
-        const next = nextMachineBlock();
+        const next = minerPreviewTargetBlock();
         const nextText = next
           ? next.status === 'locked'
             ? 'Next block is locked. Exploration drilling is required before this can become a promise.'
@@ -8956,15 +9551,15 @@
           const yrTonnes = annualTonnes();
           const yrGrade = annualGrade();
           const daysLeft = Math.max(0, YEAR_LENGTH_DAYS - dayOfYear());
+          const pipClass = state.pipActive ? 'pipStatusPanel active' : 'pipStatusPanel';
           body = `
             <p><strong>Operating Year ${state.year} objective:</strong> deliver the annual KPI package issued by the <strong>Superior Leadership Team</strong>. Targets are clear, achievable, realistic, and subject to later clarification.</p>
+            <div class="${pipClass}"><strong>PIP Status:</strong> ${state.pipActive ? 'Active. A second consecutive Needs Improvement rating will result in a supported transition outside the organisation.' : 'Clear. Performance concern has not yet been formally laminated.'}</div>
+            ${annualKpiTrackerHtml()}
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Year Clock</strong><span>Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}. Year-end review occurs automatically at day ${YEAR_LENGTH_DAYS}.</span></div><span class="tag">${daysLeft} days left</span></div>
-              <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Annual Tonnage</strong><span>${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes).toLocaleString()}t mined this operating year.</span></div><span class="tag">${Math.round(yrTonnes / target.tonnes * 100)}%</span></div>
-              <div class="row"><div class="avatarDot" style="background:#ec4899"></div><div><strong>Annual Goldilocks Grade</strong><span>${yrGrade.toFixed(2)}% / ${target.grade.toFixed(2)}%. Grade is reconciled when mined, not when Sales first likes the colour.</span></div><span class="tag">${yrGrade >= target.grade ? 'Pass' : 'At risk'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Exploration Requirement</strong><span>${state.exploration.discoveredRowsThisYear || 0} / ${target.discoveredRows || 0} rows discovered this year.</span></div><span class="tag">${(state.exploration.discoveredRowsThisYear || 0) >= (target.discoveredRows || 0) ? 'On plan' : 'Required'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Safety Floor</strong><span>Finish the year with Safety at or above ${target.safetyMin || 45}. The target is described as a floor because calling it a trap tested poorly.</span></div><span class="tag">${Math.round(traitValue('safety'))}</span></div>
               <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Initial known ground has deliberately been reduced to force a more optimistic exploration strategy.</span></div><span class="tag">Explore</span></div>
+              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Belt Head</strong><span>${beltHeadLabel()}. The belt can only be advanced through mined-out centreline ground.</span></div><span class="tag">Centreline</span></div>
             </div>
             ${state.setupComplete && !state.running ? '<div class="btnRow"><button class="primary" data-accept-objective>Accept Objective and Start Operating Year</button></div>' : ''}`;
           if (state.setupComplete && !state.running) setModalClosable(false);
@@ -8985,17 +9580,27 @@
           const geo = geologistOnCrew();
           const drillers = drillersOnCrew();
           const nextRow = nextExplorationRow();
-          const ready = state.assets.drillOwned && geo && drillers.length >= 2 && nextRow !== null && !state.exploration.active;
-          body = `<p>Exploration reveals interpreted grade, not truth. Better geologists reduce surprise; worse geologists create opportunity for later clarification.</p>
+          const explorationUnlocked = featureUnlocked('exploration');
+          const ready = explorationUnlocked && state.assets.drillOwned && geo && drillers.length >= 2 && nextRow !== null && !state.exploration.active;
+          const statusText = state.exploration.active
+            ? 'Drilling Row ' + (state.exploration.row + 1) + ' · ' + Math.round(state.exploration.progress) + '%'
+            : nextRow === null ? 'All rows interpreted' : 'Next programme: Row ' + (nextRow + 1);
+          body = `<p>${explorationUnlocked ? 'Exploration reveals interpreted grade, not truth. Better geologists reduce surprise; worse geologists create opportunity for later clarification.' : 'Exploration becomes available in Year 2, once the SLT requires evidence for the reserve position it has already declared.'}</p>
+            <div class="explorationStatusStrip">
+              <div><strong>Programme Status</strong>${statusText}</div>
+              <div><strong>Rows Discovered This Year</strong>${state.exploration.discoveredRowsThisYear || 0}</div>
+              <div><strong>Last Completed Row</strong>${state.exploration.lastCompletedRow === null || state.exploration.lastCompletedRow === undefined ? 'None yet' : 'Row ' + (state.exploration.lastCompletedRow + 1)}</div>
+              <div><strong>Estimate Confidence</strong>${geo ? 'Skill ' + geo.skill + '/5 · ' + geo.trait : 'No geologist, no defensible optimism'}</div>
+            </div>
             <div class="rows">
-              <div class="row"><div class="avatarDot" style="background:${state.assets.drillOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Exploration Drill</strong><span>${state.assets.drillOwned ? 'Purchased and waiting to turn money into holes.' : 'Not purchased.'}</span></div><span class="tag">${state.assets.drillOwned ? 'Owned' : money(DRILL_PURCHASE_COST)}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${state.assets.drillOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Exploration Drill</strong><span>${state.assets.drillOwned ? 'Purchased and waiting to turn money into holes.' : 'Not purchased.'}</span></div><span class="tag">${state.assets.drillOwned ? 'Owned' : money(scaledCost(DRILL_PURCHASE_COST))}</span></div>
               <div class="row"><div class="avatarDot" style="background:${geo ? '#22c55e' : '#ef4444'}"></div><div><strong>Geologist</strong><span>${geo ? geo.name + ' · Skill ' + geo.skill + '/5 · ' + geo.trait : 'Required for grade interpretation.'}</span></div><span class="tag">${geo ? 'Assigned' : 'Missing'}</span></div>
               <div class="row"><div class="avatarDot" style="background:${drillers.length >= 2 ? '#22c55e' : '#ef4444'}"></div><div><strong>Drillers</strong><span>${drillers.length ? drillers.map(d => d.name).join(', ') : 'Two named drillers required.'}</span></div><span class="tag">${drillers.length}/2</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Next Row</strong><span>${nextRow === null ? 'All rows discovered.' : 'Row ' + (nextRow + 1) + ' is available for the next left-to-right drilling programme.'}</span></div><span class="tag">${state.exploration.active ? Math.round(state.exploration.progress) + '%' : 'Ready'}</span></div>
             </div>
             <div class="btnRow">
-              <button class="primary" data-buy-drill ${state.assets.drillOwned ? 'disabled' : ''}>Buy Drill · ${money(DRILL_PURCHASE_COST)}</button>
-              <button class="primary" data-start-exploration ${ready ? '' : 'disabled'}>Fund Row Exploration · ${money(EXPLORATION_PROGRAM_COST)}</button>
+              <button class="primary" data-buy-drill ${state.assets.drillOwned || !explorationUnlocked ? 'disabled' : ''}>Buy Drill · ${money(scaledCost(DRILL_PURCHASE_COST))}</button>
+              <button class="primary" data-start-exploration ${ready ? '' : 'disabled'}>Fund Row Exploration · ${money(scaledCost(EXPLORATION_PROGRAM_COST))}</button>
               <button data-window="hr">Hire Technical Crew</button>
             </div>`;
         }
@@ -9026,6 +9631,12 @@
               : state.conveyor.status === 'maintenance'
                 ? 'Intervention in progress'
                 : conveyorInfo.label;
+          const beltStatus = beltExtensionStatus();
+          const beltUnlocked = featureUnlocked('beltAdvancement');
+          const bolterUnlocked = featureUnlocked('groundSupport');
+          const surveyor = surveyorOnCrew();
+          const beltHead = beltHeadLabel();
+          const beltNext = beltStatus.row === null ? 'No further row' : 'Row ' + (beltStatus.row + 1) + ', Column ' + (beltColumn() + 1);
 
           body = `<p><strong>Old Continuous Miner</strong></p>
             <div class="rows">
@@ -9037,7 +9648,7 @@
             </div>
             <p>This asset has been described as old, loyal, and statistically unlikely to improve.</p>
             <div class="btnRow">
-              <button class="primary" data-call-fitter ${canCallFitter ? '' : 'disabled'}>${state.machine.status === 'broken' ? 'Call Fitter' : 'Call Fitter for Maintenance'} (${money(repairCost())})</button>
+              <button class="primary" data-call-fitter ${canCallFitter ? '' : 'disabled'}>${state.machine.status === 'broken' ? 'Call Fitter' : 'Call Fitter for Maintenance'} (${money(scaledCost(repairCost()))})</button>
             </div>
 
             <hr style="border:0;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">
@@ -9046,24 +9657,27 @@
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:${state.conveyor.status === 'running' ? '#22c55e' : state.conveyor.status === 'maintenance' ? '#38bdf8' : '#ef4444'}"></div><div><strong>Status</strong><span>${conveyorStatus}</span></div><span class="tag">${state.conveyor.status}</span></div>
               <div class="row"><div class="avatarDot" style="background:${state.conveyor.condition < 55 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.conveyor.condition.toFixed(1)}%</span></div><span class="tag">${state.conveyor.condition < 55 ? 'Fragile' : 'Usable'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Required Response</strong><span>${state.conveyor.status === 'running' ? 'No immediate action required. This is suspicious.' : conveyorInfo.action + ' · Required: ' + roleName(conveyorInfo.role)}</span></div><span class="tag">${state.conveyor.status === 'running' ? 'Available' : money(conveyorInfo.cost)}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Belt Head</strong><span>${beltHead}. Next extension target: ${beltNext}. ${beltUnlocked ? beltStatus.reason : 'Belt advancement unlocks in Year 4 after an engineering study discovers distance.'}</span></div><span class="tag">${beltUnlocked ? money(scaledCost(BELT_EXTENSION_COST)) : 'Year 4'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${surveyor ? '#22c55e' : '#ef4444'}"></div><div><strong>Surveyor</strong><span>${surveyor ? surveyor.name + ' · Skill ' + surveyor.skill + '/5' : 'Required for belt advancement from Year 4.'}</span></div><span class="tag">${surveyor ? 'Assigned' : 'Missing'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Required Response</strong><span>${state.conveyor.status === 'running' ? 'No immediate action required. This is suspicious.' : conveyorInfo.action + ' · Required: ' + roleName(conveyorInfo.role)}</span></div><span class="tag">${state.conveyor.status === 'running' ? 'Available' : money(scaledCost(conveyorInfo.cost))}</span></div>
               ${state.conveyor.status === 'maintenance' ? `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Intervention Progress</strong><span>${Math.round(state.conveyor.progress)}%</span></div><span class="tag">${conveyorWorker ? conveyorWorker.name : 'Searching'}</span></div>` : ''}
             </div>
             <p>If the conveyor stops, the miner stops automatically. Production describes this as a dependency; Finance describes it as proof that one belt was too many.</p>
             <div class="btnRow">
-              <button class="primary" data-conveyor-fix ${state.conveyor.status === 'stopped' && conveyorWorker ? '' : 'disabled'}>${state.conveyor.status === 'stopped' ? conveyorInfo.action + ' (' + money(conveyorInfo.cost) + ')' : state.conveyor.status === 'maintenance' ? 'Intervention in Progress' : 'Conveyor Running'}</button>
+              <button class="primary" data-conveyor-fix ${state.conveyor.status === 'stopped' && conveyorWorker ? '' : 'disabled'}>${state.conveyor.status === 'stopped' ? conveyorInfo.action + ' (' + money(scaledCost(conveyorInfo.cost)) + ')' : state.conveyor.status === 'maintenance' ? 'Intervention in Progress' : 'Conveyor Running'}</button>
+              <button class="primary" data-belt-extend ${beltUnlocked && surveyor && beltStatus.canExtend ? '' : 'disabled'}>Extend Belt Line · ${money(scaledCost(BELT_EXTENSION_COST))}</button>
             </div>
 
             <hr style="border:0;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">
             <p><strong>Ground Support</strong></p>
             <div class="rows">
-              <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'On the board. Switch the HOPE remote to BOLTER, face a pillar, then press BOLT.' : 'Not purchased. Pillars must currently support themselves.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : money(BOLTER_PURCHASE_COST)}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'On the board. Switch the HOPE remote to BOLTER, face a pillar, then press BOLT.' : bolterUnlocked ? 'Not purchased. The Rock Doctor will keep reminding everyone.' : 'Unlocks in Year 3 when technical responsibility becomes fashionable.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : 'Year 3'}</span></div>
               <div class="row"><div class="avatarDot" style="background:${rockDoctorOnCrew() ? '#22c55e' : '#ef4444'}"></div><div><strong>Rock Doctor</strong><span>${rockDoctorOnCrew() ? rockDoctorOnCrew().name + ' · Skill ' + rockDoctorOnCrew().skill + '/5' : 'Required for support decisions.'}</span></div><span class="tag">${rockDoctorOnCrew() ? 'Assigned' : 'Missing'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Worst Pillar</strong><span>${worstPillar() ? 'Row ' + (worstPillar().r + 1) + ', Column ' + (worstPillar().c + 1) + ' · ' + worstPillar().pillarState : 'No unsupported exposed pillars identified.'}</span></div><span class="tag">${worstPillar() ? money(PILLAR_SUPPORT_COST) : 'Stable'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Worst Pillar</strong><span>${worstPillar() ? 'Row ' + (worstPillar().r + 1) + ', Column ' + (worstPillar().c + 1) + ' · ' + worstPillar().pillarState : 'No unsupported exposed pillars identified.'}</span></div><span class="tag">${worstPillar() ? money(scaledCost(PILLAR_SUPPORT_COST)) : 'Stable'}</span></div>
             </div>
             <div class="btnRow">
-              <button class="primary" data-buy-bolter ${state.assets.bolterOwned ? 'disabled' : ''}>Buy Bolter · ${money(BOLTER_PURCHASE_COST)}</button>
-              <button class="primary" data-support-pillar ${state.assets.bolterOwned ? '' : 'disabled'}>Use Bolter Remote</button>
+              <button class="primary" data-buy-bolter ${state.assets.bolterOwned || !bolterUnlocked ? 'disabled' : ''}>Buy Bolter · ${bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : 'Year 3'}</button>
+              <button class="primary" data-support-pillar ${state.assets.bolterOwned && bolterUnlocked ? '' : 'disabled'}>Use Bolter Remote</button>
             </div>`;
         }
 
@@ -9164,8 +9778,23 @@
         return 500 + Math.round((c.salary || 0) * 0.01);
       }
 
+      function roleHireUnlocked(role) {
+        if (role === 'geologist' || role === 'driller') return featureUnlocked('exploration');
+        if (role === 'miningEngineer' || role === 'rockDoctor') return featureUnlocked('technicalTeam');
+        if (role === 'surveyor') return featureUnlocked('beltAdvancement');
+        return true;
+      }
+
+      function roleUnlockText(role) {
+        if (role === 'geologist' || role === 'driller') return 'Unlocks Year 2';
+        if (role === 'miningEngineer' || role === 'rockDoctor') return 'Unlocks Year 3';
+        if (role === 'surveyor') return 'Unlocks Year 4';
+        return 'Available';
+      }
+
       function candidateCard(c) {
-        return `<div class="card">
+        const unlocked = roleHireUnlocked(c.role);
+        return `<div class="card ${unlocked ? '' : 'locked'}">
           <div class="portraitPanel">
             ${portraitHtml(c)}
             <div class="portraitDetails">
@@ -9173,7 +9802,7 @@
               <p><span class="tag">${roleName(c.role)}</span> ${workerTierTag(c)} <span class="tag">${money(c.salary)}/yr</span></p>
               ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Safety', c.safety || 3)}${meter('Attendance', c.attendance)}
               <p>${c.trait}</p>
-              <button class="primary" data-hire="${c.id}">Hire · Onboard ${money(hireCost(c))}</button>
+              <button class="primary" data-hire="${c.id}" ${unlocked ? '' : 'disabled'}>${unlocked ? 'Hire · Onboard ' + money(scaledCost(hireCost(c))) : roleUnlockText(c.role)}</button>
             </div>
           </div>
         </div>`;
@@ -9200,6 +9829,7 @@
         if (role === 'driller') return 'Driller';
         if (role === 'miningEngineer') return 'Mining Engineer';
         if (role === 'rockDoctor') return 'Rock Doctor';
+        if (role === 'surveyor') return 'Surveyor';
         return 'Miner';
       }
 
@@ -9653,6 +10283,10 @@
       }
 
       function maybeGenerateStaffBubble() {
+        if ((state.hrCooldown || 0) > 0) return;
+        if (isModalOpen && isModalOpen()) return;
+        const activeIssues = state.staff.filter(s => s.bubble).length;
+        if (activeIssues >= (state.hrQueueCap || 5)) return;
         const available = state.staff.filter(s => !s.bubble);
         if (!available.length || Math.random() > 0.65) return;
 
@@ -9661,6 +10295,7 @@
         if (!template) return;
 
         s.bubble = { type: template.type, icon: template.icon };
+        state.hrCooldown = 10;
         playGameSound('hr');
       }
 
@@ -9805,9 +10440,20 @@
         const idx = state.candidates.findIndex(c => c.id === id);
         if (idx < 0) return;
         const c = state.candidates.splice(idx, 1)[0];
+        if (!roleHireUnlocked(c.role)) {
+          state.candidates.splice(idx, 0, c);
+          openMiniWindow('Role Not Yet Authorised', '<p>' + escapeHtml(roleName(c.role)) + ' recruitment is not available yet. The SLT has not reached that stage of retrospective planning.</p>', true);
+          return;
+        }
         state.staff.push({ ...c, bubble: null });
         spend(hireCost(c), 'Hiring/onboarding');
+        if (['miningEngineer', 'rockDoctor', 'surveyor', 'geologist', 'driller'].includes(c.role)) state.technicalHiresThisYear = (state.technicalHiresThisYear || 0) + 1;
         adjustTrait('morale', 1);
+        if (c.role === 'rockDoctor' && featureUnlocked('groundSupport') && !state.assets.bolterOwned) {
+          updatePanelCrewTiles(true);
+          openRockDoctorBolterHold();
+          return;
+        }
         openWindow('hr');
         updatePanelCrewTiles(true);
       }
@@ -9921,6 +10567,14 @@
             return;
           }
 
+          const openTargetsAfterBriefingBtn = e.target.closest('[data-open-targets-after-briefing]');
+          if (openTargetsAfterBriefingBtn) {
+            state.paused = false;
+            if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+            openWindow('targets', false, 'New Annual KPI Notice');
+            return;
+          }
+
           const activeMachineToggle = e.target.closest('#activeMachineToggle');
           if (activeMachineToggle) { toggleActiveMachine(); return; }
 
@@ -9957,6 +10611,9 @@
 
           const conveyorFixBtn = e.target.closest('[data-conveyor-fix]');
           if (conveyorFixBtn) { startConveyorFix(); return; }
+
+          const beltExtendBtn = e.target.closest('[data-belt-extend]');
+          if (beltExtendBtn) { extendBeltLine(); return; }
 
           const buyDrillBtn = e.target.closest('[data-buy-drill]');
           if (buyDrillBtn) { buyDrill(); return; }
