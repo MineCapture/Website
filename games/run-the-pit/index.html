@@ -4055,6 +4055,89 @@
       }
     }
 
+
+    /* Annual review and dual-machine improvements */
+    .remoteMachineToggle {
+      min-height: 20px;
+      height: 22px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #0f172a, #1e293b);
+      color: #fde68a;
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid rgba(253,230,138,0.42);
+      box-shadow: none;
+      white-space: nowrap;
+    }
+
+    .annualRatingPanel {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .annualRatingOption {
+      position: relative;
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 2px solid rgba(31,41,55,0.32);
+      border-radius: 13px;
+      background: rgba(255,255,255,0.42);
+      color: #1f2937;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .annualRatingOption.unavailable {
+      opacity: 0.58;
+      background: repeating-linear-gradient(135deg, rgba(31,41,55,0.10), rgba(31,41,55,0.10) 6px, rgba(255,255,255,0.36) 6px, rgba(255,255,255,0.36) 12px);
+    }
+
+    .annualRatingOption.selected::after {
+      content: '';
+      position: absolute;
+      inset: 7px;
+      border: 5px solid #dc2626;
+      border-radius: 999px;
+      transform: rotate(-4deg);
+      pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(127,29,29,0.22);
+    }
+
+    .annualRatingOption small {
+      display: block;
+      margin-top: 4px;
+      color: #4b5563;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .pipNotice {
+      border: 2px dashed #b45309;
+      border-radius: 12px;
+      padding: 11px 12px;
+      margin-top: 12px;
+      background: rgba(251,191,36,0.20);
+      color: #1f2937;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 700;
+    }
+
+    @media (max-width: 620px) {
+      .annualRatingPanel { grid-template-columns: 1fr; }
+      .remoteMachineToggle { font-size: 7px; padding-inline: 5px; }
+    }
+
   </style>
 </head>
 <body>
@@ -4142,6 +4225,7 @@
         <div class="remoteShell">
           <div class="remoteTopRow">
             <div class="remoteBrand">HOPE</div>
+            <button class="remoteMachineToggle" id="activeMachineToggle" type="button" title="Switch active machine">MINER</button>
             <div class="remoteStatusPill" id="machineRemoteStatus">IDLE</div>
           </div>
 
@@ -4548,6 +4632,7 @@
       let blockHits = [];
       let bubbleHits = [];
       let machineHit = null;
+      let bolterHit = null;
       let dayTimer = 0;
       let lastPanelCrewTilesHtml = '';
       const portraitImageCache = new Map();
@@ -5117,6 +5202,10 @@
         safetyTimer: 0,
         safetyAlertTimeout: null,
         traits: { productivity: 70, skill: 70, morale: 70, safety: 70 },
+        activeMachine: 'miner',
+        pipActive: false,
+        needsImprovementStreak: 0,
+        lastPerformanceRating: null,
         machine: {
           q: MINE_ID,
           r: START_ROW,
@@ -5132,6 +5221,16 @@
           repairProgress: 0,
           warnedSmoking: false,
           warnedCritical: false
+        },
+        bolter: {
+          q: MINE_ID,
+          r: START_ROW,
+          c: START_COL,
+          status: 'idle',
+          dir: 'up',
+          target: null,
+          progress: 0,
+          facing: -Math.PI / 2
         },
         conveyor: {
           status: 'running',
@@ -5173,6 +5272,15 @@
         return x - Math.floor(x);
       }
 
+
+      function isPillarCell(r, c) {
+        if (r >= MINE_ROWS - 1) return false;
+        if (Math.abs(r - START_ROW) <= 1 && Math.abs(c - START_COL) <= 1) return false;
+        if (c <= 0 || c >= MINE_COLS - 1) return false;
+        const rowBand = Math.floor(Math.max(0, r - LOCKED_ROWS) / 2);
+        return (r - LOCKED_ROWS) % 2 === 0 && ((c + rowBand * 2) % 4 === 2);
+      }
+
       function initBlocks() {
         const list = [];
 
@@ -5190,7 +5298,7 @@
             const tonnes = 520 + Math.round(seeded(idx + 17) * 760);
             const riskVal = seeded(idx + 31);
             const risk = riskVal > 0.78 ? 'High' : riskVal > 0.44 ? 'Medium' : 'Low';
-            const isPillar = unlocked && r < MINE_ROWS - 1 && c % 5 === 2 && c !== START_COL;
+            const isPillar = unlocked && isPillarCell(r, c);
 
             list.push({
               q: MINE_ID,
@@ -5428,11 +5536,20 @@
 
       function setMachineDirection(dir) {
         if (!['up', 'right', 'down', 'left'].includes(dir)) return;
+        if (activeMachineName && activeMachineName() === 'bolter') {
+          state.bolter.dir = dir;
+          state.bolter.facing = dirToAngle(dir);
+          return;
+        }
         state.machine.dir = dir;
         state.machine.facing = dirToAngle(dir);
       }
 
       function driveMachineDirection(dir) {
+        if (activeMachineName && activeMachineName() === 'bolter') {
+          driveBolterDirection(dir);
+          return;
+        }
         setMachineDirection(dir);
         startAutoMining();
       }
@@ -5461,6 +5578,164 @@
         if (dir === 'down') return 'Down';
         if (dir === 'left') return 'Left';
         return 'Right';
+      }
+
+
+      function activeMachineName() {
+        return state.activeMachine === 'bolter' ? 'bolter' : 'miner';
+      }
+
+      function activeMachineState() {
+        return activeMachineName() === 'bolter' ? state.bolter : state.machine;
+      }
+
+      function activeDirectionLabel() {
+        return directionLabel(activeMachineState().dir || 'up');
+      }
+
+      function toggleActiveMachine() {
+        if (activeMachineName() === 'miner') {
+          if (!state.assets.bolterOwned) {
+            openMiniWindow('Bolter Not Owned', '<p>Purchase a bolter before assigning the remote to ground support. HOPE Mining advises that the equipment works best after procurement.</p>', true);
+            return;
+          }
+          state.activeMachine = 'bolter';
+          showProductionComment('Remote assigned to bolter. It can tram through mined-out blocks and bolt a pillar when adjacent and facing it.', 'Ground Control', 4.5);
+        } else {
+          state.activeMachine = 'miner';
+          showProductionComment('Remote assigned to continuous miner. Production has resumed its preferred level of risk.', 'Production', 3.8);
+        }
+        updateMachinePadHud();
+      }
+
+      function nextBolterBlock() {
+        const d = dirDelta(state.bolter.dir);
+        return blockAt(MINE_ID, state.bolter.r + d.r, state.bolter.c + d.c);
+      }
+
+      function bolterTargetBlock() {
+        return nextBolterBlock();
+      }
+
+      function isBolterSupportable(block = bolterTargetBlock()) {
+        if (!state.assets.bolterOwned || !rockDoctorOnCrew()) return false;
+        return !!(block && block.isPillar && block.status === 'solid' && !block.support && block.pillarState !== 'failed');
+      }
+
+      function driveBolterDirection(dir) {
+        if (!state.assets.bolterOwned) {
+          openWindow('assets');
+          return;
+        }
+        if (!state.running) startGame();
+        state.activeMachine = 'bolter';
+        state.bolter.dir = dir;
+        state.bolter.facing = dirToAngle(dir);
+
+        if (state.bolter.status === 'tramming' || state.bolter.status === 'bolting') {
+          showProductionComment('Bolter direction queued emotionally, not technically. Finish the current ground-support decision first.', 'Ground Control', 3.8);
+          return;
+        }
+
+        const next = nextBolterBlock();
+        if (!next) {
+          showProductionComment('The bolter is facing the edge of the known mine. Ground support cannot be installed in optimism.', 'Ground Control');
+          return;
+        }
+        if (next.status === 'void') {
+          startBolterTram(next);
+          return;
+        }
+        if (isBolterSupportable(next)) {
+          showProductionComment('Bolter is facing a supportable pillar. Press BOLT on the remote to install support.', 'Ground Control', 4.2);
+          return;
+        }
+        showProductionComment('Bolter can only tram through mined-out ground, or bolt an adjacent pillar it is facing.', 'Ground Control', 4.2);
+      }
+
+      function startBolterTram(block) {
+        state.bolter.status = 'tramming';
+        state.bolter.target = { q: block.q, r: block.r, c: block.c };
+        state.bolter.progress = 0;
+        state.bolter.facing = dirToAngle(state.bolter.dir);
+      }
+
+      function startBolting() {
+        const target = bolterTargetBlock();
+        const rockDoc = rockDoctorOnCrew();
+        if (!state.assets.bolterOwned) { openWindow('assets'); return; }
+        if (!rockDoc) {
+          openMiniWindow('Rock Doctor Required', '<p>Support installation requires a Rock Doctor. Production can request bolts, but Ground Control insists someone technical says where they go.</p>', true);
+          return;
+        }
+        if (!isBolterSupportable(target)) {
+          showProductionComment('No supportable pillar is in front of the bolter. Position it adjacent to a pillar and face the target.', 'Ground Control');
+          return;
+        }
+        state.bolter.status = 'bolting';
+        state.bolter.target = { q: target.q, r: target.r, c: target.c };
+        state.bolter.progress = 0;
+        showProductionComment('Bolting started. The Rock Doctor has prescribed steel, patience, and a cost code.', 'Ground Control', 4.5);
+      }
+
+      function stopBolter(message = 'Bolter stopped. Ground support has been paused for alignment with production priorities.') {
+        if (state.bolter.status === 'tramming' || state.bolter.status === 'bolting') {
+          state.bolter.status = 'idle';
+          state.bolter.target = null;
+          state.bolter.progress = 0;
+        }
+        showProductionComment(message, 'Ground Control');
+      }
+
+      function updateBolter(dt) {
+        if (!state.assets.bolterOwned) return;
+        if (state.bolter.status === 'tramming') {
+          const target = state.bolter.target ? blockAt(state.bolter.target.q, state.bolter.target.r, state.bolter.target.c) : null;
+          if (!target || target.status !== 'void') { stopBolter('Bolter route blocked. It can only tram through mined-out ground.'); return; }
+          state.bolter.progress += tramSpeed() * 0.78 * dt;
+          const p = bolterPos();
+          if (Math.random() < 0.12) spawnDust(p.x, p.y);
+          if (state.bolter.progress >= 100) {
+            state.bolter.q = target.q;
+            state.bolter.r = target.r;
+            state.bolter.c = target.c;
+            state.bolter.status = 'idle';
+            state.bolter.target = null;
+            state.bolter.progress = 0;
+            spend(Math.round(TRAM_COST * 0.55), 'Bolter tramming', p);
+          }
+          return;
+        }
+        if (state.bolter.status === 'bolting') {
+          const target = state.bolter.target ? blockAt(state.bolter.target.q, state.bolter.target.r, state.bolter.target.c) : null;
+          const rockDoc = rockDoctorOnCrew();
+          if (!target || !rockDoc || target.support || target.status !== 'solid') { stopBolter('Bolting stopped because the target is no longer a supportable pillar.'); return; }
+          const rate = (10 + (rockDoc.skill || 3) * 8) * productivityFactor();
+          state.bolter.progress += rate * dt;
+          const p = bolterPos();
+          if (Math.random() < 0.28) spawnDust(p.x, p.y);
+          if (state.bolter.progress >= 100) completeBolting(target, rockDoc);
+        }
+      }
+
+      function completeBolting(target, rockDoc) {
+        const p = bolterPos();
+        spend(PILLAR_SUPPORT_COST, 'Pillar support', p);
+        target.support = true;
+        target.pillarState = 'supported';
+        target.exposureAge = Math.max(0, (target.exposureAge || 0) - 120);
+        state.bolter.status = 'idle';
+        state.bolter.target = null;
+        state.bolter.progress = 0;
+        adjustTrait('safety', 2);
+        spawnFloatingText(p.x, p.y - board.cell * 0.6, ['BOLTED', '-' + money(PILLAR_SUPPORT_COST)], '#bfdbfe');
+        pushQueueEvent({
+          tone: 'good',
+          icon: '⛏',
+          label: 'GND',
+          title: 'Pillar Supported',
+          body: `<p>${rockDoc.name} has authorised and installed support on a pillar using the bolter.</p><p><strong>Impact:</strong> +2 Safety, ${money(PILLAR_SUPPORT_COST)} support cost.</p>`
+        });
       }
 
       function update(dt) {
@@ -5493,6 +5768,7 @@
 
         updateExploration(dt);
         updateEngineeringResearch(dt);
+        updateBolter(dt);
 
         if (state.machine.status === 'mining') {
           mineUpdate(dt);
@@ -6409,9 +6685,12 @@
         drawBoardShadow();
         drawQuadrants();
         drawBlocks();
+        drawBolterTargetHighlight();
         drawShaft();
+        drawExplorationDrill();
         bubbleHits = [];
         drawStaff();
+        drawBolter();
         drawMachine();
         drawParticles();
         drawFloatingTexts();
@@ -6516,16 +6795,40 @@
 
           if (block.isPillar) {
             ctx.save();
-            ctx.strokeStyle = block.support ? '#93c5fd' : block.pillarState === 'failed' ? '#ef4444' : block.pillarState === 'fractured' ? '#f97316' : block.pillarState === 'spalling' ? '#fbbf24' : 'rgba(255,255,255,0.72)';
-            ctx.lineWidth = Math.max(2, r.w * 0.07);
-            ctx.setLineDash(block.support ? [] : [Math.max(3, r.w * 0.14), Math.max(2, r.w * 0.09)]);
-            ctx.strokeRect(r.x + r.w * 0.18, r.y + r.h * 0.18, r.w * 0.64, r.h * 0.64);
-            ctx.setLineDash([]);
-            if (block.pillarState === 'spalling' || block.pillarState === 'fractured' || block.pillarState === 'failed') drawCracks(r, block.pillarState === 'failed' ? 95 : block.pillarState === 'fractured' ? 70 : 42);
+            const danger = block.pillarState === 'failed' ? '#dc2626' : block.pillarState === 'critical' ? '#ef4444' : block.pillarState === 'fractured' ? '#f97316' : block.pillarState === 'spalling' ? '#fbbf24' : block.pillarState === 'cracking' ? '#fde68a' : '#e5e7eb';
+            ctx.fillStyle = 'rgba(15,23,42,0.38)';
+            ctx.fillRect(r.x + r.w * 0.10, r.y + r.h * 0.10, r.w * 0.80, r.h * 0.80);
+            ctx.strokeStyle = danger;
+            ctx.lineWidth = Math.max(2.2, r.w * 0.085);
+            ctx.strokeRect(r.x + r.w * 0.13, r.y + r.h * 0.13, r.w * 0.74, r.h * 0.74);
+
+            ctx.globalAlpha = 0.72;
+            ctx.strokeStyle = block.support ? '#bfdbfe' : 'rgba(255,255,255,0.64)';
+            ctx.lineWidth = Math.max(1, r.w * 0.035);
+            for (let hx = -r.h; hx < r.w + r.h; hx += Math.max(5, r.w * 0.24)) {
+              ctx.beginPath();
+              ctx.moveTo(r.x + hx, r.y + r.h * 0.92);
+              ctx.lineTo(r.x + hx + r.h * 0.82, r.y + r.h * 0.10);
+              ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+
+            ctx.fillStyle = block.support ? '#dbeafe' : '#fff7ed';
+            ctx.font = '900 ' + Math.max(9, r.w * 0.34) + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(block.support ? 'B' : 'P', r.x + r.w / 2, r.y + r.h / 2);
+
+            if (block.pillarState === 'cracking' || block.pillarState === 'spalling' || block.pillarState === 'fractured' || block.pillarState === 'critical' || block.pillarState === 'failed') {
+              drawCracks(r, block.pillarState === 'failed' ? 100 : block.pillarState === 'critical' ? 88 : block.pillarState === 'fractured' ? 70 : block.pillarState === 'spalling' ? 48 : 28);
+            }
             if (block.support) {
-              ctx.fillStyle = 'rgba(147,197,253,0.85)';
-              ctx.fillRect(r.x + r.w * 0.28, r.y + r.h * 0.46, r.w * 0.44, Math.max(2, r.h * 0.08));
-              ctx.fillRect(r.x + r.w * 0.46, r.y + r.h * 0.28, Math.max(2, r.w * 0.08), r.h * 0.44);
+              ctx.fillStyle = 'rgba(147,197,253,0.92)';
+              ctx.fillRect(r.x + r.w * 0.22, r.y + r.h * 0.46, r.w * 0.56, Math.max(2, r.h * 0.08));
+              ctx.fillRect(r.x + r.w * 0.46, r.y + r.h * 0.22, Math.max(2, r.w * 0.08), r.h * 0.56);
+              for (const [px, py] of [[0.28,0.28],[0.72,0.28],[0.28,0.72],[0.72,0.72]]) {
+                ctx.beginPath(); ctx.arc(r.x + r.w * px, r.y + r.h * py, Math.max(1.8, r.w * 0.06), 0, Math.PI * 2); ctx.fill();
+              }
             }
             ctx.restore();
           }
@@ -7125,6 +7428,122 @@
         return typeof m.facing === 'number' ? m.facing : -Math.PI / 2;
       }
 
+
+      function bolterPos() {
+        const b = state.bolter;
+        const target = b.target ? blockAt(b.target.q, b.target.r, b.target.c) : null;
+        const cell = target && b.status === 'tramming' ? target : blockAt(MINE_ID, b.r, b.c);
+        const cr = cellRect(MINE_ID, cell.r, cell.c);
+        return { x: cr.x + cr.w / 2, y: cr.y + cr.h / 2, size: cr.w };
+      }
+
+      function bolterFacingAngle() {
+        const b = state.bolter;
+        if (b.target && b.status === 'tramming') {
+          const dy = b.target.r - b.r;
+          const dx = b.target.c - b.c;
+          if (dx || dy) return Math.atan2(dy, dx);
+        }
+        return dirToAngle(b.dir || 'up');
+      }
+
+      function drawBolterTargetHighlight() {
+        if (!state.assets.bolterOwned || activeMachineName() !== 'bolter') return;
+        const target = bolterTargetBlock();
+        if (!target) return;
+        const r = cellRect(MINE_ID, target.r, target.c);
+        ctx.save();
+        if (isBolterSupportable(target)) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = Math.max(2, r.w * 0.08);
+          ctx.setLineDash([Math.max(4, r.w * 0.18), Math.max(3, r.w * 0.10)]);
+          ctx.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+        } else if (target.status === 'void') {
+          ctx.strokeStyle = 'rgba(147,197,253,0.52)';
+          ctx.lineWidth = Math.max(1.4, r.w * 0.045);
+          ctx.strokeRect(r.x + 4, r.y + 4, r.w - 8, r.h - 8);
+        }
+        ctx.restore();
+      }
+
+      function drawBolter() {
+        bolterHit = null;
+        if (!state.assets.bolterOwned) return;
+        const p = bolterPos();
+        const active = state.bolter.status === 'tramming' || state.bolter.status === 'bolting';
+        const shakeX = active ? rand(-0.8, 0.8) : 0;
+        const shakeY = active ? rand(-0.6, 0.6) : 0;
+        const angle = bolterFacingAngle();
+        const length = board.cell * 1.05;
+        const width = board.cell * 0.66;
+        bolterHit = { x: p.x - length * 0.62, y: p.y - length * 0.62, w: length * 1.24, h: length * 1.24 };
+
+        ctx.save();
+        ctx.translate(p.x + shakeX, p.y + shakeY);
+        ctx.rotate(angle);
+        drawCompactBolter(length, width);
+        ctx.restore();
+
+        if (state.activeMachine === 'bolter') {
+          drawMachineStatusLabel(p.x, p.y - board.cell * 0.72, state.bolter.status === 'bolting' ? 'BOLT ' + Math.round(state.bolter.progress) + '%' : state.bolter.status === 'tramming' ? 'TRAM' : 'BOLTER', '#dbeafe', '#075985');
+        }
+      }
+
+      function drawCompactBolter(length, width) {
+        const bolting = state.bolter.status === 'bolting';
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.30)';
+        ctx.beginPath();
+        ctx.ellipse(0, width * 0.08, length * 0.52, width * 0.38, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const rearX = -length * 0.44;
+        const bodyL = length * 0.70;
+        const bodyW = width * 0.58;
+        ctx.fillStyle = '#111827';
+        roundRect(ctx, rearX, -width * 0.42, bodyL, width * 0.16, width * 0.04); ctx.fill();
+        roundRect(ctx, rearX, width * 0.26, bodyL, width * 0.16, width * 0.04); ctx.fill();
+
+        ctx.fillStyle = '#2563eb';
+        roundRect(ctx, rearX, -bodyW / 2, bodyL, bodyW, width * 0.08); ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = Math.max(1.2, width * 0.035);
+        roundRect(ctx, rearX, -bodyW / 2, bodyL, bodyW, width * 0.08); ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8';
+        roundRect(ctx, -length * 0.20, -width * 0.20, length * 0.34, width * 0.40, width * 0.06); ctx.fill(); ctx.stroke();
+
+        ctx.strokeStyle = bolting ? '#facc15' : '#93c5fd';
+        ctx.lineWidth = Math.max(3, width * 0.07);
+        ctx.beginPath();
+        ctx.moveTo(length * 0.05, 0);
+        ctx.lineTo(length * 0.43, 0);
+        ctx.stroke();
+        ctx.fillStyle = bolting ? '#facc15' : '#dbeafe';
+        ctx.beginPath();
+        ctx.arc(length * 0.48, 0, Math.max(3, width * 0.10), 0, Math.PI * 2);
+        ctx.fill();
+
+        if (bolting) {
+          ctx.strokeStyle = '#fde68a';
+          ctx.lineWidth = Math.max(1, width * 0.025);
+          for (let i = 0; i < 5; i++) {
+            const x = length * (0.35 + i * 0.05);
+            ctx.beginPath();
+            ctx.moveTo(x, -width * 0.12);
+            ctx.lineTo(x + length * 0.06, width * 0.12);
+            ctx.stroke();
+          }
+        }
+
+        ctx.fillStyle = '#e0f2fe';
+        ctx.font = '900 ' + Math.max(6, width * 0.18) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('BOLT', -length * 0.12, 0);
+        ctx.restore();
+      }
+
       function drawMachine() {
         const p = machinePos();
         const active = state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.status === 'maintenance';
@@ -7623,7 +8042,7 @@
           block.estimatedGrade = estimate.estimatedGrade;
           block.grade = estimate.estimatedGrade;
           block.gradeConfidence = estimate.confidence;
-          block.isPillar = block.r < MINE_ROWS - 1 && block.c % 5 === 2 && block.c !== START_COL;
+          block.isPillar = isPillarCell(block.r, block.c);
           if (block.isPillar) block.pillarState = 'stable';
         }
         state.exploration.active = false;
@@ -7782,31 +8201,83 @@
         });
       }
 
+      function annualReviewRatingHtml(rating) {
+        const selected = rating === 'successful' ? 'successful' : 'needs';
+        return `<div class="annualRatingPanel">
+          <div class="annualRatingOption unavailable"><div>Outstanding<small>Not awarded under current moderation guidance</small></div></div>
+          <div class="annualRatingOption ${selected === 'successful' ? 'selected' : ''}"><div>Successful<small>KPI met or exceeded</small></div></div>
+          <div class="annualRatingOption ${selected === 'needs' ? 'selected' : ''}"><div>Needs Improvement<small>Supportive process initiated</small></div></div>
+        </div>`;
+      }
+
       function triggerYearEndReview() {
         const passed = annualTargetPassed();
+        const rating = passed ? 'successful' : 'needsImprovement';
+        state.lastPerformanceRating = rating;
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+
         if (passed) {
-          pushQueueEvent({
-            tone: 'good',
-            icon: 'SLT',
-            label: 'SLT',
-            title: 'Year-End SLT Review: Passed',
-            body: `<p>The Superior Leadership Team notes that Year ${state.year} was successful. This proves the targets were realistic and may have been too low.</p><p><strong>Result:</strong> You continue into Year ${state.year + 1}. The SLT will now improve the target by making it harder.</p><div class="btnRow"><button class="primary" data-next-year>Accept Next Operating Year</button></div>`
-          });
-          state.paused = true;
+          state.needsImprovementStreak = 0;
+          state.pipActive = false;
+          openAnnualPerformanceReview('successful', false);
         } else {
-          state.gameOver = true;
-          state.paused = true;
-          pushQueueEvent({
-            tone: 'danger',
-            icon: 'SLT',
-            label: 'FAIL',
-            title: 'Year-End SLT Review: Not Aligned',
-            body: `<p>The Superior Leadership Team regrets that the mine has failed to deliver the clear and achievable annual KPI package.</p><p><strong>Outcome:</strong> Game over. The player has been reassigned to a development opportunity with no direct operational influence.</p><p>Annual tonnes: ${Math.round(annualTonnes()).toLocaleString()}t. Annual grade: ${annualGrade().toFixed(2)}%. Safety: ${Math.round(traitValue('safety'))}.</p>`
-          });
+          state.needsImprovementStreak = (state.needsImprovementStreak || 0) + 1;
+          if (state.needsImprovementStreak >= 2) {
+            state.gameOver = true;
+            state.pipActive = true;
+            openAnnualPerformanceReview('needsImprovement', true);
+          } else {
+            state.pipActive = true;
+            openAnnualPerformanceReview('needsImprovement', false);
+          }
         }
       }
 
+      function openAnnualPerformanceReview(rating, fired) {
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Annual Performance Review';
+        const target = state.annualTargets || {};
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const ratingText = rating === 'successful' ? 'Successful' : 'Needs Improvement';
+        const pipText = fired
+          ? `<div class="pipNotice"><strong>PIP outcome:</strong> The Performance Improvement Plan has successfully identified a performance improvement opportunity outside the organisation.</div>`
+          : rating === 'needsImprovement'
+            ? `<div class="pipNotice"><strong>Performance Improvement Plan:</strong> You have been placed on a supportive process designed to help you understand that next year’s failure will be treated differently.</div>`
+            : `<div class="pipNotice"><strong>PIP status:</strong> Cleared. Previous underperformance has been temporarily reinterpreted as development.</div>`;
+        const buttonHtml = fired
+          ? `<button class="primary" data-close>Accept Reassignment</button>`
+          : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>`;
+
+        $('modalBody').innerHTML = `
+          <div class="letter">
+            <h2>Annual Performance Review — Year ${state.year}</h2>
+            <p>Dear Mine Manager,</p>
+            <p>The <strong>Superior Leadership Team</strong> has completed your annual review against the KPI package issued at the start of the operating year, subsequently clarified through the normal strategic process.</p>
+            <p>Outstanding has not been awarded this year, in line with moderation guidance, precedent management, and the need to preserve aspiration.</p>
+            ${annualReviewRatingHtml(rating === 'successful' ? 'successful' : 'needs')}
+            <p><strong>Rating:</strong> ${ratingText}</p>
+            <p><strong>Annual tonnes:</strong> ${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t<br>
+               <strong>Annual Goldilocks Grade:</strong> ${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%<br>
+               <strong>Safety:</strong> ${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}<br>
+               <strong>Exploration rows:</strong> ${state.exploration.discoveredRowsThisYear || 0} / ${target.discoveredRows || 0}</p>
+            ${pipText}
+            <p>${rating === 'successful'
+              ? 'Your success confirms the targets were realistic and may therefore have been insufficiently ambitious.'
+              : fired
+                ? 'Unfortunately, two consecutive Needs Improvement ratings mean the organisation must now support your development from a safer distance.'
+                : 'The SLT remains confident that next year will demonstrate improvement, particularly now that the consequences have been explained.'}</p>
+            <p class="sig">Superior Leadership Team<br>ManySalts Mine<br>Delivering Value Through Other People</p>
+          </div>
+          <div class="btnRow">${buttonHtml}</div>
+        `;
+        $('modalOverlay').classList.add('show');
+      }
+
       function advanceToNextYear() {
+        if (state.gameOver) return;
         const old = state.year;
         state.year += 1;
         state.yearStartDay = state.day;
@@ -7834,11 +8305,12 @@
           const neighbours = [[1,0],[-1,0],[0,1],[0,-1]].map(([dr, dc]) => blockAt(MINE_ID, b.r + dr, b.c + dc)).filter(Boolean);
           const exposed = neighbours.filter(n => n.status === 'void').length;
           if (exposed <= 0) continue;
-          b.exposureAge = (b.exposureAge || 0) + exposed;
-          if (b.exposureAge > 70) b.pillarState = 'fractured';
-          else if (b.exposureAge > 38) b.pillarState = 'spalling';
-          else if (b.exposureAge > 18) b.pillarState = 'cracking';
-          if (b.exposureAge > 105 && Math.random() < 0.08) failPillar(b);
+          b.exposureAge = (b.exposureAge || 0) + exposed * 0.45;
+          if (b.exposureAge > 180) b.pillarState = 'critical';
+          else if (b.exposureAge > 130) b.pillarState = 'fractured';
+          else if (b.exposureAge > 82) b.pillarState = 'spalling';
+          else if (b.exposureAge > 42) b.pillarState = 'cracking';
+          if (b.exposureAge > 210 && Math.random() < 0.025) failPillar(b);
         }
       }
 
@@ -7933,7 +8405,7 @@
 
 
       function worstPillar() {
-        const order = { stable: 0, cracking: 1, spalling: 2, fractured: 3, failed: 4 };
+        const order = { stable: 0, cracking: 1, spalling: 2, fractured: 3, critical: 4, failed: 5, supported: -1 };
         return (state.blocks[MINE_ID] || [])
           .filter(b => b.isPillar && b.status !== 'void' && !b.support && b.pillarState && b.pillarState !== 'failed' && (b.exposureAge || 0) > 0)
           .sort((a, b) => (order[b.pillarState] || 0) - (order[a.pillarState] || 0) || (b.exposureAge || 0) - (a.exposureAge || 0))[0] || null;
@@ -7943,26 +8415,18 @@
         if (state.assets.bolterOwned) return;
         spend(BOLTER_PURCHASE_COST, 'Bolter purchase');
         state.assets.bolterOwned = true;
+        state.bolter.q = MINE_ID;
+        state.bolter.r = START_ROW;
+        state.bolter.c = START_COL;
+        state.bolter.status = 'idle';
+        state.bolter.dir = 'up';
+        state.activeMachine = 'bolter';
+        showProductionComment('Bolter purchased. Remote switched to BOLTER. Tram through mined-out ground and face a pillar to install support.', 'Ground Control', 6.5);
         openWindow('assets');
       }
 
       function supportWorstPillar() {
-        const pillar = worstPillar();
-        const rockDoc = rockDoctorOnCrew();
-        if (!pillar || !state.assets.bolterOwned || !rockDoc) return;
-        spend(PILLAR_SUPPORT_COST, 'Pillar support');
-        pillar.support = true;
-        pillar.pillarState = 'supported';
-        pillar.exposureAge = Math.max(0, (pillar.exposureAge || 0) - 35);
-        adjustTrait('safety', 2);
-        pushQueueEvent({
-          tone: 'good',
-          icon: '⛏',
-          label: 'GND',
-          title: 'Pillar Supported',
-          body: `<p>${rockDoc.name} has authorised support on the worst exposed pillar. The bolter has installed enough steel for everyone to feel temporarily responsible.</p><p><strong>Impact:</strong> +2 Safety, ${money(PILLAR_SUPPORT_COST)} support cost.</p>`
-        });
-        openWindow('assets');
+        openMiniWindow('Use the Bolter Remote', '<p>Ground support is now a board action. Switch the HOPE remote to <strong>BOLTER</strong>, tram through mined-out ground, face an adjacent pillar, then press <strong>BOLT</strong>.</p><p>The Rock Doctor still has to be hired, because apparently the steel needs feelings and a sign-off.</p>', true);
       }
 
       function buyDrill() {
@@ -8038,27 +8502,53 @@
       }
 
       function updateMachinePadHud() {
+        const active = activeMachineState();
         document.querySelectorAll('[data-machine-dir]').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.machineDir === state.machine.dir);
+          btn.classList.toggle('active', btn.dataset.machineDir === (active.dir || 'up'));
         });
 
         const dirEl = document.getElementById('machineRemoteDir');
         const statusEl = document.getElementById('machineRemoteStatus');
+        const toggleEl = document.getElementById('activeMachineToggle');
+        const stopBtn = document.querySelector('.machinePadStop[data-machine-stop]');
+        const displayLabel = document.querySelector('.remoteDisplayLabel');
 
-        if (dirEl) dirEl.textContent = directionLabel().toUpperCase();
+        if (toggleEl) toggleEl.textContent = activeMachineName() === 'bolter' ? 'BOLTER' : 'MINER';
+        if (displayLabel) displayLabel.textContent = activeMachineName() === 'bolter' ? 'HOPE Bolter' : 'Continuous Miner';
+        if (dirEl) dirEl.textContent = activeDirectionLabel().toUpperCase();
+
+        if (stopBtn) {
+          if (activeMachineName() === 'bolter' && state.bolter.status !== 'bolting' && isBolterSupportable()) {
+            stopBtn.textContent = 'BOLT';
+            stopBtn.title = 'Install support on the facing pillar';
+            stopBtn.classList.add('active');
+          } else {
+            stopBtn.textContent = 'STOP';
+            stopBtn.title = activeMachineName() === 'bolter' ? 'Stop bolter' : 'Stop mining';
+            stopBtn.classList.remove('active');
+          }
+        }
 
         if (statusEl) {
           let status = 'IDLE';
-          if (!isConveyorAvailable()) status = state.conveyor.status === 'maintenance' ? 'BELT FIX' : 'BELT STOP';
-          else if (state.machine.status === 'mining') status = 'MINING';
-          else if (state.machine.status === 'tramming') status = 'TRAM';
-          else if (state.machine.status === 'maintenance') status = 'REPAIR';
-          else if (state.machine.status === 'broken') status = 'BROKEN';
+          if (activeMachineName() === 'bolter') {
+            if (!state.assets.bolterOwned) status = 'NO BOLT';
+            else if (state.bolter.status === 'bolting') status = 'BOLTING';
+            else if (state.bolter.status === 'tramming') status = 'TRAM';
+            else if (isBolterSupportable()) status = 'READY';
+            else status = 'BOLTER';
+          } else {
+            if (!isConveyorAvailable()) status = state.conveyor.status === 'maintenance' ? 'BELT FIX' : 'BELT STOP';
+            else if (state.machine.status === 'mining') status = 'MINING';
+            else if (state.machine.status === 'tramming') status = 'TRAM';
+            else if (state.machine.status === 'maintenance') status = 'REPAIR';
+            else if (state.machine.status === 'broken') status = 'BROKEN';
+          }
           statusEl.textContent = status;
           statusEl.style.background =
-            status === 'BROKEN' ? 'rgba(127,29,29,0.92)' :
-            status === 'REPAIR' || status === 'BELT FIX' ? 'rgba(3,105,161,0.92)' :
-            status === 'BELT STOP' ? 'rgba(127,29,29,0.92)' :
+            status === 'BROKEN' || status === 'BELT STOP' ? 'rgba(127,29,29,0.92)' :
+            status === 'REPAIR' || status === 'BELT FIX' || status === 'BOLTING' ? 'rgba(3,105,161,0.92)' :
+            status === 'READY' ? 'rgba(21,128,61,0.92)' :
             status === 'MINING' ? 'rgba(21,128,61,0.92)' :
             status === 'TRAM' ? 'rgba(180,83,9,0.92)' :
             'rgba(15,23,42,0.75)';
@@ -8073,7 +8563,13 @@
         for (const hit of bubbleHits) {
           if (inside(x, y, hit.rect)) { openStaffEvent(hit.staffId); return; }
         }
+        if (bolterHit && inside(x, y, bolterHit)) {
+          state.activeMachine = 'bolter';
+          openWindow('assets');
+          return;
+        }
         if (machineHit && inside(x, y, machineHit)) {
+          state.activeMachine = 'miner';
           if (state.machine.status === 'broken') { startRepair(); return; }
           openWindow('assets');
           return;
@@ -8228,6 +8724,32 @@
       function openMachineControl() {
         setModalClosable(true);
         $('modalWindow').className = 'window small';
+        if (activeMachineName() === 'bolter') {
+          $('modalTitle').textContent = 'HOPE Bolter Control';
+          const target = bolterTargetBlock();
+          const targetText = !state.assets.bolterOwned
+            ? 'Bolter not owned.'
+            : isBolterSupportable(target)
+              ? 'Facing supportable pillar. Press BOLT to install support.'
+              : target && target.status === 'void'
+                ? 'Facing mined-out ground. Directional control will tram the bolter.'
+                : 'Face a mined-out block to tram, or an adjacent pillar to bolt.';
+          $('modalBody').innerHTML = `
+            <p><strong>HOPE Bolter</strong></p>
+            <p>Status: <strong>${state.bolter.status}</strong> · Direction: <strong>${directionLabel(state.bolter.dir)}</strong> · Progress: <strong>${Math.round(state.bolter.progress)}%</strong></p>
+            <p>${targetText}</p>
+            <div class="machineControls">
+              <div></div><button class="machineDirBtn ${state.bolter.dir === 'up' ? 'active' : ''}" data-machine-dir="up">↑</button><div></div>
+              <button class="machineDirBtn ${state.bolter.dir === 'left' ? 'active' : ''}" data-machine-dir="left">←</button>
+              <button class="machineStartBtn ${isBolterSupportable(target) ? 'primary' : 'warn'}" data-machine-stop>${isBolterSupportable(target) ? 'Bolt' : 'Stop'}</button>
+              <button class="machineDirBtn ${state.bolter.dir === 'right' ? 'active' : ''}" data-machine-dir="right">→</button>
+              <div></div><button class="machineDirBtn ${state.bolter.dir === 'down' ? 'active' : ''}" data-machine-dir="down">↓</button><div></div>
+            </div>
+            <div class="btnRow"><button data-window="assets">Asset Details</button><button data-close>Close</button></div>
+          `;
+          $('modalOverlay').classList.add('show');
+          return;
+        }
         $('modalTitle').textContent = 'Continuous Miner Control';
 
         const next = nextMachineBlock();
@@ -8535,13 +9057,13 @@
             <hr style="border:0;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">
             <p><strong>Ground Support</strong></p>
             <div class="rows">
-              <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'Available for pillar support.' : 'Not purchased. Pillars must currently support themselves.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : money(BOLTER_PURCHASE_COST)}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'On the board. Switch the HOPE remote to BOLTER, face a pillar, then press BOLT.' : 'Not purchased. Pillars must currently support themselves.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : money(BOLTER_PURCHASE_COST)}</span></div>
               <div class="row"><div class="avatarDot" style="background:${rockDoctorOnCrew() ? '#22c55e' : '#ef4444'}"></div><div><strong>Rock Doctor</strong><span>${rockDoctorOnCrew() ? rockDoctorOnCrew().name + ' · Skill ' + rockDoctorOnCrew().skill + '/5' : 'Required for support decisions.'}</span></div><span class="tag">${rockDoctorOnCrew() ? 'Assigned' : 'Missing'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Worst Pillar</strong><span>${worstPillar() ? 'Row ' + (worstPillar().r + 1) + ', Column ' + (worstPillar().c + 1) + ' · ' + worstPillar().pillarState : 'No unsupported exposed pillars identified.'}</span></div><span class="tag">${worstPillar() ? money(PILLAR_SUPPORT_COST) : 'Stable'}</span></div>
             </div>
             <div class="btnRow">
               <button class="primary" data-buy-bolter ${state.assets.bolterOwned ? 'disabled' : ''}>Buy Bolter · ${money(BOLTER_PURCHASE_COST)}</button>
-              <button class="primary" data-support-pillar ${state.assets.bolterOwned && rockDoctorOnCrew() && worstPillar() ? '' : 'disabled'}>Install Support · ${money(PILLAR_SUPPORT_COST)}</button>
+              <button class="primary" data-support-pillar ${state.assets.bolterOwned ? '' : 'disabled'}>Use Bolter Remote</button>
             </div>`;
         }
 
@@ -9399,6 +9921,9 @@
             return;
           }
 
+          const activeMachineToggle = e.target.closest('#activeMachineToggle');
+          if (activeMachineToggle) { toggleActiveMachine(); return; }
+
           const machineDirBtn = e.target.closest('[data-machine-dir]');
           if (machineDirBtn) {
             driveMachineDirection(machineDirBtn.dataset.machineDir);
@@ -9407,14 +9932,20 @@
 
           const machineStartBtn = e.target.closest('[data-machine-start]');
           if (machineStartBtn) {
-            startAutoMining();
+            if (activeMachineName() === 'bolter') startBolting();
+            else startAutoMining();
             openMachineControl();
             return;
           }
 
           const machineStopBtn = e.target.closest('[data-machine-stop]');
           if (machineStopBtn) {
-            stopAutoMining();
+            if (activeMachineName() === 'bolter') {
+              if (isBolterSupportable() && state.bolter.status !== 'bolting') startBolting();
+              else stopBolter();
+            } else {
+              stopAutoMining();
+            }
             return;
           }
 
