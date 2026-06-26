@@ -4262,6 +4262,88 @@
       .beanCounterArt { height: 96px; }
     }
 
+
+    .modalCharacterPanel {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 14px;
+      align-items: center;
+      border: 2px solid rgba(251,191,36,0.20);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.92), rgba(51,65,85,0.62));
+      padding: 12px;
+      margin: 8px 0 12px;
+    }
+
+    .modalCharacterImageWrap {
+      position: relative;
+      height: 118px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 25%, rgba(251,191,36,0.22), rgba(15,23,42,0.95));
+      border: 1px solid rgba(255,255,255,0.14);
+      display: grid;
+      place-items: center;
+    }
+
+    .modalCharacterImg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .modalCharacterFallback {
+      width: 100%;
+      height: 100%;
+      display: none;
+      place-items: center;
+      color: #fde68a;
+      font-weight: 950;
+      font-size: 34px;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, rgba(120,53,15,0.65), rgba(15,23,42,0.94));
+    }
+
+    .modalCharacterPanel h3 {
+      margin: 0 0 4px;
+      color: #fde68a;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .modalCharacterPanel p { margin: 0 0 5px; color: #e5e7eb; }
+    .modalCharacterPanel .modalCharacterDept { color: #93c5fd; font-size: 12px; font-weight: 850; }
+
+    .hiringTabBar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 10px 0 12px;
+    }
+
+    .hiringTabBtn {
+      border: 1px solid rgba(251,191,36,0.28);
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: rgba(15,23,42,0.62);
+      color: #fde68a;
+      font-weight: 900;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .hiringTabBtn.active {
+      background: #facc15;
+      color: #111827;
+      border-color: #facc15;
+    }
+
+    @media (max-width: 620px) {
+      .modalCharacterPanel { grid-template-columns: 1fr; }
+      .modalCharacterImageWrap { height: 106px; }
+    }
+
+
     .kpiTrackerCard strong {
       color: #fef3c7;
       font-size: 13px;
@@ -4923,11 +5005,15 @@
       const TARGET_TONNES = 10000;
       const TARGET_GRADE = 14.0;
       const YEAR_LENGTH_DAYS = 365;
+      const YEAR_REAL_SECONDS = 180;
+      const DAYS_PER_REAL_SECOND = YEAR_LENGTH_DAYS / YEAR_REAL_SECONDS;
       const EXPLORATION_PROGRAM_COST = 4200;
       const DRILL_PURCHASE_COST = 26000;
       const BOLTER_PURCHASE_COST = 32000;
       const PILLAR_SUPPORT_COST = 1200;
       const BELT_EXTENSION_COST = 3200;
+      const DECLINE_INVESTMENT_COST = 62000;
+      const SECOND_MINER_PURCHASE_COST = 88000;
 
       const BASE_REVENUE_PER_TONNE = 5.5;
       const TRAM_COST = 55;
@@ -5468,6 +5554,10 @@
         manager: null,
         year: 1,
         day: 0,
+        mineLevel: -1000,
+        depthIndex: 0,
+        declineOfferShown: false,
+        declineInvestments: 0,
         yearStartDay: 0,
         yearStartTonnes: 0,
         yearStartK2oTonnes: 0,
@@ -5541,7 +5631,8 @@
         },
         assets: {
           drillOwned: false,
-          bolterOwned: false
+          bolterOwned: false,
+          secondMinerOwned: false
         },
         exploration: {
           active: false,
@@ -5552,6 +5643,8 @@
         },
         technicalHiresThisYear: 0,
         beltExtensionsThisYear: 0,
+        staffDepartureCooldownUntilDay: 0,
+        secondMinerChaosTimer: 0,
         pillarSplitTonnesThisYear: 0,
         engineeringTimer: 0,
         groundTimer: 0,
@@ -5562,6 +5655,7 @@
         staff: [],
         formerStaff: [],
         candidates: [],
+        hiringTab: 'supervisors',
         blocks: {}
       };
 
@@ -5583,22 +5677,25 @@
 
       function initBlocks() {
         const list = [];
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
 
         for (let r = 0; r < MINE_ROWS; r++) {
           for (let c = 0; c < MINE_COLS; c++) {
-            const idx = r * MINE_COLS + c + 8843;
+            const idx = r * MINE_COLS + c + 8843 + depth * 1379;
             const unlocked = r >= LOCKED_ROWS;
             const sweetSpot = ((r >= LOCKED_ROWS - 1 && r <= LOCKED_ROWS + 4 && c >= 4 && c <= 8) || (r >= LOCKED_ROWS && r <= LOCKED_ROWS + 6 && c >= 11 && c <= 15));
             const lowerDilution = r > MINE_ROWS - 5;
 
-            let actualGrade = 12.1 + seeded(idx) * 3.55;
+            let actualGrade = 12.1 + seeded(idx) * 3.55 + depth * 0.16;
             if (sweetSpot) actualGrade += 0.85;
             if (lowerDilution) actualGrade -= 0.25;
 
-            const tonnes = 520 + Math.round(seeded(idx + 17) * 760);
+            const tonnes = 520 + Math.round(seeded(idx + 17) * 760) + Math.round(depth * 55);
             const riskVal = seeded(idx + 31);
             const risk = riskVal > 0.78 ? 'High' : riskVal > 0.44 ? 'Medium' : 'Low';
             const isPillar = unlocked && isPillarCell(r, c);
+            const gasPocket = depth >= 1 && unlocked && !isPillar && seeded(idx + 71) > 0.925;
+            const waterPocket = depth >= 2 && unlocked && !isPillar && seeded(idx + 83) > 0.955;
 
             list.push({
               q: MINE_ID,
@@ -5613,6 +5710,9 @@
               isPillar,
               support: false,
               pillarState: isPillar ? 'stable' : null,
+              gasPocket,
+              gasReleased: false,
+              waterPocket,
               exposureAge: 0,
               status: unlocked ? 'solid' : 'locked',
               progress: 0
@@ -5850,6 +5950,26 @@
       function money(v) {
         const sign = v < 0 ? '-' : '';
         return sign + '£' + Math.abs(Math.round(v)).toLocaleString();
+      }
+
+
+      function currentLevelName() {
+        return String(state.mineLevel || -1000) + ' Level';
+      }
+
+      function modalCharacterHtml(src, name, department, text, initialsText = '?') {
+        const alt = name + ' — ' + department;
+        return `<div class="modalCharacterPanel">
+          <div class="modalCharacterImageWrap">
+            <img class="modalCharacterImg" src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+            <div class="modalCharacterFallback" aria-hidden="true">${escapeHtml(initialsText)}</div>
+          </div>
+          <div><h3>${escapeHtml(name)}</h3><p class="modalCharacterDept">${escapeHtml(department)}</p><p>${text}</p></div>
+        </div>`;
+      }
+
+      function depthRiskFactor() {
+        return 1 + Math.max(0, Number(state.depthIndex) || 0) * 0.32;
       }
 
       function financePlanForYear(year, priorCash = 0) {
@@ -6208,7 +6328,7 @@
 
         if (state.hrCooldown > 0) state.hrCooldown = Math.max(0, state.hrCooldown - dt);
 
-        dayTimer += dt;
+        dayTimer += dt * DAYS_PER_REAL_SECOND;
         while (dayTimer >= 1) {
           dayTimer -= 1;
           state.day++;
@@ -6217,12 +6337,14 @@
           updateExposedPillarsOneDay();
           if (state.day % 16 === 0) showRandomProductionComment();
           if (state.day % 24 === 0) maybeGenerateStaffBubble();
+          if (state.day % 31 === 0) maybeGenerateStaffDeparture();
           if (state.day % 20 === 0) maybeQueueBeltDistanceConcern();
           maybeConveyorFault();
         }
 
         updateExploration(dt);
         updateEngineeringResearch(dt);
+        updateSecondMinerChaos(dt);
         updateBolter(dt);
 
         if (state.machine.status === 'mining') {
@@ -6312,7 +6434,8 @@
         const avgSkill = miners.reduce((sum, s) => sum + s.skill, 0) / miners.length;
         const manager = currentManager();
         const managerMult = manager ? manager.miningSpeedMult : 1;
-        return (4.5 + avgSkill * 0.9) * managerMult * productivityFactor() * moraleFactor();
+        const secondMinerMult = state.assets && state.assets.secondMinerOwned ? 1.24 : 1;
+        return (4.5 + avgSkill * 0.9) * managerMult * productivityFactor() * moraleFactor() * secondMinerMult;
       }
 
       function tramSpeed() {
@@ -6342,7 +6465,8 @@
         state.machine.progress = target.progress;
 
         const safetyWear = clamp(1.15 - traitValue('safety') / 130, 0.45, 1.25);
-        const wearRate = 0.16 * riskMult(target.risk) * safetyWear * beltWearFactor(target);
+        const fleetWear = state.assets && state.assets.secondMinerOwned ? 1.12 : 1;
+        const wearRate = 0.16 * riskMult(target.risk) * safetyWear * beltWearFactor(target) * depthRiskFactor() * fleetWear;
         state.machine.condition = Math.max(0, state.machine.condition - wearRate * dt);
 
         if (state.machine.condition < 45 && !state.machine.warnedSmoking) {
@@ -6370,6 +6494,38 @@
         }
       }
 
+      function triggerGasPocketEvent(target, pos) {
+        target.gasReleased = true;
+        const damage = Math.round(10 + (state.depthIndex || 0) * 5);
+        state.machine.condition = Math.max(0, state.machine.condition - damage);
+        adjustTrait('safety', -2);
+        adjustTrait('morale', -1);
+        pushQueueEvent({
+          tone: 'warning',
+          icon: 'G',
+          label: 'GAS',
+          image: 'assets/characters/ventilation-warning.png',
+          title: 'Gas Pocket Encountered',
+          body: `<p>The miner has intersected a gas pocket on ${currentLevelName()}. The machine is still mostly a machine, but now with more atmosphere than requested.</p><p><strong>Impact:</strong> -${damage}% machine condition, -2 Safety, -1 Morale.</p><p>Deeper levels introduce hazards that make the previous level look retrospectively well planned.</p>`
+        });
+        if (pos) spawnFloatingText(pos.x, pos.y - board.cell * 0.7, ['GAS POCKET', '-' + damage + '% condition'], '#bbf7d0');
+      }
+
+      function triggerWaterPocketEvent(target, pos) {
+        target.waterReleased = true;
+        const cost = 1600 + (state.depthIndex || 0) * 600;
+        spend(cost, 'Water management', pos);
+        adjustTrait('productivity', -2);
+        pushQueueEvent({
+          tone: 'warning',
+          icon: 'W',
+          label: 'WATER',
+          image: 'assets/characters/pump-operator.png',
+          title: 'Water Inflow',
+          body: `<p>A wet zone has been opened on ${currentLevelName()}. Pumping has been authorised because the alternative was calling it a new sump.</p><p><strong>Impact:</strong> -2 Productivity, ${money(scaledCost(cost))} water-management cost.</p>`
+        });
+      }
+
       function completeMiningBlock(target, pos) {
         target.status = 'void';
         target.progress = 100;
@@ -6381,6 +6537,9 @@
         state.tonnes += target.tonnes;
         state.k2oTonnes += target.tonnes * recoveredGrade;
         earn(revenue, 'Ore revenue');
+
+        if (target.gasPocket && !target.gasReleased) triggerGasPocketEvent(target, pos);
+        if (target.waterPocket && !target.waterReleased) triggerWaterPocketEvent(target, pos);
 
         if (target.isPillar) {
           state.pillarsMined = (state.pillarsMined || 0) + 1;
@@ -6730,6 +6889,7 @@
         const sampleTonnes = Math.round(state.tonnes).toLocaleString();
 
         $('modalBody').innerHTML = `
+          ${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Delivering Value Through Other People', 'Annual moderation has concluded that Outstanding remains available in principle and unavailable in practice.', 'SLT')}
           <div class="letter">
             <h2>Strategic Success Recognition Notice</h2>
 
@@ -7335,7 +7495,7 @@
         ctx.font = '900 ' + Math.max(13, b.cell * 0.34) + 'px Arial';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.fillText('ManySalts Trial Area — Zone 0', b.x + 10, b.y + 8);
+        ctx.fillText('ManySalts Trial Area — ' + currentLevelName(), b.x + 10, b.y + 8);
 
         ctx.fillStyle = 'rgba(15,23,42,0.54)';
         ctx.fillRect(b.x, b.infraY, b.w, b.infraH);
@@ -7418,6 +7578,22 @@
                 ctx.beginPath(); ctx.arc(r.x + r.w * px, r.y + r.h * py, Math.max(1.8, r.w * 0.06), 0, Math.PI * 2); ctx.fill();
               }
             }
+            ctx.restore();
+          }
+
+          if ((block.gasPocket || block.waterPocket) && block.status !== 'locked') {
+            ctx.save();
+            ctx.globalAlpha = block.status === 'mining' ? 0.98 : 0.74;
+            ctx.fillStyle = block.waterPocket ? 'rgba(56,189,248,0.62)' : 'rgba(34,197,94,0.62)';
+            const label = block.waterPocket ? 'W' : 'G';
+            ctx.beginPath();
+            ctx.arc(r.x + r.w * 0.75, r.y + r.h * 0.25, Math.max(3, r.w * 0.16), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ecfeff';
+            ctx.font = '900 ' + Math.max(7, r.w * 0.20) + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, r.x + r.w * 0.75, r.y + r.h * 0.25);
             ctx.restore();
           }
 
@@ -8666,6 +8842,72 @@
         };
       }
 
+
+
+      function openDeclineProposal() {
+        if (state.declineOfferShown && isModalOpen()) return;
+        state.declineOfferShown = true;
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Geology Depth Proposal';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Conference Delegation for Enthusiastic Rock Lickers', 'After attending an informative conference, the geology department has realised that it can drill down as well as sideways.', 'GEO')}
+          <div class="letter"><h2>Decline Investment Proposal</h2><p>After attending an informative conference for enthusiastic rock lickers, the geology department has realised that they can drill down as well as sideways.</p><p>The current map is the <strong>${currentLevelName()}</strong>. The next proposal is to invest in a decline to access the <strong>${state.mineLevel - 100} Level</strong>.</p><p>Deeper levels may contain gas pockets, water, higher ground pressure, and new ways for equipment to become expensive.</p><p><strong>Decline investment:</strong> ${money(scaledCost(DECLINE_INVESTMENT_COST))}</p></div>
+          <div class="btnRow"><button class="primary" data-invest-decline>Invest in decline</button><button data-close-decline>Defer geology enthusiasm</button></div>`;
+        $('modalOverlay').classList.add('show');
+      }
+
+      function resetMineForNewDepth() {
+        initBlocks();
+        state.machine.q = MINE_ID;
+        state.machine.r = START_ROW;
+        state.machine.c = START_COL;
+        state.machine.status = 'idle';
+        state.machine.target = null;
+        state.machine.progress = 0;
+        state.machine.condition = Math.min(100, Math.max(72, state.machine.condition + 8));
+        state.bolter.q = MINE_ID;
+        state.bolter.r = START_ROW;
+        state.bolter.c = START_COL;
+        state.bolter.status = 'idle';
+        state.bolter.target = null;
+        state.bolter.progress = 0;
+        state.conveyor.status = 'running';
+        state.conveyor.fault = null;
+        state.conveyor.progress = 0;
+        state.conveyor.beltExtendedToRow = START_ROW + 1;
+        state.exploration.active = false;
+        state.exploration.row = LOCKED_ROWS - 1;
+        state.exploration.progress = 0;
+        state.exploration.lastCompletedRow = null;
+        state.selectedBlock = null;
+      }
+
+      function investInDecline() {
+        spend(DECLINE_INVESTMENT_COST, 'Decline development');
+        state.depthIndex = (state.depthIndex || 0) + 1;
+        state.mineLevel = -1000 - state.depthIndex * 100;
+        state.declineInvestments = (state.declineInvestments || 0) + 1;
+        state.declineOfferShown = false;
+        resetMineForNewDepth();
+        setModalClosable(true);
+        $('modalOverlay').classList.remove('show');
+        state.paused = false;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+        pushQueueEvent({
+          tone: 'info',
+          icon: '↓',
+          label: 'DECL',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Decline Development',
+          title: currentLevelName() + ' Opened',
+          body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>. The geology department has confirmed that down is a valid direction.</p><p>New level hazards are now active. Gas pockets may damage the miner, and ground pressure will increase pillar deterioration.</p>`
+        });
+        showProductionComment(currentLevelName() + ' is now available. Exploration has reset to a fresh level of optimism.', 'Geology');
+      }
+
       function startExplorationProgram() {
         if (!featureUnlocked('exploration')) {
           openMiniWindow('Exploration Not Yet Authorised', '<p>Exploration becomes available in Year 2, after the SLT has already declared what it needs exploration to confirm.</p>', true);
@@ -8676,7 +8918,7 @@
         const drillers = drillersOnCrew();
 
         if (row === null) {
-          openMiniWindow('Exploration Complete', '<p>There is no more known unknown left in this training area. The SLT may shortly create some.</p>', true);
+          openDeclineProposal();
           return;
         }
         if (!state.assets.drillOwned || !geo || drillers.length < 2) {
@@ -8707,6 +8949,12 @@
           block.grade = estimate.estimatedGrade;
           block.gradeConfidence = estimate.confidence;
           block.isPillar = isPillarCell(block.r, block.c);
+          const depth = Math.max(0, Number(state.depthIndex) || 0);
+          const idx = block.r * MINE_COLS + block.c + 8843 + depth * 1379;
+          block.gasPocket = depth >= 1 && !block.isPillar && seeded(idx + 71) > 0.925;
+          block.gasReleased = false;
+          block.waterPocket = depth >= 2 && !block.isPillar && seeded(idx + 83) > 0.955;
+          block.waterReleased = false;
           if (block.isPillar) block.pillarState = 'stable';
         }
         state.exploration.active = false;
@@ -8717,16 +8965,20 @@
           tone: 'info',
           icon: '◆',
           label: 'GEO',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Exploration Interpretation',
           title: 'Exploration row discovered',
-          body: `<p><strong>Row ${row + 1} has been discovered.</strong></p><p>${geo ? geo.name : 'The geology function'} has converted drill information into a colourful interpretation. The colours are now available for operational overconfidence.</p><p>Geologist skill controls how close these estimates are to the eventual mined grade.</p>`
+          body: `<p><strong>Row ${row + 1} has been discovered on ${currentLevelName()}.</strong></p><p>${geo ? geo.name : 'The geology function'} has converted drill information into a colourful interpretation. The colours are now available for operational overconfidence.</p><p>Geologist skill controls how close these estimates are to the eventual mined grade.</p>`
         });
+        if (nextExplorationRow() === null) openDeclineProposal();
       }
 
       function updateExploration(dt) {
         if (!state.exploration.active) return;
         const rate = explorationRate();
         if (rate <= 0) return;
-        state.exploration.progress += rate * dt;
+        state.exploration.progress += rate * dt * DAYS_PER_REAL_SECOND;
         if (Math.random() < 0.12) {
           const b = board;
           const y = b.y + (state.exploration.row + 0.5) * b.cell;
@@ -8794,6 +9046,59 @@
         pushQueueEvent({ tone: event.tone, icon: event.icon, label: event.label, title: event.title, body: `<p><strong>${eng.name} — ${roleName(eng.role)}</strong></p>${event.body}` });
       }
 
+
+
+      function secondMinerUnlocked() {
+        return (state.depthIndex || 0) >= 1;
+      }
+
+      function buySecondMiner() {
+        if (!secondMinerUnlocked()) {
+          openMiniWindow('Second Miner Not Yet Authorised', '<p>A second continuous miner becomes available once the operation has advanced below the initial -1000 Level and created enough chaos to justify multiplying it.</p>', true);
+          return;
+        }
+        if (state.assets.secondMinerOwned) {
+          openMiniWindow('Second Miner Already Active', '<p>The second mining unit is already contributing to production, maintenance demand, and general misunderstanding.</p>', true);
+          return;
+        }
+        spend(SECOND_MINER_PURCHASE_COST, 'Second continuous miner');
+        state.assets.secondMinerOwned = true;
+        adjustTrait('productivity', 4);
+        adjustTrait('safety', -2);
+        pushQueueEvent({
+          tone: 'warning',
+          icon: 'CM2',
+          label: 'CM2',
+          image: 'assets/characters/mining-engineer.png',
+          character: 'Mining Engineering Department',
+          department: 'Fleet Multiplication',
+          title: 'Second Miner Commissioned',
+          body: '<p>A second mining unit has been authorised. Production capacity increases, along with maintenance load, traffic management, and the number of things that can be in the wrong place at once.</p><p><strong>Impact:</strong> +4 Productivity, -2 Safety. Mining speed increases while random fleet-chaos events become possible.</p>'
+        });
+        openWindow('assets');
+      }
+
+      function updateSecondMinerChaos(dt) {
+        if (!state.assets || !state.assets.secondMinerOwned || !state.running || state.paused) return;
+        state.secondMinerChaosTimer += dt;
+        if (state.secondMinerChaosTimer < 55) return;
+        state.secondMinerChaosTimer = 0;
+        if (Math.random() > 0.36) return;
+        const cost = 1100 + Math.round((state.depthIndex || 0) * 550);
+        spend(cost, 'Second miner coordination');
+        adjustTrait('morale', -1);
+        pushQueueEvent({
+          tone: 'warning',
+          icon: 'CM2',
+          label: 'CM2',
+          image: 'assets/characters/mining-engineer.png',
+          character: 'Mining Engineering Department',
+          department: 'Fleet Coordination',
+          title: 'Second Miner Coordination Issue',
+          body: `<p>The second miner has increased production potential and also the number of people asking which machine the plan meant.</p><p><strong>Impact:</strong> -1 Morale, ${money(scaledCost(cost))} coordination cost.</p>`
+        });
+      }
+
       function updateEngineeringResearch(dt) {
         const eng = miningEngineerOnCrew();
         if (!featureUnlocked('technicalTeam') || !eng || !state.running || state.paused) return;
@@ -8820,7 +9125,8 @@
         setModalClosable(true);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = ev.title || 'Queued Event';
-        $('modalBody').innerHTML = (ev.body || '<p>Event details unavailable.</p>') + '<div class="btnRow"><button class="primary" data-close>Close</button></div>';
+        const eventImage = ev.image ? modalCharacterHtml(ev.image, ev.character || ev.title || 'Event', ev.department || ev.label || 'Operational Update', ev.imageText || 'A department has produced a visual explanation for why this is now your problem.', ev.label || 'EVT') : '';
+        $('modalBody').innerHTML = eventImage + (ev.body || '<p>Event details unavailable.</p>') + '<div class="btnRow"><button class="primary" data-close>Close</button></div>';
         $('modalOverlay').classList.add('show');
         updateMobileEventQueue(true);
       }
@@ -8994,7 +9300,7 @@
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Mid-Year Alignment Review';
-        $('modalBody').innerHTML = `<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p><div class="sltReviewBox"><div class="reviewPanel">${originalHtml}</div><div class="reviewPanel">${revisedHtml}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div><div class="btnRow"><button class="primary" data-close-formal-review>Accept Revised Reality</button></div>`;
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Strategic Adjustment Without Accountability', 'The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.', 'SLT')}<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p><div class="sltReviewBox"><div class="reviewPanel">${originalHtml}</div><div class="reviewPanel">${revisedHtml}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div><div class="btnRow"><button class="primary" data-close-formal-review>Accept Revised Reality</button></div>`;
         $('modalOverlay').classList.add('show');
       }
 
@@ -9050,6 +9356,7 @@
           : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>`;
 
         $('modalBody').innerHTML = `
+          ${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Delivering Value Through Other People', 'Annual moderation has concluded that Outstanding remains available in principle and unavailable in practice.', 'SLT')}
           <div class="letter">
             <h2>Annual Performance Review — Year ${state.year}</h2>
             <p>Dear Mine Manager,</p>
@@ -9114,12 +9421,22 @@
         return `<div class="letter"><h2>Operating Year ${year} KPI Notice</h2><p>All major systems are now active. Continued success has confirmed that future targets should be larger, more specific, and less forgiving.</p><p>The game will continue until two consecutive Needs Improvement ratings demonstrate a need for your career to explore external opportunities.</p><p class="sig">Superior Leadership Team<br>Escalation Based on Demonstrated Capability</p></div>`;
       }
 
+
+
+      function yearStartCharacterHtml(year) {
+        if (year === 2) return modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Reserve Confidence Through Retrospective Evidence', 'Exploration is needed to confirm what the SLT has already declared to the board.', 'GEO');
+        if (year === 3) return modalCharacterHtml('assets/characters/mining-engineer.png', 'Technical Team', 'Professional Oversight After Commitment', 'The company has approved production ramp-up and now requires people qualified enough to describe the obvious risks professionally.', 'TECH');
+        if (year === 4) return modalCharacterHtml('assets/characters/mining-engineer-belt-study.png', 'Mining Engineering Department', 'Radical Solutions Using Existing Concepts', 'A detailed study has discovered that the belt works better when it is closer to where mining is happening.', 'ENG');
+        if (year === 5) return modalCharacterHtml('assets/characters/pillar-splitting-consultant.png', 'External Technical Consultant', 'Value Recovery From Previous Competence', 'A consultant has identified that pillars contain value, which is different from saying they contain consequences.', 'CONS');
+        return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Escalation Based on Demonstrated Capability', 'Continued success has confirmed that future targets should be larger, more specific, and less forgiving.', 'SLT');
+      }
+
       function openYearStartBriefing(year) {
         pauseMusicForFormalModal();
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Annual KPI Notice';
-        $('modalBody').innerHTML = yearStartBriefingHtml(year) + '<div class="btnRow"><button class="primary" data-open-finance-after-briefing>Proceed to Annual Budget Alignment</button></div>';
+        $('modalBody').innerHTML = yearStartCharacterHtml(year) + yearStartBriefingHtml(year) + '<div class="btnRow"><button class="primary" data-open-finance-after-briefing>Proceed to Annual Budget Alignment</button></div>';
         $('modalOverlay').classList.add('show');
       }
 
@@ -9142,7 +9459,7 @@
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Annual Budget Alignment';
-        $('modalBody').innerHTML = `<div class="financeCharacter"><div class="beanCounterArt" aria-hidden="true"></div><div><h3>Mr B. Counter</h3><p>Department of Financial Prevention</p><p>“Following a detailed bean-counting exercise, Finance has concluded that the targets are ambitious, the budget is appropriate, and any gap between the two is a leadership opportunity.”</p></div></div>
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/mr-b-counter.png', 'Mr B. Counter', 'Department of Financial Prevention', '“Following a detailed bean-counting exercise, Finance has concluded that the targets are ambitious, the budget is appropriate, and any gap between the two is a leadership opportunity.”', 'B')}
           <div class="rows">
             <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Previous Closing Position</strong><span>Revenue recognised, normalised, celebrated briefly, and removed from your control.</span></div><span class="tag">${money(notice.priorCash || 0)}</span></div>
             <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Finance Carry-forward</strong><span>${carryText}</span></div><span class="tag">${money(notice.carryForward || 0)}</span></div>
@@ -9161,7 +9478,7 @@
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Ground Control Hold Point';
-        $('modalBody').innerHTML = `<div class="letter"><h2>Production Hold — Rock Doctor Intervention</h2><p>“I do not know how you have been getting away with this, but now that my name is attached to the ground conditions, we are going to monitor pillar condition and install support before everyone starts calling this predictable.”</p><p><strong>Requirement:</strong> purchase a bolter. Move the bolter through mined-out ground, face an adjacent pillar, then press <strong>BOLT</strong> on the HOPE remote.</p><p>Production remains paused until ground support equipment exists in more than a PowerPoint sense.</p><p class="sig">Rock Doctor<br>Legally Interested in the Roof</p></div><div class="btnRow"><button class="primary" data-window="assets">Purchase Bolter</button></div>`;
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/rock-doctor.png', 'Rock Doctor', 'Legally Interested in the Roof', '“I do not know how you have been getting away with this, but now that my name is attached to the ground conditions, we are going to monitor pillar condition and install support before everyone starts calling this predictable.”', 'RD')}<div class="letter"><h2>Production Hold — Rock Doctor Intervention</h2><p><strong>Requirement:</strong> purchase a bolter. Move the bolter through mined-out ground, face an adjacent pillar, then press <strong>BOLT</strong> on the HOPE remote.</p><p>Production remains paused until ground support equipment exists in more than a PowerPoint sense.</p><p class="sig">Rock Doctor<br>Legally Interested in the Roof</p></div><div class="btnRow"><button class="primary" data-window="assets">Purchase Bolter</button></div>`;
         $('modalOverlay').classList.add('show');
       }
 
@@ -9173,7 +9490,7 @@
           const neighbours = [[1,0],[-1,0],[0,1],[0,-1]].map(([dr, dc]) => blockAt(MINE_ID, b.r + dr, b.c + dc)).filter(Boolean);
           const exposed = neighbours.filter(n => n.status === 'void').length;
           if (exposed <= 0) continue;
-          b.exposureAge = (b.exposureAge || 0) + exposed * 0.45;
+          b.exposureAge = (b.exposureAge || 0) + exposed * 0.45 * depthRiskFactor();
           if (b.exposureAge > 180) b.pillarState = 'critical';
           else if (b.exposureAge > 130) b.pillarState = 'fractured';
           else if (b.exposureAge > 82) b.pillarState = 'spalling';
@@ -9200,16 +9517,27 @@
         return state.staff.filter(s => s.role === role);
       }
 
-      function recruitmentTabsHtml() {
-        const groups = [
-          ['Production', ['supervisor', 'miner', 'fitter', 'electrician']],
-          ['Exploration', ['geologist', 'driller']],
-          ['Technical', ['miningEngineer', 'rockDoctor', 'surveyor']]
+      function hiringDisciplineTabs() {
+        return [
+          { key: 'supervisors', label: 'Supervisors', roles: ['supervisor'] },
+          { key: 'miners', label: 'Miners', roles: ['miner'] },
+          { key: 'tradesmen', label: 'Tradesmen', roles: ['fitter', 'electrician'] },
+          { key: 'technical', label: 'Technical', roles: ['geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor'] }
         ];
-        return groups.map(([title, roles]) => {
-          const cards = state.candidates.filter(c => roles.includes(c.role)).map(c => candidateCard(c)).join('') || '<p>No candidates currently available. S.H.A.F.T. is checking whether anyone still answers unknown numbers.</p>';
-          return `<section class="crewRoleSection"><div class="crewRoleHeader"><h3>${title}</h3><span>${roles.map(roleName).join(' · ')}</span></div><div class="gridCards">${cards}</div></section>`;
-        }).join('');
+      }
+
+      function openHiringDiscipline(key) {
+        state.hiringTab = key || 'supervisors';
+        openWindow('hr');
+      }
+
+      function recruitmentTabsHtml() {
+        const tabs = hiringDisciplineTabs();
+        if (!tabs.some(t => t.key === state.hiringTab)) state.hiringTab = 'supervisors';
+        const active = tabs.find(t => t.key === state.hiringTab) || tabs[0];
+        const tabHtml = `<div class="hiringTabBar">${tabs.map(t => `<button class="hiringTabBtn ${t.key === active.key ? 'active' : ''}" data-hiring-tab="${t.key}">${t.label}</button>`).join('')}</div>`;
+        const cards = state.candidates.filter(c => active.roles.includes(c.role)).map(c => candidateCard(c)).join('') || '<p>No candidates currently available in this discipline. S.H.A.F.T. is checking whether anyone still answers unknown numbers.</p>';
+        return `${tabHtml}<section class="crewRoleSection"><div class="crewRoleHeader"><h3>${active.label}</h3><span>${active.roles.map(roleName).join(' · ')}</span></div><div class="gridCards">${cards}</div></section>`;
       }
 
       function staffHierarchyHtml() {
@@ -9365,7 +9693,7 @@
       }
 
       function updateHud() {
-        $('dayHud').textContent = 'Y' + state.year + ' D' + dayOfYear();
+        $('dayHud').textContent = 'Y' + state.year + ' D' + dayOfYear() + ' · ' + currentLevelName();
         $('cashHud').textContent = money(state.cash);
         const revHud = $('revenueHud'); if (revHud) revHud.textContent = money(state.revenue);
         const expHud = $('expenditureHud'); if (expHud) expHud.textContent = money(state.expenditure);
@@ -9888,7 +10216,8 @@
             <div class="${pipClass}"><strong>PIP Status:</strong> ${state.pipActive ? 'Active. A second consecutive Needs Improvement rating will result in a supported transition outside the organisation.' : 'Clear. Performance concern has not yet been formally laminated.'}</div>
             ${annualKpiTrackerHtml()}
             <div class="rows">
-              <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Year Clock</strong><span>Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}. Year-end review occurs automatically at day ${YEAR_LENGTH_DAYS}.</span></div><span class="tag">${daysLeft} days left</span></div>
+              <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Year Clock</strong><span>Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}. Year-end review occurs automatically at day ${YEAR_LENGTH_DAYS}. One operating year now lasts about three real minutes.</span></div><span class="tag">${daysLeft} days left</span></div>
+              <div class="row"><div class="avatarDot" style="background:#7c3aed"></div><div><strong>Mining Level</strong><span>Current canvas is ${currentLevelName()}. Reaching the top of the explored area triggers decline investment options.</span></div><span class="tag">Depth ${state.depthIndex || 0}</span></div>
               <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Initial known ground has deliberately been reduced to force a more optimistic exploration strategy.</span></div><span class="tag">Explore</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Belt Head</strong><span>${beltHeadLabel()}. The belt can only be advanced through mined-out centreline ground.</span></div><span class="tag">Centreline</span></div>
             </div>
@@ -9897,7 +10226,7 @@
         }
 
         if (type === 'hr') {
-          title = 'S.H.A.F.T. Recruitment';
+          title = customTitle || 'S.H.A.F.T. Recruitment';
           body = '<p>Available candidates have been carefully selected using the S.H.A.F.T. three-stage process: availability, surname, and whether they answered the phone.</p>' + recruitmentTabsHtml();
         }
 
@@ -10011,7 +10340,14 @@
             <div class="btnRow">
               <button class="primary" data-buy-bolter ${state.assets.bolterOwned || !bolterUnlocked ? 'disabled' : ''}>Buy Bolter · ${bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : 'Year 3'}</button>
               <button class="primary" data-support-pillar ${state.assets.bolterOwned && bolterUnlocked ? '' : 'disabled'}>Use Bolter Remote</button>
-            </div>`;
+            </div>
+            <section class="crewRoleSection">
+              <div class="crewRoleHeader"><h3>Fleet Expansion</h3><span>${secondMinerUnlocked() ? 'Available below -1000 Level' : 'Requires deeper level access'}</span></div>
+              <div class="rows">
+                <div class="row"><div class="avatarDot" style="background:${state.assets.secondMinerOwned ? '#22c55e' : '#64748b'}"></div><div><strong>Second Continuous Miner</strong><span>${state.assets.secondMinerOwned ? 'Active. More tonnes, more traffic, more reasons for a meeting.' : 'Adds production capacity after decline access, but increases fleet chaos.'}</span></div><span class="tag">${state.assets.secondMinerOwned ? 'Active' : money(scaledCost(SECOND_MINER_PURCHASE_COST))}</span></div>
+              </div>
+              <div class="btnRow"><button class="primary" data-buy-second-miner ${!state.assets.secondMinerOwned && secondMinerUnlocked() ? '' : 'disabled'}>Authorise Second Miner</button></div>
+            </section>`;
         }
 
         if (type === 'finance') {
@@ -10299,7 +10635,7 @@
         if (!person) return '';
         if (person.portrait) return person.portrait;
 
-        const sharedRoles = ['miner', 'fitter', 'electrician', 'geologist', 'driller', 'miningEngineer', 'rockDoctor'];
+        const sharedRoles = ['miner', 'fitter', 'electrician', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor'];
         if (sharedRoles.includes(person.role) && person.portraitTier) {
           return `assets/characters/portraits/${person.role}_${person.portraitTier}.png`;
         }
@@ -10618,6 +10954,94 @@
         openWindow('targets', false, 'Objective Review');
       }
 
+
+
+      function roleSafeToLose(role) {
+        const count = state.staff.filter(s => s.role === role).length;
+        if (state.year <= 1 && ['supervisor', 'miner', 'fitter', 'electrician'].includes(role)) return count > (role === 'miner' ? 2 : 1);
+        return count > 0;
+      }
+
+      function createReplacementCandidate(role) {
+        const label = roleName(role);
+        const id = 'agency_' + role + '_' + Date.now().toString(36) + Math.floor(Math.random() * 999).toString(36);
+        const initials = label.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+        const names = ['J. Spare', 'A. Vacancy', 'T. Pending', 'M. Available', 'C. Contractor', 'R. Standby'];
+        const name = names[Math.floor(Math.random() * names.length)] + ' ' + initials;
+        return {
+          id,
+          portraitTier: 'average',
+          name,
+          role,
+          model: initials,
+          salary: role === 'miningEngineer' || role === 'rockDoctor' ? 70000 : role === 'geologist' || role === 'surveyor' ? 62000 : role === 'driller' ? 52000 : role === 'fitter' || role === 'electrician' ? 50000 : 46000,
+          skill: 3,
+          morale: 3,
+          attendance: 3,
+          safety: 3,
+          trait: 'Agency Availability',
+          description: 'Available quickly, which is the main competency S.H.A.F.T. could verify.'
+        };
+      }
+
+      function removeStaffUncontrolled(staff, reason, title) {
+        if (!staff) return;
+        const idx = state.staff.findIndex(s => s.id === staff.id);
+        if (idx < 0) return;
+        const [s] = state.staff.splice(idx, 1);
+        state.formerStaff.push({ ...s, bubble: null, exitReason: reason });
+        if (!state.candidates.some(c => c.role === s.role)) state.candidates.push(createReplacementCandidate(s.role));
+        state.hrCooldown = Math.max(state.hrCooldown || 0, 10);
+        state.staffDepartureCooldownUntilDay = state.day + Math.max(65, 110 - Math.min(45, state.year * 6));
+        adjustTrait('morale', -2);
+        pushQueueEvent({
+          kind: 'staffDeparture',
+          tone: 'hr',
+          icon: 'HR',
+          label: 'HR',
+          image: 'assets/characters/hr-department.png',
+          character: 'S.H.A.F.T.',
+          department: 'Strategic Hiring And Future Talent',
+          title,
+          body: `<p><strong>${escapeHtml(s.name)} — ${roleName(s.role)}</strong></p><p>${escapeHtml(reason)}</p><p><strong>Impact:</strong> -2 Morale. Recruitment has been reopened because continuity is a lifestyle choice.</p><div class="btnRow"><button data-window="hr">Open Recruitment</button></div>`
+        });
+        updatePanelCrewTiles(true);
+      }
+
+      function maybeGenerateStaffDeparture() {
+        if (!state.running || state.paused || isModalOpen()) return;
+        if ((state.hrCooldown || 0) > 0) return;
+        if (state.day < (state.staffDepartureCooldownUntilDay || 0)) return;
+        const existingHrQueue = (state.queueEvents || []).filter(ev => ev.kind === 'staffDeparture').length + state.staff.filter(s => s.bubble).length;
+        if (existingHrQueue >= Math.min(3, state.hrQueueCap || 5)) return;
+        const y = Math.max(1, Number(state.year) || 1);
+        const chance = y <= 1 ? 0.015 : y === 2 ? 0.045 : y === 3 ? 0.065 : Math.min(0.14, 0.075 + y * 0.006);
+        if (Math.random() > chance) return;
+        const available = state.staff.filter(s => roleSafeToLose(s.role));
+        if (!available.length) return;
+        const s = available[Math.floor(Math.random() * available.length)];
+        const templates = [
+          {
+            title: 'Voluntary Resignation',
+            reason: `“I’m fed up. I’m going to become an AI game developer. It cannot be that difficult.” ${s.name} has left the operation to pursue a career in guaranteed overconfidence.`
+          },
+          {
+            title: 'Targeted Testing Dismissal',
+            reason: `${s.name} failed targeted drugs and alcohol testing after being found with high levels of happiness and contentment in their bloodstream. Dismissed.`
+          },
+          {
+            title: 'Learning Team Misconduct',
+            reason: `A learning team involving ${s.name} evolved into an opportunity for boxing. Management described this as spirited engagement. HR described it as gross misconduct.`
+          },
+          {
+            title: 'Career Development Outside Mining',
+            reason: `${s.name} has accepted a role where the equipment is theoretical, the KPIs are virtual, and nobody asks whether the belt is running.`
+          }
+        ];
+        const t = templates[Math.floor(Math.random() * templates.length)];
+        removeStaffUncontrolled(s, t.reason, t.title);
+      }
+
       function maybeGenerateStaffBubble() {
         if ((state.hrCooldown || 0) > 0) return;
         if (isModalOpen && isModalOpen()) return;
@@ -10914,7 +11338,10 @@
             state.paused = false;
             if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
             resumeMusicAfterFormalModal();
-            if (state.year === 2 || state.year === 3 || state.year === 4) openWindow('hr', false, financeContinueLabel(state.year));
+            if (state.year === 2 || state.year === 3 || state.year === 4) {
+              state.hiringTab = 'technical';
+              openWindow('hr', false, financeContinueLabel(state.year));
+            }
             else if (state.year === 5) openWindow('assets', false, 'Pillar Splitting Controls');
             else openWindow('targets', false, 'New Annual KPI Notice');
             return;
@@ -10926,6 +11353,16 @@
             if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
             closeFormalReviewBtn.closest('.overlay').classList.remove('show');
             resumeMusicAfterFormalModal();
+            return;
+          }
+
+          const investDeclineBtn = e.target.closest('[data-invest-decline]');
+          if (investDeclineBtn) { investInDecline(); return; }
+          const closeDeclineBtn = e.target.closest('[data-close-decline]');
+          if (closeDeclineBtn) {
+            state.paused = false;
+            if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+            closeDeclineBtn.closest('.overlay').classList.remove('show');
             return;
           }
 
@@ -10978,6 +11415,9 @@
           const supportPillarBtn = e.target.closest('[data-support-pillar]');
           if (supportPillarBtn) { supportWorstPillar(); return; }
 
+          const buySecondMinerBtn = e.target.closest('[data-buy-second-miner]');
+          if (buySecondMinerBtn) { buySecondMiner(); return; }
+
           const startExplorationBtn = e.target.closest('[data-start-exploration]');
           if (startExplorationBtn) { startExplorationProgram(); openWindow('exploration'); return; }
 
@@ -11013,6 +11453,9 @@
             if (formalMusicPaused) resumeMusicAfterFormalModal();
             return;
           }
+          const hiringTabBtn = e.target.closest('[data-hiring-tab]');
+          if (hiringTabBtn) { openHiringDiscipline(hiringTabBtn.dataset.hiringTab); return; }
+
           const hireBtn = e.target.closest('[data-hire]');
           if (hireBtn) { hire(hireBtn.dataset.hire); return; }
           const choiceBtn = e.target.closest('[data-event-choice]');
