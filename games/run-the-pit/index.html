@@ -5737,7 +5737,8 @@
           nextFaultDay: 58,
           faultCooldownUntilDay: 45,
           faultCount: 0,
-          beltExtendedToRow: START_ROW
+          beltExtendedToRow: START_ROW,
+          resumeMachineAfterRepair: null
         },
         assets: {
           drillOwned: false,
@@ -6261,6 +6262,7 @@
           driveBolterDirection(dir);
           return;
         }
+        if (!isConveyorAvailable()) clearConveyorInterruptedMachineState();
         setMachineDirection(dir);
         startAutoMining();
       }
@@ -6695,7 +6697,8 @@
 
       function mineUpdate(dt) {
         if (!isConveyorAvailable()) {
-          stopAutoMining('Conveyor stopped mid-cut. The miner has paused before the shift becomes a loading problem.', 'Mine Services');
+          recordConveyorInterruptedMachineState();
+          stopAutoMining('Belt stopped mid-cut. The miner has paused before the shift becomes a loading problem.', 'Mine Services', { preserveBeltResume: true });
           return;
         }
 
@@ -6824,7 +6827,8 @@
 
       function tramUpdate(dt) {
         if (!isConveyorAvailable()) {
-          stopAutoMining('Conveyor stopped while tramming. The miner is parked until Mine Services finishes explaining itself.', 'Mine Services');
+          recordConveyorInterruptedMachineState();
+          stopAutoMining('Belt stopped while tramming. The miner is parked until Mine Services finishes explaining itself.', 'Mine Services', { preserveBeltResume: true });
           return;
         }
 
@@ -7190,6 +7194,39 @@
         return state.conveyor && state.conveyor.status === 'running';
       }
 
+      function recordConveyorInterruptedMachineState() {
+        if (!state.conveyor || !state.machine) return;
+        const m = state.machine;
+        const active = m.status === 'mining' || m.status === 'tramming' || m.autoMining;
+        if (!active) return;
+        state.conveyor.resumeMachineAfterRepair = {
+          status: m.status,
+          dir: m.dir,
+          target: m.target ? { ...m.target } : null,
+          day: state.day
+        };
+      }
+
+      function clearConveyorInterruptedMachineState() {
+        if (state.conveyor) state.conveyor.resumeMachineAfterRepair = null;
+      }
+
+      function resumeMachineAfterConveyorRepair() {
+        if (!state.conveyor || !state.conveyor.resumeMachineAfterRepair) return;
+        const resume = state.conveyor.resumeMachineAfterRepair;
+        state.conveyor.resumeMachineAfterRepair = null;
+
+        if (!state.running || state.levelComplete || state.paused || state.safetyStanddownActive) return;
+        if (!isConveyorAvailable()) return;
+        if (state.machine.status === 'broken' || state.machine.status === 'maintenance') return;
+
+        if (resume.dir) setMachineDirection(resume.dir);
+        state.activeMachine = 'miner';
+        state.machine.autoMining = true;
+        if (state.machine.status === 'idle') beginNextMachineStep();
+        showProductionComment('Belt repaired. The miner has resumed the previous plan, because no one formally cancelled it.', 'Mine Services', 5.2);
+      }
+
       function conveyorFaultInfo(fault = state.conveyor.fault) {
         const map = {
           trip: {
@@ -7297,7 +7334,8 @@
         state.conveyor.condition = Math.max(0, state.conveyor.condition - (type === 'trip' ? 5 : type === 'buried' ? 8 : 15));
         scheduleNextConveyorFault(28);
 
-        stopAutoMining('Conveyor stopped. The miner has stopped automatically because mined tonnes cannot currently escape the consequences.', 'Mine Services');
+        recordConveyorInterruptedMachineState();
+        stopAutoMining('Belt stopped. The miner has stopped automatically because mined tonnes cannot currently escape the consequences.', 'Mine Services', { preserveBeltResume: true });
         playGameSound('belt');
         maybeQueueBeltDistanceConcern();
 
@@ -7361,7 +7399,8 @@
 
         if (state.conveyor.status === 'stopped') {
           if (state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining) {
-            stopAutoMining('Conveyor unavailable. The miner has been stopped before the stockpile became a geological feature.', 'Mine Services');
+            recordConveyorInterruptedMachineState();
+            stopAutoMining('Belt unavailable. The miner has been stopped before the stockpile became a geological feature.', 'Mine Services', { preserveBeltResume: true });
           }
           return;
         }
@@ -7380,7 +7419,8 @@
             state.conveyor.progress = 0;
             state.conveyor.condition = Math.min(100, Math.max(state.conveyor.condition, 70));
             scheduleNextConveyorFault(state.year <= 1 ? 80 : state.year === 2 ? 58 : 36);
-            showProductionComment('Conveyor available. Mine Services has restarted the belt and several arguments.', 'Mine Services');
+            showProductionComment('Belt available. Mine Services has restarted the belt and several arguments.', 'Mine Services');
+            resumeMachineAfterConveyorRepair();
           }
         }
       }
@@ -7924,15 +7964,17 @@
           ctx.setLineDash([]);
 
           ctx.fillStyle = '#e5e7eb';
-          ctx.font = '900 ' + Math.max(13, b.cell * 0.36) + 'px Arial';
+          ctx.font = '900 ' + Math.max(13, b.cell * 0.34) + 'px Arial';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('AREA LOCKED', b.x + b.w / 2, b.y + h / 2 - b.cell * 0.32);
+          ctx.fillText('AREA LOCKED', b.x + b.w / 2, b.y + h / 2 - b.cell * 0.46);
 
+          ctx.fillStyle = '#fde68a';
+          ctx.font = '800 ' + Math.max(10, b.cell * 0.21) + 'px Arial';
+          ctx.fillText('Requires BORC-compliant cash-to-core conversion', b.x + b.w / 2, b.y + h / 2 - b.cell * 0.03);
           ctx.fillStyle = '#cbd5e1';
-          ctx.font = '700 ' + Math.max(10, b.cell * 0.23) + 'px Arial';
-          ctx.fillText('Requires exploration drilling', b.x + b.w / 2, b.y + h / 2 + b.cell * 0.16);
-          ctx.fillText('Hire drillers and a geologist, then fund an exploration programme', b.x + b.w / 2, b.y + h / 2 + b.cell * 0.54);
+          ctx.font = '700 ' + Math.max(9, b.cell * 0.18) + 'px Arial';
+          ctx.fillText('Tap locked ground to approve informed risk taking', b.x + b.w / 2, b.y + h / 2 + b.cell * 0.34);
         }
 
         if (state.exploration && state.exploration.active && typeof state.exploration.row === 'number') {
@@ -10511,7 +10553,7 @@
       function showBlockInfo(block) {
         if (!block) return;
         if (block.status === 'locked') {
-          showProductionComment('Locked ground. Tap the HOPE exploration rig to drill and interpret new rows before the SLT asks where the reserve went.', 'Exploration', 5);
+          openMiniWindow('BORC Reserve Confirmation Notice', `<p>This area requires cash to be converted into drill core, as recommended by the <strong>BORC Code</strong>: Brilliant Ore Reserve Committee.</p><p>The Geology Department is confident that many tonnes at high grade exist in this area. The drilling programme simply requires your approval to confirm their hypothesis.</p><p><strong>This is not gambling.</strong> It is informed risk taking.</p><div class="btnRow"><button class="primary" data-window="exploration">Open Exploration</button></div>`, false);
           return;
         }
         if (block.status === 'void') {
@@ -10588,7 +10630,8 @@
         }
       }
 
-      function stopAutoMining(message = 'Mining stopped. The machine is now awaiting further leadership.', category = 'Production') {
+      function stopAutoMining(message = 'Mining stopped. The machine is now awaiting further leadership.', category = 'Production', options = {}) {
+        if (!options.preserveBeltResume) clearConveyorInterruptedMachineState();
         state.machine.autoMining = false;
 
         if (state.machine.status === 'mining') {
@@ -10629,7 +10672,7 @@
           state.machine.status = 'idle';
           state.machine.target = null;
           state.machine.progress = 0;
-          showProductionComment('Area locked. Exploration drilling is required before anyone is allowed to turn this into a production promise.', 'Exploration');
+          showProductionComment('Area locked. BORC-compliant cash-to-core conversion is required before geology can confirm what has already been confidently implied.', 'Exploration');
           return;
         }
 
@@ -10848,6 +10891,7 @@
         state.conveyor.progress = 0;
         state.conveyor.condition = 100;
         state.conveyor.nextFaultDay = state.day + 999;
+        state.conveyor.resumeMachineAfterRepair = null;
         playGameSound('belt');
         showProductionComment('Dev reset: conveyor restored. Mine Services has declared victory and left before follow-up questions.', 'Dev Tools', 5);
       }
