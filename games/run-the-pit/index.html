@@ -4528,6 +4528,74 @@
       .kpiTrackerGrid { grid-template-columns: 1fr; }
     }
 
+
+    /* KPI/readability polish: keep traffic-light status cards subtle but legible. */
+    .kpiTrackerCard.onTrack {
+      border-color: rgba(22,101,52,0.56);
+      background: rgba(220,252,231,0.95);
+      color: #052e16;
+    }
+
+    .kpiTrackerCard.atRisk {
+      border-color: rgba(146,64,14,0.60);
+      background: rgba(254,243,199,0.96);
+      color: #431407;
+    }
+
+    .kpiTrackerCard.failing {
+      border-color: rgba(153,27,27,0.64);
+      background: rgba(254,226,226,0.96);
+      color: #450a0a;
+    }
+
+    .kpiTrackerCard.onTrack strong,
+    .kpiTrackerCard.atRisk strong,
+    .kpiTrackerCard.failing strong,
+    .kpiTrackerCard.onTrack span,
+    .kpiTrackerCard.atRisk span,
+    .kpiTrackerCard.failing span {
+      color: inherit;
+    }
+
+    .kpiTrackerCard.onTrack .kpiStatusBadge {
+      background: #14532d;
+      color: #dcfce7;
+    }
+
+    .kpiTrackerCard.atRisk .kpiStatusBadge {
+      background: #92400e;
+      color: #fef3c7;
+    }
+
+    .kpiTrackerCard.failing .kpiStatusBadge {
+      background: #991b1b;
+      color: #fee2e2;
+    }
+
+    .financeSummaryCard.statusOnTrack {
+      border-color: rgba(22,101,52,0.58);
+      background: rgba(220,252,231,0.95);
+      color: #052e16;
+    }
+
+    .financeSummaryCard.statusAtRisk {
+      border-color: rgba(146,64,14,0.60);
+      background: rgba(254,243,199,0.96);
+      color: #431407;
+    }
+
+    .financeSummaryCard.statusFailing {
+      border-color: rgba(153,27,27,0.64);
+      background: rgba(254,226,226,0.96);
+      color: #450a0a;
+    }
+
+    .financeSummaryCard.statusOnTrack strong,
+    .financeSummaryCard.statusAtRisk strong,
+    .financeSummaryCard.statusFailing strong {
+      color: inherit;
+    }
+
   </style>
 </head>
 <body>
@@ -4581,8 +4649,8 @@
         <div class="dashboardHeader">
           <div class="logoBox">RTP</div>
           <div class="dashboardTitle">
-            <h1>Run the Pit</h1>
-            <p>MineCapture · S.H.A.F.T. — Strategic Hiring And Future Talent</p>
+            <h1>SLT Dashboard</h1>
+            <p>A single source of the many truths</p>
           </div>
         </div>
 
@@ -4592,8 +4660,9 @@
           <div class="pill">Revenue <strong id="revenueHud">£0</strong></div>
           <div class="pill">Spend <strong id="expenditureHud">£0</strong></div>
           <div class="pill wide">KPI <strong id="kpiHud">0✓ · 0!</strong></div>
-          <div class="pill wide">Sample <strong id="tonnesHud">0 / 10,000t</strong></div>
+          <div class="pill wide">Mined Tonnes <strong id="tonnesHud">0 / 10,000t</strong></div>
           <div class="pill wide">Goldilocks <strong id="gradeHud">0.0%</strong></div>
+          <div class="pill wide">LOM Reserve <strong id="lomHud">0kt @ 0.0%</strong></div>
           <div class="pill wide machinePill">Machine <strong id="machineHud">Idle</strong></div>
         </div>
 
@@ -5920,26 +5989,68 @@
         return { tonnes, grade: tonnes > 0 ? gradeT / tonnes : 0, blocks: discovered.length };
       }
 
+      function blockPersistenceKey(block) {
+        if (!block) return '';
+        return [Number(state.depthIndex) || 0, block.r, block.c].join(':');
+      }
+
+      function recordMinedBlock(block) {
+        if (!block) return;
+        if (!Array.isArray(state.minedBlockKeys)) state.minedBlockKeys = [];
+        const key = blockPersistenceKey(block);
+        if (key && !state.minedBlockKeys.includes(key)) state.minedBlockKeys.push(key);
+      }
+
+      function captureMinedBlockSnapshot() {
+        return (state.blocks[MINE_ID] || [])
+          .filter(b => b.status === 'void')
+          .map(b => ({ key: blockPersistenceKey(b), r: b.r, c: b.c, progress: b.progress || 100 }));
+      }
+
+      function restoreMinedBlockSnapshot(snapshot = []) {
+        const depth = Number(state.depthIndex) || 0;
+        const keys = new Set(Array.isArray(state.minedBlockKeys) ? state.minedBlockKeys : []);
+
+        for (const item of snapshot || []) {
+          if (!item || item.key === undefined) continue;
+          keys.add(item.key);
+        }
+
+        state.minedBlockKeys = Array.from(keys);
+
+        for (const key of state.minedBlockKeys) {
+          const parts = String(key).split(':').map(Number);
+          if (parts.length !== 3 || parts[0] !== depth) continue;
+          const b = blockAt(MINE_ID, parts[1], parts[2]);
+          if (!b) continue;
+          b.status = 'void';
+          b.progress = 100;
+          b.gasReleased = true;
+          b.waterReleased = true;
+        }
+      }
+
       function targetsForYear(year) {
         const y = Math.max(1, Number(year) || 1);
         const base = {
           // Annual tonnage is now tuned for a three-minute operating year and larger mine blocks.
           // A good year should require roughly 5 blocks in Year 1 and 10–20 blocks once the operation ramps up.
-          1: { tonnes: 10000, grade: 14.0, discoveredRows: 0, safetyMin: 45, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
-          2: { tonnes: 16000, grade: 14.0, discoveredRows: 3, safetyMin: 48, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
-          3: { tonnes: 21000, grade: 14.1, discoveredRows: 3, safetyMin: 52, technicalHires: 2, beltExtensions: 0, pillarSplitTonnes: 0 },
-          4: { tonnes: 27000, grade: 14.2, discoveredRows: 4, safetyMin: 56, technicalHires: 0, beltExtensions: 2, pillarSplitTonnes: 0 },
-          5: { tonnes: 34000, grade: 14.35, discoveredRows: 4, safetyMin: 60, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 5000 }
+          // -1000 Level is the tutorial campaign: enough pressure to teach systems, not enough to trap most players.
+          1: { tonnes: 9000, grade: 13.9, discoveredRows: 0, safetyMin: 42, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
+          2: { tonnes: 13000, grade: 14.0, discoveredRows: 2, safetyMin: 45, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
+          3: { tonnes: 17000, grade: 14.0, discoveredRows: 2, safetyMin: 48, technicalHires: 2, beltExtensions: 0, pillarSplitTonnes: 0 },
+          4: { tonnes: 22000, grade: 14.1, discoveredRows: 3, safetyMin: 52, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 0 },
+          5: { tonnes: 26000, grade: 14.2, discoveredRows: 3, safetyMin: 55, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 3000 }
         };
         if (base[y]) return { ...base[y] };
         return {
-          tonnes: Math.round(34000 * Math.pow(1.10, y - 5)),
-          grade: Math.min(15.4, 14.35 + (y - 5) * 0.12),
-          discoveredRows: 4,
-          safetyMin: Math.min(75, 60 + (y - 5) * 2),
+          tonnes: Math.round(30000 * Math.pow(1.12, y - 5)),
+          grade: Math.min(15.4, 14.2 + (y - 5) * 0.12),
+          discoveredRows: 3 + Math.floor((y - 5) / 3),
+          safetyMin: Math.min(75, 55 + (y - 5) * 2),
           technicalHires: 0,
           beltExtensions: 1 + Math.floor((y - 5) / 2),
-          pillarSplitTonnes: Math.round(5000 * Math.pow(1.10, y - 5))
+          pillarSplitTonnes: Math.round(3000 * Math.pow(1.12, y - 5))
         };
       }
 
@@ -9172,6 +9283,7 @@
       }
 
       function resetMineForNewDepth() {
+        state.minedBlockKeys = [];
         initBlocks();
         state.machine.q = MINE_ID;
         state.machine.r = START_ROW;
@@ -9258,6 +9370,7 @@
         if (row === null || row < 0) return;
         const blocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row);
         for (const block of blocks) {
+          if (block.status === 'void') continue;
           const estimate = estimateGradeForBlock(block.actualGrade, geo);
           block.status = 'solid';
           block.estimatedGrade = estimate.estimatedGrade;
@@ -9825,6 +9938,7 @@
 
       function advanceToNextYear() {
         if (state.gameOver) return;
+        const minedSnapshot = captureMinedBlockSnapshot();
         state.year += 1;
         state.yearStartDay = state.day;
         state.yearStartTonnes = state.tonnes;
@@ -9838,6 +9952,7 @@
         state.pillarSplitTonnesThisYear = 0;
         state.annualTargets = targetsForYear(state.year);
         applyAnnualFinanceReset(state.year, state.cash, state.revenue, state.expenditure);
+        restoreMinedBlockSnapshot(minedSnapshot);
         if (state.year >= 5) state.pillarSplittingUnlocked = true;
         state.paused = true;
         if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
@@ -9847,7 +9962,7 @@
 
       function yearStartBriefingHtml(year) {
         if (year === 2) {
-          return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a 10,000 tonne bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now be converted into a scalable mining operation.</p><p>Unfortunately, no exploration programme was completed before this commitment was made. Exploration is needed to confirm what the SLT has already declared to the board.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock three new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
+          return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a 10,000 tonne bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now be converted into a scalable mining operation.</p><p>Unfortunately, no exploration programme was completed before this commitment was made. Exploration is needed to confirm what the SLT has already declared to the board.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock two new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
         }
         if (year === 3) {
           return `<div class="letter"><h2>Year 3 KPI Notice — Technical Legitimacy</h2><p>The Superior Leadership Team has approved production ramp-up from an area originally described as temporary. As no feasibility study was completed before this decision, a technical team is now required to make the decision appear planned.</p><p><strong>New requirements:</strong> hire a Mining Engineer and a Rock Doctor. Once the Rock Doctor is legally attached to the ground conditions, production may be interrupted until a bolter is purchased.</p><p class="sig">Superior Leadership Team<br>Professional Oversight After Commitment</p></div>`;
@@ -10265,6 +10380,11 @@
         const kpiHud = $('kpiHud'); if (kpiHud) kpiHud.textContent = kpiHudText();
         $('tonnesHud').textContent = Math.round(annualTonnes()).toLocaleString() + ' / ' + Math.round(state.annualTargets.tonnes).toLocaleString() + 't';
         $('gradeHud').textContent = annualGrade().toFixed(1) + '%';
+        const lomHud = $('lomHud');
+        if (lomHud) {
+          const lom = lifeOfMineMetrics();
+          lomHud.textContent = (lom.tonnes / 1000).toFixed(lom.tonnes >= 100000 ? 0 : 1) + 'kt @ ' + lom.grade.toFixed(1) + '%';
+        }
 
         const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
         const kpiStatus = aggregateKpiStatus(annualKpiStatusList());
@@ -10274,6 +10394,7 @@
         setPillStatus('tonnesHud', progressKpiStatus(annualTonnes(), target.tonnes || 0));
         setPillStatus('gradeHud', gradeKpiStatus(annualGrade(), target.grade || 0, annualTonnes()));
         setPillStatus('kpiHud', kpiStatus);
+        if ($('lomHud')) setPillStatus('lomHud', lifeOfMineMetrics().tonnes >= Math.max(1, (target.tonnes || 0) * 0.8) ? 'onTrack' : 'atRisk');
 
         let machineText = state.paused ? 'Paused' : !isConveyorAvailable() ? 'Belt stopped' : state.machine.status === 'mining' ? 'Mining ' + directionLabel() : state.machine.status === 'tramming' ? 'Tramming ' + directionLabel() : state.machine.status === 'maintenance' ? 'Repair' : state.machine.status === 'broken' ? 'Broken' : 'Idle ' + directionLabel();
         $('machineHud').textContent = machineText;
@@ -10993,7 +11114,7 @@
           title = title || 'Training Report';
           const pass = state.tonnes >= TARGET_TONNES && grade() >= TARGET_GRADE;
           body = `<p>${pass || forceReportComplete ? '<strong>Module outcome:</strong> Sufficient Readiness Demonstrated.' : '<strong>Module outcome:</strong> Development Opportunity In Progress.'}</p>
-                  <p>Sample mined: <strong>${Math.round(state.tonnes).toLocaleString()}t</strong></p>
+                  <p>Mined tonnes: <strong>${Math.round(state.tonnes).toLocaleString()}t</strong></p>
                   <p>Goldilocks Grade: <strong>${grade().toFixed(2)}%</strong></p>
                   <p>Budget remaining: <strong>${money(state.cash)}</strong></p><p>Revenue: <strong>${money(state.revenue)}</strong> · Spend: <strong>${money(state.expenditure)}</strong></p>
                   <p>${pass ? 'Congratulations. You may now be given more responsibility without additional resources.' : 'Continue mining adjacent blocks until the training evidence becomes defensible.'}</p>`;
