@@ -4201,6 +4201,16 @@
     }
 
     .financeSummaryCard strong { display:block; color:#f0f9ff; font-size:13px; margin-bottom:3px; }
+    .financeSummaryCard.statusOnTrack { border-color: rgba(34,197,94,0.42); background: rgba(20,83,45,0.20); color:#bbf7d0; }
+    .financeSummaryCard.statusAtRisk { border-color: rgba(251,191,36,0.54); background: rgba(120,53,15,0.20); color:#fde68a; }
+    .financeSummaryCard.statusFailing { border-color: rgba(248,113,113,0.58); background: rgba(127,29,29,0.25); color:#fecaca; }
+
+    .pill.statusOnTrack { border-color: rgba(34,197,94,0.42); background: rgba(20,83,45,0.23); }
+    .pill.statusAtRisk { border-color: rgba(251,191,36,0.54); background: rgba(120,53,15,0.24); }
+    .pill.statusFailing { border-color: rgba(248,113,113,0.58); background: rgba(127,29,29,0.27); }
+    .pill.statusOnTrack strong { color:#bbf7d0; }
+    .pill.statusAtRisk strong { color:#fde68a; }
+    .pill.statusFailing strong { color:#fecaca; }
 
     .financeCharacter {
       display: grid;
@@ -4519,11 +4529,11 @@
       <section id="gradeKeyPanel" class="gradeKeyPanel" aria-label="Grade key">
         <h2>Grade Key</h2>
         <div class="gradeKeyRows">
-          <div><span style="background:#7e22ce"></span>15.8%+</div>
-          <div><span style="background:#c026d3"></span>15.0–15.8</div>
-          <div><span style="background:#ec4899"></span>14.2–15.0</div>
-          <div><span style="background:#f59e0b"></span>13.7–14.2</div>
-          <div><span style="background:#78350f"></span>&lt;13.0</div>
+          <div><span style="background:#a855f7"></span>Best · 15.2%+</div>
+          <div><span style="background:#ef4444"></span>High · 14.6–15.2</div>
+          <div><span style="background:#facc15"></span>Target · 14.0–14.6</div>
+          <div><span style="background:#22c55e"></span>Marginal · 13.2–14.0</div>
+          <div><span style="background:#3b82f6"></span>Low · &lt;13.2</div>
         </div>
       </section>
 
@@ -4996,6 +5006,7 @@
       let bubbleHits = [];
       let machineHit = null;
       let bolterHit = null;
+      let drillRigHit = null;
       let dayTimer = 0;
       let lastPanelCrewTilesHtml = '';
       const portraitImageCache = new Map();
@@ -5638,7 +5649,8 @@
           progress: 0,
           discoveredRowsThisYear: 0,
           lastCompletedRow: null,
-          rowReveal: null
+          rowReveal: null,
+          drillGuideDismissed: false
         },
         technicalHiresThisYear: 0,
         beltExtensionsThisYear: 0,
@@ -5691,7 +5703,9 @@
             if (sweetSpot) actualGrade += 0.85;
             if (lowerDilution) actualGrade -= 0.25;
 
-            const tonnes = 1400 + Math.round(seeded(idx + 17) * 1300) + Math.round(depth * 130);
+            const forwardScore = clamp((MINE_ROWS - 1 - r) / Math.max(1, MINE_ROWS - 1), 0, 1);
+            const rowTonnageBonus = Math.round(forwardScore * 1250 + Math.pow(forwardScore, 1.75) * 650);
+            const tonnes = 1350 + Math.round(seeded(idx + 17) * 750) + rowTonnageBonus + Math.round(depth * 170);
             const riskVal = seeded(idx + 31);
             const risk = riskVal > 0.78 ? 'High' : riskVal > 0.44 ? 'Medium' : 'Low';
             const isPillar = unlocked && isPillarCell(r, c);
@@ -5871,20 +5885,20 @@
           // Annual tonnage is now tuned for a three-minute operating year and larger mine blocks.
           // A good year should require roughly 5 blocks in Year 1 and 10–20 blocks once the operation ramps up.
           1: { tonnes: 10000, grade: 14.0, discoveredRows: 0, safetyMin: 45, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
-          2: { tonnes: 20000, grade: 14.0, discoveredRows: 3, safetyMin: 48, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
-          3: { tonnes: 28000, grade: 14.1, discoveredRows: 3, safetyMin: 52, technicalHires: 2, beltExtensions: 0, pillarSplitTonnes: 0 },
-          4: { tonnes: 35000, grade: 14.2, discoveredRows: 4, safetyMin: 56, technicalHires: 0, beltExtensions: 2, pillarSplitTonnes: 0 },
-          5: { tonnes: 42000, grade: 14.35, discoveredRows: 4, safetyMin: 60, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 6500 }
+          2: { tonnes: 16000, grade: 14.0, discoveredRows: 3, safetyMin: 48, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
+          3: { tonnes: 21000, grade: 14.1, discoveredRows: 3, safetyMin: 52, technicalHires: 2, beltExtensions: 0, pillarSplitTonnes: 0 },
+          4: { tonnes: 27000, grade: 14.2, discoveredRows: 4, safetyMin: 56, technicalHires: 0, beltExtensions: 2, pillarSplitTonnes: 0 },
+          5: { tonnes: 34000, grade: 14.35, discoveredRows: 4, safetyMin: 60, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 5000 }
         };
         if (base[y]) return { ...base[y] };
         return {
-          tonnes: Math.round(42000 * Math.pow(1.14, y - 5)),
+          tonnes: Math.round(34000 * Math.pow(1.10, y - 5)),
           grade: Math.min(15.4, 14.35 + (y - 5) * 0.12),
           discoveredRows: 4,
           safetyMin: Math.min(75, 60 + (y - 5) * 2),
           technicalHires: 0,
           beltExtensions: 1 + Math.floor((y - 5) / 2),
-          pillarSplitTonnes: Math.round(6500 * Math.pow(1.10, y - 5))
+          pillarSplitTonnes: Math.round(5000 * Math.pow(1.10, y - 5))
         };
       }
 
@@ -7626,6 +7640,42 @@
         }
 
         drawLockedExplorationNotice();
+        drawRowReserveLabels();
+      }
+
+
+      function rowReserveEstimate(row) {
+        const rowBlocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && b.status !== 'locked' && b.status !== 'void' && b.status !== 'mining');
+        const tonnes = rowBlocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
+        const gradeT = rowBlocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade ?? b.grade) || 0), 0);
+        return { tonnes, grade: tonnes > 0 ? gradeT / tonnes : 0, blocks: rowBlocks.length };
+      }
+
+      function drawRowReserveLabels() {
+        if (!board) return;
+        const b = board;
+        ctx.save();
+        for (let r = 0; r < MINE_ROWS; r++) {
+          const est = rowReserveEstimate(r);
+          if (!est.blocks || est.tonnes <= 0) continue;
+          const y = b.y + r * b.cell;
+          const label = Math.round(est.tonnes / 1000) + 'kt';
+          const x = b.x + 4;
+          const w = Math.max(32, b.cell * 0.78);
+          const h = Math.max(13, b.cell * 0.25);
+          ctx.fillStyle = 'rgba(15,23,42,0.62)';
+          roundRect(ctx, x, y + 3, w, h, h / 2);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = '#e0f2fe';
+          ctx.font = '900 ' + Math.max(8, b.cell * 0.16) + 'px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, x + w / 2, y + 3 + h / 2);
+        }
+        ctx.restore();
       }
 
       function drawLockedExplorationNotice() {
@@ -7694,12 +7744,11 @@
       }
 
       function gradeColour(g) {
-        if (g >= 15.8) return '#7e22ce';
-        if (g >= 15.0) return '#c026d3';
-        if (g >= 14.2) return '#ec4899';
-        if (g >= 13.7) return '#f59e0b';
-        if (g >= 13.0) return '#b45309';
-        return '#78350f';
+        if (g >= 15.2) return '#a855f7'; // best grade: bright purple
+        if (g >= 14.6) return '#ef4444'; // second grade: red
+        if (g >= 14.0) return '#facc15'; // third grade: yellow
+        if (g >= 13.2) return '#22c55e'; // fourth grade: green
+        return '#3b82f6'; // bottom grade: blue
       }
 
       function drawCracks(r, progress) {
@@ -8928,6 +8977,7 @@
         state.exploration.progress = 0;
         state.exploration.lastCompletedRow = null;
         state.exploration.rowReveal = null;
+        state.exploration.drillGuideDismissed = false;
         state.selectedBlock = null;
       }
 
@@ -9191,6 +9241,20 @@
         return { symbol: '!', label: 'At risk', cls: 'atRisk' };
       }
 
+
+      function statusCssClass(status) {
+        if (status === 'onTrack') return 'statusOnTrack';
+        if (status === 'failing') return 'statusFailing';
+        return 'statusAtRisk';
+      }
+
+      function aggregateKpiStatus(list) {
+        if (!list || !list.length) return 'onTrack';
+        if (list.some(x => x.status === 'failing')) return 'failing';
+        if (list.some(x => x.status === 'atRisk')) return 'atRisk';
+        return 'onTrack';
+      }
+
       function progressKpiStatus(actual, target) {
         if (!target || target <= 0) return 'onTrack';
         if (dayOfYear() < 20 && (Number(actual) || 0) <= 0) return 'atRisk';
@@ -9275,11 +9339,15 @@
         if (target.technicalHires) optionalCards.push(kpiCardHtml('Technical Team', `${techHires} / ${target.technicalHires}`, pct(techHires, target.technicalHires), progressKpiStatus(techHires, target.technicalHires), 'Mining Engineer and Rock Doctor required'));
         if (target.beltExtensions) optionalCards.push(kpiCardHtml('Belt Advancement', `${beltExt} / ${target.beltExtensions}`, pct(beltExt, target.beltExtensions), progressKpiStatus(beltExt, target.beltExtensions), 'Survey-controlled infrastructure promise'));
         if (target.pillarSplitTonnes) optionalCards.push(kpiCardHtml('Pillar Splitting', `${Math.round(pillarSplit).toLocaleString()} / ${Math.round(target.pillarSplitTonnes).toLocaleString()}t`, pct(pillarSplit, target.pillarSplitTonnes), progressKpiStatus(pillarSplit, target.pillarSplitTonnes), 'Consultant-recovered value'));
+        const statusList = annualKpiStatusList();
+        const overallStatus = aggregateKpiStatus(statusList);
+        const budgetStatus = budgetKpiStatus();
+        const tonnesStatus = progressKpiStatus(yrTonnes, target.tonnes || 0);
         return `<div class="financeSummaryGrid">
-          <div class="financeSummaryCard"><strong>Annual Position</strong>Year ${state.year} · Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS} · ${elapsedPct}% elapsed</div>
-          <div class="financeSummaryCard"><strong>Budget Remaining</strong>${money(state.cash)} · Opening ${money(state.openingBudget || 0)}</div>
-          <div class="financeSummaryCard"><strong>Revenue / Spend</strong>${money(state.revenue)} generated · ${money(state.expenditure)} spent</div>
-          <div class="financeSummaryCard"><strong>Spend Plan</strong>${money(state.expenditure)} actual · ${money(finance.plannedSpend)} planned</div>
+          <div class="financeSummaryCard ${statusCssClass(overallStatus)}"><strong>Annual Position</strong>Year ${state.year} · Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS} · ${elapsedPct}% elapsed</div>
+          <div class="financeSummaryCard ${statusCssClass(budgetStatus)}"><strong>Budget Remaining</strong>${money(state.cash)} · Opening ${money(state.openingBudget || 0)}</div>
+          <div class="financeSummaryCard ${statusCssClass(tonnesStatus)}"><strong>Revenue / Spend</strong>${money(state.revenue)} generated · ${money(state.expenditure)} spent</div>
+          <div class="financeSummaryCard ${statusCssClass(budgetStatus)}"><strong>Spend Plan</strong>${money(state.expenditure)} actual · ${money(finance.plannedSpend)} planned</div>
         </div><div class="kpiTrackerGrid">
           ${kpiCardHtml('Budget Control', `${money(state.cash)} remaining`, state.spendLimit ? pct(Math.max(0, (state.spendLimit || 0) - state.expenditure), state.spendLimit) : 100, budgetKpiStatus(), `Spend plan: ${money(finance.plannedSpend)} by today`)}
           ${kpiCardHtml('Annual Tonnes', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t`, pct(yrTonnes, target.tonnes), progressKpiStatus(yrTonnes, target.tonnes || 0), `Expected by now: ${Math.round((target.tonnes || 0) * finance.elapsed).toLocaleString()}t`)}
@@ -9441,6 +9509,7 @@
         state.midYearReviewDone = false;
         state.yearReviewDue = false;
         state.exploration.discoveredRowsThisYear = 0;
+        state.exploration.drillGuideDismissed = false;
         state.technicalHiresThisYear = 0;
         state.beltExtensionsThisYear = 0;
         state.pillarSplitTonnesThisYear = 0;
@@ -9714,6 +9783,7 @@
       }
 
       function drawExplorationDrill() {
+        drillRigHit = null;
         if (!board) return;
         const b = board;
         const nextRow = nextExplorationRow();
@@ -9728,11 +9798,26 @@
         const y = b.y + (row + 0.5) * b.cell;
         const x = Math.max(10 + b.cell * 0.65, b.x - b.cell * 1.20);
         const s = b.cell;
+        drillRigHit = { x: x - s * 0.68, y: y - s * 0.86, w: s * 2.36, h: s * 1.42 };
+        const guide = shouldHighlightDrillRig();
         const progress = clamp(state.exploration.progress / 100, 0, 1);
         const rodStartX = x + s * 0.50;
         const rodEndX = active ? b.x + b.w * progress : Math.min(b.x + b.cell * 0.7, rodStartX + s * 0.75);
 
         ctx.save();
+        if (guide) {
+          const pulse = 0.55 + Math.sin(anim * 5.5) * 0.22;
+          ctx.save();
+          ctx.globalAlpha = pulse;
+          ctx.strokeStyle = '#fde047';
+          ctx.lineWidth = Math.max(3, s * 0.08);
+          roundRect(ctx, drillRigHit.x, drillRigHit.y, drillRigHit.w, drillRigHit.h, s * 0.22);
+          ctx.stroke();
+          ctx.shadowColor = '#fde047';
+          ctx.shadowBlur = s * 0.35;
+          ctx.stroke();
+          ctx.restore();
+        }
         ctx.globalAlpha = active ? 1 : available ? 0.76 : 0.34;
 
         if (available || active) {
@@ -9812,7 +9897,34 @@
         const label = active ? 'WE FIND IT · ' + Math.round(state.exploration.progress) + '%' : available ? 'HOPE: WE FIND IT' : 'DRILL RIG LOCKED';
         ctx.fillText(label, Math.min(b.x + b.w / 2, x + s * 1.65), y - s * 0.78);
 
+        if (guide) {
+          const tip = 'Tap rig to explore new ground';
+          const tx = Math.min(b.x + b.w - s * 3.2, x + s * 1.05);
+          const ty = y + s * 0.58;
+          const tw = Math.max(s * 3.4, 164);
+          const th = Math.max(s * 0.46, 24);
+          ctx.fillStyle = 'rgba(15,23,42,0.88)';
+          roundRect(ctx, tx, ty, tw, th, th / 2);
+          ctx.fill();
+          ctx.strokeStyle = '#fde047';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.fillStyle = '#fef9c3';
+          ctx.font = '900 ' + Math.max(10, s * 0.18) + 'px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(tip, tx + tw / 2, ty + th / 2);
+        }
+
         ctx.restore();
+      }
+
+
+      function setPillStatus(strongId, status) {
+        const el = $(strongId);
+        if (!el || !el.parentElement) return;
+        el.parentElement.classList.remove('statusOnTrack', 'statusAtRisk', 'statusFailing');
+        el.parentElement.classList.add(statusCssClass(status));
       }
 
       function updateHud() {
@@ -9823,6 +9935,15 @@
         const kpiHud = $('kpiHud'); if (kpiHud) kpiHud.textContent = kpiHudText();
         $('tonnesHud').textContent = Math.round(annualTonnes()).toLocaleString() + ' / ' + Math.round(state.annualTargets.tonnes).toLocaleString() + 't';
         $('gradeHud').textContent = annualGrade().toFixed(1) + '%';
+
+        const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
+        const kpiStatus = aggregateKpiStatus(annualKpiStatusList());
+        setPillStatus('cashHud', budgetKpiStatus());
+        setPillStatus('expenditureHud', budgetKpiStatus());
+        setPillStatus('revenueHud', progressKpiStatus(annualTonnes(), target.tonnes || 0));
+        setPillStatus('tonnesHud', progressKpiStatus(annualTonnes(), target.tonnes || 0));
+        setPillStatus('gradeHud', gradeKpiStatus(annualGrade(), target.grade || 0, annualTonnes()));
+        setPillStatus('kpiHud', kpiStatus);
 
         let machineText = state.paused ? 'Paused' : !isConveyorAvailable() ? 'Belt stopped' : state.machine.status === 'mining' ? 'Mining ' + directionLabel() : state.machine.status === 'tramming' ? 'Tramming ' + directionLabel() : state.machine.status === 'maintenance' ? 'Repair' : state.machine.status === 'broken' ? 'Broken' : 'Idle ' + directionLabel();
         $('machineHud').textContent = machineText;
@@ -9908,6 +10029,50 @@
         }
       }
 
+
+      function explorationStaffReady() {
+        return !!(featureUnlocked('exploration') && geologistOnCrew() && drillersOnCrew().length >= 2 && nextExplorationRow() !== null);
+      }
+
+      function shouldHighlightDrillRig() {
+        return !!(explorationStaffReady() && !state.exploration.active && !(state.exploration && state.exploration.drillGuideDismissed) && (state.exploration.discoveredRowsThisYear || 0) === 0);
+      }
+
+      function openExplorationRig() {
+        if (state.exploration) state.exploration.drillGuideDismissed = true;
+        if (!featureUnlocked('exploration')) {
+          openMiniWindow('Exploration Not Yet Authorised', '<p>The HOPE exploration rig is present because optimism is cheaper when pre-installed. Exploration becomes available in Year 2.</p>', true);
+          return;
+        }
+        const geo = geologistOnCrew();
+        const drillers = drillersOnCrew();
+        if (!geo || drillers.length < 2) {
+          openMiniWindow('Exploration Crew Missing', '<p>Exploration requires one Geologist and two Drillers. S.H.A.F.T. has made them available under Technical recruitment.</p><div class="btnRow"><button class="primary" data-window="hr">Open Technical Hiring</button></div>', false);
+          state.hiringTab = 'technical';
+          return;
+        }
+        if (!state.assets.drillOwned) {
+          showProductionComment('Exploration team ready. Tap Buy Drill in the exploration panel to convert payroll into holes.', 'Exploration', 5);
+        }
+        openWindow('exploration');
+      }
+
+      function showBlockInfo(block) {
+        if (!block) return;
+        if (block.status === 'locked') {
+          showProductionComment('Locked ground. Tap the HOPE exploration rig to drill and interpret new rows before the SLT asks where the reserve went.', 'Exploration', 5);
+          return;
+        }
+        if (block.status === 'void') {
+          showProductionComment('Mined-out ground. Value has been extracted and Finance has already started asking where it went.', 'Production', 3.8);
+          return;
+        }
+        const estGrade = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
+        const confidence = block.gradeConfidence ? Math.round(block.gradeConfidence * 100) + '% confidence' : 'model confidence unavailable';
+        const pillarText = block.isPillar ? ' Structural pillar: mineable only after Pillar Splitting authorisation.' : '';
+        showProductionComment('Row ' + (block.r + 1) + ', Block ' + (block.c + 1) + ': ' + Math.round(block.tonnes).toLocaleString() + 't at modelled ' + estGrade.toFixed(1) + '% Goldilocks Grade (' + confidence + ').' + pillarText, 'Block Estimate', 6);
+      }
+
       function canvasClick(e) {
         const rect = canvas.getBoundingClientRect();
         const x = (e.clientX - rect.left) * W / rect.width;
@@ -9927,9 +10092,14 @@
           openWindow('assets');
           return;
         }
+        if (drillRigHit && inside(x, y, drillRigHit)) {
+          openExplorationRig();
+          return;
+        }
         for (const hit of blockHits) {
           if (inside(x, y, hit.rect)) {
-            showProductionComment('Blocks are no longer selected manually. Use the remote to send the miner towards the next operational misunderstanding.', 'Training');
+            const block = blockAt(hit.q, hit.r, hit.c);
+            showBlockInfo(block);
             return;
           }
         }
@@ -11332,6 +11502,9 @@
         spend(hireCost(c), 'Hiring/onboarding');
         if (['miningEngineer', 'rockDoctor', 'surveyor', 'geologist', 'driller'].includes(c.role)) state.technicalHiresThisYear = (state.technicalHiresThisYear || 0) + 1;
         adjustTrait('morale', 1);
+        if (['geologist', 'driller'].includes(c.role) && explorationStaffReady() && state.exploration && !state.exploration.drillGuideDismissed && (state.exploration.discoveredRowsThisYear || 0) === 0) {
+          showProductionComment('Exploration crew ready. The HOPE exploration rig is now highlighted on the canvas; tap it to start opening new ground.', 'Exploration', 6);
+        }
         if (c.role === 'rockDoctor' && featureUnlocked('groundSupport') && !state.assets.bolterOwned) {
           updatePanelCrewTiles(true);
           openRockDoctorBolterHold();
