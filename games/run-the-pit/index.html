@@ -1389,6 +1389,10 @@
 
     .card h3 { margin: 0; font-size: 13px; }
     .card p { margin: 0; font-size: 12px; color: #cbd5e1; }
+    .card.headcountFull { border-color: rgba(251,191,36,0.42); background: rgba(251,191,36,0.07); }
+    .headcountNote { margin-top: 5px; font-size: 11px; color: #cbd5e1; }
+    .headcountNote.full { color: #fde68a; }
+    .headcountNote.locked { color: #94a3b8; }
 
     .tag {
       display: inline-flex;
@@ -9685,7 +9689,13 @@
           ['Rock Doctor', staffGroup('rockDoctor').length >= 1, 'Required for bolter support decisions.'],
           ['Surveyor', staffGroup('surveyor').length >= 1, 'Required from Year 4 to advance the belt line straight enough for audit.']
         ];
-        return `<div class="roleCoverageGrid">${checks.map(([name, ok, note]) => `<div class="roleCoverageItem ${ok ? 'ok' : 'missing'}"><strong>${ok ? '✓' : '×'} ${name}</strong>${note}</div>`).join('')}</div>`;
+        const roleMap = { 'Supervisor': 'supervisor', 'Miner': 'miner', 'Fitter': 'fitter', 'Electrician': 'electrician', 'Geologist': 'geologist', 'Drillers': 'driller', 'Mining Engineer': 'miningEngineer', 'Rock Doctor': 'rockDoctor', 'Surveyor': 'surveyor' };
+        return `<div class="roleCoverageGrid">${checks.map(([name, ok, note]) => {
+          const role = roleMap[name];
+          const cap = role ? roleHeadcountStatus(role) : null;
+          const capText = cap ? `<br><span>Headcount ${cap.count}/${cap.max}</span>` : '';
+          return `<div class="roleCoverageItem ${ok ? 'ok' : 'missing'}"><strong>${ok ? '✓' : '×'} ${name}</strong>${note}${capText}</div>`;
+        }).join('')}</div>`;
       }
 
       function staffRosterHtml() {
@@ -9728,6 +9738,7 @@
         if (idx < 0) return;
         const s = state.staff.splice(idx, 1)[0];
         state.formerStaff.push({ ...s, bubble: null, exitReason: reason || 'Resigned' });
+        if (!state.candidates.some(c => c.role === s.role)) state.candidates.push(createReplacementCandidate(s.role));
         adjustTrait('morale', -3);
         pushQueueEvent({
           tone: 'warning',
@@ -10757,17 +10768,62 @@
         return 'Available';
       }
 
+      function maxHeadcountForRole(role) {
+        const secondMiner = !!(state.assets && state.assets.secondMinerOwned);
+        const deeperLevel = (Number(state.depthIndex) || 0) > 0;
+        const matureOperation = (Number(state.year) || 1) >= 6;
+        if (role === 'supervisor') return 1;
+        if (role === 'miner') return secondMiner ? 4 : 2;
+        if (role === 'fitter') return (secondMiner || deeperLevel || matureOperation) ? 2 : 1;
+        if (role === 'electrician') return (secondMiner || deeperLevel || matureOperation) ? 2 : 1;
+        if (role === 'geologist') return 1;
+        if (role === 'driller') return 2;
+        if (role === 'miningEngineer') return 1;
+        if (role === 'rockDoctor') return 1;
+        if (role === 'surveyor') return 1;
+        return 1;
+      }
+
+      function currentHeadcountForRole(role) {
+        return state.staff.filter(s => s.role === role).length;
+      }
+
+      function roleHeadcountFull(role) {
+        return currentHeadcountForRole(role) >= maxHeadcountForRole(role);
+      }
+
+      function roleHeadcountStatus(role) {
+        const count = currentHeadcountForRole(role);
+        const max = maxHeadcountForRole(role);
+        return { count, max, full: count >= max };
+      }
+
+      function showHeadcountFullNotice(role) {
+        const label = roleName(role);
+        const h = roleHeadcountStatus(role);
+        openMiniWindow('S.H.A.F.T. Headcount Control', `<p><strong>${escapeHtml(label)} headcount is full: ${h.count}/${h.max}.</strong></p><p>S.H.A.F.T. would like to remind you that the authorised headcount for this role is full.</p><p>Further recruitment would create unnecessary capacity, resilience, and other avoidable precedents.</p>`, true);
+      }
+
       function candidateCard(c) {
         const unlocked = roleHireUnlocked(c.role);
-        return `<div class="card ${unlocked ? '' : 'locked'}">
+        const h = roleHeadcountStatus(c.role);
+        const full = unlocked && h.full;
+        const headcountText = `Headcount ${h.count}/${h.max}${full ? ' · Full' : ''}`;
+        const buttonHtml = !unlocked
+          ? `<button class="primary" disabled>${roleUnlockText(c.role)}</button>`
+          : full
+            ? `<button class="warn" data-headcount-full="${c.role}">Headcount Full</button>`
+            : `<button class="primary" data-hire="${c.id}">Hire · Onboard ${money(scaledCost(hireCost(c)))}</button>`;
+        return `<div class="card ${unlocked ? '' : 'locked'} ${full ? 'headcountFull' : ''}">
           <div class="portraitPanel">
             ${portraitHtml(c)}
             <div class="portraitDetails">
               <h3>${c.name}</h3>
               <p><span class="tag">${roleName(c.role)}</span> ${workerTierTag(c)} <span class="tag">${money(c.salary)}/yr</span></p>
+              <p class="headcountNote ${full ? 'full' : (!unlocked ? 'locked' : '')}">${headcountText}</p>
               ${meter('Skill', c.skill)}${meter('Morale', c.morale)}${meter('Safety', c.safety || 3)}${meter('Attendance', c.attendance)}
               <p>${c.trait}</p>
-              <button class="primary" data-hire="${c.id}" ${unlocked ? '' : 'disabled'}>${unlocked ? 'Hire · Onboard ' + money(scaledCost(hireCost(c))) : roleUnlockText(c.role)}</button>
+              ${buttonHtml}
             </div>
           </div>
         </div>`;
@@ -11498,6 +11554,11 @@
           openMiniWindow('Role Not Yet Authorised', '<p>' + escapeHtml(roleName(c.role)) + ' recruitment is not available yet. The SLT has not reached that stage of retrospective planning.</p>', true);
           return;
         }
+        if (roleHeadcountFull(c.role)) {
+          state.candidates.splice(idx, 0, c);
+          showHeadcountFullNotice(c.role);
+          return;
+        }
         state.staff.push({ ...c, bubble: null });
         spend(hireCost(c), 'Hiring/onboarding');
         if (['miningEngineer', 'rockDoctor', 'surveyor', 'geologist', 'driller'].includes(c.role)) state.technicalHiresThisYear = (state.technicalHiresThisYear || 0) + 1;
@@ -11751,6 +11812,9 @@
           }
           const hiringTabBtn = e.target.closest('[data-hiring-tab]');
           if (hiringTabBtn) { openHiringDiscipline(hiringTabBtn.dataset.hiringTab); return; }
+
+          const headcountFullBtn = e.target.closest('[data-headcount-full]');
+          if (headcountFullBtn) { showHeadcountFullNotice(headcountFullBtn.dataset.headcountFull); return; }
 
           const hireBtn = e.target.closest('[data-hire]');
           if (hireBtn) { hire(hireBtn.dataset.hire); return; }
