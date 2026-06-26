@@ -5692,6 +5692,7 @@
         engineeringTimer: 0,
         groundTimer: 0,
         productionCommentTimer: 0,
+        pmGuidanceShown: {},
         capexFreezeUntil: 0,
         randomEventCount: 0,
         queueEvents: [],
@@ -6440,7 +6441,81 @@
         state.productionCommentTimer = 0;
       }
 
+      function pmGuidanceAlreadyShown(key, repeatAfterDays = 110) {
+        state.pmGuidanceShown = state.pmGuidanceShown || {};
+        const lastShown = state.pmGuidanceShown[key];
+        return typeof lastShown === 'number' && state.day - lastShown < repeatAfterDays;
+      }
+
+      function markPmGuidanceShown(key) {
+        state.pmGuidanceShown = state.pmGuidanceShown || {};
+        state.pmGuidanceShown[key] = state.day;
+      }
+
+      function maybeShowProductionGuidance(force = false) {
+        if (!state.running && !force) return false;
+        const options = [];
+        const origin = machinePreviewOrigin(state.machine) || cellObjectForPosition(state.machine.r, state.machine.c);
+        const target = minerPreviewTargetBlock();
+        const finance = currentFinanceStatus ? currentFinanceStatus() : null;
+
+        if (state.tonnes > 0 && !pmGuidanceAlreadyShown('tonnageScale')) {
+          options.push({
+            key: 'tonnageScale',
+            category: 'Production Guidance',
+            text: 'Mining blocks deeper in the mine contain more tonnes. Survey has yet to decide whether this is real, or a belt-weigher/reconciliation error.'
+          });
+        }
+
+        if (target && target.status === 'solid' && typeof target.estimatedGrade === 'number' && !pmGuidanceAlreadyShown('gradeModel')) {
+          options.push({
+            key: 'gradeModel',
+            category: 'Grade Guidance',
+            text: 'The block colours show interpreted grade. Geology would like to remind you that interpreted is not the same as correct.'
+          });
+        }
+
+        if (featureUnlocked('exploration') && state.exploration && !state.exploration.active && !pmGuidanceAlreadyShown('drillRig')) {
+          options.push({
+            key: 'drillRig',
+            category: 'Exploration Guidance',
+            text: 'The HOPE exploration rig unlocks new ground. Exploration is how we confirm what has already been promised externally.'
+          });
+        }
+
+        if (featureUnlocked('beltAdvancement') && origin && beltServiceDistance(origin) >= 4.5 && !pmGuidanceAlreadyShown('beltDistance', 80)) {
+          options.push({
+            key: 'beltDistance',
+            category: 'Belt Guidance',
+            text: 'If the belt is too far behind the miner, production slows down. Mine Services call this logistics. Production calls it yesterday’s problem.'
+          });
+        }
+
+        if (featureUnlocked('groundSupport') && !pmGuidanceAlreadyShown('pillars')) {
+          options.push({
+            key: 'pillars',
+            category: 'Ground Control Guidance',
+            text: 'Pillars are not waste. They are ore that has been temporarily promoted to holding the roof up.'
+          });
+        }
+
+        if (finance && state.spendLimit && finance.spendVariance > state.spendLimit * 0.12 && !pmGuidanceAlreadyShown('budgetPressure', 70)) {
+          options.push({
+            key: 'budgetPressure',
+            category: 'Finance Guidance',
+            text: 'Budget pressure is rising. Mining good tonnes helps, but Finance prefers the cheaper option where nothing breaks and nobody asks for tools.'
+          });
+        }
+
+        if (!options.length) return false;
+        const chosen = options[Math.floor(Math.random() * options.length)];
+        markPmGuidanceShown(chosen.key);
+        showProductionComment(chosen.text, chosen.category, 8.5);
+        return true;
+      }
+
       function showRandomProductionComment() {
+        if (maybeShowProductionGuidance()) return;
         if (!productionManagerEvents.length) return;
         const event = productionManagerEvents[Math.floor(Math.random() * productionManagerEvents.length)];
         applyProductionManagerEvent(event);
@@ -7141,12 +7216,12 @@
 
       function startConveyorFix() {
         if (!state.conveyor || state.conveyor.status === 'running') {
-          openMiniWindow('Conveyor Availability', '<p>The conveyor is currently running. Mine Services recommends not touching it until it changes its mind.</p>', true);
+          openMiniWindow('Belt Availability', '<p>The conveyor is currently running. Mine Services recommends not touching it until it changes its mind.</p>', true);
           return;
         }
 
         if (state.conveyor.status === 'maintenance') {
-          openMiniWindow('Conveyor Availability', '<p>The conveyor intervention is already in progress. Please allow the relevant trade to mutter in peace.</p>', true);
+          openMiniWindow('Belt Availability', '<p>The conveyor intervention is already in progress. Please allow the relevant trade to mutter in peace.</p>', true);
           return;
         }
 
@@ -7989,7 +8064,7 @@
           ? 'BELT STOPPED'
           : maintenance
             ? 'BELT INTERVENTION ' + Math.round(state.conveyor.progress) + '%'
-            : 'CONVEYOR OF CONSEQUENCES';
+            : 'BELT';
 
         ctx.fillStyle = stopped ? '#fecaca' : maintenance ? '#bae6fd' : '#f59e0b';
         ctx.font = '900 ' + Math.max(7, board.cell * 0.16) + 'px Arial';
@@ -9610,9 +9685,12 @@
           : rating === 'needsImprovement'
             ? `<div class="pipNotice"><strong>Performance Improvement Plan:</strong> You have been placed on a supportive process designed to help you understand that next year’s failure will be treated differently.</div>`
             : `<div class="pipNotice"><strong>PIP status:</strong> Cleared. Previous underperformance has been temporarily reinterpreted as development.</div>`;
+        const pleadButton = rating === 'needsImprovement'
+          ? `<button class="warn" data-plead-case>${fired ? 'Plead for Reconsideration' : 'Plead Your Case'}</button>`
+          : '';
         const buttonHtml = fired
-          ? `<button class="primary" data-close>Accept Reassignment</button>`
-          : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>`;
+          ? `<button class="primary" data-close>Accept Reassignment</button>${pleadButton}`
+          : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>${pleadButton}`;
 
         $('modalBody').innerHTML = `
           ${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Delivering Value Through Other People', 'Annual moderation has concluded that Outstanding remains available in principle and unavailable in practice.', 'SLT')}
@@ -9639,6 +9717,108 @@
             <p class="sig">Superior Leadership Team<br>ManySalts Mine<br>Delivering Value Through Other People</p>
           </div>
           <div class="btnRow">${buttonHtml}</div>
+        `;
+        $('modalOverlay').classList.add('show');
+      }
+
+      function openPleadCaseModal() {
+        const dismissalPending = !!state.gameOver;
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = dismissalPending ? 'Plead for Reconsideration' : 'Plead Your Case';
+        $('modalBody').innerHTML = `
+          ${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Accountability Calibration Panel', 'The SLT will now consider your explanation, providing it does not affect the conclusion already reached.', 'SLT')}
+          <div class="letter">
+            <h2>${dismissalPending ? 'Final Representations' : 'Management Response Opportunity'}</h2>
+            <p>You may accept the rating or attempt to explain why a clearly ambitious target was not achieved in conditions that were fully foreseeable by someone else.</p>
+            <p><strong>Warning:</strong> pleading your case may soften the consequence, change nothing, or confirm that you do not yet understand accountability.</p>
+          </div>
+          <div class="gridCards">
+            <button class="eventChoiceBtn" data-plea-choice="technical"><strong>Blame Technical Services</strong><span>Suggest the interpretation, model, or survey was less useful than advertised.</span></button>
+            <button class="eventChoiceBtn" data-plea-choice="forgiveness"><strong>Beg for Forgiveness</strong><span>Accept accountability while implying most decisions were above your pay grade.</span></button>
+            <button class="eventChoiceBtn" data-plea-choice="methodology"><strong>Question the KPI Methodology</strong><span>Ask whether success was measured against the original, revised, or retrospectively preferred target.</span></button>
+            <button class="eventChoiceBtn" data-plea-choice="external"><strong>Highlight External Factors</strong><span>Refer to belt reliability, ground conditions, staffing volatility, and the continued existence of reality.</span></button>
+            <button class="eventChoiceBtn negative" data-plea-choice="accept"><strong>Accept the Feedback</strong><span>Safest option. No relief, but no additional opportunity to make things worse.</span></button>
+          </div>
+        `;
+        $('modalOverlay').classList.add('show');
+      }
+
+      function pleaChance(choice) {
+        const target = state.annualTargets || {};
+        let chance = 0.24;
+        if (choice === 'technical') {
+          chance = 0.26;
+          if ((state.exploration?.discoveredRowsThisYear || 0) < (target.discoveredRows || 0)) chance += 0.14;
+          if (annualGrade() < (target.grade || 0)) chance += 0.10;
+        }
+        if (choice === 'forgiveness') chance = 0.30;
+        if (choice === 'methodology') chance = 0.20 + (state.midYearReviewDone ? 0.12 : 0);
+        if (choice === 'external') {
+          chance = 0.24;
+          if ((state.conveyor?.faultCount || 0) >= 2) chance += 0.12;
+          if (traitValue('safety') < (target.safetyMin || 0)) chance += 0.05;
+        }
+        if (state.gameOver) chance *= 0.45;
+        return clamp(chance, 0.06, 0.48);
+      }
+
+      function resolvePleaChoice(choice) {
+        const dismissalPending = !!state.gameOver;
+        if (choice === 'accept') {
+          openPleaResult('Feedback Accepted', '<p>You accept the rating. The SLT appreciates your maturity and has recorded it as evidence that the process worked.</p>', false, dismissalPending);
+          return;
+        }
+
+        const chance = pleaChance(choice);
+        const roll = Math.random();
+        const backfire = roll > Math.max(0.62, chance + 0.34);
+        const success = roll < chance;
+
+        const labels = {
+          technical: 'Technical Services Accountability Review',
+          forgiveness: 'Mercy-Based Performance Calibration',
+          methodology: 'KPI Methodology Clarification',
+          external: 'External Factors Consideration'
+        };
+
+        if (success) {
+          if (dismissalPending) {
+            state.gameOver = false;
+            state.needsImprovementStreak = 1;
+            state.pipActive = true;
+            adjustTrait('morale', -1);
+            openPleaResult(labels[choice], '<p>The SLT has agreed to defer dismissal and convert the outcome into a final supportive warning. This is not mercy; it is succession-planning uncertainty.</p><p><strong>Outcome:</strong> continue next year on PIP. A further Needs Improvement rating will not be interpreted generously.</p>', true, false);
+            return;
+          }
+          state.needsImprovementStreak = 0;
+          state.pipActive = true;
+          state.cash += 3500;
+          openPleaResult(labels[choice], '<p>Your explanation has been partially accepted. The Needs Improvement rating remains, but the consecutive-failure counter has been suspended under “contextual delivery pressure”.</p><p><strong>Outcome:</strong> PIP remains active, but next year is not treated as the second consecutive failure. Finance has also located a small amount of reluctant support.</p>', true, false);
+          return;
+        }
+
+        if (backfire) {
+          adjustTrait('morale', -3);
+          spend(1800, 'SLT escalation review');
+          openPleaResult(labels[choice], '<p>The SLT has interpreted your explanation as a lack of ownership. A follow-up review has been scheduled in principle, which is cheaper than support and more visible than help.</p><p><strong>Outcome:</strong> -3 Morale and an additional review cost.</p>', false, dismissalPending);
+          return;
+        }
+
+        openPleaResult(labels[choice], '<p>The SLT has carefully considered your points and concluded that the original conclusion remains the conclusion. Your comments have been noted, which is the formal version of ignored.</p><p><strong>Outcome:</strong> no change.</p>', false, dismissalPending);
+      }
+
+      function openPleaResult(title, bodyHtml, helped, dismissalPending) {
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = title;
+        const button = dismissalPending && state.gameOver
+          ? '<button class="primary" data-close>Accept Reassignment</button>'
+          : '<button class="primary" data-next-year>Proceed to Next Operating Year</button>';
+        $('modalBody').innerHTML = `
+          ${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', helped ? 'Contextual Reinterpretation' : 'Accountability Maintained', helped ? 'Your explanation has created just enough uncertainty to be useful.' : 'Your explanation has been recorded without altering the expected learning outcome.', 'SLT')}
+          <div class="letter"><h2>${escapeHtml(title)}</h2>${bodyHtml}<p class="sig">Superior Leadership Team<br>Accountability Calibration Panel</p></div>
+          <div class="btnRow">${button}</div>
         `;
         $('modalOverlay').classList.add('show');
       }
@@ -10758,7 +10938,7 @@
 
             <hr style="border:0;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">
 
-            <p><strong>Conveyor Belt</strong></p>
+            <p><strong>Belt</strong></p>
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:${state.conveyor.status === 'running' ? '#22c55e' : state.conveyor.status === 'maintenance' ? '#38bdf8' : '#ef4444'}"></div><div><strong>Status</strong><span>${conveyorStatus}</span></div><span class="tag">${state.conveyor.status}</span></div>
               <div class="row"><div class="avatarDot" style="background:${state.conveyor.condition < 55 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.conveyor.condition.toFixed(1)}%</span></div><span class="tag">${state.conveyor.condition < 55 ? 'Fragile' : 'Usable'}</span></div>
@@ -11916,6 +12096,12 @@
 
           const startExplorationBtn = e.target.closest('[data-start-exploration]');
           if (startExplorationBtn) { startExplorationProgram(); openWindow('exploration'); return; }
+
+          const pleadCaseBtn = e.target.closest('[data-plead-case]');
+          if (pleadCaseBtn) { openPleadCaseModal(); return; }
+
+          const pleaChoiceBtn = e.target.closest('[data-plea-choice]');
+          if (pleaChoiceBtn) { resolvePleaChoice(pleaChoiceBtn.dataset.pleaChoice); return; }
 
           const nextYearBtn = e.target.closest('[data-next-year]');
           if (nextYearBtn) { advanceToNextYear(); return; }
