@@ -3615,6 +3615,129 @@
     }
 
 
+  
+
+    /* Mobile splash-screen clipping fix.
+       The page intentionally uses overflow:hidden for gameplay, so the splash overlay
+       must own its own scrolling on small screens. */
+    #splashOverlay {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    #splashOverlay .splashCard {
+      max-height: calc(100dvh - 32px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @supports not (height: 100dvh) {
+      #splashOverlay .splashCard {
+        max-height: calc(100vh - 32px);
+      }
+    }
+
+    @media screen and (max-width: 760px), screen and (max-height: 660px) {
+      #splashOverlay {
+        align-items: flex-start;
+        justify-content: center;
+        padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+      }
+
+      #splashOverlay .splashCard {
+        width: min(100%, 620px);
+        max-height: none;
+        margin: 0 auto;
+        overflow: visible;
+        border-radius: 18px;
+      }
+
+      #splashOverlay .splashHeader {
+        padding: 22px 15px 15px;
+      }
+
+      #splashOverlay .splashHeader h1 {
+        font-size: clamp(42px, 14vw, 68px);
+        letter-spacing: -2px;
+      }
+
+      #splashOverlay .splashHeader h2 {
+        margin-top: 5px;
+        font-size: clamp(15px, 5vw, 21px);
+        line-height: 1.16;
+      }
+
+      #splashOverlay .splashBody {
+        grid-template-columns: 1fr;
+        gap: 13px;
+        padding: 15px;
+        align-items: stretch;
+      }
+
+      #splashOverlay .crest {
+        height: 76px;
+        border-radius: 15px;
+        font-size: 31px;
+      }
+
+      #splashOverlay .institution {
+        line-height: 1.42;
+      }
+
+      #splashOverlay .institution .simIntro {
+        font-size: 13px;
+        line-height: 1.43;
+        margin: 8px 0;
+      }
+
+      #splashOverlay .institution .disclaimer {
+        margin-top: 10px;
+        padding-top: 8px;
+        font-size: 9.5px;
+        line-height: 1.28;
+      }
+
+      #splashOverlay #beginTrainingBtn {
+        width: 100%;
+        margin-top: 2px;
+      }
+    }
+
+    @media screen and (max-width: 390px), screen and (max-height: 560px) {
+      #splashOverlay .splashHeader {
+        padding: 18px 13px 13px;
+      }
+
+      #splashOverlay .splashHeader h1 {
+        font-size: clamp(38px, 13vw, 58px);
+      }
+
+      #splashOverlay .splashHeader h2 {
+        font-size: 14px;
+      }
+
+      #splashOverlay .splashBody {
+        gap: 10px;
+        padding: 12px;
+      }
+
+      #splashOverlay .crest {
+        height: 58px;
+        font-size: 25px;
+      }
+
+      #splashOverlay .institution .simIntro {
+        font-size: 12px;
+        line-height: 1.34;
+      }
+
+      #splashOverlay .institution .disclaimer {
+        font-size: 8.75px;
+      }
+    }
+
   </style>
 </head>
 <body>
