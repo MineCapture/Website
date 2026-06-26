@@ -3738,6 +3738,232 @@
       }
     }
 
+  
+
+    /* Hard fix for Android/Chrome splash clipping.
+       Use a normal block-scrolling overlay in phone mode instead of flex centring.
+       This avoids the splash card being vertically centred with its top/bottom outside the visual viewport. */
+    html.phoneLayout #splashOverlay,
+    body.phoneLayout #splashOverlay {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      overflow-x: hidden !important;
+      overflow-y: scroll !important;
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior-y: contain !important;
+      touch-action: pan-y !important;
+      align-items: initial !important;
+      justify-content: initial !important;
+      padding: max(14px, env(safe-area-inset-top)) 10px max(38px, calc(env(safe-area-inset-bottom) + 30px)) !important;
+    }
+
+    html.phoneLayout #splashOverlay.show,
+    body.phoneLayout #splashOverlay.show {
+      display: block !important;
+    }
+
+    html.phoneLayout #splashOverlay .splashCard,
+    body.phoneLayout #splashOverlay .splashCard {
+      display: block !important;
+      width: min(100%, 620px) !important;
+      max-width: 620px !important;
+      max-height: none !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+      margin: 0 auto 34px !important;
+      transform: none !important;
+    }
+
+    html.phoneLayout #splashOverlay .splashHeader,
+    body.phoneLayout #splashOverlay .splashHeader {
+      padding: 18px 13px 13px !important;
+    }
+
+    html.phoneLayout #splashOverlay .splashHeader h1,
+    body.phoneLayout #splashOverlay .splashHeader h1 {
+      font-size: clamp(36px, 12vw, 58px) !important;
+      line-height: 0.95 !important;
+      letter-spacing: -1.5px !important;
+    }
+
+    html.phoneLayout #splashOverlay .splashHeader h2,
+    body.phoneLayout #splashOverlay .splashHeader h2 {
+      margin-top: 5px !important;
+      font-size: clamp(14px, 4.4vw, 19px) !important;
+      line-height: 1.14 !important;
+    }
+
+    html.phoneLayout #splashOverlay .splashBody,
+    body.phoneLayout #splashOverlay .splashBody {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 11px !important;
+      padding: 13px !important;
+      align-items: stretch !important;
+    }
+
+    html.phoneLayout #splashOverlay .crest,
+    body.phoneLayout #splashOverlay .crest {
+      height: 58px !important;
+      border-radius: 14px !important;
+      font-size: 25px !important;
+    }
+
+    html.phoneLayout #splashOverlay .institution,
+    body.phoneLayout #splashOverlay .institution {
+      line-height: 1.34 !important;
+    }
+
+    html.phoneLayout #splashOverlay .institution .simIntro,
+    body.phoneLayout #splashOverlay .institution .simIntro {
+      font-size: 12px !important;
+      line-height: 1.34 !important;
+      margin: 7px 0 !important;
+    }
+
+    html.phoneLayout #splashOverlay .institution .disclaimer,
+    body.phoneLayout #splashOverlay .institution .disclaimer {
+      margin-top: 9px !important;
+      padding-top: 8px !important;
+      font-size: 8.75px !important;
+      line-height: 1.24 !important;
+    }
+
+    html.phoneLayout #splashOverlay #beginTrainingBtn,
+    body.phoneLayout #splashOverlay #beginTrainingBtn {
+      width: 100% !important;
+      min-height: 36px !important;
+      margin-top: 4px !important;
+    }
+
+    @media screen and (max-width: 920px) {
+      #splashOverlay {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        overflow-x: hidden !important;
+        overflow-y: scroll !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain !important;
+        touch-action: pan-y !important;
+        align-items: initial !important;
+        justify-content: initial !important;
+        padding: max(14px, env(safe-area-inset-top)) 10px max(38px, calc(env(safe-area-inset-bottom) + 30px)) !important;
+      }
+
+      #splashOverlay.show {
+        display: block !important;
+      }
+
+      #splashOverlay .splashCard {
+        display: block !important;
+        width: min(100%, 620px) !important;
+        max-width: 620px !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        margin: 0 auto 34px !important;
+        transform: none !important;
+      }
+
+      #splashOverlay .splashHeader {
+        padding: 18px 13px 13px !important;
+      }
+
+      #splashOverlay .splashHeader h1 {
+        font-size: clamp(36px, 12vw, 58px) !important;
+        line-height: 0.95 !important;
+        letter-spacing: -1.5px !important;
+      }
+
+      #splashOverlay .splashHeader h2 {
+        margin-top: 5px !important;
+        font-size: clamp(14px, 4.4vw, 19px) !important;
+        line-height: 1.14 !important;
+      }
+
+      #splashOverlay .splashBody {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 11px !important;
+        padding: 13px !important;
+        align-items: stretch !important;
+      }
+
+      #splashOverlay .crest {
+        height: 58px !important;
+        border-radius: 14px !important;
+        font-size: 25px !important;
+      }
+
+      #splashOverlay .institution {
+        line-height: 1.34 !important;
+      }
+
+      #splashOverlay .institution .simIntro {
+        font-size: 12px !important;
+        line-height: 1.34 !important;
+        margin: 7px 0 !important;
+      }
+
+      #splashOverlay .institution .disclaimer {
+        margin-top: 9px !important;
+        padding-top: 8px !important;
+        font-size: 8.75px !important;
+        line-height: 1.24 !important;
+      }
+
+      #splashOverlay #beginTrainingBtn {
+        width: 100% !important;
+        min-height: 36px !important;
+        margin-top: 4px !important;
+      }
+    }
+
+    @media screen and (max-width: 360px), screen and (max-height: 620px) {
+      #splashOverlay {
+        padding: 10px 8px 32px !important;
+      }
+
+      #splashOverlay .splashHeader {
+        padding: 15px 11px 11px !important;
+      }
+
+      #splashOverlay .splashHeader h1 {
+        font-size: clamp(32px, 11vw, 48px) !important;
+      }
+
+      #splashOverlay .splashHeader h2 {
+        font-size: 13px !important;
+      }
+
+      #splashOverlay .splashBody {
+        padding: 11px !important;
+        gap: 9px !important;
+      }
+
+      #splashOverlay .crest {
+        height: 50px !important;
+        font-size: 22px !important;
+      }
+
+      #splashOverlay .institution .simIntro {
+        font-size: 11px !important;
+        line-height: 1.30 !important;
+      }
+
+      #splashOverlay .institution .disclaimer {
+        font-size: 8px !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -8338,6 +8564,12 @@
 
       function bind() {
         applyResponsiveLayout();
+        const splashOverlayForScroll = $('splashOverlay');
+        if (splashOverlayForScroll) {
+          splashOverlayForScroll.scrollTop = 0;
+          setTimeout(() => { splashOverlayForScroll.scrollTop = 0; }, 100);
+          setTimeout(() => { splashOverlayForScroll.scrollTop = 0; }, 500);
+        }
         window.addEventListener('resize', resize);
         window.addEventListener('orientationchange', () => setTimeout(resize, 250));
         if (window.visualViewport) {
