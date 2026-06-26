@@ -4156,6 +4156,112 @@
       gap: 6px;
     }
 
+    .kpiTrackerCard.onTrack { border-color: rgba(34,197,94,0.42); }
+    .kpiTrackerCard.atRisk { border-color: rgba(251,191,36,0.55); }
+    .kpiTrackerCard.failing { border-color: rgba(248,113,113,0.58); background: rgba(127,29,29,0.28); }
+
+    .kpiStatusLine {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .kpiStatusBadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 950;
+      color: #0f172a;
+    }
+
+    .kpiStatusBadge.onTrack { background: #bbf7d0; }
+    .kpiStatusBadge.atRisk { background: #fde68a; }
+    .kpiStatusBadge.failing { background: #fecaca; }
+
+    .financeSummaryGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 8px;
+      margin: 10px 0 12px;
+    }
+
+    .financeSummaryCard {
+      border: 1px solid rgba(56,189,248,0.22);
+      border-radius: 12px;
+      background: rgba(8,47,73,0.24);
+      padding: 9px;
+      color: #bae6fd;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .financeSummaryCard strong { display:block; color:#f0f9ff; font-size:13px; margin-bottom:3px; }
+
+    .financeCharacter {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 14px;
+      align-items: center;
+      border: 2px solid rgba(120,53,15,0.22);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(254,243,199,0.80), rgba(253,230,138,0.48));
+      color: #1f2937;
+      padding: 12px;
+      margin: 8px 0 12px;
+    }
+
+    .beanCounterArt {
+      position: relative;
+      height: 118px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #dbeafe 0 46%, #78350f 47% 100%);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 2px rgba(31,41,55,0.16);
+    }
+
+    .beanCounterArt::before {
+      content: 'B';
+      position: absolute;
+      left: 40px;
+      top: 19px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #fde68a;
+      color: #1f2937;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      font-size: 22px;
+      box-shadow: 0 26px 0 9px #334155, 0 39px 0 18px #475569;
+    }
+
+    .beanCounterArt::after {
+      content: '● ● ●';
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 13px;
+      color: #facc15;
+      font-size: 26px;
+      letter-spacing: 8px;
+      text-align: center;
+      text-shadow: 38px -4px 0 #f59e0b, 66px 2px 0 #facc15;
+    }
+
+    .financeCharacter h3 { margin: 0 0 5px; color:#78350f; font-family: Arial, Helvetica, sans-serif; }
+    .financeCharacter p { margin: 0; color:#1f2937; }
+
+    @media (max-width: 620px) {
+      .financeCharacter { grid-template-columns: 1fr; }
+      .beanCounterArt { height: 96px; }
+    }
+
     .kpiTrackerCard strong {
       color: #fef3c7;
       font-size: 13px;
@@ -4360,9 +4466,10 @@
 
         <div class="hud dashboardHud">
           <div class="pill">Day <strong id="dayHud">0</strong></div>
-          <div class="pill">Balance <strong id="cashHud">£0</strong></div>
+          <div class="pill">Budget <strong id="cashHud">£0</strong></div>
           <div class="pill">Revenue <strong id="revenueHud">£0</strong></div>
           <div class="pill">Spend <strong id="expenditureHud">£0</strong></div>
+          <div class="pill wide">KPI <strong id="kpiHud">0✓ · 0!</strong></div>
           <div class="pill wide">Sample <strong id="tonnesHud">0 / 10,000t</strong></div>
           <div class="pill wide">Goldilocks <strong id="gradeHud">0.0%</strong></div>
           <div class="pill wide machinePill">Machine <strong id="machineHud">Idle</strong></div>
@@ -4653,6 +4760,20 @@
       }
     }
 
+    let formalMusicPaused = false;
+
+    function pauseMusicForFormalModal() {
+      if (!bgMusic || !musicWanted || bgMusic.paused) return;
+      formalMusicPaused = true;
+      bgMusic.pause();
+    }
+
+    function resumeMusicAfterFormalModal() {
+      if (!formalMusicPaused) return;
+      formalMusicPaused = false;
+      if (musicWanted) startMusic();
+    }
+
 
     async function playLevelCompleteSound() {
       if (levelCompleteSound) {
@@ -4802,14 +4923,15 @@
       const TARGET_TONNES = 10000;
       const TARGET_GRADE = 14.0;
       const YEAR_LENGTH_DAYS = 365;
-      const EXPLORATION_PROGRAM_COST = 6500;
-      const DRILL_PURCHASE_COST = 28000;
-      const BOLTER_PURCHASE_COST = 36000;
-      const PILLAR_SUPPORT_COST = 1800;
-      const BELT_EXTENSION_COST = 4200;
+      const EXPLORATION_PROGRAM_COST = 4200;
+      const DRILL_PURCHASE_COST = 26000;
+      const BOLTER_PURCHASE_COST = 32000;
+      const PILLAR_SUPPORT_COST = 1200;
+      const BELT_EXTENSION_COST = 3200;
 
-      const BASE_REVENUE_PER_TONNE = 1.25;
-      const TRAM_COST = 75;
+      const BASE_REVENUE_PER_TONNE = 5.5;
+      const TRAM_COST = 55;
+      const EXPLORATION_ROW_DAYS = 90;
       const WAGE_ACCRUAL_FACTOR = 0.12;
       const SAFETY_ROLL_INTERVAL_SECONDS = 120;
       const BASE_SHIFT_TRAIT = 75;
@@ -5353,7 +5475,12 @@
         midYearReviewDone: false,
         yearReviewDue: false,
         gameOver: false,
-        cash: 0,
+        cash: 42000,
+        openingBudget: 42000,
+        revenueTarget: 65000,
+        spendLimit: 36000,
+        financeCarryForward: 0,
+        lastFinanceNotice: null,
         revenue: 0,
         expenditure: 0,
         tonnes: 0,
@@ -5407,7 +5534,8 @@
           condition: 92,
           progress: 0,
           anim: 0,
-          nextFaultDay: 18,
+          nextFaultDay: 58,
+          faultCooldownUntilDay: 45,
           faultCount: 0,
           beltExtendedToRow: START_ROW + 1
         },
@@ -5693,12 +5821,22 @@
 
       function operatingScaleFactor() {
         const y = Math.max(1, Number(state.year) || 1);
+        if (y <= 1) return 0.70;
+        if (y === 2) return 0.90;
+        if (y === 3) return 1.12;
+        if (y === 4) return 1.45;
+        if (y === 5) return 1.90;
+        return Math.min(3.25, 2.25 + (y - 6) * 0.20);
+      }
+
+      function revenueScaleFactor() {
+        const y = Math.max(1, Number(state.year) || 1);
         if (y <= 1) return 1.00;
-        if (y === 2) return 1.25;
-        if (y === 3) return 1.60;
-        if (y === 4) return 2.10;
-        if (y === 5) return 2.80;
-        return Math.min(5.0, 3.5 + (y - 6) * 0.28);
+        if (y === 2) return 1.10;
+        if (y === 3) return 1.22;
+        if (y === 4) return 1.40;
+        if (y === 5) return 1.62;
+        return Math.min(2.55, 1.82 + (y - 6) * 0.12);
       }
 
       function scaledCost(amount) {
@@ -5706,12 +5844,56 @@
       }
 
       function scaledRevenue(amount) {
-        return Math.round((Number(amount) || 0) * (1 + (operatingScaleFactor() - 1) * 0.55));
+        return Math.round((Number(amount) || 0) * revenueScaleFactor());
       }
 
       function money(v) {
         const sign = v < 0 ? '-' : '';
         return sign + '£' + Math.abs(Math.round(v)).toLocaleString();
+      }
+
+      function financePlanForYear(year, priorCash = 0) {
+        const y = Math.max(1, Number(year) || 1);
+        const base = {
+          1: { openingBudget: 42000, revenueTarget: 65000, spendLimit: 36000, note: 'Bulk sample allowance. Finance expects very little because that is cheaper.' },
+          2: { openingBudget: 68000, revenueTarget: 95000, spendLimit: 62000, note: 'Exploration enablement funding has been reluctantly attached to the reserve position already declared.' },
+          3: { openingBudget: 92000, revenueTarget: 135000, spendLimit: 82000, note: 'Technical legitimacy funding covers the early cost of making previous decisions defensible.' },
+          4: { openingBudget: 112000, revenueTarget: 185000, spendLimit: 104000, note: 'Infrastructure realisation funding recognises that belts work best when closer to work.' },
+          5: { openingBudget: 138000, revenueTarget: 245000, spendLimit: 132000, note: 'Pillar splitting funding assumes value recovery is safer when described by a consultant.' }
+        };
+        const plan = base[y] ? { ...base[y] } : {
+          openingBudget: Math.round(138000 * Math.pow(1.14, y - 5)),
+          revenueTarget: Math.round(245000 * Math.pow(1.16, y - 5)),
+          spendLimit: Math.round(132000 * Math.pow(1.13, y - 5)),
+          note: 'Mature operating funding. Success has been converted into a larger expectation.'
+        };
+        const surplusCarry = priorCash > 0 ? Math.min(9000 + y * 1200, Math.round(priorCash * 0.16)) : 0;
+        const deficitPenalty = priorCash < 0 ? Math.min(12000 + y * 1500, Math.round(Math.abs(priorCash) * 0.22)) : 0;
+        plan.carryForward = surplusCarry - deficitPenalty;
+        plan.clawback = priorCash > 0 ? Math.max(0, Math.round(priorCash - surplusCarry)) : 0;
+        plan.deficitPenalty = deficitPenalty;
+        plan.openingBudget = Math.max(18000, plan.openingBudget + plan.carryForward);
+        return plan;
+      }
+
+      function applyAnnualFinanceReset(year, priorCash = state.cash, priorRevenue = state.revenue, priorExpenditure = state.expenditure) {
+        const plan = financePlanForYear(year, priorCash);
+        state.openingBudget = plan.openingBudget;
+        state.revenueTarget = plan.revenueTarget;
+        state.spendLimit = plan.spendLimit;
+        state.financeCarryForward = plan.carryForward;
+        state.cash = plan.openingBudget;
+        state.revenue = 0;
+        state.expenditure = 0;
+        state.lastFinanceNotice = { ...plan, year, priorCash, priorRevenue, priorExpenditure };
+        return state.lastFinanceNotice;
+      }
+
+      function currentFinanceStatus() {
+        const elapsed = clamp(dayOfYear() / YEAR_LENGTH_DAYS, 0, 1);
+        const plannedSpend = (state.spendLimit || 0) * elapsed;
+        const spendVariance = state.expenditure - plannedSpend;
+        return { elapsed, plannedSpend, spendVariance };
       }
 
       function spend(amount, reason = 'Expenditure', pos = null) {
@@ -6035,6 +6217,7 @@
           updateExposedPillarsOneDay();
           if (state.day % 16 === 0) showRandomProductionComment();
           if (state.day % 24 === 0) maybeGenerateStaffBubble();
+          if (state.day % 20 === 0) maybeQueueBeltDistanceConcern();
           maybeConveyorFault();
         }
 
@@ -6606,7 +6789,7 @@
             label: 'Electrical trip',
             role: 'electrician',
             action: 'Reset Conveyor Trip',
-            cost: 350,
+            cost: 180,
             category: 'Mine Services',
             message: 'The conveyor has tripped. Electrical believes it is either a protection device or a personality trait.'
           },
@@ -6614,7 +6797,7 @@
             label: 'Buried tail end',
             role: 'miner',
             action: 'Dig Out Belt',
-            cost: 200,
+            cost: 240,
             category: 'Production',
             message: 'The conveyor tail end is buried. The belt is unavailable until someone relocates the mine from around it.'
           },
@@ -6622,7 +6805,7 @@
             label: 'Drive fault',
             role: 'fitter',
             action: 'Maintain Drive',
-            cost: 1100,
+            cost: 750,
             category: 'Maintenance',
             message: 'The conveyor drive has developed mechanical uncertainty. Maintenance has requested time, tools, and fewer questions.'
           },
@@ -6630,7 +6813,7 @@
             label: 'Mechanical stoppage',
             role: 'fitter',
             action: 'Repair Conveyor',
-            cost: 1600,
+            cost: 1100,
             category: 'Maintenance',
             message: 'The belt has stopped for mechanical reasons, which is a technical term meaning the expensive bit is unhappy.'
           }
@@ -6655,18 +6838,46 @@
         return 20 + skill * 11;
       }
 
+      function conveyorFaultIntervalDays() {
+        const y = Math.max(1, Number(state.year) || 1);
+        const conditionPenalty = state.conveyor && state.conveyor.condition < 50 ? -12 : 0;
+        if (y <= 1) return 95 + Math.floor(Math.random() * 45) + conditionPenalty;
+        if (y === 2) return 72 + Math.floor(Math.random() * 36) + conditionPenalty;
+        if (y === 3) return 52 + Math.floor(Math.random() * 32) + conditionPenalty;
+        if (y === 4) return 38 + Math.floor(Math.random() * 28) + conditionPenalty;
+        return Math.max(22, 30 + Math.floor(Math.random() * 24) + conditionPenalty);
+      }
+
+      function scheduleNextConveyorFault(minimum = 0) {
+        const interval = Math.max(minimum, conveyorFaultIntervalDays());
+        state.conveyor.nextFaultDay = state.day + interval;
+        state.conveyor.faultCooldownUntilDay = state.day + Math.max(18, Math.floor(interval * 0.45));
+      }
+
+      function weightedConveyorFaultType() {
+        const y = Math.max(1, Number(state.year) || 1);
+        let faults = y <= 1
+          ? ['trip', 'trip', 'trip', 'buried', 'buried']
+          : y === 2
+            ? ['trip', 'trip', 'buried', 'buried', 'drive']
+            : ['trip', 'buried', 'drive', 'mechanical', y >= 4 ? 'mechanical' : 'drive'];
+        if (state.conveyor.condition < 45) faults = faults.concat(['drive', 'mechanical']);
+        return faults[Math.floor(Math.random() * faults.length)];
+      }
+
       function maybeConveyorFault() {
         if (!state.running || state.paused || state.levelComplete) return;
         if (!state.conveyor || state.conveyor.status !== 'running') return;
-        if (state.day < state.conveyor.nextFaultDay) return;
+        if (state.day < state.conveyor.nextFaultDay || state.day < (state.conveyor.faultCooldownUntilDay || 0)) return;
         if (state.machine.status !== 'mining' && state.machine.status !== 'tramming') return;
 
-        if (Math.random() < 0.36) {
-          const faults = ['trip', 'buried', 'drive', 'mechanical'];
-          const type = faults[Math.floor(Math.random() * faults.length)];
-          triggerConveyorFault(type);
+        const y = Math.max(1, Number(state.year) || 1);
+        const baseChance = y <= 1 ? 0.18 : y === 2 ? 0.22 : y === 3 ? 0.27 : 0.32;
+        const conditionChance = state.conveyor.condition < 50 ? 0.10 : 0;
+        if (Math.random() < baseChance + conditionChance) {
+          triggerConveyorFault(weightedConveyorFaultType());
         } else {
-          state.conveyor.nextFaultDay = state.day + 10 + Math.floor(Math.random() * 12);
+          scheduleNextConveyorFault(18);
         }
       }
 
@@ -6677,29 +6888,34 @@
         state.conveyor.progress = 0;
         state.conveyor.faultCount++;
         state.conveyor.condition = Math.max(0, state.conveyor.condition - (type === 'trip' ? 5 : type === 'buried' ? 8 : 15));
-        state.conveyor.nextFaultDay = state.day + 14 + Math.floor(Math.random() * 14);
+        scheduleNextConveyorFault(28);
 
         stopAutoMining('Conveyor stopped. The miner has stopped automatically because mined tonnes cannot currently escape the consequences.', 'Mine Services');
         playGameSound('belt');
-        addBeltMoanBubble();
+        maybeQueueBeltDistanceConcern();
 
         showProductionComment(info.message, info.category, 8);
       }
 
-      function addBeltMoanBubble() {
-        const candidates = state.staff.filter(s =>
-          !s.bubble && ['miner', 'supervisor', 'fitter', 'electrician'].includes(s.role)
-        );
-        if (!candidates.length) return;
+      function maybeQueueBeltDistanceConcern(force = false) {
+        if (!featureUnlocked('beltAdvancement') && !force) return;
+        const active = machinePreviewOrigin(state.machine) || blockAt(MINE_ID, state.machine.r, state.machine.c);
+        const distance = beltServiceDistance(active);
+        if (!force && distance < 4.5) return;
+        const unresolved = state.queueEvents.some(ev => ev && ev.kind === 'beltDistance');
+        if (unresolved) return;
+        pushQueueEvent({
+          kind: 'beltDistance',
+          tone: 'warning',
+          icon: '↻',
+          label: 'BELT',
+          title: 'Crew Fatigue Report',
+          body: `<p>The crew have reported that the belt is now far enough from the working area that walking to it has become “a form of unpaid exploration”.</p><p><strong>Operational issue:</strong> belt distance is reducing productivity and increasing wear. Extend the centreline belt through mined-out ground to reduce the penalty.</p><p>If ignored repeatedly, this may become a formal HR grievance, because poor infrastructure eventually learns the language of people management.</p>`
+        });
+      }
 
-        const preferred = candidates.filter(s => s.role === 'miner' || s.role === 'supervisor');
-        const list = preferred.length ? preferred : candidates;
-        const s = list[Math.floor(Math.random() * list.length)];
-        s.bubble = {
-          type: Math.random() < 0.65 ? 'beltAvailability' : 'beltBlame',
-          icon: '↻'
-        };
-        playGameSound('hr');
+      function addBeltMoanBubble() {
+        maybeQueueBeltDistanceConcern(true);
       }
 
       function startConveyorFix() {
@@ -6756,6 +6972,7 @@
             state.conveyor.fault = null;
             state.conveyor.progress = 0;
             state.conveyor.condition = Math.min(100, Math.max(state.conveyor.condition, 70));
+            scheduleNextConveyorFault(state.year <= 1 ? 80 : state.year === 2 ? 58 : 36);
             showProductionComment('Conveyor available. Mine Services has restarted the belt and several arguments.', 'Mine Services');
           }
         }
@@ -6875,7 +7092,7 @@
       }
 
       function repairCost() {
-        return state.capexFreezeUntil > state.day ? 3750 : 2500;
+        return state.capexFreezeUntil > state.day ? 2900 : 1800;
       }
 
       function breakdownMachine() {
@@ -8429,9 +8646,12 @@
         const geo = geologistOnCrew();
         const drillers = drillersOnCrew();
         if (!state.assets.drillOwned || !geo || drillers.length < 2) return 0;
-        const prod = technicalAverage('attendance', drillers.concat([geo]));
-        const morale = technicalAverage('morale', drillers.concat([geo]));
-        return (2.2 + prod * 0.75) * clamp(0.78 + morale * 0.08, 0.8, 1.25);
+        const people = drillers.concat([geo]);
+        const attendance = technicalAverage('attendance', people);
+        const morale = technicalAverage('morale', people);
+        const skill = technicalAverage('skill', people);
+        const teamFactor = clamp(0.76 + attendance * 0.045 + morale * 0.025 + skill * 0.035, 0.78, 1.18);
+        return (100 / EXPLORATION_ROW_DAYS) * teamFactor;
       }
 
       function estimateGradeForBlock(actualGrade, geologist) {
@@ -8472,7 +8692,7 @@
         state.exploration.active = true;
         state.exploration.row = row;
         state.exploration.progress = 0;
-        showProductionComment('Exploration has started. The drillers are drilling, the geologist is interpreting, and Finance is regretting the word investment.', 'Exploration');
+        showProductionComment('Exploration has started. A row now takes roughly a quarter of the operating year to confirm, because reserves are apparently easier to declare than drill.', 'Exploration');
       }
 
       function completeExplorationProgram() {
@@ -8611,9 +8831,77 @@
         return clamp((value / target) * 100, 0, 160);
       }
 
-      function kpiCardHtml(title, valueText, pctValue, ok, detail) {
+      function kpiStatusMeta(status) {
+        if (status === 'onTrack') return { symbol: '✓', label: 'On track', cls: 'onTrack' };
+        if (status === 'failing') return { symbol: '✕', label: 'Failing', cls: 'failing' };
+        return { symbol: '!', label: 'At risk', cls: 'atRisk' };
+      }
+
+      function progressKpiStatus(actual, target) {
+        if (!target || target <= 0) return 'onTrack';
+        if (dayOfYear() < 20 && (Number(actual) || 0) <= 0) return 'atRisk';
+        const elapsed = clamp(dayOfYear() / YEAR_LENGTH_DAYS, 0.03, 1);
+        const expected = target * elapsed;
+        if (actual >= expected * 0.90) return 'onTrack';
+        if (actual >= expected * 0.70) return 'atRisk';
+        return 'failing';
+      }
+
+      function directKpiStatus(actual, target, tolerance = 0) {
+        if (!target || target <= 0) return 'onTrack';
+        if (actual >= target) return 'onTrack';
+        if (actual >= target - tolerance) return 'atRisk';
+        return 'failing';
+      }
+
+      function gradeKpiStatus(actual, target, tonnes) {
+        if (!target || target <= 0) return 'onTrack';
+        if (!tonnes || tonnes < Math.max(300, (state.annualTargets.tonnes || 0) * 0.04)) return dayOfYear() < 40 ? 'atRisk' : 'failing';
+        if (actual >= target) return 'onTrack';
+        if (actual >= target - 0.35) return 'atRisk';
+        return 'failing';
+      }
+
+      function budgetKpiStatus() {
+        const f = currentFinanceStatus();
+        if (!state.spendLimit) return state.cash >= 0 ? 'onTrack' : 'failing';
+        if (state.cash < 0) return 'failing';
+        if (f.elapsed < 0.05) return 'onTrack';
+        if (state.expenditure <= f.plannedSpend * 1.10 + 1200) return 'onTrack';
+        if (state.expenditure <= f.plannedSpend * 1.30 + 2500) return 'atRisk';
+        return 'failing';
+      }
+
+      function annualKpiStatusList() {
+        const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        const list = [
+          { key: 'budget', title: 'Budget', status: budgetKpiStatus() },
+          { key: 'tonnes', title: 'Tonnes', status: progressKpiStatus(yrTonnes, target.tonnes || 0) },
+          { key: 'grade', title: 'Grade', status: gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes) },
+          { key: 'exploration', title: 'Exploration', status: progressKpiStatus(exp, target.discoveredRows || 0) },
+          { key: 'safety', title: 'Safety', status: directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8) }
+        ];
+        if (target.technicalHires) list.push({ key: 'technical', title: 'Technical Team', status: progressKpiStatus(technicalTeamCoverage(), target.technicalHires) });
+        if (target.beltExtensions) list.push({ key: 'belt', title: 'Belt Advancement', status: progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions) });
+        if (target.pillarSplitTonnes) list.push({ key: 'pillar', title: 'Pillar Splitting', status: progressKpiStatus(state.pillarSplitTonnesThisYear || 0, target.pillarSplitTonnes) });
+        return list;
+      }
+
+      function kpiHudText() {
+        const list = annualKpiStatusList();
+        const ok = list.filter(x => x.status === 'onTrack').length;
+        const risk = list.filter(x => x.status === 'atRisk').length;
+        const fail = list.filter(x => x.status === 'failing').length;
+        return ok + '✓ · ' + risk + '! · ' + fail + '✕';
+      }
+
+      function kpiCardHtml(title, valueText, pctValue, status, detail) {
         const p = Math.round(clamp(pctValue, 0, 100));
-        return `<div class="kpiTrackerCard"><strong>${title}</strong><span>${valueText}</span><div class="kpiProgressTrack"><div class="kpiProgressFill ${ok ? '' : 'atRisk'}" style="width:${p}%"></div></div><span>${detail}</span></div>`;
+        const meta = kpiStatusMeta(status);
+        return `<div class="kpiTrackerCard ${meta.cls}"><div class="kpiStatusLine"><strong>${title}</strong><span class="kpiStatusBadge ${meta.cls}">${meta.symbol} ${meta.label}</span></div><span>${valueText}</span><div class="kpiProgressTrack"><div class="kpiProgressFill ${status === 'onTrack' ? '' : 'atRisk'}" style="width:${p}%"></div></div><span>${detail}</span></div>`;
       }
 
       function annualKpiTrackerHtml() {
@@ -8627,16 +8915,24 @@
         const lom = lifeOfMineMetrics();
         const gradePct = target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100;
         const safetyPct = target.safetyMin ? clamp((traitValue('safety') / target.safetyMin) * 100, 0, 120) : 100;
+        const finance = currentFinanceStatus();
+        const elapsedPct = Math.round(finance.elapsed * 100);
         const optionalCards = [];
-        if (target.technicalHires) optionalCards.push(kpiCardHtml('Technical Team', `${techHires} / ${target.technicalHires}`, pct(techHires, target.technicalHires), techHires >= target.technicalHires, 'Mining Engineer and Rock Doctor required'));
-        if (target.beltExtensions) optionalCards.push(kpiCardHtml('Belt Advancement', `${beltExt} / ${target.beltExtensions}`, pct(beltExt, target.beltExtensions), beltExt >= target.beltExtensions, 'Survey-controlled infrastructure promise'));
-        if (target.pillarSplitTonnes) optionalCards.push(kpiCardHtml('Pillar Splitting', `${Math.round(pillarSplit).toLocaleString()} / ${Math.round(target.pillarSplitTonnes).toLocaleString()}t`, pct(pillarSplit, target.pillarSplitTonnes), pillarSplit >= target.pillarSplitTonnes, 'Consultant-recovered value'));
-        return `<div class="kpiTrackerGrid">
-          ${kpiCardHtml('Annual Tonnes', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t`, pct(yrTonnes, target.tonnes), yrTonnes >= (target.tonnes || 0), yrTonnes >= (target.tonnes || 0) ? 'On or above KPI' : 'Behind KPI')}
-          ${kpiCardHtml('Goldilocks Grade', `${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%`, gradePct, yrGrade >= (target.grade || 0), 'Reconciled when mined')}
-          ${kpiCardHtml('Exploration', `${exp} / ${target.discoveredRows || 0} rows`, pct(exp, target.discoveredRows || 1), exp >= (target.discoveredRows || 0), (target.discoveredRows || 0) ? 'Required by SLT' : 'No formal requirement')}
-          ${kpiCardHtml('Safety Floor', `${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}`, safetyPct, traitValue('safety') >= (target.safetyMin || 0), 'Safety must survive year end')}
-          ${kpiCardHtml('Life of Mine', `${Math.round(lom.tonnes).toLocaleString()}t @ ${lom.grade.toFixed(2)}%`, Math.min(100, lom.tonnes / Math.max(1, target.tonnes) * 100), lom.tonnes >= Math.max(1, target.tonnes * 0.8), 'Estimated explored reserve')}
+        if (target.technicalHires) optionalCards.push(kpiCardHtml('Technical Team', `${techHires} / ${target.technicalHires}`, pct(techHires, target.technicalHires), progressKpiStatus(techHires, target.technicalHires), 'Mining Engineer and Rock Doctor required'));
+        if (target.beltExtensions) optionalCards.push(kpiCardHtml('Belt Advancement', `${beltExt} / ${target.beltExtensions}`, pct(beltExt, target.beltExtensions), progressKpiStatus(beltExt, target.beltExtensions), 'Survey-controlled infrastructure promise'));
+        if (target.pillarSplitTonnes) optionalCards.push(kpiCardHtml('Pillar Splitting', `${Math.round(pillarSplit).toLocaleString()} / ${Math.round(target.pillarSplitTonnes).toLocaleString()}t`, pct(pillarSplit, target.pillarSplitTonnes), progressKpiStatus(pillarSplit, target.pillarSplitTonnes), 'Consultant-recovered value'));
+        return `<div class="financeSummaryGrid">
+          <div class="financeSummaryCard"><strong>Annual Position</strong>Year ${state.year} · Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS} · ${elapsedPct}% elapsed</div>
+          <div class="financeSummaryCard"><strong>Budget Remaining</strong>${money(state.cash)} · Opening ${money(state.openingBudget || 0)}</div>
+          <div class="financeSummaryCard"><strong>Revenue / Spend</strong>${money(state.revenue)} generated · ${money(state.expenditure)} spent</div>
+          <div class="financeSummaryCard"><strong>Spend Plan</strong>${money(state.expenditure)} actual · ${money(finance.plannedSpend)} planned</div>
+        </div><div class="kpiTrackerGrid">
+          ${kpiCardHtml('Budget Control', `${money(state.cash)} remaining`, state.spendLimit ? pct(Math.max(0, (state.spendLimit || 0) - state.expenditure), state.spendLimit) : 100, budgetKpiStatus(), `Spend plan: ${money(finance.plannedSpend)} by today`)}
+          ${kpiCardHtml('Annual Tonnes', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t`, pct(yrTonnes, target.tonnes), progressKpiStatus(yrTonnes, target.tonnes || 0), `Expected by now: ${Math.round((target.tonnes || 0) * finance.elapsed).toLocaleString()}t`)}
+          ${kpiCardHtml('Goldilocks Grade', `${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%`, gradePct, gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes), 'Reconciled when mined')}
+          ${kpiCardHtml('Exploration', `${exp} / ${target.discoveredRows || 0} rows`, pct(exp, target.discoveredRows || 1), progressKpiStatus(exp, target.discoveredRows || 0), (target.discoveredRows || 0) ? `Expected by now: ${((target.discoveredRows || 0) * finance.elapsed).toFixed(1)} rows` : 'No formal requirement')}
+          ${kpiCardHtml('Safety Floor', `${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}`, safetyPct, directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8), 'Safety must survive year end')}
+          ${kpiCardHtml('Life of Mine', `${Math.round(lom.tonnes).toLocaleString()}t @ ${lom.grade.toFixed(2)}%`, Math.min(100, lom.tonnes / Math.max(1, target.tonnes) * 100), lom.tonnes >= Math.max(1, target.tonnes * 0.8) ? 'onTrack' : 'atRisk', 'Estimated explored reserve')}
           ${optionalCards.join('')}
         </div>`;
       }
@@ -8692,13 +8988,14 @@
         };
         const originalHtml = `<h3>Original KPI</h3><p>${Math.round(original.tonnes).toLocaleString()}t at ${original.grade.toFixed(2)}% Goldilocks Grade<br>${original.discoveredRows} exploration rows<br>Safety floor ${original.safetyMin}</p>`;
         const revisedHtml = `<h3>Revised KPI</h3><p>${Math.round(revised.tonnes).toLocaleString()}t at ${revised.grade.toFixed(2)}% Goldilocks Grade<br>${revised.discoveredRows} exploration rows<br>Safety floor ${revised.safetyMin}</p>`;
-        pushQueueEvent({
-          tone: 'warning',
-          icon: 'SLT',
-          label: 'SLT',
-          title: 'Mid-Year Alignment Review',
-          body: `<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p><div class="sltReviewBox"><div class="reviewPanel">${originalHtml}</div><div class="reviewPanel">${revisedHtml}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div>`
-        });
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Mid-Year Alignment Review';
+        $('modalBody').innerHTML = `<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p><div class="sltReviewBox"><div class="reviewPanel">${originalHtml}</div><div class="reviewPanel">${revisedHtml}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div><div class="btnRow"><button class="primary" data-close-formal-review>Accept Revised Reality</button></div>`;
+        $('modalOverlay').classList.add('show');
       }
 
       function annualReviewRatingHtml(rating) {
@@ -8735,6 +9032,7 @@
       }
 
       function openAnnualPerformanceReview(rating, fired) {
+        pauseMusicForFormalModal();
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Annual Performance Review';
@@ -8792,6 +9090,7 @@
         state.beltExtensionsThisYear = 0;
         state.pillarSplitTonnesThisYear = 0;
         state.annualTargets = targetsForYear(state.year);
+        applyAnnualFinanceReset(state.year, state.cash, state.revenue, state.expenditure);
         if (state.year >= 5) state.pillarSplittingUnlocked = true;
         state.paused = true;
         if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
@@ -8816,10 +9115,41 @@
       }
 
       function openYearStartBriefing(year) {
+        pauseMusicForFormalModal();
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Annual KPI Notice';
-        $('modalBody').innerHTML = yearStartBriefingHtml(year) + '<div class="btnRow"><button class="primary" data-open-targets-after-briefing>Review Annual KPIs</button></div>';
+        $('modalBody').innerHTML = yearStartBriefingHtml(year) + '<div class="btnRow"><button class="primary" data-open-finance-after-briefing>Proceed to Annual Budget Alignment</button></div>';
+        $('modalOverlay').classList.add('show');
+      }
+
+      function financeContinueLabel(year) {
+        if (year === 2) return 'Proceed to hire Geologist and Drillers';
+        if (year === 3) return 'Proceed to hire Technical Team';
+        if (year === 4) return 'Proceed to hire Surveyor';
+        if (year === 5) return 'Review Pillar Splitting Controls';
+        return 'Review Annual KPIs';
+      }
+
+      function openAnnualFinanceNotice(year) {
+        pauseMusicForFormalModal();
+        const notice = state.lastFinanceNotice || applyAnnualFinanceReset(year);
+        const carryText = notice.carryForward > 0
+          ? `Finance has allowed ${money(notice.carryForward)} to remain locally after demonstrating restraint.`
+          : notice.carryForward < 0
+            ? `Finance has applied a ${money(Math.abs(notice.carryForward))} confidence adjustment after last year’s position.`
+            : 'No carry-forward has been permitted because round numbers look more controlled.';
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Annual Budget Alignment';
+        $('modalBody').innerHTML = `<div class="financeCharacter"><div class="beanCounterArt" aria-hidden="true"></div><div><h3>Mr B. Counter</h3><p>Department of Financial Prevention</p><p>“Following a detailed bean-counting exercise, Finance has concluded that the targets are ambitious, the budget is appropriate, and any gap between the two is a leadership opportunity.”</p></div></div>
+          <div class="rows">
+            <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Previous Closing Position</strong><span>Revenue recognised, normalised, celebrated briefly, and removed from your control.</span></div><span class="tag">${money(notice.priorCash || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Finance Carry-forward</strong><span>${carryText}</span></div><span class="tag">${money(notice.carryForward || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Opening Budget</strong><span>Mining revenue adds to this. Costs, wages, repairs, HR, exploration and equipment subtract from it.</span></div><span class="tag">${money(state.openingBudget || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Revenue Expectation</strong><span>Finance expects the ground to pay for the plan it was not consulted on.</span></div><span class="tag">${money(state.revenueTarget || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#ef4444"></div><div><strong>Spend Limit</strong><span>Guidance only in early years; increasingly formal once optimism has scaled.</span></div><span class="tag">${money(state.spendLimit || 0)}</span></div>
+          </div><p>${escapeHtml(notice.note || '')}</p><div class="btnRow"><button class="primary" data-finance-continue>${financeContinueLabel(year)}</button></div>`;
         $('modalOverlay').classList.add('show');
       }
 
@@ -9039,6 +9369,7 @@
         $('cashHud').textContent = money(state.cash);
         const revHud = $('revenueHud'); if (revHud) revHud.textContent = money(state.revenue);
         const expHud = $('expenditureHud'); if (expHud) expHud.textContent = money(state.expenditure);
+        const kpiHud = $('kpiHud'); if (kpiHud) kpiHud.textContent = kpiHudText();
         $('tonnesHud').textContent = Math.round(annualTonnes()).toLocaleString() + ' / ' + Math.round(state.annualTargets.tonnes).toLocaleString() + 't';
         $('gradeHud').textContent = annualGrade().toFixed(1) + '%';
 
@@ -9582,9 +9913,11 @@
           const nextRow = nextExplorationRow();
           const explorationUnlocked = featureUnlocked('exploration');
           const ready = explorationUnlocked && state.assets.drillOwned && geo && drillers.length >= 2 && nextRow !== null && !state.exploration.active;
+          const activeRate = explorationRate();
+          const daysRemaining = state.exploration.active && activeRate > 0 ? Math.ceil((100 - state.exploration.progress) / activeRate) : EXPLORATION_ROW_DAYS;
           const statusText = state.exploration.active
-            ? 'Drilling Row ' + (state.exploration.row + 1) + ' · ' + Math.round(state.exploration.progress) + '%'
-            : nextRow === null ? 'All rows interpreted' : 'Next programme: Row ' + (nextRow + 1);
+            ? 'Drilling Row ' + (state.exploration.row + 1) + ' · ' + Math.round(state.exploration.progress) + '% · about ' + daysRemaining + ' days remaining'
+            : nextRow === null ? 'All rows interpreted' : 'Next programme: Row ' + (nextRow + 1) + ' · about ' + EXPLORATION_ROW_DAYS + ' days';
           body = `<p>${explorationUnlocked ? 'Exploration reveals interpreted grade, not truth. Better geologists reduce surprise; worse geologists create opportunity for later clarification.' : 'Exploration becomes available in Year 2, once the SLT requires evidence for the reserve position it has already declared.'}</p>
             <div class="explorationStatusStrip">
               <div><strong>Programme Status</strong>${statusText}</div>
@@ -9683,15 +10016,18 @@
 
         if (type === 'finance') {
           title = 'Finance';
-          body = `<p>Finance now describes the situation as a <strong>balance</strong>, because budget sounded too controllable.</p>
+          const finance = currentFinanceStatus();
+          body = `<p>Finance now describes the situation as <strong>Budget</strong>, because balance sounded like something you might be allowed to keep.</p>
                   <div class="rows">
-                    <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Revenue</strong><span>Generated mainly by mining tonnes. Higher Goldilocks Grade earns a stronger multiplier.</span></div><span class="tag">${money(state.revenue)}</span></div>
-                    <div class="row"><div class="avatarDot" style="background:#ef4444"></div><div><strong>Expenditure</strong><span>Wages, repairs, tramming, contractors, tools, and other operational surprises.</span></div><span class="tag">${money(state.expenditure)}</span></div>
-                    <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Current Balance</strong><span>Revenue minus expenditure.</span></div><span class="tag">${money(state.cash)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Budget Remaining</strong><span>Your active operating money for the current year. Mining adds to it; decisions subtract from it.</span></div><span class="tag">${money(state.cash)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Opening Budget</strong><span>Issued by Mr B. Counter at annual budget alignment.</span></div><span class="tag">${money(state.openingBudget || 0)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Revenue Generated</strong><span>Generated mainly by mining tonnes. Higher Goldilocks Grade earns a stronger multiplier.</span></div><span class="tag">${money(state.revenue)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#ef4444"></div><div><strong>Spend</strong><span>Wages, repairs, tramming, contractors, tools, support, exploration and other operational surprises.</span></div><span class="tag">${money(state.expenditure)}</span></div>
+                    <div class="row"><div class="avatarDot" style="background:#f97316"></div><div><strong>Spend Plan</strong><span>Expected spend by today: ${money(finance.plannedSpend)}. Actual variance: ${money(finance.spendVariance)}.</span></div><span class="tag">${budgetKpiStatus() === 'onTrack' ? 'On track' : budgetKpiStatus() === 'atRisk' ? 'At risk' : 'Failing'}</span></div>
                     <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Current Wage Accrual</strong><span>Charged every game day while the shift is running.</span></div><span class="tag">${money(dailyWageCost())}/day</span></div>
                   </div>
                   <p>CAPEX status: <strong>${state.capexFreezeUntil > state.day ? 'Frozen until Day ' + state.capexFreezeUntil : 'Nominally available'}</strong></p>
-                  <p>Finance note: costs remain lower when people and machines do not do anything. Production note: this has disadvantages.</p>`;
+                  <p>Finance note: unspent budget may be clawed back. Overspend may also be clawed back from next year, which Finance describes as learning.</p>`;
         }
 
         if (type === 'reports') {
@@ -9700,7 +10036,7 @@
           body = `<p>${pass || forceReportComplete ? '<strong>Module outcome:</strong> Sufficient Readiness Demonstrated.' : '<strong>Module outcome:</strong> Development Opportunity In Progress.'}</p>
                   <p>Sample mined: <strong>${Math.round(state.tonnes).toLocaleString()}t</strong></p>
                   <p>Goldilocks Grade: <strong>${grade().toFixed(2)}%</strong></p>
-                  <p>Balance: <strong>${money(state.cash)}</strong></p><p>Revenue: <strong>${money(state.revenue)}</strong> · Expenditure: <strong>${money(state.expenditure)}</strong></p>
+                  <p>Budget remaining: <strong>${money(state.cash)}</strong></p><p>Revenue: <strong>${money(state.revenue)}</strong> · Spend: <strong>${money(state.expenditure)}</strong></p>
                   <p>${pass ? 'Congratulations. You may now be given more responsibility without additional resources.' : 'Continue mining adjacent blocks until the training evidence becomes defensible.'}</p>`;
         }
 
@@ -10567,11 +10903,29 @@
             return;
           }
 
-          const openTargetsAfterBriefingBtn = e.target.closest('[data-open-targets-after-briefing]');
-          if (openTargetsAfterBriefingBtn) {
+          const openFinanceAfterBriefingBtn = e.target.closest('[data-open-finance-after-briefing]');
+          if (openFinanceAfterBriefingBtn) {
+            openAnnualFinanceNotice(state.year);
+            return;
+          }
+
+          const financeContinueBtn = e.target.closest('[data-finance-continue]');
+          if (financeContinueBtn) {
             state.paused = false;
             if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
-            openWindow('targets', false, 'New Annual KPI Notice');
+            resumeMusicAfterFormalModal();
+            if (state.year === 2 || state.year === 3 || state.year === 4) openWindow('hr', false, financeContinueLabel(state.year));
+            else if (state.year === 5) openWindow('assets', false, 'Pillar Splitting Controls');
+            else openWindow('targets', false, 'New Annual KPI Notice');
+            return;
+          }
+
+          const closeFormalReviewBtn = e.target.closest('[data-close-formal-review]');
+          if (closeFormalReviewBtn) {
+            state.paused = false;
+            if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+            closeFormalReviewBtn.closest('.overlay').classList.remove('show');
+            resumeMusicAfterFormalModal();
             return;
           }
 
@@ -10656,6 +11010,7 @@
           const closeBtn = e.target.closest('[data-close]');
           if (closeBtn) {
             closeBtn.closest('.overlay').classList.remove('show');
+            if (formalMusicPaused) resumeMusicAfterFormalModal();
             return;
           }
           const hireBtn = e.target.closest('[data-hire]');
