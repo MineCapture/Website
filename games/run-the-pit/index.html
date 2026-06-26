@@ -1327,6 +1327,24 @@
 
     .institution strong { color: #fde68a; }
 
+    .institution .simIntro {
+      font-size: 14px;
+      line-height: 1.58;
+    }
+
+    .institution .simIntro strong {
+      color: #fde68a;
+    }
+
+    .institution .disclaimer {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.14);
+      color: #94a3b8;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
     .letter {
       background: var(--paper);
       color: var(--ink);
@@ -3651,7 +3669,7 @@
           <div class="logoBox">RTP</div>
           <div class="dashboardTitle">
             <h1>Run the Pit</h1>
-            <p>Cambourne School of Mines · Faculty of Operational Excuses · S.H.A.F.T.</p>
+            <p>MineCapture · S.H.A.F.T. — Strategic Hiring And Future Talent</p>
           </div>
         </div>
 
@@ -3739,21 +3757,26 @@
     <div class="splashCard">
       <div class="splashHeader">
         <h1>Run the Pit</h1>
-        <h2>A Mine Management Readiness Simulator</h2>
+        <h2>Think you can do a better job of managing the pit? Now&rsquo;s your chance.</h2>
       </div>
       <div class="splashBody">
-        <div class="crest">CSM</div>
+        <div class="crest">MC</div>
         <div class="institution">
-          <p>
-            Presented by the <strong>Cambourne School of Mines</strong>,<br>
-            <strong>Faculty of Operational Excuses</strong>.
+          <p class="simIntro">
+            Welcome to <strong>Run the Pit</strong>, a Mine Management Training Simulation presented by
+            <strong>MineCapture</strong> in association with <strong>S.H.A.F.T.</strong> — Strategic Hiring And Future Talent.
           </p>
-          <p>
-            In association with <strong>S.H.A.F.T.</strong><br>
-            Strategic Hiring And Future Talent.
+          <p class="simIntro">
+            This simulator is designed for future and aspiring Mine Managers to test their mettle in a realistic,
+            high-paced production environment. You will need to stay agile and adaptable while dealing with the
+            many challenges of sophisticated underground mining operations, demonstrate excellent people skills
+            and conflict resolution with empathy and understanding for your workforce, and deliver against clear,
+            achievable and entirely realistic KPIs set by the Senior Leadership Team.
           </p>
-          <p>
-            Completion of this module does not guarantee competence, promotion, additional pay, or operational control.
+          <p class="disclaimer">
+            Completion of this training does not guarantee competence, promotion, additional pay, or operational control.
+            All references and characters included in this training are purely fictional, and any likeness to real life
+            is purely coincidental or accidental.
           </p>
           <button class="primary" id="beginTrainingBtn">Begin Mandatory Training</button>
         </div>
@@ -7386,7 +7409,7 @@
 
         if (type === 'hr') {
           title = 'S.H.A.F.T. Recruitment';
-          body = '<p>Available candidates have been carefully selected using the Cambourne three-stage process: availability, surname, and whether they answered the phone.</p><div class="gridCards">' +
+          body = '<p>Available candidates have been carefully selected using the S.H.A.F.T. three-stage process: availability, surname, and whether they answered the phone.</p><div class="gridCards">' +
             state.candidates.map(c => candidateCard(c)).join('') + '</div>';
         }
 
