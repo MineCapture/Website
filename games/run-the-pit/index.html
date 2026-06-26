@@ -262,6 +262,32 @@
       flex: 0 0 auto;
     }
 
+
+    .shaftHeadgearSvg {
+      width: 78%;
+      height: 78%;
+      display: block;
+      color: #1f1300;
+      filter: drop-shadow(0 1px rgba(255,255,255,0.22));
+    }
+
+    .shaftHeadgearMark {
+      stroke-width: 5.5;
+    }
+
+    .crest.shaftCrest {
+      padding: 12px;
+    }
+
+    .crest.shaftCrest .shaftHeadgearSvg {
+      width: min(128px, 92%);
+      height: min(128px, 92%);
+    }
+
+    .logoBox.shaftLogo {
+      font-size: 0;
+    }
+
     .brandText { min-width: 0; }
     .brandText h1 { margin: 0; font-size: 19px; line-height: 1.05; color: #fde68a; }
     .brandText p { margin: 4px 0 0; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4533,11 +4559,11 @@
       <section id="gradeKeyPanel" class="gradeKeyPanel" aria-label="Grade key">
         <h2>Grade Key</h2>
         <div class="gradeKeyRows">
-          <div><span style="background:#a855f7"></span>Best · 15.2%+</div>
+          <div><span style="background:#d946ef"></span>Premium · 15.2%+</div>
           <div><span style="background:#ef4444"></span>High · 14.6–15.2</div>
-          <div><span style="background:#facc15"></span>Target · 14.0–14.6</div>
-          <div><span style="background:#22c55e"></span>Marginal · 13.2–14.0</div>
-          <div><span style="background:#3b82f6"></span>Low · &lt;13.2</div>
+          <div><span style="background:#f59e0b"></span>Good · 14.0–14.6</div>
+          <div><span style="background:#a16207"></span>Marginal · 13.2–14.0</div>
+          <div><span style="background:#64748b"></span>Poor · &lt;13.2</div>
         </div>
       </section>
 
@@ -5442,11 +5468,13 @@
       };
 
       const MINE_ID = 'MINE';
-      const MINE_COLS = 10;
+      const MINE_COLS = 11;
       const MINE_ROWS = 18;
       const LOCKED_ROWS = 14;
       const START_COL = Math.floor(MINE_COLS / 2);
-      const START_ROW = MINE_ROWS - 2;
+      const ACCESS_ROW = MINE_ROWS;
+      const START_ROW = ACCESS_ROW;
+      const FIRST_MINE_ROW = MINE_ROWS - 1;
 
       const managerOptions = [
         {
@@ -5640,7 +5668,7 @@
           nextFaultDay: 58,
           faultCooldownUntilDay: 45,
           faultCount: 0,
-          beltExtendedToRow: START_ROW + 1
+          beltExtendedToRow: START_ROW
         },
         assets: {
           drillOwned: false,
@@ -5741,12 +5769,8 @@
 
         state.blocks[MINE_ID] = list;
 
-        const start = blockAt(MINE_ID, START_ROW, START_COL);
-        if (start) {
-          start.status = 'void';
-          start.tonnes = 0;
-          start.grade = 0;
-        }
+        // The miner and conveyor now start in the access row outside the ore grid.
+        // No grade block is pre-mined at setup; the first cut enters the centreline block.
       }
 
       function blockAt(q, r, c) {
@@ -5834,11 +5858,23 @@
         return { x: board.x + c * cs, y: board.y + r * cs, w: cs, h: cs };
       }
 
+      function accessCellAt(r, c) {
+        if (r === ACCESS_ROW && c >= 0 && c < MINE_COLS) {
+          return { q: MINE_ID, r, c, status: 'access', isAccess: true };
+        }
+        return null;
+      }
+
+      function cellObjectForPosition(r, c) {
+        return blockAt(MINE_ID, r, c) || accessCellAt(r, c);
+      }
+
       function machinePos() {
         const m = state.machine;
         const target = m.target ? blockAt(m.target.q, m.target.r, m.target.c) : null;
-        const b = target && (m.status === 'mining' || m.status === 'tramming') ? target : blockAt(m.q, m.r, m.c);
-        const cr = cellRect(b.q, b.r, b.c);
+        const b = target && (m.status === 'mining' || m.status === 'tramming') ? target : cellObjectForPosition(m.r, m.c);
+        if (!b) return { x: board.x + board.w / 2, y: board.infraY + board.cell * 0.5, size: board.cell };
+        const cr = cellRect(MINE_ID, b.r, b.c);
         return { x: cr.x + cr.w / 2, y: cr.y + cr.h / 2, size: cr.w };
       }
 
@@ -6141,7 +6177,7 @@
           const target = blockAt(machine.target.q, machine.target.r, machine.target.c);
           if (target) return target;
         }
-        return blockAt(MINE_ID, machine.r, machine.c);
+        return cellObjectForPosition(machine.r, machine.c);
       }
 
       function minerPreviewTargetBlock() {
@@ -7179,17 +7215,17 @@
       }
 
       function beltHeadRow() {
-        return typeof state.conveyor.beltExtendedToRow === 'number' ? state.conveyor.beltExtendedToRow : START_ROW + 1;
+        return typeof state.conveyor.beltExtendedToRow === 'number' ? state.conveyor.beltExtendedToRow : START_ROW;
       }
 
       function isActiveBeltCell(block) {
         if (!block) return false;
-        return block.c === beltColumn() && block.status === 'void' && block.r >= beltHeadRow() && block.r <= START_ROW;
+        return block.c === beltColumn() && block.status === 'void' && block.r >= beltHeadRow() && block.r <= FIRST_MINE_ROW;
       }
 
       function beltHeadLabel() {
         const head = beltHeadRow();
-        if (head > START_ROW) return 'Just south of the first mined block';
+        if (head > FIRST_MINE_ROW) return 'Access row, just south of the first mine block';
         return 'Row ' + (head + 1) + ', Column ' + (beltColumn() + 1);
       }
 
@@ -7412,7 +7448,7 @@
           gravity: 120,
           size: rand(3, 7),
           life: rand(0.55, 1.05),
-          colour: block.grade >= 14.5 ? '#f472b6' : '#a16207',
+          colour: gradeColour(block.grade),
           rot: rand(0, Math.PI), spin: rand(-8, 8)
         });
       }
@@ -7748,11 +7784,11 @@
       }
 
       function gradeColour(g) {
-        if (g >= 15.2) return '#a855f7'; // best grade: bright purple
-        if (g >= 14.6) return '#ef4444'; // second grade: red
-        if (g >= 14.0) return '#facc15'; // third grade: yellow
-        if (g >= 13.2) return '#22c55e'; // fourth grade: green
-        return '#3b82f6'; // bottom grade: blue
+        if (g >= 15.2) return '#d946ef'; // premium: vivid magenta-purple
+        if (g >= 14.6) return '#ef4444'; // high: hot red
+        if (g >= 14.0) return '#f59e0b'; // good: orange / gold
+        if (g >= 13.2) return '#a16207'; // marginal: ochre / brown
+        return '#64748b'; // poor: slate grey
       }
 
       function drawCracks(r, progress) {
@@ -7773,47 +7809,135 @@
 
       function drawShaft() {
         const b = board;
-        const startRect = cellRect(MINE_ID, START_ROW, START_COL);
-        const shaftR = Math.max(20, b.cell * 0.72);
-        const shaftX = b.x + b.cell * 2.2;
-        const shaftY = b.infraY + b.infraH * 0.52;
+        const cs = b.cell;
+        const headX = b.x + cs * 1.95;
+        const baseY = b.infraY + b.infraH * 0.84;
+        const rigH = Math.max(cs * 2.15, 68);
+        const rigW = Math.max(cs * 2.05, 70);
+        const topY = baseY - rigH;
+        const wheelR = Math.max(cs * 0.26, 10);
+        const wheelX = headX + rigW * 0.50;
+        const wheelY = topY + rigH * 0.22;
+        const conveyorJoinX = headX + rigW * 0.86;
+        const conveyorJoinY = baseY - rigH * 0.18;
 
-        drawConveyorNetwork(shaftX + shaftR * 0.85, shaftY);
+        drawConveyorNetwork(conveyorJoinX, conveyorJoinY);
+
+        const running = state.conveyor && state.conveyor.status === 'running';
+        const windingAngle = running ? anim * 2.2 : anim * 0.25;
+        const cageBob = running ? Math.sin(anim * 2.2) * Math.max(1.5, cs * 0.03) : 0;
 
         ctx.save();
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.arc(shaftX, shaftY, shaftR, 0, Math.PI * 2);
-        ctx.fill();
 
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = Math.max(3, b.cell * 0.09);
-        ctx.beginPath();
-        ctx.arc(shaftX, shaftY, shaftR - 3, 0, Math.PI * 2);
+        // Subtle concrete/plinth pad
+        ctx.fillStyle = 'rgba(15,23,42,0.88)';
+        roundRect(ctx, headX - rigW * 0.18, baseY - cs * 0.14, rigW * 1.36, cs * 0.28, Math.max(4, cs * 0.08));
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(148,163,184,0.45)';
+        ctx.lineWidth = Math.max(1, cs * 0.025);
+        roundRect(ctx, headX - rigW * 0.18, baseY - cs * 0.14, rigW * 1.36, cs * 0.28, Math.max(4, cs * 0.08));
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        // Headgear legs and bracing. Drawn as the same simple inline-vector style as the machines.
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = Math.max(3, cs * 0.08);
         ctx.beginPath();
-        ctx.arc(shaftX, shaftY, shaftR * 0.62, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(headX + rigW * 0.18, baseY);
+        ctx.lineTo(headX + rigW * 0.42, topY + rigH * 0.15);
+        ctx.lineTo(headX + rigW * 0.58, topY + rigH * 0.15);
+        ctx.lineTo(headX + rigW * 0.84, baseY);
+        ctx.stroke();
 
-        ctx.strokeStyle = 'rgba(148,163,184,0.55)';
-        ctx.lineWidth = 1.5;
-        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+        ctx.strokeStyle = 'rgba(186,230,253,0.82)';
+        ctx.lineWidth = Math.max(2, cs * 0.05);
+        ctx.beginPath();
+        ctx.moveTo(headX + rigW * 0.30, baseY - rigH * 0.34);
+        ctx.lineTo(headX + rigW * 0.72, baseY - rigH * 0.34);
+        ctx.moveTo(headX + rigW * 0.36, baseY - rigH * 0.54);
+        ctx.lineTo(headX + rigW * 0.66, baseY - rigH * 0.54);
+        ctx.moveTo(headX + rigW * 0.26, baseY);
+        ctx.lineTo(headX + rigW * 0.74, baseY - rigH * 0.34);
+        ctx.moveTo(headX + rigW * 0.76, baseY);
+        ctx.lineTo(headX + rigW * 0.28, baseY - rigH * 0.34);
+        ctx.stroke();
+
+        // Sheave house / cap beam
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = Math.max(2, cs * 0.05);
+        ctx.beginPath();
+        ctx.moveTo(headX + rigW * 0.32, topY + rigH * 0.15);
+        ctx.lineTo(headX + rigW * 0.46, topY + rigH * 0.02);
+        ctx.lineTo(headX + rigW * 0.72, topY + rigH * 0.02);
+        ctx.lineTo(headX + rigW * 0.60, topY + rigH * 0.15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Animated winding wheel
+        ctx.save();
+        ctx.translate(wheelX, wheelY);
+        ctx.rotate(windingAngle);
+        ctx.fillStyle = '#111827';
+        ctx.strokeStyle = '#fef3c7';
+        ctx.lineWidth = Math.max(2.2, cs * 0.055);
+        ctx.beginPath();
+        ctx.arc(0, 0, wheelR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = Math.max(1.3, cs * 0.034);
+        for (let i = 0; i < 6; i++) {
+          const a = i * Math.PI / 3;
           ctx.beginPath();
-          ctx.moveTo(shaftX, shaftY);
-          ctx.lineTo(shaftX + Math.cos(a) * shaftR * 0.80, shaftY + Math.sin(a) * shaftR * 0.80);
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(a) * wheelR * 0.86, Math.sin(a) * wheelR * 0.86);
           ctx.stroke();
         }
+        ctx.fillStyle = '#fef3c7';
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(2.5, wheelR * 0.18), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
+        // Rope and cage
+        const ropeX = wheelX + Math.sin(windingAngle) * wheelR * 0.24;
+        const cageTop = baseY - rigH * 0.40 + cageBob;
+        const cageW = Math.max(cs * 0.34, 12);
+        const cageH = Math.max(cs * 0.42, 14);
+        ctx.strokeStyle = 'rgba(226,232,240,0.90)';
+        ctx.lineWidth = Math.max(1.4, cs * 0.032);
+        ctx.beginPath();
+        ctx.moveTo(ropeX, wheelY + wheelR * 0.75);
+        ctx.lineTo(ropeX, cageTop);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(30,41,59,0.96)';
+        ctx.strokeStyle = '#bae6fd';
+        ctx.lineWidth = Math.max(1.2, cs * 0.03);
+        roundRect(ctx, ropeX - cageW / 2, cageTop, cageW, cageH, Math.max(2, cs * 0.035));
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(186,230,253,0.55)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(ropeX - cageW * 0.25, cageTop + 2);
+        ctx.lineTo(ropeX - cageW * 0.25, cageTop + cageH - 2);
+        ctx.moveTo(ropeX + cageW * 0.25, cageTop + 2);
+        ctx.lineTo(ropeX + cageW * 0.25, cageTop + cageH - 2);
+        ctx.stroke();
+
+        // Small label, no longer the main graphic.
         ctx.fillStyle = '#bae6fd';
-        ctx.font = '900 ' + Math.max(9, b.cell * 0.24) + 'px Arial';
+        ctx.font = '900 ' + Math.max(8, cs * 0.17) + 'px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('SHAFT', shaftX, shaftY - 2);
-        ctx.font = '700 ' + Math.max(7, b.cell * 0.17) + 'px Arial';
+        ctx.fillText('SURFACE', headX + rigW * 0.51, baseY + cs * 0.24);
+        ctx.font = '700 ' + Math.max(7, cs * 0.14) + 'px Arial';
         ctx.fillStyle = '#cbd5e1';
-        ctx.fillText('Surface-ish', shaftX, shaftY + shaftR * 0.42);
+        ctx.fillText('winder-ish', headX + rigW * 0.51, baseY + cs * 0.46);
         ctx.restore();
       }
 
@@ -8344,7 +8468,8 @@
       function bolterPos() {
         const b = state.bolter;
         const target = b.target ? blockAt(b.target.q, b.target.r, b.target.c) : null;
-        const cell = target && b.status === 'tramming' ? target : blockAt(MINE_ID, b.r, b.c);
+        const cell = target && b.status === 'tramming' ? target : cellObjectForPosition(b.r, b.c);
+        if (!cell) return { x: board.x + board.w / 2, y: board.infraY + board.cell * 0.5, size: board.cell };
         const cr = cellRect(MINE_ID, cell.r, cell.c);
         return { x: cr.x + cr.w / 2, y: cr.y + cr.h / 2, size: cr.w };
       }
@@ -8753,8 +8878,22 @@
         ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.stroke();
         ctx.fillStyle = '#fde68a'; ctx.font = '800 13px Arial'; ctx.textAlign = 'left';
         ctx.fillText('Grade Key', x + 12, y + 22);
-        const labels = [['#7e22ce','15.8%+'],['#c026d3','15.0–15.8'],['#ec4899','14.2–15.0'],['#f59e0b','13.7–14.2'],['#78350f','<13.0']];
-        labels.forEach((l, i) => { ctx.fillStyle = l[0]; ctx.fillRect(x + 12, y + 38 + i*18, 20, 12); ctx.fillStyle = '#cbd5e1'; ctx.font = '11px Arial'; ctx.fillText(l[1], x + 40, y + 48 + i*18); });
+        const labels = [
+          ['#d946ef','Premium 15.2%+'],
+          ['#ef4444','High 14.6–15.2'],
+          ['#f59e0b','Good 14.0–14.6'],
+          ['#a16207','Marginal 13.2–14.0'],
+          ['#64748b','Poor <13.2']
+        ];
+        labels.forEach((l, i) => {
+          ctx.fillStyle = l[0];
+          ctx.fillRect(x + 12, y + 38 + i*18, 20, 12);
+          ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+          ctx.strokeRect(x + 12, y + 38 + i*18, 20, 12);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '11px Arial';
+          ctx.fillText(l[1], x + 40, y + 48 + i*18);
+        });
         ctx.restore();
       }
 
@@ -8975,7 +9114,7 @@
         state.conveyor.status = 'running';
         state.conveyor.fault = null;
         state.conveyor.progress = 0;
-        state.conveyor.beltExtendedToRow = START_ROW + 1;
+        state.conveyor.beltExtendedToRow = START_ROW;
         state.exploration.active = false;
         state.exploration.row = LOCKED_ROWS - 1;
         state.exploration.progress = 0;
@@ -10250,7 +10389,7 @@
         $('startBtn').textContent = 'Running';
         $('startBtn').disabled = true;
         hideProductionComment();
-        showProductionComment('Right. Directional mining is live. Use the remote in the toolbar to move up, left, or right through the explored area. The locked grey zone is tomorrow’s funding problem.', 'Production');
+        showProductionComment('Right. Directional mining is live. Use the remote in the toolbar to drive north from the access row into the first centreline block, then mine left or right through the explored area. The locked grey zone is tomorrow’s funding problem.', 'Production');
       }
 
       function showToast(text) {
