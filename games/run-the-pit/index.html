@@ -16001,6 +16001,232 @@
         }
       }, true);
 
+      /* KPI unlock guards: SLT can only score mechanics and metrics that have actually been unlocked. */
+      const baseTargetsForYearForUnlockGuards = targetsForYear;
+
+      function metricUnlockedForYear(metric, year = state.year) {
+        const y = Math.max(1, Number(year) || 1);
+        if (metric === 'tonnes' || metric === 'grade') return true;
+        if (metric === 'revenue' || metric === 'lom') return y >= 2;
+        if (metric === 'finance' || metric === 'safety') return y >= 3;
+        if (metric === 'sharePrice') return y >= 4;
+        return true;
+      }
+
+      function mechanicUnlockedForKpi(key) {
+        if (key === 'exploration') return featureUnlocked('exploration');
+        if (key === 'technicalHires') return featureUnlocked('technicalTeam');
+        if (key === 'groundSupport' || key === 'pillarSupports' || key === 'maxPillarFailures') return featureUnlocked('groundSupport');
+        if (key === 'beltExtensions') return featureUnlocked('beltAdvancement');
+        if (key === 'secondMiner') return featureUnlocked('secondMiner');
+        if (key === 'gasWater') return featureUnlocked('gasWater');
+        if (key === 'ventilation') return featureUnlocked('ventilation');
+        return true;
+      }
+
+      function sanitiseAnnualTargetsForUnlocks(raw = {}, year = state.year) {
+        const t = { ...(raw || {}) };
+
+        if (!metricUnlockedForYear('safety', year)) t.safetyMin = 0;
+        if (!mechanicUnlockedForKpi('exploration')) t.discoveredRows = 0;
+        if (!mechanicUnlockedForKpi('technicalHires')) t.technicalHires = 0;
+        if (!mechanicUnlockedForKpi('beltExtensions')) t.beltExtensions = 0;
+
+        if (!mechanicUnlockedForKpi('groundSupport')) {
+          t.pillarSupports = 0;
+          t.maxPillarFailures = 99;
+        }
+
+        if (!mechanicUnlockedForKpi('gasWater')) {
+          t.gasEvents = 0;
+          t.waterEvents = 0;
+          t.gasWaterIncidents = 0;
+        }
+
+        if (!mechanicUnlockedForKpi('ventilation')) {
+          t.ventilationActions = 0;
+          t.heatEvents = 0;
+        }
+
+        // Keep base business targets intact. These scale by year, not by depth.
+        t.tonnes = Number(t.tonnes || TARGET_TONNES);
+        t.grade = Number(t.grade || TARGET_GRADE);
+        t.discoveredRows = Math.max(0, Number(t.discoveredRows) || 0);
+        t.safetyMin = Math.max(0, Number(t.safetyMin) || 0);
+        t.technicalHires = Math.max(0, Number(t.technicalHires) || 0);
+        t.beltExtensions = Math.max(0, Number(t.beltExtensions) || 0);
+        t.pillarSupports = Math.max(0, Number(t.pillarSupports) || 0);
+        t.maxPillarFailures = typeof t.maxPillarFailures === 'number' ? t.maxPillarFailures : 99;
+        return t;
+      }
+
+      targetsForYear = function(year) {
+        return sanitiseAnnualTargetsForUnlocks(baseTargetsForYearForUnlockGuards(year), year);
+      };
+
+      function activeAnnualTargets() {
+        const current = state.annualTargets || targetsForYear(state.year);
+        return sanitiseAnnualTargetsForUnlocks(current, state.year);
+      }
+
+      function applyAnnualTargetUnlockGuards() {
+        state.annualTargets = activeAnnualTargets();
+        return state.annualTargets;
+      }
+
+      function targetSummaryHtml(target = activeAnnualTargets()) {
+        const t = sanitiseAnnualTargetsForUnlocks(target, state.year);
+        const lines = [
+          `${Math.round(t.tonnes).toLocaleString()}t mined`,
+          `${Number(t.grade || 0).toFixed(2)}% Goldilocks Grade`
+        ];
+        if (metricUnlockedForYear('revenue') && state.revenueTarget) lines.push(`${money(state.revenueTarget)} revenue`);
+        if (metricUnlockedForYear('finance')) lines.push('Positive Operating Surplus');
+        if ((t.discoveredRows || 0) > 0) lines.push(`${t.discoveredRows} exploration rows`);
+        if ((t.technicalHires || 0) > 0) lines.push(`${t.technicalHires} Technical Team hires`);
+        if ((t.beltExtensions || 0) > 0) lines.push(`${t.beltExtensions} belt advancement actions`);
+        if ((t.pillarSupports || 0) > 0) lines.push(`${t.pillarSupports} pillar supports`);
+        if (typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99) lines.push(`maximum ${t.maxPillarFailures} pillar failures`);
+        if ((t.safetyMin || 0) > 0) lines.push(`Safety floor ${t.safetyMin}`);
+        if (metricUnlockedForYear('sharePrice')) lines.push(`Share Price target ${formatSharePrice(state.sharePriceTarget)}`);
+        return '<ul>' + lines.map(line => '<li>' + escapeHtml(line) + '</li>').join('') + '</ul>';
+      }
+
+      activeKpiMetrics = function() {
+        const y = Math.max(1, Number(state.year) || 1);
+        return {
+          tonnes: true,
+          grade: true,
+          revenue: metricUnlockedForYear('revenue', y),
+          finance: metricUnlockedForYear('finance', y),
+          sharePrice: metricUnlockedForYear('sharePrice', y),
+          safety: metricUnlockedForYear('safety', y),
+          lom: metricUnlockedForYear('lom', y)
+        };
+      };
+
+      progressiveKpiRows = function() {
+        ensureSharePriceState();
+        const target = activeAnnualTargets();
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        const metrics = activeKpiMetrics();
+        const rows = [
+          { key: 'tonnes', title: 'Mined Tonnes', status: progressKpiStatus(yrTonnes, target.tonnes || 0) },
+          { key: 'grade', title: 'Goldilocks Grade', status: gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes) }
+        ];
+        if (metrics.revenue) rows.push({ key: 'revenue', title: 'Revenue', status: progressKpiStatus(state.revenue || 0, state.revenueTarget || 0) });
+        if (metrics.finance) rows.push({ key: 'surplus', title: 'Operating Surplus', status: budgetKpiStatus() });
+        if ((target.discoveredRows || 0) > 0) rows.push({ key: 'exploration', title: 'Exploration', status: progressKpiStatus(exp, target.discoveredRows || 0) });
+        if ((target.technicalHires || 0) > 0) rows.push({ key: 'technical', title: 'Technical Team', status: progressKpiStatus(technicalTeamCoverage(), target.technicalHires) });
+        if ((target.beltExtensions || 0) > 0) rows.push({ key: 'belt', title: 'Belt Advancement', status: progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions) });
+        if ((target.pillarSupports || 0) > 0) rows.push({ key: 'pillarSupport', title: 'Pillar Support', status: progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports) });
+        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) rows.push({ key: 'pillarFailures', title: 'Pillar Failures', status: annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing' });
+        if (metrics.safety && (target.safetyMin || 0) > 0) rows.push({ key: 'safety', title: 'Safety Floor', status: directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8) });
+        if (metrics.sharePrice) rows.push({ key: 'sharePrice', title: 'Share Price', status: sharePriceKpiStatus() });
+        return rows;
+      };
+
+      annualKpiStatusList = function() {
+        return progressiveKpiRows();
+      };
+
+      annualTargetPassed = function() {
+        return annualKpiStatusList().every(x => x.status === 'onTrack');
+      };
+
+      annualKpiTrackerHtml = function() {
+        ensureSharePriceState();
+        const target = activeAnnualTargets();
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        const finance = currentFinanceStatus();
+        const metrics = activeKpiMetrics();
+        const cards = [];
+        cards.push(kpiCardHtml('Mined Tonnes', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t`, pct(yrTonnes, target.tonnes), progressKpiStatus(yrTonnes, target.tonnes || 0), `Expected by now: ${Math.round((target.tonnes || 0) * finance.elapsed).toLocaleString()}t`));
+        cards.push(kpiCardHtml('Goldilocks Grade', `${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%`, target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100, gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes), 'Reconciled when mined'));
+        if (metrics.revenue) cards.push(kpiCardHtml('Revenue', `${money(state.revenue || 0)} / ${money(state.revenueTarget || 0)}`, pct(state.revenue || 0, state.revenueTarget || 1), progressKpiStatus(state.revenue || 0, state.revenueTarget || 0), 'SLT has discovered that some tonnes are worth more than others'));
+        if (metrics.finance) cards.push(kpiCardHtml('Operating Surplus', `${money(state.cash)} current`, state.cash >= 0 ? 100 : 0, budgetKpiStatus(), 'Revenue is important, but Finance now insists costs also exist'));
+        if ((target.discoveredRows || 0) > 0) cards.push(kpiCardHtml('Exploration', `${exp} / ${target.discoveredRows || 0} rows`, pct(exp, target.discoveredRows || 1), progressKpiStatus(exp, target.discoveredRows || 0), `Expected by now: ${((target.discoveredRows || 0) * finance.elapsed).toFixed(1)} rows`));
+        if ((target.technicalHires || 0) > 0) cards.push(kpiCardHtml('Technical Team', `${technicalTeamCoverage()} / ${target.technicalHires}`, pct(technicalTeamCoverage(), target.technicalHires), progressKpiStatus(technicalTeamCoverage(), target.technicalHires), 'Mining Engineer and Rock Doctor required'));
+        if ((target.beltExtensions || 0) > 0) cards.push(kpiCardHtml('Belt Advancement', `${state.beltExtensionsThisYear || 0} / ${target.beltExtensions}`, pct(state.beltExtensionsThisYear || 0, target.beltExtensions), progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions), 'Survey-controlled infrastructure promise'));
+        if ((target.pillarSupports || 0) > 0) cards.push(kpiCardHtml('Pillar Support', `${state.pillarSupportsThisYear || 0} / ${target.pillarSupports}`, pct(state.pillarSupportsThisYear || 0, target.pillarSupports), progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports), 'Preventative support, not safety-score farming'));
+        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) cards.push(kpiCardHtml('Pillar Failures', `${annualPillarFailures()} / ${target.maxPillarFailures} allowed`, annualPillarFailures() <= target.maxPillarFailures ? 100 : 0, annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing', 'Pillar bursts damage the failed pillar and two adjacent blocks'));
+        if (metrics.safety && (target.safetyMin || 0) > 0) cards.push(kpiCardHtml('Safety Floor', `${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}`, target.safetyMin ? clamp((traitValue('safety') / target.safetyMin) * 100, 0, 120) : 100, directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8), 'Safety must survive year end'));
+        if (metrics.sharePrice) cards.push(kpiCardHtml('Share Price', `${formatSharePrice()} / ${formatSharePrice(state.sharePriceTarget)}`, pct(state.sharePrice, state.sharePriceTarget || 1), sharePriceKpiStatus(), 'External confidence, market gossip, and executive share awards'));
+        const overallStatus = aggregateKpiStatus(annualKpiStatusList());
+        const summaryBits = [`Year ${state.year}`, `Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}`, `${Math.round(finance.elapsed * 100)}% elapsed`];
+        if (metrics.sharePrice) summaryBits.push(`Share ${formatSharePrice()}`);
+        return `<div class="financeSummaryGrid">
+          <div class="financeSummaryCard ${statusCssClass(overallStatus)}"><strong>Annual Position</strong>${summaryBits.join(' · ')}</div>
+          <div class="financeSummaryCard"><strong>Active SLT Metrics</strong>${annualKpiStatusList().map(x => escapeHtml(x.title)).join(' · ')}</div>
+        </div><div class="kpiTrackerGrid">${cards.join('')}</div>`;
+      };
+
+      const baseTriggerMidYearReviewForKpiGuards = triggerMidYearReview;
+      triggerMidYearReview = function() {
+        applyAnnualTargetUnlockGuards();
+        const t = state.annualTargets;
+        const original = { ...t };
+        let reason = '';
+        if (annualTonnes() > (t.tonnes || TARGET_TONNES) * 0.55) {
+          t.tonnes = Math.round((t.tonnes || TARGET_TONNES) * 1.18);
+          t.grade = Math.max(t.grade || TARGET_GRADE, TARGET_GRADE + ((state.year || 1) <= 1 ? 0.10 : 0.25));
+          reason = 'Production is ahead of plan, so the original plan has been reclassified as insufficiently ambitious.';
+        } else if (featureUnlocked('exploration')) {
+          t.discoveredRows = Math.max(t.discoveredRows || 0, 1);
+          reason = 'Sales and Marketing have announced a product stream requiring improved confidence in future supply. This could not have been anticipated, except by anyone aware R&D began three years ago.';
+        } else {
+          t.tonnes = Math.round((t.tonnes || TARGET_TONNES) * 1.08);
+          reason = 'The bulk sample has generated enough confidence for the SLT to request a larger bulk sample while continuing to describe it as a trial.';
+        }
+        state.annualTargets = sanitiseAnnualTargetsForUnlocks(t, state.year);
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Mid-Year Alignment Review';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Strategic Adjustment Without Accountability', 'The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.', 'SLT')}<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p><div class="sltReviewBox"><div class="reviewPanel"><h3>Original KPI</h3>${targetSummaryHtml(original)}</div><div class="reviewPanel"><h3>Revised KPI</h3>${targetSummaryHtml(state.annualTargets)}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div><div class="btnRow"><button class="primary" data-close-formal-review>Accept Revised Reality</button></div>`;
+        $('modalOverlay').classList.add('show');
+      };
+
+      const baseUpdateHudForKpiGuards = updateHud;
+      updateHud = function() {
+        applyAnnualTargetUnlockGuards();
+        baseUpdateHudForKpiGuards();
+      };
+
+      const baseDevActionForKpiGuards = devAction;
+      devAction = function(action) {
+        if (action === 'kpi-guards-refresh') {
+          applyAnnualTargetUnlockGuards();
+          showProductionComment('Dev: KPI unlock guards reapplied. SLT has been prevented from measuring locked systems, temporarily.', 'Dev Tools', 5);
+          return;
+        }
+        if (action === 'kpi-guards-show') {
+          applyAnnualTargetUnlockGuards();
+          openMiniWindow('Active SLT KPI Package', `<p>Current level: <strong>${currentLevelName()}</strong>. Operating Year: <strong>${state.year}</strong>.</p><p>Only unlocked metrics and mechanics are active:</p>${targetSummaryHtml(state.annualTargets)}`, true);
+          return;
+        }
+        return baseDevActionForKpiGuards(action);
+      };
+
+      const baseEnhanceDevToolsForKpiGuards = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForKpiGuards();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-kpi-guard-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-kpi-guard-dev-tools>
+          <section class="devToolCard"><h3>KPI Unlock Guards</h3><p>Test that SLT targets only score metrics and mechanics unlocked by the current year and depth.</p><div class="devToolBtns"><button data-dev-action="kpi-guards-refresh">Reapply KPI Guards</button><button data-dev-action="kpi-guards-show">Show Active KPI Package</button></div></section>
+        </div>`);
+      };
+
+      applyAnnualTargetUnlockGuards();
+
+
       ensureSharePriceState();
 
       applyResponsiveLayout();
