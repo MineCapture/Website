@@ -4814,6 +4814,7 @@
           <div class="pill wide">Mined Tonnes <strong id="tonnesHud">0 / 10,000t</strong></div>
           <div class="pill wide">Goldilocks Grade <strong id="gradeHud">0.0%</strong></div>
           <div class="pill wide">LOM Reserve <strong id="lomHud">0kt @ 0.0%</strong></div>
+          <div class="pill wide" id="pillarHudPill" style="display:none">Pillar Split <strong id="pillarHud">0 / 3.0kt</strong></div>
           <div class="pill wide machinePill">Machine <strong id="machineHud">Idle</strong></div>
         </div>
 
@@ -5956,6 +5957,8 @@
         hseInspectionDoneThisYear: false,
         hseFines: 0,
         hseInspections: 0,
+        meetingEventDoneThisYear: false,
+        meetingEvents: 0,
         lifetimeRevenue: 0,
         lifetimeExpenditure: 0,
         skipFactorTotalTonnes: 0,
@@ -6251,7 +6254,7 @@
       }
 
       function lifeOfMineMetrics() {
-        const discovered = (state.blocks[MINE_ID] || []).filter(b => b.status !== 'locked' && b.status !== 'void' && typeof b.estimatedGrade === 'number' && b.tonnes > 0);
+        const discovered = (state.blocks[MINE_ID] || []).filter(b => b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble' && typeof b.estimatedGrade === 'number' && b.tonnes > 0);
         const tonnes = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
         const gradeT = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade) || 0), 0);
         return { tonnes, grade: tonnes > 0 ? gradeT / tonnes : 0, blocks: discovered.length };
@@ -6791,6 +6794,7 @@
             if (maybeMandatorySafetyStanddown()) break;
             if (maybeHseInspectionEvent()) break;
             if (maybeSkipFactorEvent()) break;
+            if (maybePointlessMeetingEvent()) break;
           }
           maybeConveyorFault();
         }
@@ -7457,6 +7461,93 @@
           button: passed ? 'File the Report Before They Change Their Mind' : 'Accept Statutory Learning Opportunity'
         });
         showProductionComment(passed ? 'HSE found no infractions, this time. Paperwork has briefly aligned with reality.' : 'HSE has issued a fine. Safety has asked whether this can be coded to Production.', 'Safety', 8);
+      }
+
+      function meetingEvents() {
+        return [
+          {
+            tone: 'warning',
+            pct: -0.018,
+            traits: { productivity: -2, morale: -1 },
+            text: 'You have been invited to a meeting which could have been an email, on a topic where your contribution is neither required nor desired. Several attendees ask questions that were answered in the first slide. One person raises a point unrelated to the agenda but important to their personal visibility. While you are away, production continues in earnest, which appears to have included some avoidable interpretation of your instructions.',
+            impact: 'Annual mined tonnes reduced. Productivity and morale reduced.'
+          },
+          {
+            tone: 'info',
+            pct: 0.012,
+            traits: { morale: -1 },
+            text: 'You have been invited to a meeting which could have been an email. The meeting over-runs, generates three actions for people not present, and concludes that a follow-up meeting is required. While you are away, production continues in earnest and briefly improves because nobody is available to interfere.',
+            impact: 'Annual mined tonnes increased slightly. Morale reduced.'
+          },
+          {
+            tone: 'warning',
+            cost: 850,
+            traits: { productivity: -1 },
+            text: 'You have been invited to a meeting to align on alignment. The agenda is amended during the meeting to include matters outside the agenda. Several people ask whether the action tracker will be tracked. While you are away, production continues in earnest and Administration discovers a charge code.',
+            impact: 'Small budget cost and productivity loss.'
+          },
+          {
+            tone: 'warning',
+            pct: -0.01,
+            traits: { skill: -1 },
+            text: 'You have been invited to a meeting because your name was visible on an organisational chart. No decision is made, but several decisions are implied. While you are away, production continues in earnest using yesterday’s assumptions, which are now considered out of date.',
+            impact: 'Annual mined tonnes reduced slightly. Skill confidence reduced.'
+          }
+        ];
+      }
+
+      function maybePointlessMeetingEvent() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.meetingEventDoneThisYear) return false;
+        const doy = dayOfYear();
+        if (doy < 45 || doy > YEAR_LENGTH_DAYS - 30) return false;
+        const chance = clamp(0.060 + Math.max(0, state.year - 1) * 0.007, 0.05, 0.13);
+        if (Math.random() > chance) return false;
+        const list = meetingEvents();
+        return applyPointlessMeetingEvent(list[Math.floor(Math.random() * list.length)]);
+      }
+
+      function applyPointlessMeetingEvent(event) {
+        if (!event) return false;
+        state.meetingEventDoneThisYear = true;
+        state.meetingEvents = (state.meetingEvents || 0) + 1;
+        const impacts = [];
+
+        if (event.pct) {
+          const annual = annualTonnes();
+          const base = Math.max(annual, 2500);
+          const delta = Math.round(base * event.pct);
+          if (delta) {
+            const currentGrade = annualGrade() || grade() || TARGET_GRADE;
+            state.tonnes = Math.max(state.yearStartTonnes || 0, state.tonnes + delta);
+            state.k2oTonnes = Math.max(state.yearStartK2oTonnes || 0, state.k2oTonnes + delta * currentGrade);
+            impacts.push(`${delta > 0 ? '+' : ''}${Math.round(delta).toLocaleString()}t reported mined tonnes`);
+          }
+        }
+
+        if (event.cost) {
+          spend(event.cost, 'Meeting consequence');
+          impacts.push('-' + money(event.cost));
+        }
+
+        for (const [trait, delta] of Object.entries(event.traits || {})) {
+          adjustTrait(trait, delta);
+          impacts.push((delta > 0 ? '+' : '') + delta + ' ' + traitLabel(trait));
+        }
+
+        const impactText = impacts.length ? impacts.join(' · ') : (event.impact || 'No measurable benefit identified.');
+        openOperationalEventModal({
+          title: 'Meeting Invitation',
+          image: 'assets/characters/meeting-that-could-have-been-email.png',
+          character: 'Corporate Alignment Forum',
+          department: 'Meeting Generation Office',
+          label: 'MTG',
+          tone: event.tone || 'warning',
+          body: `<p>${escapeHtml(event.text)}</p><p><strong>Impact:</strong> ${escapeHtml(impactText)}.</p><p>The meeting minutes will be circulated once nobody remembers what was agreed.</p>`,
+          button: 'Return Slightly Less Informed'
+        });
+        showProductionComment('You attended a meeting that could have been an email. Production continued in earnest, which is not always the same as correctly.', 'Management', 7);
+        return true;
       }
 
       function openOperationalEventModal(ev) {
@@ -8357,6 +8448,39 @@
             ctx.strokeStyle = 'rgba(255,255,255,0.09)';
             ctx.lineWidth = 1;
             ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+            ctx.restore();
+            continue;
+          }
+
+          if (block.status === 'rubble') {
+            ctx.save();
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+            ctx.fillStyle = '#4b5563';
+            ctx.strokeStyle = 'rgba(15,23,42,0.82)';
+            ctx.lineWidth = Math.max(1, r.w * 0.035);
+            for (let i = 0; i < 9; i++) {
+              const seed = seeded(block.r * 41 + block.c * 97 + i * 13);
+              const cx = r.x + r.w * (0.12 + ((seed * 7.31) % 0.76));
+              const cy = r.y + r.h * (0.16 + ((seed * 5.17) % 0.68));
+              const sz = r.w * (0.10 + ((seed * 3.91) % 0.12));
+              ctx.beginPath();
+              ctx.moveTo(cx - sz * 0.55, cy + sz * 0.35);
+              ctx.lineTo(cx - sz * 0.12, cy - sz * 0.50);
+              ctx.lineTo(cx + sz * 0.55, cy - sz * 0.18);
+              ctx.lineTo(cx + sz * 0.38, cy + sz * 0.48);
+              ctx.closePath();
+              ctx.fill();
+              ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(248,113,113,0.65)';
+            ctx.lineWidth = Math.max(2, r.w * 0.055);
+            ctx.strokeRect(r.x + r.w * 0.14, r.y + r.h * 0.14, r.w * 0.72, r.h * 0.72);
+            ctx.fillStyle = 'rgba(254,202,202,0.88)';
+            ctx.font = '900 ' + Math.max(9, r.w * 0.22) + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('RUBBLE', r.x + r.w / 2, r.y + r.h / 2);
             ctx.restore();
             continue;
           }
@@ -9969,7 +10093,7 @@
       }
 
       function exploredRowSummary(row) {
-        const blocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && b.status !== 'locked' && b.status !== 'void');
+        const blocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble');
         const tonnes = blocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
         const gradeT = blocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade) || Number(b.grade) || 0), 0);
         const confidence = blocks.length ? blocks.reduce((sum, b) => sum + (Number(b.gradeConfidence) || 0), 0) / blocks.length : 0;
@@ -10444,6 +10568,9 @@
         const buttonHtml = fired
           ? `<button class="primary" data-accept-reassignment>Accept Reassignment</button>${pleadButton}`
           : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>${pleadButton}`;
+        const successRecognitionHtml = rating === 'successful'
+          ? `<div class="pipNotice"><strong>Leadership recognition:</strong> The SLT is pleased to confirm that your operational delivery has validated their strategic direction. In recognition of this success, the SLT has awarded itself a performance bonus, revised titles, and a leadership offsite. You have been awarded a pay rise of 0.6%, subject to payroll alignment, affordability, and whether the form survives Finance.</div>`
+          : '';
 
         $('modalBody').innerHTML = `
           ${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Delivering Value Through Other People', 'Annual moderation has concluded that Outstanding remains available in principle and unavailable in practice.', 'SLT')}
@@ -10462,8 +10589,9 @@
                <strong>Belt advancements:</strong> ${state.beltExtensionsThisYear || 0} / ${target.beltExtensions || 0}<br>
                <strong>Pillar splitting tonnes:</strong> ${Math.round(state.pillarSplitTonnesThisYear || 0).toLocaleString()} / ${Math.round(target.pillarSplitTonnes || 0).toLocaleString()}t</p>
             ${pipText}
+            ${successRecognitionHtml}
             <p>${rating === 'successful'
-              ? 'Your success confirms the targets were realistic and may therefore have been insufficiently ambitious.'
+              ? 'Your success confirms the targets were realistic, the SLT was correct to believe in them, and your individual contribution was valuable enough to be acknowledged but not meaningfully rewarded.'
               : fired
                 ? 'Unfortunately, two consecutive Needs Improvement ratings mean the organisation must now support your development from a safer distance.'
                 : 'The SLT remains confident that next year will demonstrate improvement, particularly now that the consequences have been explained.'}</p>
@@ -10740,6 +10868,7 @@
         state.safetyStanddownScheduledYear = 0;
         state.skipFactorDoneThisYear = false;
         state.hseInspectionDoneThisYear = false;
+        state.meetingEventDoneThisYear = false;
         state.annualTargets = targetsForYear(state.year);
         applyAnnualFinanceReset(state.year, state.cash, state.revenue, state.expenditure);
         restoreMinedBlockSnapshot(minedSnapshot);
@@ -10763,7 +10892,10 @@
         if (year === 5) {
           return `<div class="letter"><h2>Year 5 KPI Notice — Pillar Splitting Initiative</h2><p>The Superior Leadership Team has commissioned an external consultant to review mining efficiency. The consultant has identified that previous technical caution left viable mining grade behind in pillars.</p><p>This has been branded <strong>Pillar Splitting</strong>. Pillar extraction is now permitted where operational value can be recovered faster than concern can be documented.</p><p><strong>New requirement:</strong> recover tonnes from pillar splitting zones while pretending ground-control risk has been optimised.</p><p class="sig">External Technical Consultant<br>Value Recovery From Previous Competence</p></div>`;
         }
-        return `<div class="letter"><h2>Operating Year ${year} KPI Notice</h2><p>All major systems are now active. Continued success has confirmed that future targets should be larger, more specific, and less forgiving.</p><p>The game will continue until two consecutive Needs Improvement ratings demonstrate a need for your career to explore external opportunities.</p><p class="sig">Superior Leadership Team<br>Escalation Based on Demonstrated Capability</p></div>`;
+        if ((Number(state.depthIndex) || 0) === 0) {
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Decline Development</h2><p>The -1000 Level has now generated enough activity to justify further ambition, additional capital, and a larger future problem.</p><p><strong>Current strategic objective:</strong> fully explore the -1000 Level, confirm sufficient remaining value, and invest in development to reach the -1100 Level.</p><p>The SLT has described this as a growth opportunity, despite previously describing the same ground as mature, depleted, and someone else’s problem.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
+        }
+        return `<div class="letter"><h2>Operating Year ${year} KPI Notice</h2><p>All major systems are now active. Continued success has confirmed that future targets should be larger, more specific, and less forgiving.</p><p>The operation will continue until the mine is exhausted, the budget is exhausted, or your career is reallocated to a development opportunity.</p><p class="sig">Superior Leadership Team<br>Escalation Based on Demonstrated Capability</p></div>`;
       }
 
 
@@ -10773,6 +10905,7 @@
         if (year === 3) return modalCharacterHtml('assets/characters/mining-engineer.png', 'Technical Team', 'Professional Oversight After Commitment', 'The company has approved production ramp-up and now requires people qualified enough to describe the obvious risks professionally.', 'TECH');
         if (year === 4) return modalCharacterHtml('assets/characters/mining-engineer-belt-study.png', 'Mining Engineering Department', 'Radical Solutions Using Existing Concepts', 'A detailed study has discovered that the belt works better when it is closer to where mining is happening.', 'ENG');
         if (year === 5) return modalCharacterHtml('assets/characters/pillar-splitting-consultant.png', 'External Technical Consultant', 'Value Recovery From Previous Competence', 'A consultant has identified that pillars contain value, which is different from saying they contain consequences.', 'CONS');
+        if ((Number(state.depthIndex) || 0) === 0 && year >= 6) return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Growth Through Deeper Accountability', 'The -1000 Level must now justify the next level of ambition, capital, and personal exposure.', 'SLT');
         return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Escalation Based on Demonstrated Capability', 'Continued success has confirmed that future targets should be larger, more specific, and less forgiving.', 'SLT');
       }
 
@@ -10790,6 +10923,7 @@
         if (year === 3) return 'Proceed to hire Technical Team';
         if (year === 4) return 'Proceed to hire Surveyor';
         if (year === 5) return 'Review Pillar Splitting Controls';
+        if (year >= 6 && (Number(state.depthIndex) || 0) === 0) return 'Prepare -1100 Development';
         return 'Review Annual KPIs';
       }
 
@@ -10870,6 +11004,9 @@
 
       function failPillar(block) {
         block.pillarState = 'failed';
+        block.status = 'rubble';
+        block.progress = 100;
+        block.support = false;
         state.pillarFailures = (state.pillarFailures || 0) + 1;
         adjustTrait('safety', -6);
         adjustTrait('morale', -3);
@@ -10905,6 +11042,7 @@
         const tabs = hiringDisciplineTabs();
         if (!tabs.some(t => t.key === state.hiringTab)) state.hiringTab = 'supervisors';
         const active = tabs.find(t => t.key === state.hiringTab) || tabs[0];
+        ensureCandidatePool(active.roles, false);
         const tabHtml = `<div class="hiringTabBar">${tabs.map(t => `<button class="hiringTabBtn ${t.key === active.key ? 'active' : ''}" data-hiring-tab="${t.key}">${t.label}</button>`).join('')}</div>`;
         const cards = state.candidates.filter(c => active.roles.includes(c.role)).map(c => candidateCard(c)).join('') || '<p>No candidates currently available in this discipline. S.H.A.F.T. is checking whether anyone still answers unknown numbers.</p>';
         return `${tabHtml}<section class="crewRoleSection"><div class="crewRoleHeader"><h3>${active.label}</h3><span>${active.roles.map(roleName).join(' · ')}</span></div><div class="gridCards">${cards}</div></section>`;
@@ -11202,6 +11340,17 @@
         }
 
         const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
+        const pillarPill = $('pillarHudPill');
+        const pillarHud = $('pillarHud');
+        if (pillarPill && pillarHud) {
+          if (target.pillarSplitTonnes) {
+            pillarPill.style.display = '';
+            pillarHud.textContent = (Math.round((state.pillarSplitTonnesThisYear || 0) / 100) / 10).toFixed(1) + ' / ' + (Math.round((target.pillarSplitTonnes || 0) / 100) / 10).toFixed(1) + 'kt';
+          } else {
+            pillarPill.style.display = 'none';
+          }
+        }
+
         const kpiStatus = aggregateKpiStatus(annualKpiStatusList());
         setPillStatus('cashHud', budgetKpiStatus());
         setPillStatus('expenditureHud', budgetKpiStatus());
@@ -11210,6 +11359,7 @@
         setPillStatus('gradeHud', gradeKpiStatus(annualGrade(), target.grade || 0, annualTonnes()));
         setPillStatus('kpiHud', kpiStatus);
         if ($('lomHud')) setPillStatus('lomHud', lifeOfMineMetrics().tonnes >= Math.max(1, (target.tonnes || 0) * 0.8) ? 'onTrack' : 'atRisk');
+        if ($('pillarHud') && target.pillarSplitTonnes) setPillStatus('pillarHud', progressKpiStatus(state.pillarSplitTonnesThisYear || 0, target.pillarSplitTonnes));
 
         let machineText = state.paused ? 'Paused' : !isConveyorAvailable() ? 'Belt stopped' : state.machine.status === 'mining' ? 'Mining ' + directionLabel() : state.machine.status === 'tramming' ? 'Tramming ' + directionLabel() : state.machine.status === 'maintenance' ? 'Repair' : state.machine.status === 'broken' ? 'Broken' : 'Idle ' + directionLabel();
         $('machineHud').textContent = machineText;
@@ -12564,6 +12714,7 @@
           if (!existingIds.has(reserve.id)) state.candidates.push(reserve);
         }
 
+        ensureCandidatePool(null, false);
         applyInitialShiftTraits();
         state.setupComplete = true;
         $('startBtn').disabled = false;
@@ -12601,6 +12752,53 @@
         };
       }
 
+      function candidateMinimumForRole(role) {
+        const minima = {
+          supervisor: 2,
+          miner: 3,
+          fitter: 2,
+          electrician: 2,
+          geologist: 2,
+          driller: 2,
+          miningEngineer: 2,
+          rockDoctor: 2,
+          surveyor: 2
+        };
+        return minima[role] || 1;
+      }
+
+      function ensureCandidatePool(roles, forceNotice = false) {
+        const roleList = Array.isArray(roles) && roles.length
+          ? roles
+          : ['supervisor', 'miner', 'fitter', 'electrician', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor'];
+        let created = 0;
+        for (const role of roleList) {
+          if (!roleHireUnlocked(role)) continue;
+          if (roleHeadcountFull(role)) continue;
+          const min = candidateMinimumForRole(role);
+          let available = state.candidates.filter(c => c.role === role).length;
+          while (available < min) {
+            state.candidates.push(createReplacementCandidate(role));
+            available++;
+            created++;
+          }
+        }
+        if (created && forceNotice) {
+          pushQueueEvent({
+            kind: 'recruitmentRefresh',
+            tone: 'hr',
+            icon: 'HR',
+            label: 'HR',
+            image: 'assets/characters/hr-department.png',
+            character: 'S.H.A.F.T.',
+            department: 'Strategic Hiring And Future Talent',
+            title: 'Talent Pipeline Refreshed',
+            body: `<p>S.H.A.F.T. has refreshed the talent pipeline following unexpected staff movement, planned attrition, and one incident currently described as developmental.</p><p><strong>${created}</strong> additional candidate${created === 1 ? '' : 's'} added to the hiring pool. Authorised headcount caps still apply.</p><div class="btnRow"><button data-window="hr">Open Recruitment</button></div>`
+          });
+        }
+        return created;
+      }
+
       function removeStaffUncontrolled(staff, reason, title) {
         if (!staff) return;
         const idx = state.staff.findIndex(s => s.id === staff.id);
@@ -12608,6 +12806,7 @@
         const [s] = state.staff.splice(idx, 1);
         state.formerStaff.push({ ...s, bubble: null, exitReason: reason });
         if (!state.candidates.some(c => c.role === s.role)) state.candidates.push(createReplacementCandidate(s.role));
+        ensureCandidatePool([s.role], true);
         state.hrCooldown = Math.max(state.hrCooldown || 0, 10);
         state.staffDepartureCooldownUntilDay = state.day + Math.max(65, 110 - Math.min(45, state.year * 6));
         adjustTrait('morale', -2);
@@ -12843,6 +13042,7 @@
         spend(hireCost(c), 'Hiring/onboarding');
         if (['miningEngineer', 'rockDoctor', 'surveyor', 'geologist', 'driller'].includes(c.role)) state.technicalHiresThisYear = (state.technicalHiresThisYear || 0) + 1;
         adjustTrait('morale', 1);
+        ensureCandidatePool([c.role], false);
         if (['geologist', 'driller'].includes(c.role) && explorationStaffReady() && state.exploration && !state.exploration.drillGuideDismissed && (state.exploration.discoveredRowsThisYear || 0) === 0) {
           showProductionComment('Exploration crew ready. The HOPE exploration rig is now highlighted on the canvas; tap it to start opening new ground.', 'Exploration', 6);
         }
