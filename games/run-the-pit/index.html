@@ -7194,51 +7194,138 @@
       function triggerGeologyReinterpretationEvent() {
         if (!canTriggerGeologyReinterpretation()) return false;
         const targets = geologyReinterpretationTargets();
-        const geo = geologistOnCrew();
+        if (!targets.length) return false;
+
+        state.pendingGeologyReinterpretation = {
+          id: 'geo_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+          cells: targets.map(b => ({ r: b.r, c: b.c })),
+          resolved: false
+        };
+        state.lastGeologyReinterpretationDay = state.day;
+
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Geology Model Reinterpretation';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Interpretation of Reality Unit', 'The model may improve. The biscuits definitely will not survive.', 'GEO')}
+          <div class="letter"><h2>Model Improvement Opportunity</h2>
+            <p>The Geologist thinks they can improve the model, but it will require investment in extra tea, biscuits, and interpretive confidence.</p>
+            <p>They point at a variogram chart which they say shows a clear structure, sill, and range.</p>
+            <p>To you, it looks like a heart ECG monitor chart.</p>
+          </div>
+          <div class="eventChoiceGrid">
+            <button class="eventChoiceBtn positive" data-geology-reinterpret-choice="science"><strong>Trust the Science and Invest</strong><span>Fund the tea and biscuits. The model may improve, or become more confidently wrong.</span></button>
+            <button class="eventChoiceBtn" data-geology-reinterpret-choice="consultant"><strong>Employ a Consultant to Conduct a Review</strong><span>More expensive, more slides, and a chance of professionally packaged uncertainty.</span></button>
+            <button class="eventChoiceBtn negative" data-geology-reinterpret-choice="decline"><strong>Decline, the Model Already Shows Enough High Grade Blocks</strong><span>Spend nothing. The Geologist will remember this when the model next changes.</span></button>
+          </div>`;
+        $('modalOverlay').classList.add('show');
+        return true;
+      }
+
+      function geologyDecisionTargets() {
+        const ev = state.pendingGeologyReinterpretation;
+        if (!ev || !Array.isArray(ev.cells)) return [];
+        return ev.cells
+          .map(cell => blockAt(MINE_ID, cell.r, cell.c))
+          .filter(b => b && b.status === 'solid' && !b.reconciled && typeof b.estimatedGrade === 'number' && typeof b.actualGrade === 'number');
+      }
+
+      function applyGeologyModelShift(targets, success, mode, geo) {
         let improved = 0;
         let worsened = 0;
+        let unchanged = 0;
         let premiumNow = 0;
         let poorNow = 0;
+        const reviewFraction = mode === 'consultant' ? 0.72 : 1;
 
         for (const b of targets) {
-          const oldBand = gradeBandIndex(typeof b.estimatedGrade === 'number' ? b.estimatedGrade : b.actualGrade);
-          const direction = Math.random() < 0.52 ? 1 : -1;
-          const magnitude = Math.random() < 0.18 ? 2 : 1;
-          let newBand = clamp(oldBand + direction * magnitude, 0, 4);
-          if (newBand === oldBand) newBand = oldBand <= 1 ? oldBand + 1 : oldBand - 1;
-
+          if (Math.random() > reviewFraction) { unchanged++; continue; }
           const oldActual = b.actualGrade;
+          const oldBand = gradeBandIndex(typeof b.estimatedGrade === 'number' ? b.estimatedGrade : b.actualGrade);
+          let delta = 0;
+
+          if (success) {
+            if (mode === 'consultant') delta = Math.random() < 0.48 ? 1 : (Math.random() < 0.18 ? -1 : 0);
+            else delta = Math.random() < 0.68 ? 1 : (Math.random() < 0.18 ? -1 : 0);
+          } else {
+            if (mode === 'consultant') delta = Math.random() < 0.46 ? -1 : (Math.random() < 0.16 ? 1 : 0);
+            else delta = Math.random() < 0.62 ? -1 : (Math.random() < 0.16 ? 1 : 0);
+          }
+
+          if (delta === 0) { unchanged++; continue; }
+          const newBand = clamp(oldBand + delta, 0, 4);
+          if (newBand === oldBand) { unchanged++; continue; }
           const newActual = randomGradeInBand(newBand);
           const estimate = estimateGradeForBlock(newActual, geo);
           b.actualGrade = newActual;
           b.estimatedGrade = estimate.estimatedGrade;
           b.grade = estimate.estimatedGrade;
-          b.gradeConfidence = Math.max(0.25, Math.min(0.9, estimate.confidence * 0.92));
-
+          b.gradeConfidence = Math.max(0.22, Math.min(0.92, estimate.confidence * (success ? 1.03 : 0.88)));
           if (newActual > oldActual) improved++;
           else worsened++;
           if (newBand >= 4) premiumNow++;
           if (newBand <= 0) poorNow++;
         }
+        return { improved, worsened, unchanged, premiumNow, poorNow };
+      }
 
-        state.lastGeologyReinterpretationDay = state.day;
-        const lom = lifeOfMineMetrics();
-        const title = 'Geology Model Reinterpretation';
-        const body = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Interpretation of Reality Unit', 'The model changed. The ground has been invited to align with the model. Production remains accountable for the outcome.', 'GEO')}
-          <div class="letter"><h2>Updated Truth Issued</h2>
-          <p>Geology has reinterpreted the seam model following a technical review, two revised assumptions, and one spreadsheet that was previously hidden in someone's Downloads folder.</p>
-          <p><strong>${targets.length}</strong> explored, unmined blocks have been recalibrated. Both interpreted grade and actual hidden grade have changed to maintain alignment between the model and the newly approved version of reality.</p>
-          <p><strong>Movement:</strong> ${improved} blocks improved · ${worsened} blocks worsened · ${premiumNow} now Premium · ${poorNow} now Poor.</p>
-          <p><strong>LOM Reserve now:</strong> ${(lom.tonnes / 1000).toFixed(lom.tonnes >= 100000 ? 0 : 1)}kt @ ${lom.grade.toFixed(1)}% Goldilocks Grade.</p>
-          <p>The Geology Department would like to clarify that the ground has not changed. Only its underlying truth has been recalibrated.</p></div>`;
+      function resolveGeologyReinterpretationChoice(choice) {
+        const ev = state.pendingGeologyReinterpretation;
+        if (!ev || ev.resolved) return;
+        ev.resolved = true;
+        document.querySelectorAll('[data-geology-reinterpret-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
 
-        setModalClosable(true);
-        $('modalWindow').className = 'window medium';
-        $('modalTitle').textContent = title;
-        $('modalBody').innerHTML = body + '<div class="btnRow"><button class="primary" data-close>Accept the Updated Truth</button></div>';
-        $('modalOverlay').classList.add('show');
-        showProductionComment('Geology has issued an updated truth. The model changed, the ground changed to match it, and Production remains responsible.', 'Geology', 7.5);
-        return true;
+        const targets = geologyDecisionTargets();
+        const geo = geologistOnCrew();
+        const geoSkill = geo ? Number(geo.skill) || 3 : 2;
+        let title = 'Geology Model Outcome';
+        let tone = 'warning';
+        let body = '';
+
+        if (choice === 'decline') {
+          if (geo) geo.morale = Math.max(1, (Number(geo.morale) || 3) - 1);
+          adjustTrait('morale', -2);
+          body = `<p>You declined the model improvement because the existing interpretation already shows a reassuring number of high-grade blocks.</p><p>The Geologist has accepted this decision in the same way a geologist accepts an engineer's straight line: visibly and under protest.</p><p><strong>Impact:</strong> no budget cost, -2 Morale. The current model remains conveniently unchanged.</p>`;
+        } else {
+          const isConsultant = choice === 'consultant';
+          const baseCost = isConsultant ? 7200 : 2600;
+          const successChance = isConsultant
+            ? clamp(0.42 + geoSkill * 0.055, 0.42, 0.72)
+            : clamp(0.34 + geoSkill * 0.095, 0.42, 0.84);
+          const success = Math.random() < successChance;
+          spend(baseCost, isConsultant ? 'Geology consultant review' : 'Geology tea and biscuits');
+          const result = applyGeologyModelShift(targets, success, isConsultant ? 'consultant' : 'science', geo);
+          const lom = lifeOfMineMetrics();
+
+          if (success) {
+            tone = 'good';
+            adjustTrait('skill', isConsultant ? 1 : 2);
+            adjustTrait('morale', isConsultant ? 0 : 1);
+            if (geo) {
+              geo.skill = Math.min(5, (Number(geo.skill) || 3) + (isConsultant ? 0 : 1));
+              geo.morale = Math.min(5, (Number(geo.morale) || 3) + 1);
+            }
+            body = `<p>${isConsultant ? 'The consultant has reviewed the model and confirmed that uncertainty can be reduced by using more expensive uncertainty.' : 'The Geologist has consumed the approved biscuits and improved the model with renewed interpretive confidence.'}</p><p><strong>Movement:</strong> ${result.improved} blocks improved · ${result.worsened} blocks worsened · ${result.unchanged} unchanged · ${result.premiumNow} now Premium · ${result.poorNow} now Poor.</p><p><strong>LOM Reserve now:</strong> ${(lom.tonnes / 1000).toFixed(lom.tonnes >= 100000 ? 0 : 1)}kt @ ${lom.grade.toFixed(1)}% Goldilocks Grade.</p><p><strong>Impact:</strong> -${money(scaledCost(baseCost))} budget, ${isConsultant ? '+1 Skill' : '+2 Skill, +1 Morale'}.</p>`;
+          } else {
+            tone = 'danger';
+            adjustTrait('skill', -1);
+            adjustTrait('morale', -2);
+            if (geo) geo.morale = Math.max(1, (Number(geo.morale) || 3) - 1);
+            body = `<p>${isConsultant ? 'The consultant has delivered a 47-slide report confirming that further work is required before the previous work can be understood.' : 'The biscuits were consumed successfully. The model improvement was less successful.'}</p><p><strong>Movement:</strong> ${result.improved} blocks improved · ${result.worsened} blocks worsened · ${result.unchanged} unchanged · ${result.premiumNow} now Premium · ${result.poorNow} now Poor.</p><p><strong>Impact:</strong> -${money(scaledCost(baseCost))} budget, -1 Skill, -2 Morale. Production remains responsible for finding the grade that is now more theoretically distributed.</p>`;
+          }
+        }
+
+        state.pendingGeologyReinterpretation = null;
+        openDecisionOutcomeModal({
+          title,
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Interpretation of Reality Unit',
+          label: 'GEO',
+          tone,
+          body,
+          button: 'Accept the Revised Interpretation'
+        });
+        showProductionComment('Geology has completed a model decision cycle. The decision was yours; the consequences are geological.', 'Geology', 7.5);
       }
 
       function showRandomProductionComment() {
@@ -7703,38 +7790,109 @@
         return true;
       }
 
-      function triggerHseInspectionEvent() {
-        state.hseInspectionDoneThisYear = true;
-        state.hseInspections = (state.hseInspections || 0) + 1;
+      function hseInspectionPassChance(choice) {
         const safety = traitValue('safety');
         const supervisor = staffGroup('supervisor')[0];
         const supervisorBonus = supervisor ? (Number(supervisor.safety) || 3) * 4 : -8;
         const incidentPenalty = (state.pillarFailures || 0) * 2 + Math.max(0, (state.hseFines || 0) / 2500);
-        const passChance = clamp(0.22 + safety / 120 + supervisorBonus / 100 - incidentPenalty / 100, 0.12, 0.88);
-        const passed = Math.random() < passChance;
-        const fine = Math.round((9000 + state.year * 1200 + (state.depthIndex || 0) * 3500) * operatingScaleFactor());
-        let body;
+        let chance = 0.22 + safety / 120 + supervisorBonus / 100 - incidentPenalty / 100;
+        if (choice === 'inactive') chance += 0.18;
+        if (choice === 'trust') chance += 0.02;
+        if (choice === 'cleanup') chance += 0.24;
+        if (choice === 'it') chance -= 0.12;
+        return clamp(chance, 0.08, 0.90);
+      }
+
+      function triggerHseInspectionEvent() {
+        state.hseInspectionDoneThisYear = true;
+        state.hseInspections = (state.hseInspections || 0) + 1;
+        state.pendingHseInspection = { id: 'hse_' + Date.now() + '_' + Math.floor(Math.random() * 100000), resolved: false };
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'HSE Surprise Inspection';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/hse-inspector.png', 'Health and Safety Executive', 'Unexpected Procedure Reality Check', 'A clipboard has entered the site boundary and is asking difficult questions.', 'HSE')}
+          <div class="letter"><h2>Unplanned Regulatory Attention</h2>
+            <p>The Health and Safety Executive has arrived following an anonymous email alleging that existing procedures may not be entirely compatible with survival.</p>
+            <p>The inspection team is asking to see the mine, the procedures, the people, and the gap between them.</p>
+          </div>
+          <div class="eventChoiceGrid">
+            <button class="eventChoiceBtn" data-hse-inspection-choice="inactive"><strong>Show the HSE Part of the Mine That Isn’t Operating Today</strong><span>Reduce visible risk by selecting an area with fewer people, machines, and facts.</span></button>
+            <button class="eventChoiceBtn positive" data-hse-inspection-choice="trust"><strong>Trust Your Team to Perform Well</strong><span>A bold strategy based on training, memory, and nobody improvising.</span></button>
+            <button class="eventChoiceBtn" data-hse-inspection-choice="cleanup"><strong>Deploy Clean Up Crew to Cover Up Known Problems</strong><span>Spend money and production time converting obvious issues into less obvious issues.</span></button>
+            <button class="eventChoiceBtn negative" data-hse-inspection-choice="it"><strong>Order IT to Find Which User Sent the Email</strong><span>Focus on the real hazard: uncontrolled communication.</span></button>
+          </div>`;
+        $('modalOverlay').classList.add('show');
+      }
+
+      function resolveHseInspectionChoice(choice) {
+        const ev = state.pendingHseInspection;
+        if (!ev || ev.resolved) return;
+        ev.resolved = true;
+        document.querySelectorAll('[data-hse-inspection-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+
+        const baseFine = Math.round((9000 + state.year * 1200 + (state.depthIndex || 0) * 3500) * operatingScaleFactor());
+        let fine = baseFine;
+        let title = 'HSE Inspection Outcome';
+        let tone = 'warning';
+        let body = '';
+        let passed = Math.random() < hseInspectionPassChance(choice);
+
+        if (choice === 'cleanup') {
+          const cleanupCost = scaledCost(2400);
+          spend(2400, 'Pre-inspection clean up');
+          adjustTrait('productivity', -2);
+          body += `<p>A clean-up crew has been deployed to convert visible non-compliance into tidier non-compliance.</p><p><strong>Immediate impact:</strong> -${money(cleanupCost)} budget, -2 Productivity.</p>`;
+          fine = Math.round(baseFine * 0.72);
+        }
+
+        if (choice === 'it') {
+          adjustTrait('morale', -4);
+          adjustTrait('safety', -2);
+          body += `<p>IT has been ordered to identify the anonymous email sender. The workforce has interpreted this as a lesson about reporting concerns through unofficial channels.</p><p><strong>Immediate impact:</strong> -4 Morale, -2 Safety.</p>`;
+          fine = Math.round(baseFine * 1.12);
+        }
+
+        if (choice === 'inactive') {
+          body += `<p>The inspection party has been shown a quiet section of the mine containing limited activity and therefore limited evidence.</p>`;
+          fine = Math.round(baseFine * 1.28);
+        }
+
+        if (choice === 'trust') {
+          body += `<p>You trusted the team to explain the work as performed, the procedures as written, and the difference as a developmental gap.</p>`;
+        }
 
         if (passed) {
-          adjustTrait('safety', 1);
-          body = `<p>The Health and Safety Executive has arrived following an anonymous email alleging that existing procedures may not be entirely compatible with survival.</p><p>The inspection team questioned the supervisor and crew on safe working procedures. The IT Department is working hard to determine whether the anonymous whistleblower can be identified.</p><p><strong>Outcome:</strong> The HSE was unable to identify any material infractions, this time. +1 Safety.</p>`;
+          tone = 'good';
+          title = 'HSE Inspection — Passed';
+          adjustTrait('safety', choice === 'trust' ? 2 : 1);
+          if (choice === 'trust') adjustTrait('morale', 1);
+          body += `<p><strong>Outcome:</strong> The HSE was unable to identify any material infractions, this time. The word "this" is doing significant work.</p><p><strong>Impact:</strong> ${choice === 'trust' ? '+2 Safety, +1 Morale' : '+1 Safety'}.</p>`;
         } else {
+          title = 'HSE Inspection — Failed';
           state.cash -= fine;
           state.expenditure += fine;
           state.lifetimeExpenditure = (state.lifetimeExpenditure || 0) + fine;
           state.hseFines = (state.hseFines || 0) + fine;
           adjustTrait('safety', -6);
           adjustTrait('morale', -4);
-          body = `<p>The Health and Safety Executive has arrived following an anonymous email alleging that existing procedures may not be entirely compatible with survival.</p><p>The inspection team questioned the supervisor and crew on safe working procedures. The IT Department is working hard to determine whether the anonymous whistleblower can be identified.</p><p><strong>Outcome:</strong> several areas appear to rely on optimism rather than procedure. A fine of ${money(fine)} has been issued to your budget. -6 Safety, -4 Morale.</p>`;
+          if (choice === 'inactive') {
+            body += `<p><strong>Outcome:</strong> The inspector found the operating panel by following the sound of panic. The attempt to show an inactive area has been recorded as interpretive site selection.</p>`;
+          } else if (choice === 'it') {
+            body += `<p><strong>Outcome:</strong> The HSE has asked why management response to a safety concern began with user tracing rather than hazard control.</p>`;
+          } else {
+            body += `<p><strong>Outcome:</strong> several areas appear to rely on optimism rather than procedure.</p>`;
+          }
+          body += `<p><strong>Impact:</strong> ${money(fine)} fine, -6 Safety, -4 Morale.</p>`;
         }
 
-        openOperationalEventModal({
-          title: passed ? 'HSE Surprise Inspection — Passed' : 'HSE Surprise Inspection — Failed',
+        state.pendingHseInspection = null;
+        openDecisionOutcomeModal({
+          title,
           image: 'assets/characters/hse-inspector.png',
           character: 'Health and Safety Executive',
           department: 'Unexpected Procedure Reality Check',
           label: 'HSE',
-          tone: passed ? 'good' : 'danger',
+          tone,
           body,
           button: passed ? 'File the Report Before They Change Their Mind' : 'Accept Statutory Learning Opportunity'
         });
@@ -8071,9 +8229,16 @@
             body = `<p>A stakeholder workshop has been held. Several action points were captured, none of which can be mined.</p><p><strong>Impact:</strong> -${money(scaledCost(1450))} budget, -1 Productivity, -1 Morale.</p>`;
           }
         }
-        setModalClosable(true);
-        $('modalTitle').textContent = title;
-        $('modalBody').innerHTML = body + '<div class="btnRow"><button class="primary" data-close>Return to Controlled Uncertainty</button></div>';
+        openDecisionOutcomeModal({
+          title,
+          image: 'assets/characters/external-affairs.png',
+          character: 'External Affairs',
+          department: 'Corporate Interface Management',
+          label: 'EXT',
+          tone,
+          body,
+          button: 'Return to Controlled Uncertainty'
+        });
         showProductionComment('External Affairs has concluded that the outside world remains outside, but now has actions.', 'External Affairs', 7);
       }
 
@@ -8258,6 +8423,13 @@
         const eventImage = ev.image ? modalCharacterHtml(ev.image, ev.character || ev.title || 'Operational Event', ev.department || 'Operational Update', 'A department has arrived with findings and implications.', ev.label || 'EVT') : '';
         $('modalBody').innerHTML = eventImage + (ev.body || '<p>Event details unavailable.</p>') + `<div class="btnRow"><button class="primary" data-close>${escapeHtml(ev.button || 'Accept Operational Reality')}</button></div>`;
         $('modalOverlay').classList.add('show');
+      }
+
+      function openDecisionOutcomeModal(ev) {
+        // Standard decision-event flow: close the choice modal, then open a separate outcome modal.
+        const overlay = $('modalOverlay');
+        if (overlay) overlay.classList.remove('show');
+        setTimeout(() => openOperationalEventModal(ev), 0);
       }
 
       function maybeSafetyEvent() {
@@ -13374,16 +13546,7 @@
           openOperationalEventModal({ title: ev.title, image: ev.image, character: ev.character, department: ev.department, label: 'EXT', tone: ev.kind === 'governmentNegative' ? 'warning' : 'info', body: ev.body, button: 'Accept Policy Environment' });
           return;
         }
-        openOperationalEventModal({
-          title: ev.title,
-          image: ev.image,
-          character: ev.character,
-          department: ev.department,
-          label: 'EXT',
-          tone: 'warning',
-          body: ev.body + '<p><strong>Dev trigger:</strong> choose a response below.</p><div class="btnRow">' + ev.choices.map(ch => `<button class="eventChoiceBtn" data-external-choice="${ev.kind}:${ch[0]}"><strong>${escapeHtml(ch[1])}</strong><span>${escapeHtml(ch[2])}</span></button>`).join('') + '</div>',
-          button: 'Close Without Resolving'
-        });
+        openExternalAffairsChoiceModal(ev);
       }
 
 
@@ -13516,7 +13679,7 @@
         }
         state.crewAccidents = (state.crewAccidents || 0) + 1;
         state.pendingCrewAccident = null;
-        openOperationalEventModal({ title, image: 'assets/characters/safety-standdown.png', character: 'Incident Review', department: 'Accident Response', label: 'ACC', tone: 'warning', body, button: 'Return to Managed Risk' });
+        openDecisionOutcomeModal({ title, image: 'assets/characters/safety-standdown.png', character: 'Incident Review', department: 'Accident Response', label: 'ACC', tone: 'warning', body, button: 'Return to Managed Risk' });
       }
 
       function forceHeatVentilationEvent() {
@@ -15175,8 +15338,14 @@
           const externalChoiceBtn = e.target.closest('[data-external-choice]');
           if (externalChoiceBtn) { document.querySelectorAll('[data-external-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); }); resolveExternalAffairsChoice(externalChoiceBtn.dataset.externalChoice); return; }
 
+          const geologyChoiceBtn = e.target.closest('[data-geology-reinterpret-choice]');
+          if (geologyChoiceBtn) { document.querySelectorAll('[data-geology-reinterpret-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); }); resolveGeologyReinterpretationChoice(geologyChoiceBtn.dataset.geologyReinterpretChoice); return; }
+
+          const hseChoiceBtn = e.target.closest('[data-hse-inspection-choice]');
+          if (hseChoiceBtn) { document.querySelectorAll('[data-hse-inspection-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); }); resolveHseInspectionChoice(hseChoiceBtn.dataset.hseInspectionChoice); return; }
+
           const accidentChoiceBtn = e.target.closest('[data-crew-accident-choice]');
-          if (accidentChoiceBtn) { resolveCrewAccidentChoice(accidentChoiceBtn.dataset.crewAccidentChoice); return; }
+          if (accidentChoiceBtn) { document.querySelectorAll('[data-crew-accident-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); }); resolveCrewAccidentChoice(accidentChoiceBtn.dataset.crewAccidentChoice); return; }
 
           const nextYearBtn = e.target.closest('[data-next-year]');
           if (nextYearBtn) { advanceToNextYear(); return; }
