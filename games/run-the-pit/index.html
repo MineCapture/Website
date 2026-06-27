@@ -5804,7 +5804,7 @@
       const MINE_ID = 'MINE';
       const MINE_COLS = 11;
       const MINE_ROWS = 18;
-      const LOCKED_ROWS = 9;
+      const LOCKED_ROWS = MINE_ROWS - 5;
       const START_COL = Math.floor(MINE_COLS / 2);
       const ACCESS_ROW = MINE_ROWS;
       const START_ROW = ACCESS_ROW;
@@ -5957,6 +5957,7 @@
         premiumTonnes: 0,
         premiumK2oTonnes: 0,
         yearIntroShown: {},
+        roleIntroShown: {},
         rockDoctorHoldActive: false,
         pillarSplittingUnlocked: false,
         hrCooldown: 0,
@@ -6458,6 +6459,46 @@
 
       function currentLevelName() {
         return String(state.mineLevel || -1000) + ' Level';
+      }
+
+      function columnLetter(c) {
+        let n = Math.max(0, Number(c) || 0);
+        let s = '';
+        do {
+          s = String.fromCharCode(65 + (n % 26)) + s;
+          n = Math.floor(n / 26) - 1;
+        } while (n >= 0);
+        return s;
+      }
+
+      function gridRowNumber(r) {
+        return Math.max(1, MINE_ROWS - (Number(r) || 0));
+      }
+
+      function gridRefFor(r, c) {
+        return gridRowNumber(r) + columnLetter(c);
+      }
+
+      function gridRef(block) {
+        return block ? gridRefFor(block.r, block.c) : 'Unknown Grid';
+      }
+
+      function levelTransitionRow() {
+        // The row just below this line is the tenth row from the bottom.
+        return Math.max(0, MINE_ROWS - 10);
+      }
+
+      function levelTransitionText() {
+        return 'Explore here to unlock the ' + (state.mineLevel - 100) + ' Level';
+      }
+
+      function hasReachedLevelTransition() {
+        const limit = levelTransitionRow();
+        for (let r = limit; r < MINE_ROWS; r++) {
+          const row = (state.blocks[MINE_ID] || []).filter(b => b.r === r);
+          if (!row.length || row.every(b => b.status === 'locked')) return false;
+        }
+        return true;
       }
 
       function modalCharacterHtml(src, name, department, text, initialsText = '?') {
@@ -7711,7 +7752,7 @@
         const gr = gradeRestrictionActive();
         if (!gr || !block || isBlockAllowedByGradeRestriction(block)) return '';
         const estGrade = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
-        return `${gr.source || 'The active product specification'} requires ${gr.label || gradeBandNameFromIndex(gr.minBand) + '+'} material. This block is modelled as ${gradeBandNameFromIndex(blockGradeBand(block))} at ${Number(estGrade || 0).toFixed(1)}% Goldilocks Grade.`;
+        return `${gr.source || 'The active product specification'} requires ${gr.label || gradeBandNameFromIndex(gr.minBand) + '+'} material. Grid ${gridRef(block)} is modelled as ${gradeBandNameFromIndex(blockGradeBand(block))} at ${Number(estGrade || 0).toFixed(1)}% Goldilocks Grade.`;
       }
 
       function showGradeRestrictionBlockNotice(block) {
@@ -8631,7 +8672,7 @@
       function beltHeadLabel() {
         const head = beltHeadRow();
         if (head > FIRST_MINE_ROW) return 'Access row, just south of the first mine block';
-        return 'Row ' + (head + 1) + ', Column ' + (beltColumn() + 1);
+        return 'Grid ' + gridRefFor(head, beltColumn());
       }
 
       function nextBeltExtensionRow() {
@@ -8681,7 +8722,7 @@
           icon: '↻',
           label: 'BELT',
           title: 'Belt Line Extended',
-          body: `<p>The conveyor has been advanced to Row ${status.row + 1} along the centreline.</p><p><strong>Rule:</strong> active belt cells are now physical infrastructure. The miner and bolter must go around the front of the belt, not through it.</p>`
+          body: `<p>The conveyor has been advanced to <strong>Grid ${gridRefFor(status.row, beltColumn())}</strong> along the centreline.</p><p><strong>Rule:</strong> active belt cells are now physical infrastructure. The miner and bolter must go around the front of the belt, not through it.</p>`
         });
         openWindow('assets');
       }
@@ -9172,7 +9213,9 @@
         }
 
         drawLockedExplorationNotice();
+        drawLevelTransitionLine();
         drawRowReserveLabels();
+        drawGridReferences();
       }
 
 
@@ -9274,6 +9317,76 @@
           ctx.fillText('ROW INTERPRETED', b.x + b.w / 2, y + b.cell / 2);
         }
 
+        ctx.restore();
+      }
+
+      function drawLevelTransitionLine() {
+        if (!board) return;
+        const b = board;
+        const row = levelTransitionRow();
+        const y = b.y + row * b.cell;
+        const label = levelTransitionText();
+        const nextLevel = String(state.mineLevel - 100) + ' Level';
+        const reached = hasReachedLevelTransition();
+
+        ctx.save();
+        ctx.strokeStyle = reached ? 'rgba(34,197,94,0.95)' : 'rgba(251,191,36,0.95)';
+        ctx.lineWidth = Math.max(2, b.cell * 0.06);
+        ctx.setLineDash(reached ? [] : [10, 6]);
+        ctx.beginPath();
+        ctx.moveTo(b.x + 4, y);
+        ctx.lineTo(b.x + b.w - 4, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const text = reached ? 'Decline threshold reached: ' + nextLevel + ' proposal available' : label;
+        ctx.font = '900 ' + Math.max(9, b.cell * 0.20) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const tw = ctx.measureText(text).width + 18;
+        const th = Math.max(18, b.cell * 0.38);
+        const tx = b.x + b.w / 2;
+        const ty = y - th * 0.58;
+        ctx.fillStyle = reached ? 'rgba(20,83,45,0.88)' : 'rgba(120,53,15,0.88)';
+        roundRect(ctx, tx - tw / 2, ty - th / 2, tw, th, th / 2);
+        ctx.fill();
+        ctx.strokeStyle = reached ? 'rgba(187,247,208,0.65)' : 'rgba(253,230,138,0.65)';
+        ctx.lineWidth = 1;
+        roundRect(ctx, tx - tw / 2, ty - th / 2, tw, th, th / 2);
+        ctx.stroke();
+        ctx.fillStyle = reached ? '#dcfce7' : '#fef3c7';
+        ctx.fillText(text, tx, ty + 0.5);
+        ctx.restore();
+      }
+
+      function drawGridReferences() {
+        if (!board) return;
+        const b = board;
+        const cs = b.cell;
+        ctx.save();
+        ctx.font = '900 ' + Math.max(8, cs * 0.16) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        for (let c = 0; c < MINE_COLS; c++) {
+          const x = b.x + c * cs + cs / 2;
+          const y = b.y + b.h - Math.max(6, cs * 0.13);
+          ctx.fillStyle = 'rgba(15,23,42,0.62)';
+          roundRect(ctx, x - cs * 0.28, y - cs * 0.18, cs * 0.56, cs * 0.28, Math.max(3, cs * 0.08));
+          ctx.fill();
+          ctx.fillStyle = 'rgba(226,232,240,0.86)';
+          ctx.fillText(columnLetter(c), x, y - 0.5);
+        }
+
+        for (let r = 0; r < MINE_ROWS; r++) {
+          const y = b.y + r * cs + cs / 2;
+          const x = b.x + Math.max(7, cs * 0.17);
+          ctx.fillStyle = 'rgba(15,23,42,0.62)';
+          roundRect(ctx, x - cs * 0.22, y - cs * 0.18, cs * 0.42, cs * 0.30, Math.max(3, cs * 0.08));
+          ctx.fill();
+          ctx.fillStyle = 'rgba(226,232,240,0.86)';
+          ctx.fillText(String(gridRowNumber(r)), x, y - 0.5);
+        }
         ctx.restore();
       }
 
@@ -10748,6 +10861,10 @@
         const geo = geologistOnCrew();
         const drillers = drillersOnCrew();
 
+        if (hasReachedLevelTransition()) {
+          openDeclineProposal();
+          return;
+        }
         if (row === null) {
           openDeclineProposal();
           return;
@@ -10798,7 +10915,7 @@
 
       function explorationDiscoveryBody(row, geo) {
         const summary = exploredRowSummary(row);
-        return `<p><strong>Row ${row + 1} has been discovered on ${currentLevelName()}.</strong></p>
+        return `<p><strong>Grid Row ${gridRowNumber(row)} has been interpreted on ${currentLevelName()}.</strong></p>
           <p><strong>Estimated reserve:</strong> ${(summary.tonnes / 1000).toFixed(summary.tonnes >= 100000 ? 0 : 1)}kt · <strong>Estimated grade:</strong> ${summary.grade.toFixed(2)}% Goldilocks Grade · <strong>Confidence:</strong> ${Math.round((summary.confidence || 0) * 100)}%</p>
           <p>${geo ? geo.name : 'The geology function'} has converted drill information into a colourful interpretation. The colours are now available for operational overconfidence.</p>
           <p>${exploredRowSatire(summary)}</p>`;
@@ -10840,7 +10957,7 @@
           title: 'Exploration row discovered',
           body: explorationDiscoveryBody(row, geo)
         });
-        if (nextExplorationRow() === null) openDeclineProposal();
+        if (hasReachedLevelTransition() || nextExplorationRow() === null) openDeclineProposal();
       }
 
       function updateExploration(dt) {
@@ -12267,7 +12384,7 @@
               : block.pillarState === 'fractured' || block.pillarState === 'spalling' || block.pillarState === 'cracking'
                 ? 'The Rock Doctor recommends installing support before the roof becomes more direct in its feedback.'
                 : 'That pillar is currently performing its main duty: remaining where it was left.';
-        showProductionComment('Pillar condition: ' + stateText + '. Modelled ' + Math.round(block.tonnes).toLocaleString() + 't at ' + estGrade.toFixed(1) + '% Goldilocks Grade (' + confidence + '). ' + advice, 'Ground Control', 8);
+        showProductionComment('Pillar at Grid ' + gridRef(block) + ' is ' + stateText + '. Modelled ' + Math.round(block.tonnes).toLocaleString() + 't at ' + estGrade.toFixed(1) + '% Goldilocks Grade (' + confidence + '). ' + advice, 'Ground Control', 8);
       }
 
       function showBlockInfo(block) {
@@ -12299,7 +12416,7 @@
           showPillarConditionReport(block, estGrade, confidence);
           return;
         }
-        showProductionComment('Row ' + (block.r + 1) + ', Block ' + (block.c + 1) + ': ' + Math.round(block.tonnes).toLocaleString() + 't at modelled ' + estGrade.toFixed(1) + '% Goldilocks Grade (' + confidence + ').', 'Block Estimate', 6);
+        showProductionComment('Grid ' + gridRef(block) + ': ' + Math.round(block.tonnes).toLocaleString() + 't at modelled ' + estGrade.toFixed(1) + '% Goldilocks Grade (' + confidence + ').', 'Block Estimate', 6);
       }
 
       function canvasClick(e) {
@@ -12770,8 +12887,128 @@
         }
       }
 
+      function roleIntroKeyToTab(key) {
+        if (key === 'exploration' || key === 'miningEngineering' || key === 'groundControl' || key === 'ventilation') return 'technical';
+        if (key === 'survey') return 'technical';
+        return 'supervisors';
+      }
+
+      function roleIntroContent(key) {
+        if (key === 'exploration') {
+          return {
+            title: 'Exploration Department Unlock',
+            image: 'assets/characters/geology-rock-lickers.png',
+            character: 'Geology Department',
+            department: 'Exploration, Colouring Pencils and Reserve Confidence',
+            initials: 'GEO',
+            body: `<div class="letter"><h2>Exploration Department Unlock</h2>
+              <p>The SLT has approved exploration, a process where cash is converted into drill core, coloured pencils, and confidence intervals.</p>
+              <p>Geologists will predict where the grade is, build a model, and then reserve the right to change their mind when Production gets there.</p>
+              <p>Drillers are required to turn these predictions into core, while maintaining a professional relationship with Geology through muttering, waiting, and asking whether the hole has moved again.</p>
+              <p><strong>The Geological Society would like to remind you that all models are wrong, but some are useful. How useful this model is, remains to be seen.</strong></p>
+            </div>`,
+            button: 'Proceed to Hire Geologists and Drillers'
+          };
+        }
+        if (key === 'miningEngineering') {
+          return {
+            title: 'Mining Engineering Department Unlock',
+            image: 'assets/characters/mining-engineer.png',
+            character: 'Mining Engineering Department',
+            department: 'Precision, Lines and Later Accountability',
+            initials: 'ENG',
+            body: `<div class="letter"><h2>Mining Engineering Department Unlock</h2>
+              <p>The SLT has approved the appointment of a Mining Engineer.</p>
+              <p>Mining Engineers convert geological optimism into lines, numbers, schedules, and designs that appear precise enough to be blamed later.</p>
+              <p>Engineers work to high levels of precision. Geologists refer to this process as <strong>sharpening the crayons</strong>.</p>
+              <p>The Mining Engineer will help formalise mine design, ground-control planning, and the increasingly difficult task of explaining why the mine cannot simply follow the pink blocks.</p>
+            </div>`,
+            button: 'Proceed to Hire Mining Engineer'
+          };
+        }
+        if (key === 'groundControl') {
+          return {
+            title: 'Ground Control Unlock',
+            image: 'assets/characters/rock-doctor.png',
+            character: 'Rock Doctor',
+            department: 'Ground Control and Roof Retention',
+            initials: 'ROCK',
+            body: `<div class="letter"><h2>Ground Control Unlock</h2>
+              <p>The mine has reached a depth where pillars are no longer decorative optimism.</p>
+              <p>The Rock Doctor will inspect pillars, object to Production's interpretation of gravity, and insist that the bolter exists for a reason.</p>
+              <p>Bolting prevents losses. It does not improve Safety; it merely restores the minimum acceptable condition of the roof not joining the floor.</p>
+            </div>`,
+            button: 'Proceed to Hire Rock Doctor'
+          };
+        }
+        if (key === 'survey') {
+          return {
+            title: 'Survey Department Unlock',
+            image: 'assets/characters/mining-engineer.png',
+            character: 'Survey Department',
+            department: 'Lines, Coordinates and Belt Regret',
+            initials: 'SURV',
+            body: `<div class="letter"><h2>Survey Department Unlock</h2>
+              <p>The operation has scaled to the point where straight lines can no longer be assumed.</p>
+              <p>A Surveyor is required to move the belt forward, maintain the centreline, and explain why the machine is not where the plan says it is.</p>
+              <p>Production calls this delay. Survey calls it the grid attempting to defend itself.</p>
+            </div>`,
+            button: 'Proceed to Hire Surveyor'
+          };
+        }
+        if (key === 'ventilation') {
+          return {
+            title: 'Ventilation Department Unlock',
+            image: 'assets/characters/mining-engineer.png',
+            character: 'Ventilation Engineering',
+            department: 'Air Movement Strategy',
+            initials: 'VENT',
+            body: `<div class="letter"><h2>Ventilation Department Unlock</h2>
+              <p>The crew has reported that the deeper mine is warm, humid, and increasingly similar to being inside a policy failure.</p>
+              <p>A Ventilation Engineer can be hired to convert airflow into diagrams, fan curves, and eventually a surface desk fan installed near the winder.</p>
+              <p>Ventilation confirms that air has moved. Whether it moved to the correct place remains subject to further modelling.</p>
+            </div>`,
+            button: 'Proceed to Hire Ventilation Engineer'
+          };
+        }
+        return null;
+      }
+
+      function nextRoleIntroKey() {
+        if (!state.roleIntroShown) state.roleIntroShown = {};
+        if (featureUnlocked('exploration') && !state.roleIntroShown.exploration && (!geologistOnCrew() || drillersOnCrew().length < 2)) return 'exploration';
+        if (featureUnlocked('technicalTeam') && !state.roleIntroShown.miningEngineering && !miningEngineerOnCrew()) return 'miningEngineering';
+        if (featureUnlocked('groundSupport') && !state.roleIntroShown.groundControl && !rockDoctorOnCrew()) return 'groundControl';
+        if (featureUnlocked('beltAdvancement') && !state.roleIntroShown.survey && !surveyorOnCrew()) return 'survey';
+        if (featureUnlocked('ventilation') && !state.roleIntroShown.ventilation && !ventilationEngineerOnCrew()) return 'ventilation';
+        return null;
+      }
+
+      function openRoleUnlockIntro(key, customTitle = null) {
+        const intro = roleIntroContent(key);
+        if (!intro) return false;
+        if (!state.roleIntroShown) state.roleIntroShown = {};
+        state.roleIntroShown[key] = true;
+        state.hiringTab = roleIntroKeyToTab(key);
+        setModalClosable(true);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = customTitle || intro.title;
+        $('modalBody').innerHTML = modalCharacterHtml(intro.image, intro.character, intro.department, 'A new department has arrived to define what success would have looked like if requested earlier.', intro.initials)
+          + intro.body
+          + `<div class="btnRow"><button class="primary" data-window="hr">${escapeHtml(intro.button || 'Proceed to Recruitment')}</button></div>`;
+        $('modalOverlay').classList.add('show');
+        return true;
+      }
+
+      function maybeOpenRoleIntroBeforeHr(customTitle = null) {
+        const key = nextRoleIntroKey();
+        if (!key) return false;
+        return openRoleUnlockIntro(key, customTitle);
+      }
+
       function openWindow(type, forceReportComplete = false, customTitle = null) {
         if (state.manualPaused && type !== 'dev') { showProductionComment('Game paused. Windows are locked because management cannot improve a situation while time is stopped.', 'Pause', 3.5); return; }
+        if (type === 'hr' && maybeOpenRoleIntroBeforeHr(customTitle)) return;
         setModalClosable(true);
         let title = customTitle || '';
         let body = '';
@@ -12790,8 +13027,8 @@
             ${annualKpiTrackerHtml()}
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Year Clock</strong><span>Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}. Year-end review occurs automatically at day ${YEAR_LENGTH_DAYS}. One operating year now lasts about three real minutes.</span></div><span class="tag">${daysLeft} days left</span></div>
-              <div class="row"><div class="avatarDot" style="background:#7c3aed"></div><div><strong>Mining Level</strong><span>Current canvas is ${currentLevelName()}. Reaching the top of the explored area triggers decline investment options.</span></div><span class="tag">Depth ${state.depthIndex || 0}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Initial known ground has deliberately been reduced to force a more optimistic exploration strategy.</span></div><span class="tag">Explore</span></div>
+              <div class="row"><div class="avatarDot" style="background:#7c3aed"></div><div><strong>Mining Level</strong><span>Current canvas is ${currentLevelName()}. The marked exploration line on the canvas shows where decline development to the next level becomes available.</span></div><span class="tag">Depth ${state.depthIndex || 0}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Only the first five rows are initially available on a fresh level; the rest requires drill core and optimism.</span></div><span class="tag">${hasReachedLevelTransition() ? 'Decline ready' : 'Explore'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Belt Head</strong><span>${beltHeadLabel()}. The belt can only be advanced through mined-out centreline ground.</span></div><span class="tag">Centreline</span></div>
             </div>
             ${state.setupComplete && !state.running ? '<div class="btnRow"><button class="primary" data-accept-objective>Accept Objective and Start Operating Year</button></div>' : ''}`;
@@ -12818,20 +13055,20 @@
           const activeRate = explorationRate();
           const daysRemaining = state.exploration.active && activeRate > 0 ? Math.ceil((100 - state.exploration.progress) / activeRate) : EXPLORATION_ROW_DAYS;
           const statusText = state.exploration.active
-            ? 'Drilling Row ' + (state.exploration.row + 1) + ' · ' + Math.round(state.exploration.progress) + '% · about ' + daysRemaining + ' days remaining'
-            : nextRow === null ? 'All rows interpreted' : 'Next programme: Row ' + (nextRow + 1) + ' · about ' + EXPLORATION_ROW_DAYS + ' days';
+            ? 'Drilling Grid Row ' + gridRowNumber(state.exploration.row) + ' · ' + Math.round(state.exploration.progress) + '% · about ' + daysRemaining + ' days remaining'
+            : hasReachedLevelTransition() ? 'Decline threshold reached · ' + (state.mineLevel - 100) + ' Level proposal available' : nextRow === null ? 'All rows interpreted' : 'Next programme: Grid Row ' + gridRowNumber(nextRow) + ' · about ' + EXPLORATION_ROW_DAYS + ' days';
           body = `<p>${explorationUnlocked ? 'Exploration reveals interpreted grade, not truth. Better geologists reduce surprise; worse geologists create opportunity for later clarification.' : 'Exploration becomes available in Year 2, once the SLT requires evidence for the reserve position it has already declared.'}</p>
             <div class="explorationStatusStrip">
               <div><strong>Programme Status</strong>${statusText}</div>
               <div><strong>Rows Discovered This Year</strong>${state.exploration.discoveredRowsThisYear || 0}</div>
-              <div><strong>Last Completed Row</strong>${state.exploration.lastCompletedRow === null || state.exploration.lastCompletedRow === undefined ? 'None yet' : 'Row ' + (state.exploration.lastCompletedRow + 1)}</div>
+              <div><strong>Last Completed Row</strong>${state.exploration.lastCompletedRow === null || state.exploration.lastCompletedRow === undefined ? 'None yet' : 'Grid Row ' + gridRowNumber(state.exploration.lastCompletedRow)}</div>
               <div><strong>Estimate Confidence</strong>${geo ? 'Skill ' + geo.skill + '/5 · ' + geo.trait : 'No geologist, no defensible optimism'}</div>
             </div>
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:${state.assets.drillOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Exploration Drill</strong><span>${state.assets.drillOwned ? 'Purchased and waiting to turn money into holes.' : 'Not purchased.'}</span></div><span class="tag">${state.assets.drillOwned ? 'Owned' : money(scaledCost(DRILL_PURCHASE_COST))}</span></div>
               <div class="row"><div class="avatarDot" style="background:${geo ? '#22c55e' : '#ef4444'}"></div><div><strong>Geologist</strong><span>${geo ? geo.name + ' · Skill ' + geo.skill + '/5 · ' + geo.trait : 'Required for grade interpretation.'}</span></div><span class="tag">${geo ? 'Assigned' : 'Missing'}</span></div>
               <div class="row"><div class="avatarDot" style="background:${drillers.length >= 2 ? '#22c55e' : '#ef4444'}"></div><div><strong>Drillers</strong><span>${drillers.length ? drillers.map(d => d.name).join(', ') : 'Two named drillers required.'}</span></div><span class="tag">${drillers.length}/2</span></div>
-              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Next Row</strong><span>${nextRow === null ? 'All rows discovered.' : 'Row ' + (nextRow + 1) + ' is available for the next left-to-right drilling programme.'}</span></div><span class="tag">${state.exploration.active ? Math.round(state.exploration.progress) + '%' : 'Ready'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Next Row</strong><span>${hasReachedLevelTransition() ? levelTransitionText() : nextRow === null ? 'All rows discovered.' : 'Grid Row ' + gridRowNumber(nextRow) + ' is available for the next left-to-right drilling programme.'}</span></div><span class="tag">${state.exploration.active ? Math.round(state.exploration.progress) + '%' : (hasReachedLevelTransition() ? 'Decline' : 'Ready')}</span></div>
             </div>
             <div class="btnRow">
               <button class="primary" data-buy-drill ${state.assets.drillOwned || !explorationUnlocked ? 'disabled' : ''}>Buy Drill · ${money(scaledCost(DRILL_PURCHASE_COST))}</button>
@@ -12873,7 +13110,7 @@
           const ventUnlocked = featureUnlocked('ventilation');
           const ventEng = ventilationEngineerOnCrew();
           const beltHead = beltHeadLabel();
-          const beltNext = beltStatus.row === null ? 'No further row' : 'Row ' + (beltStatus.row + 1) + ', Column ' + (beltColumn() + 1);
+          const beltNext = beltStatus.row === null ? 'No further row' : 'Grid ' + gridRefFor(beltStatus.row, beltColumn());
 
           body = `<p><strong>1stHOPE Continuous Miner</strong></p>
             <div class="rows">
@@ -12910,7 +13147,7 @@
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'On the board. Switch the HOPE remote to BOLTER, face a pillar, then press BOLT.' : bolterUnlocked ? 'Not purchased. The Rock Doctor will keep reminding everyone.' : 'Unlocks on the -1100 Level when technical responsibility becomes unavoidable.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : '-1100'}</span></div>
               <div class="row"><div class="avatarDot" style="background:${rockDoctorOnCrew() ? '#22c55e' : '#ef4444'}"></div><div><strong>Rock Doctor</strong><span>${rockDoctorOnCrew() ? rockDoctorOnCrew().name + ' · Skill ' + rockDoctorOnCrew().skill + '/5' : 'Required for support decisions.'}</span></div><span class="tag">${rockDoctorOnCrew() ? 'Assigned' : 'Missing'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Worst Pillar</strong><span>${worstPillar() ? 'Row ' + (worstPillar().r + 1) + ', Column ' + (worstPillar().c + 1) + ' · ' + worstPillar().pillarState : 'No unsupported exposed pillars identified.'}</span></div><span class="tag">${worstPillar() ? money(scaledCost(PILLAR_SUPPORT_COST)) : 'Stable'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Worst Pillar</strong><span>${worstPillar() ? 'Grid ' + gridRef(worstPillar()) + ' · ' + worstPillar().pillarState : 'No unsupported exposed pillars identified.'}</span></div><span class="tag">${worstPillar() ? money(scaledCost(PILLAR_SUPPORT_COST)) : 'Stable'}</span></div>
             </div>
             <div class="btnRow">
               <button class="primary" data-buy-bolter ${state.assets.bolterOwned || !bolterUnlocked ? 'disabled' : ''}>Buy Bolter · ${bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : '-1100'}</button>
@@ -14137,7 +14374,11 @@
           if (buyMineFanBtn) { buyMineFan(); return; }
 
           const startExplorationBtn = e.target.closest('[data-start-exploration]');
-          if (startExplorationBtn) { startExplorationProgram(); openWindow('exploration'); return; }
+          if (startExplorationBtn) {
+            startExplorationProgram();
+            if (state.exploration && state.exploration.active && !hasReachedLevelTransition()) openWindow('exploration');
+            return;
+          }
 
           const pleadCaseBtn = e.target.closest('[data-plead-case]');
           if (pleadCaseBtn) { openPleadCaseModal(); return; }
