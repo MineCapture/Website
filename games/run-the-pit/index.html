@@ -11317,6 +11317,139 @@
         });
       }
 
+
+      function syncMinerAliases() {
+        // Keep the original miner alias stable. Older systems still use state.machine;
+        // fleet-aware systems use state.machine1/state.machine2 and temporarily rebind state.machine.
+        if (!state.machine1) state.machine1 = state.machine || {
+          q: MINE_ID,
+          r: START_ROW,
+          c: START_COL,
+          status: 'idle',
+          autoMining: false,
+          dir: 'up',
+          target: null,
+          progress: 0,
+          condition: 78,
+          cutter: 0,
+          facing: -Math.PI / 2,
+          repairProgress: 0,
+          warnedSmoking: false,
+          warnedCritical: false,
+          label: '1stHOPE'
+        };
+        state.machine1.label = '1stHOPE';
+        state.machine = state.machine1;
+
+        if (!state.machine2) {
+          state.machine2 = {
+            q: MINE_ID,
+            r: START_ROW,
+            c: Math.min(MINE_COLS - 1, START_COL + 1),
+            status: 'idle',
+            autoMining: false,
+            dir: 'up',
+            target: null,
+            progress: 0,
+            condition: 82,
+            cutter: 0,
+            facing: -Math.PI / 2,
+            repairProgress: 0,
+            warnedSmoking: false,
+            warnedCritical: false,
+            label: '2ndHOPE'
+          };
+        }
+        state.machine2.label = '2ndHOPE';
+      }
+
+      function secondMinerUnlocked() {
+        return featureUnlocked('secondMiner');
+      }
+
+      function placeSecondMinerAtStart() {
+        syncMinerAliases();
+        const candidates = [
+          { r: START_ROW, c: Math.min(MINE_COLS - 1, START_COL + 1) },
+          { r: START_ROW, c: Math.max(0, START_COL - 1) },
+          { r: Math.min(MINE_ROWS - 1, START_ROW + 1), c: START_COL },
+          { r: START_ROW, c: START_COL }
+        ];
+        const spot = candidates.find(pos => {
+          const b = blockAt(MINE_ID, pos.r, pos.c);
+          return b && (b.status === 'void' || b.status === 'cleared' || b.status === 'solid');
+        }) || { r: START_ROW, c: START_COL };
+        const b = blockAt(MINE_ID, spot.r, spot.c);
+        if (b && b.status === 'solid' && !b.isPillar) {
+          b.status = 'void';
+          b.tonnes = 0;
+          b.grade = 0;
+          b.actualGrade = 0;
+          b.progress = 100;
+        }
+        state.machine2.q = MINE_ID;
+        state.machine2.r = spot.r;
+        state.machine2.c = spot.c;
+        state.machine2.status = 'idle';
+        state.machine2.autoMining = false;
+        state.machine2.dir = 'up';
+        state.machine2.target = null;
+        state.machine2.progress = 0;
+        state.machine2.facing = -Math.PI / 2;
+      }
+
+      function buySecondMiner() {
+        if (!secondMinerUnlocked()) {
+          openMiniWindow('Second Miner Not Yet Authorised', '<p>A second continuous miner becomes available on the -1200 Level, once the operation has enough scale to justify multiplying confusion.</p>', true);
+          return;
+        }
+        if (state.assets && state.assets.secondMinerOwned) {
+          openMiniWindow('Second Miner Already Active', '<p>The second mining unit is already contributing to production, maintenance demand, and general misunderstanding.</p>', true);
+          return;
+        }
+        state.assets = state.assets || {};
+        spend(scaledCost(SECOND_MINER_PURCHASE_COST), 'Second continuous miner');
+        state.assets.secondMinerOwned = true;
+        placeSecondMinerAtStart();
+        state.activeMachine = 'miner2';
+        adjustTrait('productivity', 4);
+        adjustTrait('safety', -2);
+        pushQueueEvent({
+          tone: 'warning',
+          icon: 'CM2',
+          label: 'CM2',
+          image: 'assets/characters/mining-engineer.png',
+          character: 'Mining Engineering Department',
+          department: 'Fleet Multiplication',
+          title: 'Second Miner Commissioned',
+          body: '<p>A second mining unit has been authorised and placed on the board as <strong>2ndHOPE</strong>. The original miner is now <strong>1stHOPE</strong>.</p><p>Use the HOPE remote toggle to switch between 1stHOPE, 2ndHOPE, and the bolter.</p><p><strong>Impact:</strong> +4 Productivity, -2 Safety. Actual second-machine output is available, while random fleet-chaos events become possible.</p>'
+        });
+        showProductionComment('2ndHOPE authorised. Output potential has increased, along with the number of things the belt can be blamed for.', 'Fleet Expansion', 6);
+        openWindow('assets');
+      }
+
+      function updateSecondMinerChaos(dt) {
+        if (!state.assets || !state.assets.secondMinerOwned || !state.running || state.paused || state.levelComplete) return;
+        state.secondMinerChaosTimer = (state.secondMinerChaosTimer || 0) + dt;
+        if (state.secondMinerChaosTimer < 55) return;
+        state.secondMinerChaosTimer = 0;
+        if (Math.random() > 0.36) return;
+        const baseCost = 1100 + Math.round((state.depthIndex || 0) * 550);
+        const cost = scaledCost(baseCost);
+        spend(cost, 'Second miner coordination');
+        adjustTrait('morale', -1);
+        pushQueueEvent({
+          tone: 'warning',
+          icon: 'CM2',
+          label: 'CM2',
+          image: 'assets/characters/mining-engineer.png',
+          character: 'Mining Engineering Department',
+          department: 'Fleet Coordination',
+          title: 'Second Miner Coordination Issue',
+          body: `<p>2ndHOPE has increased production potential and also the number of people asking which machine the plan meant.</p><p><strong>Impact:</strong> -1 Morale, ${money(cost)} coordination cost.</p>`
+        });
+      }
+
       function updateEngineeringResearch(dt) {
         const eng = miningEngineerOnCrew();
         if (!featureUnlocked('technicalTeam') || !eng || !state.running || state.paused) return;
@@ -12251,6 +12384,11 @@
         });
       }
 
+
+
+      function triggerPillarFailure(block) {
+        return failPillar(block);
+      }
 
       function worstPillar() {
         const order = { stable: 0, cracking: 1, spalling: 2, fractured: 3, critical: 4, failed: 5, supported: -1 };
