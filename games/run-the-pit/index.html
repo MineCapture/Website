@@ -4814,6 +4814,7 @@
           <div class="pill wide">Mined Tonnes <strong id="tonnesHud">0 / 10,000t</strong></div>
           <div class="pill wide">Goldilocks Grade <strong id="gradeHud">0.0%</strong></div>
           <div class="pill wide">LOM Reserve <strong id="lomHud">0kt @ 0.0%</strong></div>
+          <div class="pill wide" id="gradeRestrictionHudPill" style="display:none">Grade Restriction <strong id="gradeRestrictionHud">None</strong></div>
           <div class="pill wide" id="pillarHudPill" style="display:none">Pillar Split <strong id="pillarHud">0 / 3.0kt</strong></div>
           <div class="pill wide machinePill">Machine <strong id="machineHud">Idle</strong></div>
         </div>
@@ -5959,6 +5960,12 @@
         hseInspections: 0,
         meetingEventDoneThisYear: false,
         meetingEvents: 0,
+        externalAffairsDoneThisYear: false,
+        communityEvents: 0,
+        protestEvents: 0,
+        governmentEvents: 0,
+        gradeConstraintEventDoneThisYear: false,
+        gradeRestriction: null,
         lifetimeRevenue: 0,
         lifetimeExpenditure: 0,
         skipFactorTotalTonnes: 0,
@@ -6229,6 +6236,7 @@
         return next &&
           block &&
           block.status === 'solid' &&
+          isBlockAllowedByGradeRestriction(block) &&
           block.q === next.q &&
           block.r === next.r &&
           block.c === next.c &&
@@ -6785,6 +6793,7 @@
           state.day++;
           spend(dailyWageCost(), 'Crew salary');
           updateAnnualReviewTriggers();
+          expireGradeRestrictionIfNeeded();
           updateExposedPillarsOneDay();
           if (state.day % 16 === 0) showRandomProductionComment();
           if (state.day % 24 === 0) maybeGenerateStaffBubble();
@@ -6795,6 +6804,8 @@
             if (maybeHseInspectionEvent()) break;
             if (maybeSkipFactorEvent()) break;
             if (maybePointlessMeetingEvent()) break;
+            if (maybeExternalAffairsEvent()) break;
+            if (maybeGradeConstraintEvent()) break;
           }
           maybeConveyorFault();
         }
@@ -7547,6 +7558,340 @@
           button: 'Return Slightly Less Informed'
         });
         showProductionComment('You attended a meeting that could have been an email. Production continued in earnest, which is not always the same as correctly.', 'Management', 7);
+        return true;
+      }
+
+
+      function gradeRestrictionActive() {
+        const gr = state.gradeRestriction;
+        if (!gr) return null;
+        if (typeof gr.expiresDay === 'number' && state.day >= gr.expiresDay) {
+          state.gradeRestriction = null;
+          return null;
+        }
+        return gr;
+      }
+
+      function gradeRestrictionShortLabel(gr = gradeRestrictionActive()) {
+        if (!gr) return 'None';
+        const days = Math.max(0, Math.ceil((gr.expiresDay || state.day) - state.day));
+        return `${gr.label || gradeBandNameFromIndex(gr.minBand) + '+'} · ${days}d`;
+      }
+
+      function expireGradeRestrictionIfNeeded() {
+        const previous = state.gradeRestriction;
+        const active = gradeRestrictionActive();
+        if (previous && !active) {
+          showProductionComment('The temporary grade restriction has expired. The plant and customer have resumed accepting a wider range of geological disappointment.', 'Grade Control', 6);
+        }
+      }
+
+      function blockGradeBand(block) {
+        if (!block) return 0;
+        const g = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
+        return gradeBandIndex(Number(g) || 0);
+      }
+
+      function isBlockAllowedByGradeRestriction(block) {
+        const gr = gradeRestrictionActive();
+        if (!gr || !block || block.status !== 'solid') return true;
+        return blockGradeBand(block) >= Number(gr.minBand || 0);
+      }
+
+      function gradeRestrictionBlockReason(block) {
+        const gr = gradeRestrictionActive();
+        if (!gr || !block || isBlockAllowedByGradeRestriction(block)) return '';
+        const estGrade = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
+        return `${gr.source || 'The active product specification'} requires ${gr.label || gradeBandNameFromIndex(gr.minBand) + '+'} material. This block is modelled as ${gradeBandNameFromIndex(blockGradeBand(block))} at ${Number(estGrade || 0).toFixed(1)}% Goldilocks Grade.`;
+      }
+
+      function showGradeRestrictionBlockNotice(block) {
+        const gr = gradeRestrictionActive();
+        const reason = gradeRestrictionBlockReason(block);
+        if (!gr || !reason) return;
+        showProductionComment(reason + ' Sales has confirmed this is a mining issue.', 'Grade Restriction', 8);
+        openOperationalEventModal({
+          title: 'Block Not Accepted',
+          image: gr.image || 'assets/characters/plant-manager.png',
+          character: gr.character || 'Plant / Customer Interface',
+          department: 'Grade Control',
+          label: 'SPEC',
+          tone: 'warning',
+          body: `<p>${escapeHtml(reason)}</p><p><strong>Active restriction:</strong> ${escapeHtml(gradeRestrictionShortLabel(gr))}.</p><p>The block remains in the mine plan, but current reality will not accept it.</p>`,
+          button: 'Acknowledge Product Constraint'
+        });
+      }
+
+      function externalAffairsEventList() {
+        return [
+          {
+            kind: 'community',
+            title: 'Community Relations Concern',
+            image: 'assets/characters/community-relations.png',
+            character: 'Community Relations',
+            department: 'Surface Interface Management',
+            body: '<p>A local resident has reported that their house has subsided and believes this may be related to mining activity.</p><p>The Community Relations team has confirmed that the resident is probably confused, but also close enough to a newspaper to be taken seriously.</p>',
+            choices: [
+              ['pay', 'Pay Them to Shut Up', 'Immediate cost. The issue becomes quiet, which is not the same as resolved.'],
+              ['survey', 'Send Mine Surveyor', 'A proper survey may disprove the claim, or identify measurements that would have been better left approximate.'],
+              ['evidence', 'Request Further Evidence', 'Delay the decision and hope the ground stops moving.'],
+              ['historic', 'Blame Historic Workings', 'A traditional response with mixed evidential support.']
+            ]
+          },
+          {
+            kind: 'protest',
+            title: 'Environmental Protest',
+            image: 'assets/characters/greenwar-protest.png',
+            character: 'GreenWar Protestors',
+            department: 'External Affairs',
+            body: '<p>Protestors from the activist group <strong>GreenWar</strong> have assembled at the mine gates to express their view that mining is evil and bad.</p><p>Several protestors travelled to the mine in a vehicle made of steel and are currently using rare-earth-powered devices to film a vlog for their three social media followers.</p>',
+            choices: [
+              ['grown', 'Explain “If It’s Not Grown, It’s Mined”', 'Technically correct. Socially risky.'],
+              ['police', 'Call the Police and Hope They Deal With It', 'A standard escalation strategy based on outsourcing awkwardness.'],
+              ['leaflets', 'Hand Out “Just Cease Oil” Leaflets', 'Redirect concern towards a more confusing campaign.'],
+              ['workshop', 'Invite Them to a Stakeholder Workshop', 'Costs time, produces minutes, and may reduce visible shouting.']
+            ]
+          },
+          {
+            kind: 'governmentPositive',
+            title: 'Government Legislation Change',
+            image: 'assets/characters/government-legislation.png',
+            character: 'Government Liaison',
+            department: 'Policy Opportunity Unit',
+            body: '<p>The Government has announced a new strategy to support the critical minerals industry.</p><p>This includes a 5% corporation tax relief designed to encourage domestic mineral production, supply-chain resilience, and several speeches near machinery.</p><p><strong>Impact:</strong> Finance has adjusted the numbers to ensure this does not affect your KPIs or operating budget.</p>',
+            direct: true,
+            apply: () => { adjustTrait('morale', 1); }
+          },
+          {
+            kind: 'governmentNegative',
+            title: 'Government Legislation Change',
+            image: 'assets/characters/government-legislation.png',
+            character: 'Government Liaison',
+            department: 'Mineral Rights Adjustment Office',
+            body: '<p>The Government has become aware that a foreign company is exploiting natural resources for profit.</p><p>The Government is concerned that its share may not be large enough, given that it controls the issue of mineral rights.</p><p><strong>Impact:</strong> Mineral royalties have increased. Current budget reduced by 5%.</p>',
+            direct: true,
+            apply: () => {
+              const hit = Math.max(1200, Math.round(Math.max(0, state.cash) * 0.05));
+              state.cash -= hit;
+              state.expenditure += hit;
+              state.lifetimeExpenditure = (state.lifetimeExpenditure || 0) + hit;
+              adjustTrait('morale', -1);
+            }
+          }
+        ];
+      }
+
+      function maybeExternalAffairsEvent() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.externalAffairsDoneThisYear) return false;
+        const doy = dayOfYear();
+        if (doy < 65 || doy > YEAR_LENGTH_DAYS - 35) return false;
+        const chance = clamp(0.055 + Math.max(0, state.depthIndex || 0) * 0.025 + Math.max(0, state.year - 3) * 0.004, 0.04, 0.14);
+        if (Math.random() > chance) return false;
+        const list = externalAffairsEventList();
+        const ev = list[Math.floor(Math.random() * list.length)];
+        state.externalAffairsDoneThisYear = true;
+        if (ev.kind === 'community') state.communityEvents = (state.communityEvents || 0) + 1;
+        if (ev.kind === 'protest') state.protestEvents = (state.protestEvents || 0) + 1;
+        if (ev.kind && ev.kind.startsWith('government')) state.governmentEvents = (state.governmentEvents || 0) + 1;
+        if (ev.direct) {
+          if (typeof ev.apply === 'function') ev.apply();
+          openOperationalEventModal({
+            title: ev.title,
+            image: ev.image,
+            character: ev.character,
+            department: ev.department,
+            label: 'EXT',
+            tone: ev.kind === 'governmentNegative' ? 'warning' : 'info',
+            body: ev.body,
+            button: 'Accept Policy Environment'
+          });
+          showProductionComment('External Affairs has generated a condition outside the mine plan. Production remains responsible for absorbing it.', 'External Affairs', 7);
+          return true;
+        }
+        openExternalAffairsChoiceModal(ev);
+        return true;
+      }
+
+      function openExternalAffairsChoiceModal(ev) {
+        if (!ev) return;
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = ev.title || 'External Affairs Event';
+        const image = modalCharacterHtml(ev.image || 'assets/characters/external-affairs.png', ev.character || 'External Affairs', ev.department || 'Corporate Interface', 'The outside world has become aware of the mine.', 'EXT');
+        const choices = (ev.choices || []).map(([key, label, detail]) => `<button class="eventChoiceBtn" data-external-choice="${escapeHtml(ev.kind + ':' + key)}"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(detail)}</span></button>`).join('');
+        $('modalBody').innerHTML = `${image}${ev.body || ''}<div class="eventChoiceGrid">${choices}</div>`;
+        $('modalOverlay').classList.add('show');
+      }
+
+      function resolveExternalAffairsChoice(encoded) {
+        const [kind, choice] = String(encoded || '').split(':');
+        const surveyor = surveyorOnCrew();
+        let title = 'External Affairs Outcome';
+        let body = '';
+        let tone = 'warning';
+        if (kind === 'community') {
+          if (choice === 'pay') {
+            const cost = scaledCost(2600);
+            spend(2600, 'Community relations settlement');
+            adjustTrait('morale', -1);
+            body = `<p>The resident has accepted a confidential community payment and agreed that the matter has been resolved without anyone agreeing what the matter was.</p><p><strong>Impact:</strong> -${money(cost)} budget, -1 Morale.</p>`;
+          } else if (choice === 'survey') {
+            const good = !!surveyor && Math.random() < clamp(0.52 + (surveyor.skill || 3) * 0.08, 0.45, 0.85);
+            const costBase = good ? 900 : 1800;
+            const cost = scaledCost(costBase);
+            spend(costBase, 'Community survey');
+            if (good) {
+              adjustTrait('skill', 1);
+              body = `<p>${escapeHtml(surveyor.name)} has completed a thorough survey and confirmed that the property has moved less than the resident’s expectations.</p><p><strong>Impact:</strong> -${money(cost)} budget, +1 Skill.</p>`;
+              tone = 'good';
+            } else {
+              adjustTrait('morale', -2);
+              body = `<p>The survey has identified several measurements which would have been better left approximate. Community Relations has requested a more community-friendly contour interval.</p><p><strong>Impact:</strong> -${money(cost)} budget, -2 Morale.</p>`;
+            }
+          } else if (choice === 'evidence') {
+            const escalates = Math.random() < 0.45;
+            if (escalates) {
+              spend(1600, 'Community escalation');
+              adjustTrait('morale', -2);
+              body = `<p>The resident has provided further evidence, including a door that no longer closes and a local journalist who does.</p><p><strong>Impact:</strong> -${money(scaledCost(1600))} budget, -2 Morale.</p>`;
+            } else {
+              adjustTrait('skill', 1);
+              body = `<p>No further evidence has been supplied. Community Relations has described this as a successful stakeholder silence.</p><p><strong>Impact:</strong> +1 Skill.</p>`;
+              tone = 'good';
+            }
+          } else {
+            const success = Math.random() < 0.35;
+            if (success) {
+              body = `<p>The explanation has been accepted. Historic workings have once again proved useful by being unavailable for comment.</p><p><strong>Impact:</strong> no immediate budget cost.</p>`;
+              tone = 'good';
+            } else {
+              spend(2200, 'Historic workings clarification');
+              adjustTrait('morale', -1);
+              body = `<p>The historic workings defence has been reviewed and found to be historic, working, and insufficient.</p><p><strong>Impact:</strong> -${money(scaledCost(2200))} budget, -1 Morale.</p>`;
+            }
+          }
+        }
+        if (kind === 'protest') {
+          if (choice === 'grown') {
+            const works = Math.random() < 0.38;
+            if (works) {
+              adjustTrait('skill', 1);
+              body = `<p>The protestors have accepted that modern life requires mined materials, while remaining opposed to this mine specifically.</p><p><strong>Impact:</strong> +1 Skill.</p>`;
+              tone = 'good';
+            } else {
+              adjustTrait('morale', -2);
+              body = `<p>The explanation has been clipped into a context-free video. Engagement is up. Understanding is not.</p><p><strong>Impact:</strong> -2 Morale.</p>`;
+            }
+          } else if (choice === 'police') {
+            spend(1000, 'Gate disruption');
+            adjustTrait('productivity', -1);
+            body = `<p>The police have attended and requested that everyone remain calm, including the people paid to manage this.</p><p><strong>Impact:</strong> -${money(scaledCost(1000))} budget, -1 Productivity.</p>`;
+          } else if (choice === 'leaflets') {
+            const confused = Math.random() < 0.58;
+            if (confused) {
+              adjustTrait('morale', 1);
+              body = `<p>The protestors have left to research whether Just Cease Oil is a campaign, a typo, or a procurement strategy.</p><p><strong>Impact:</strong> +1 Morale.</p>`;
+              tone = 'good';
+            } else {
+              adjustTrait('morale', -1);
+              body = `<p>The leaflet strategy has added confusion without reducing attendance. Corporate Communications has called this engagement.</p><p><strong>Impact:</strong> -1 Morale.</p>`;
+            }
+          } else {
+            spend(1450, 'Stakeholder workshop');
+            adjustTrait('productivity', -1);
+            adjustTrait('morale', -1);
+            body = `<p>A stakeholder workshop has been held. Several action points were captured, none of which can be mined.</p><p><strong>Impact:</strong> -${money(scaledCost(1450))} budget, -1 Productivity, -1 Morale.</p>`;
+          }
+        }
+        setModalClosable(true);
+        $('modalTitle').textContent = title;
+        $('modalBody').innerHTML = body + '<div class="btnRow"><button class="primary" data-close>Return to Controlled Uncertainty</button></div>';
+        showProductionComment('External Affairs has concluded that the outside world remains outside, but now has actions.', 'External Affairs', 7);
+      }
+
+      function gradeConstraintEvents() {
+        return [
+          {
+            type: 'customer',
+            title: 'Customer Specification Change',
+            source: 'Customer specification',
+            label: 'Good+ only',
+            minBand: 2,
+            duration: 90,
+            tone: 'warning',
+            image: 'assets/characters/sales-marketing.png',
+            character: 'Sales and Marketing',
+            department: 'Product Quality Announcement Unit',
+            body: '<p>Sales and Marketing have agreed a new customer contract.</p><p>The customer requires consistent product quality, which Sales has interpreted as a Production problem.</p><p><strong>Restriction:</strong> for the next quarter, marginal and poor grade blocks cannot be mined.</p><p>Sales would like to clarify that the deal has already been announced externally.</p>'
+          },
+          {
+            type: 'plant',
+            title: 'Processing Plant Constraint',
+            source: 'Processing plant constraint',
+            label: 'High+ only',
+            minBand: 3,
+            duration: 30,
+            tone: 'warning',
+            image: 'assets/characters/plant-manager.png',
+            character: 'Processing Plant',
+            department: 'Material Acceptance Desk',
+            body: '<p>The processing plant grinder has failed.</p><p>The Plant Manager has confirmed that the plant can still operate, provided the mine only sends material that does not require much processing.</p><p><strong>Restriction:</strong> for the next month, only High and Premium grade blocks can be accepted.</p>'
+          },
+          {
+            type: 'blend',
+            title: 'Product Blending Restriction',
+            source: 'Blending restriction',
+            label: 'Good+ only',
+            minBand: 2,
+            duration: 60,
+            tone: 'warning',
+            image: 'assets/characters/quality-department.png',
+            character: 'Quality Department',
+            department: 'Blending Assurance',
+            body: '<p>The product blend has become too honest.</p><p>Quality has requested that the mine send better material until the plant can resume diluting optimism at the correct rate.</p><p><strong>Restriction:</strong> for the next two months, only Good, High, and Premium grade blocks can be mined.</p>'
+          }
+        ];
+      }
+
+      function maybeGradeConstraintEvent() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.gradeConstraintEventDoneThisYear) return false;
+        if (gradeRestrictionActive()) return false;
+        if (state.year < 2) return false;
+        const doy = dayOfYear();
+        if (doy < 55 || doy > YEAR_LENGTH_DAYS - 25) return false;
+        const chance = clamp(0.060 + Math.max(0, state.depthIndex || 0) * 0.020 + Math.max(0, state.year - 3) * 0.006, 0.05, 0.16);
+        if (Math.random() > chance) return false;
+        const list = gradeConstraintEvents();
+        const ev = list[Math.floor(Math.random() * list.length)];
+        return applyGradeConstraintEvent(ev);
+      }
+
+      function applyGradeConstraintEvent(ev) {
+        if (!ev) return false;
+        state.gradeConstraintEventDoneThisYear = true;
+        state.gradeRestriction = {
+          type: ev.type,
+          title: ev.title,
+          source: ev.source,
+          label: ev.label,
+          minBand: ev.minBand,
+          expiresDay: state.day + ev.duration,
+          image: ev.image,
+          character: ev.character
+        };
+        openOperationalEventModal({
+          title: ev.title,
+          image: ev.image,
+          character: ev.character,
+          department: ev.department,
+          label: 'SPEC',
+          tone: ev.tone || 'warning',
+          body: ev.body + `<p><strong>SLT Dashboard:</strong> active grade restriction shown as ${escapeHtml(gradeRestrictionShortLabel(state.gradeRestriction))}.</p>`,
+          button: 'Accept Grade Constraint'
+        });
+        showProductionComment('Grade now matters because someone outside Production has remembered product specification.', 'Grade Control', 8);
         return true;
       }
 
@@ -8564,6 +8909,26 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(label, r.x + r.w * 0.75, r.y + r.h * 0.25);
+            ctx.restore();
+          }
+
+          const gradeBlocked = !isBlockAllowedByGradeRestriction(block);
+          if (gradeBlocked) {
+            ctx.save();
+            ctx.globalAlpha = 0.52;
+            ctx.fillStyle = 'rgba(15,23,42,0.70)';
+            ctx.fillRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = '#fde68a';
+            ctx.setLineDash([4, 3]);
+            ctx.lineWidth = Math.max(1.5, r.w * 0.045);
+            ctx.strokeRect(r.x + 3, r.y + 3, r.w - 6, r.h - 6);
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#fef3c7';
+            ctx.font = '900 ' + Math.max(7, r.w * 0.18) + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('SPEC', r.x + r.w / 2, r.y + r.h / 2);
             ctx.restore();
           }
 
@@ -10434,6 +10799,8 @@
         if (target.technicalHires) optionalCards.push(kpiCardHtml('Technical Team', `${techHires} / ${target.technicalHires}`, pct(techHires, target.technicalHires), progressKpiStatus(techHires, target.technicalHires), 'Mining Engineer and Rock Doctor required'));
         if (target.beltExtensions) optionalCards.push(kpiCardHtml('Belt Advancement', `${beltExt} / ${target.beltExtensions}`, pct(beltExt, target.beltExtensions), progressKpiStatus(beltExt, target.beltExtensions), 'Survey-controlled infrastructure promise'));
         if (target.pillarSplitTonnes) optionalCards.push(kpiCardHtml('Pillar Splitting', `${Math.round(pillarSplit).toLocaleString()} / ${Math.round(target.pillarSplitTonnes).toLocaleString()}t`, pct(pillarSplit, target.pillarSplitTonnes), progressKpiStatus(pillarSplit, target.pillarSplitTonnes), 'Consultant-recovered value'));
+        const gr = gradeRestrictionActive();
+        if (gr) optionalCards.push(kpiCardHtml('Grade Restriction', gradeRestrictionShortLabel(gr), 100, 'atRisk', gr.source || 'Temporary product specification'));
         const statusList = annualKpiStatusList();
         const overallStatus = aggregateKpiStatus(statusList);
         const budgetStatus = budgetKpiStatus();
@@ -10869,6 +11236,9 @@
         state.skipFactorDoneThisYear = false;
         state.hseInspectionDoneThisYear = false;
         state.meetingEventDoneThisYear = false;
+        state.externalAffairsDoneThisYear = false;
+        state.gradeConstraintEventDoneThisYear = false;
+        if (state.gradeRestriction && state.gradeRestriction.expiresDay <= state.day) state.gradeRestriction = null;
         state.annualTargets = targetsForYear(state.year);
         applyAnnualFinanceReset(state.year, state.cash, state.revenue, state.expenditure);
         restoreMinedBlockSnapshot(minedSnapshot);
@@ -11338,6 +11708,18 @@
           const lom = lifeOfMineMetrics();
           lomHud.textContent = (lom.tonnes / 1000).toFixed(lom.tonnes >= 100000 ? 0 : 1) + 'kt @ ' + lom.grade.toFixed(1) + '%';
         }
+        const grPill = $('gradeRestrictionHudPill');
+        const grHud = $('gradeRestrictionHud');
+        const grActive = gradeRestrictionActive();
+        if (grPill && grHud) {
+          if (grActive) {
+            grPill.style.display = '';
+            grHud.textContent = gradeRestrictionShortLabel(grActive);
+          } else {
+            grPill.style.display = 'none';
+            grHud.textContent = 'None';
+          }
+        }
 
         const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
         const pillarPill = $('pillarHudPill');
@@ -11359,6 +11741,7 @@
         setPillStatus('gradeHud', gradeKpiStatus(annualGrade(), target.grade || 0, annualTonnes()));
         setPillStatus('kpiHud', kpiStatus);
         if ($('lomHud')) setPillStatus('lomHud', lifeOfMineMetrics().tonnes >= Math.max(1, (target.tonnes || 0) * 0.8) ? 'onTrack' : 'atRisk');
+        if ($('gradeRestrictionHud') && grActive) setPillStatus('gradeRestrictionHud', 'atRisk');
         if ($('pillarHud') && target.pillarSplitTonnes) setPillStatus('pillarHud', progressKpiStatus(state.pillarSplitTonnesThisYear || 0, target.pillarSplitTonnes));
 
         let machineText = state.paused ? 'Paused' : !isConveyorAvailable() ? 'Belt stopped' : state.machine.status === 'mining' ? 'Mining ' + directionLabel() : state.machine.status === 'tramming' ? 'Tramming ' + directionLabel() : state.machine.status === 'maintenance' ? 'Repair' : state.machine.status === 'broken' ? 'Broken' : 'Idle ' + directionLabel();
@@ -11484,6 +11867,11 @@
           return;
         }
         const estGrade = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
+        const restrictionReason = gradeRestrictionBlockReason(block);
+        if (restrictionReason) {
+          showGradeRestrictionBlockNotice(block);
+          return;
+        }
         const confidence = block.gradeConfidence ? Math.round(block.gradeConfidence * 100) + '% confidence' : 'model confidence unavailable';
         const pillarText = block.isPillar ? ' Structural pillar: mineable only after Pillar Splitting authorisation.' : '';
         showProductionComment('Row ' + (block.r + 1) + ', Block ' + (block.c + 1) + ': ' + Math.round(block.tonnes).toLocaleString() + 't at modelled ' + estGrade.toFixed(1) + '% Goldilocks Grade (' + confidence + ').' + pillarText, 'Block Estimate', 6);
@@ -11617,6 +12005,14 @@
         }
 
         if (next.status === 'solid') {
+          if (!isBlockAllowedByGradeRestriction(next)) {
+            state.machine.autoMining = false;
+            state.machine.status = 'idle';
+            state.machine.target = null;
+            state.machine.progress = 0;
+            showGradeRestrictionBlockNotice(next);
+            return;
+          }
           if (next.isPillar && !featureUnlocked('pillarSplitting')) {
             state.machine.autoMining = false;
             state.machine.status = 'idle';
@@ -13263,6 +13659,9 @@
 
           const pleaChoiceBtn = e.target.closest('[data-plea-choice]');
           if (pleaChoiceBtn) { resolvePleaChoice(pleaChoiceBtn.dataset.pleaChoice); return; }
+
+          const externalChoiceBtn = e.target.closest('[data-external-choice]');
+          if (externalChoiceBtn) { resolveExternalAffairsChoice(externalChoiceBtn.dataset.externalChoice); return; }
 
           const nextYearBtn = e.target.closest('[data-next-year]');
           if (nextYearBtn) { advanceToNextYear(); return; }
