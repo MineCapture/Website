@@ -5329,6 +5329,7 @@
       const BELT_EXTENSION_COST = 3200;
       const DECLINE_INVESTMENT_COST = 62000;
       const SECOND_MINER_PURCHASE_COST = 88000;
+      const MINE_FAN_PURCHASE_COST = 42000;
 
       const BASE_REVENUE_PER_TONNE = 4.8;
       const TRAM_COST = 55;
@@ -5497,7 +5498,7 @@
         {
           type: 'leave',
           icon: '↗',
-          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor'],
+          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'ventilationEngineer'],
           quote: '“Any chance?”',
           text: '{name} wants to leave early. HR advises supporting wellbeing unless it affects output, in which case HR advises output.',
           buttons: [
@@ -5508,7 +5509,7 @@
         {
           type: 'pay',
           icon: '£',
-          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor'],
+          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'ventilationEngineer'],
           traits: ['Pay'],
           quote: '“I’ve had an offer.”',
           text: '{name} claims A. Competitor will pay substantially more to sit in a cabin for 12 hours a day.',
@@ -5520,7 +5521,7 @@
         {
           type: 'tea',
           icon: '☕',
-          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor'],
+          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'ventilationEngineer'],
           traits: ['Tea'],
           quote: '“Kettle’s down.”',
           text: '{name} reports a welfare-critical tea supply issue.',
@@ -5609,7 +5610,7 @@
         {
           type: 'beltBlame',
           icon: '!',
-          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor'],
+          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'ventilationEngineer'],
           quote: '“Is the belt meant to sound like that?”',
           text: '{name} believes the conveyor has entered the blame-allocation phase of its lifecycle.',
           buttons: [
@@ -5686,7 +5687,7 @@
         {
           type: 'tired',
           icon: 'Z',
-          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor'],
+          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'ventilationEngineer'],
           quote: '“I’m hanging.”',
           text: '{name} appears to be operating mainly on caffeine, resentment, and an ancient packet of mints.',
           buttons: [
@@ -5755,7 +5756,7 @@
         {
           type: 'morale',
           icon: '!',
-          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor'],
+          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'ventilationEngineer'],
           quote: '“Can I just say something?”',
           text: '{name} has a concern. This has been classified as a learning opportunity.',
           buttons: [
@@ -5803,7 +5804,7 @@
       const MINE_ID = 'MINE';
       const MINE_COLS = 11;
       const MINE_ROWS = 18;
-      const LOCKED_ROWS = 14;
+      const LOCKED_ROWS = 9;
       const START_COL = Math.floor(MINE_COLS / 2);
       const ACCESS_ROW = MINE_ROWS;
       const START_ROW = ACCESS_ROW;
@@ -5913,7 +5914,9 @@
         { id: 'r_doctor', portraitTier: 'good', name: 'R. Doctor', role: 'rockDoctor', model: 'R', salary: 68000, skill: 5, morale: 3, attendance: 4, safety: 5, trait: 'Pillar Whisperer', description: 'Can diagnose a failing pillar by listening to the sound of Production asking for more tonnes.' },
         { id: 'c_rack', portraitTier: 'average', name: 'C. Rack', role: 'rockDoctor', model: 'R', salary: 52000, skill: 3, morale: 4, attendance: 4, safety: 3, trait: 'Sees Manageable Ground', description: 'Uses the word manageable often enough for it to become concerning.' },
         { id: 's_traight', portraitTier: 'average', name: 'S. Traight', role: 'surveyor', model: 'S', salary: 48000, skill: 4, morale: 3, attendance: 4, safety: 3, trait: 'Line Keeper', description: 'Keeps belt lines, drawings, and production promises roughly in the same coordinate system.' },
-        { id: 'o_ffset', portraitTier: 'bad', name: 'O. Ffset', role: 'surveyor', model: 'S', salary: 39000, skill: 2, morale: 4, attendance: 4, safety: 2, trait: 'Close Enough Grid', description: 'Believes every line is straight if viewed from a sufficiently strategic altitude.' }
+        { id: 'o_ffset', portraitTier: 'bad', name: 'O. Ffset', role: 'surveyor', model: 'S', salary: 39000, skill: 2, morale: 4, attendance: 4, safety: 2, trait: 'Close Enough Grid', description: 'Believes every line is straight if viewed from a sufficiently strategic altitude.' },
+        { id: 'f_reshair', portraitTier: 'average', name: 'F. Reshair', role: 'ventilationEngineer', model: 'V', salary: 64000, skill: 4, morale: 3, attendance: 4, safety: 4, trait: 'Airflow Theorist', description: 'Believes all heat problems can be solved by moving air somewhere, preferably away from responsibility.' },
+        { id: 'a_irflow', portraitTier: 'bad', name: 'A. Irflow', role: 'ventilationEngineer', model: 'V', salary: 52000, skill: 2, morale: 4, attendance: 3, safety: 3, trait: 'Fan Optimist', description: 'Owns several desk fans and a strong conviction that ventilation is mostly a question of attitude.' }
       ];
 
       let selectedCrewIds = [];
@@ -5936,6 +5939,7 @@
         yearStartDay: 0,
         yearStartTonnes: 0,
         yearStartK2oTonnes: 0,
+        yearStartPillarFailures: 0,
         annualTargets: { tonnes: 10000, grade: 14.0, discoveredRows: 0, safetyMin: 45 },
         midYearReviewDone: false,
         yearReviewDue: false,
@@ -5977,6 +5981,8 @@
         governmentEvents: 0,
         gradeConstraintEventDoneThisYear: false,
         gradeRestriction: null,
+        hopeSupportEventDoneThisYear: false,
+        heatEventDoneThisYear: false,
         lifetimeRevenue: 0,
         lifetimeExpenditure: 0,
         skipFactorTotalTonnes: 0,
@@ -6003,7 +6009,7 @@
           repairProgress: 0,
           warnedSmoking: false,
           warnedCritical: false,
-          label: 'HOPE1'
+          label: '1stHOPE'
         },
         machine2: {
           q: MINE_ID,
@@ -6020,7 +6026,7 @@
           repairProgress: 0,
           warnedSmoking: false,
           warnedCritical: false,
-          label: 'HOPE2'
+          label: '2ndHOPE'
         },
         bolter: {
           q: MINE_ID,
@@ -6047,7 +6053,8 @@
         assets: {
           drillOwned: false,
           bolterOwned: false,
-          secondMinerOwned: false
+          secondMinerOwned: false,
+          fanOwned: false
         },
         exploration: {
           active: false,
@@ -6122,8 +6129,8 @@
             const riskVal = seeded(idx + 31);
             const risk = riskVal > 0.78 ? 'High' : riskVal > 0.44 ? 'Medium' : 'Low';
             const isPillar = unlocked && isPillarCell(r, c);
-            const gasPocket = depth >= 1 && unlocked && !isPillar && seeded(idx + 71) > 0.925;
-            const waterPocket = depth >= 2 && unlocked && !isPillar && seeded(idx + 83) > 0.955;
+            const gasPocket = depth >= 3 && unlocked && !isPillar && seeded(idx + 71) > 0.925;
+            const waterPocket = depth >= 3 && unlocked && !isPillar && seeded(idx + 83) > 0.955;
 
             list.push({
               q: MINE_ID,
@@ -6268,12 +6275,12 @@
         const next = nextMachineBlock();
         return next &&
           block &&
-          block.status === 'solid' &&
-          isBlockAllowedByGradeRestriction(block) &&
+          (block.status === 'solid' || block.status === 'rubble') &&
+          (block.status === 'rubble' || isBlockAllowedByGradeRestriction(block)) &&
           block.q === next.q &&
           block.r === next.r &&
           block.c === next.c &&
-          (!block.isPillar || featureUnlocked('pillarSplitting')) &&
+          !block.isPillar &&
           state.machine.status === 'idle';
       }
 
@@ -6294,8 +6301,12 @@
         return Math.max(0, state.day - (state.yearStartDay || 0));
       }
 
+      function annualPillarFailures() {
+        return Math.max(0, (state.pillarFailures || 0) - (state.yearStartPillarFailures || 0));
+      }
+
       function lifeOfMineMetrics() {
-        const discovered = (state.blocks[MINE_ID] || []).filter(b => b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble' && typeof b.estimatedGrade === 'number' && b.tonnes > 0);
+        const discovered = (state.blocks[MINE_ID] || []).filter(b => b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble' && b.status !== 'damaged' && typeof b.estimatedGrade === 'number' && b.tonnes > 0);
         const tonnes = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
         const gradeT = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade) || 0), 0);
         return { tonnes, grade: tonnes > 0 ? gradeT / tonnes : 0, blocks: discovered.length };
@@ -6348,11 +6359,11 @@
           // Annual tonnage is now tuned for a three-minute operating year and larger mine blocks.
           // A good year should require roughly 5 blocks in Year 1 and 10–20 blocks once the operation ramps up.
           // -1000 Level is the tutorial campaign: enough pressure to teach systems, not enough to trap most players.
-          1: { tonnes: 9000, grade: 13.9, discoveredRows: 0, safetyMin: 42, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
-          2: { tonnes: 13000, grade: 14.0, discoveredRows: 2, safetyMin: 45, technicalHires: 0, beltExtensions: 0, pillarSplitTonnes: 0 },
-          3: { tonnes: 17000, grade: 14.0, discoveredRows: 2, safetyMin: 48, technicalHires: 2, beltExtensions: 0, pillarSplitTonnes: 0, pillarSupports: 1 },
-          4: { tonnes: 22000, grade: 14.1, discoveredRows: 3, safetyMin: 52, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 0 },
-          5: { tonnes: 26000, grade: 14.2, discoveredRows: 3, safetyMin: 55, technicalHires: 0, beltExtensions: 1, pillarSplitTonnes: 3000, pillarSupports: 0 }
+          1: { tonnes: 9000, grade: 13.9, discoveredRows: 0, safetyMin: 42, technicalHires: 0, beltExtensions: 0, pillarSupports: 0, maxPillarFailures: 99 },
+          2: { tonnes: 13000, grade: 14.0, discoveredRows: 2, safetyMin: 45, technicalHires: 0, beltExtensions: 0, pillarSupports: 0, maxPillarFailures: 99 },
+          3: { tonnes: 17000, grade: 14.0, discoveredRows: 2, safetyMin: 48, technicalHires: 2, beltExtensions: 0, pillarSupports: 1, maxPillarFailures: 2 },
+          4: { tonnes: 22000, grade: 14.1, discoveredRows: 3, safetyMin: 52, technicalHires: 0, beltExtensions: 1, pillarSupports: 2, maxPillarFailures: 1 },
+          5: { tonnes: 26000, grade: 14.2, discoveredRows: 3, safetyMin: 55, technicalHires: 0, beltExtensions: 1, pillarSupports: 3, maxPillarFailures: 1 }
         };
         if (base[y]) return { ...base[y] };
         const groundMode = y % 3;
@@ -6363,8 +6374,8 @@
           safetyMin: Math.min(75, 55 + (y - 5) * 2),
           technicalHires: 0,
           beltExtensions: 1 + Math.floor((y - 5) / 2),
-          pillarSplitTonnes: groundMode === 1 ? Math.round(3000 * Math.pow(1.12, y - 5)) : groundMode === 2 ? Math.round(1800 * Math.pow(1.10, y - 5)) : 0,
-          pillarSupports: groundMode === 0 ? 3 + Math.floor((y - 6) / 4) : groundMode === 2 ? 2 : 0
+          pillarSupports: groundMode === 0 ? 3 + Math.floor((y - 6) / 4) : groundMode === 2 ? 2 : 1,
+          maxPillarFailures: groundMode === 1 ? 0 : 1
         };
       }
 
@@ -6388,17 +6399,26 @@
         return state.staff.find(s => s.role === 'surveyor') || null;
       }
 
+      function ventilationEngineerOnCrew() {
+        return state.staff.find(s => s.role === 'ventilationEngineer') || null;
+      }
+
       function technicalTeamCoverage() {
         return (miningEngineerOnCrew() ? 1 : 0) + (rockDoctorOnCrew() ? 1 : 0);
       }
 
       function featureUnlocked(name) {
         const y = Number(state.year) || 1;
+        const depth = Number(state.depthIndex) || 0;
+        // KPIs scale by operating year, but mechanics are introduced by depth/level.
         if (name === 'exploration') return y >= 2;
-        if (name === 'technicalTeam') return y >= 3;
-        if (name === 'groundSupport') return y >= 3;
-        if (name === 'beltAdvancement') return y >= 4;
-        if (name === 'pillarSplitting') return y >= 5 || !!state.pillarSplittingUnlocked;
+        if (name === 'technicalTeam') return depth >= 1;       // -1100 Level
+        if (name === 'groundSupport') return depth >= 1;       // -1100 Level
+        if (name === 'beltAdvancement') return depth >= 2;     // -1200 Level
+        if (name === 'secondMiner') return depth >= 2;         // -1200 Level
+        if (name === 'gasWater') return depth >= 3;            // -1300 Level
+        if (name === 'ventilation') return depth >= 4;         // -1400 Level
+        if (name === 'pillarSplitting') return false;          // removed for now; pillars hold the roof up.
         return true;
       }
 
@@ -6644,7 +6664,7 @@
       }
 
       function activeMinerLabel() {
-        return activeMinerKey() === 'miner2' ? 'HOPE2' : 'HOPE1';
+        return activeMinerKey() === 'miner2' ? '2ndHOPE' : '1stHOPE';
       }
 
       function minerStateForKey(key) {
@@ -6673,10 +6693,10 @@
       function toggleActiveMachine() {
         if (activeMachineName() === 'bolter') {
           state.activeMachine = 'miner1';
-          showProductionComment('Remote assigned to HOPE1. Production has resumed its preferred level of risk.', 'Production', 3.8);
+          showProductionComment('Remote assigned to 1stHOPE. Production has resumed its preferred level of risk.', 'Production', 3.8);
         } else if (activeMinerKey() === 'miner1' && state.assets && state.assets.secondMinerOwned) {
           state.activeMachine = 'miner2';
-          showProductionComment('Remote assigned to HOPE2. Two miners are now available, which improves output and multiplies explanations.', 'Production', 4.5);
+          showProductionComment('Remote assigned to 2ndHOPE. Two miners are now available, which improves output and multiplies explanations.', 'Production', 4.5);
         } else if (state.assets.bolterOwned) {
           state.activeMachine = 'bolter';
           showProductionComment('Remote assigned to bolter. It can tram through mined-out blocks and bolt a pillar when adjacent and facing it.', 'Ground Control', 4.5);
@@ -6703,7 +6723,7 @@
 
       function driveBolterDirection(dir) {
         if (!featureUnlocked('groundSupport')) {
-          openMiniWindow('Bolter Not Yet Authorised', '<p>Bolter controls unlock in Year 3 when ground support becomes formal enough to interrupt production.</p>', true);
+          openMiniWindow('Bolter Not Yet Authorised', '<p>Bolter controls unlock on the -1100 Level when ground support becomes formal enough to interrupt production.</p>', true);
           return;
         }
         if (!state.assets.bolterOwned) {
@@ -6871,6 +6891,8 @@
             if (maybePointlessMeetingEvent()) break;
             if (maybeExternalAffairsEvent()) break;
             if (maybeGradeConstraintEvent()) break;
+            if (maybeHopeSupportEvent()) break;
+            if (maybeHeatVentilationEvent()) break;
           }
           maybeConveyorFault();
         }
@@ -7219,39 +7241,39 @@
       }
 
       function completeMiningBlock(target, pos) {
+        const clearingRubble = target.status === 'rubble' || target.wasRubble === true;
         target.status = 'void';
+        target.wasRubble = false;
         target.progress = 100;
+        recordMinedBlock(target);
 
-        const recoveredGrade = reconcileMinedGrade(target);
-        const revenue = blockRevenue(target.tonnes, recoveredGrade);
-        const displayedRevenue = scaledRevenue(revenue);
+        let recoveredGrade = 0;
+        let revenue = 0;
+        if (clearingRubble) {
+          recoveredGrade = 0;
+          target.grade = 0;
+          target.actualGrade = 0;
+          target.estimatedGrade = 0;
+          target.reconciled = true;
+        } else {
+          recoveredGrade = reconcileMinedGrade(target);
+          revenue = blockRevenue(target.tonnes, recoveredGrade);
+        }
 
         state.tonnes += target.tonnes;
         state.k2oTonnes += target.tonnes * recoveredGrade;
-        earn(revenue, 'Ore revenue');
+        if (revenue > 0) earn(revenue, 'Ore revenue');
 
-        if (target.gasPocket && !target.gasReleased) triggerGasPocketEvent(target, pos);
-        if (target.waterPocket && !target.waterReleased) triggerWaterPocketEvent(target, pos);
+        if (!clearingRubble && target.gasPocket && !target.gasReleased) triggerGasPocketEvent(target, pos);
+        if (!clearingRubble && target.waterPocket && !target.waterReleased) triggerWaterPocketEvent(target, pos);
 
-        if (target.isPillar) {
-          state.pillarsMined = (state.pillarsMined || 0) + 1;
-          state.pillarSplitTonnesThisYear = (state.pillarSplitTonnesThisYear || 0) + (Number(target.tonnes) || 0);
-          state.rockDoctorConcern = (state.rockDoctorConcern || 0) + 1;
-          adjustTrait('safety', -4);
-          adjustTrait('morale', -1);
-          const rockDoc = rockDoctorOnCrew();
-          if (rockDoc) rockDoc.morale = Math.max(1, (rockDoc.morale || 3) - 1);
-          if (rockDoc && state.rockDoctorConcern >= 3 && Math.random() < Math.min(0.55, 0.10 + state.rockDoctorConcern * 0.08)) {
-            removeStaffUncontrolled(rockDoc, 'Resigned after repeated pillar splitting converted professional advice into decorative text.', 'Rock Doctor Resignation');
-          } else if (state.pillarsMined >= 1) {
-            pushQueueEvent({
-              tone: 'warning',
-              icon: '⛏',
-              label: 'GND',
-              title: 'Rock Doctor Pillar Splitting Concern',
-              body: `<p>A pillar has been mined for short-term KPI support. The Rock Doctor has noted that Production is converting roof support into quarterly value.</p><p><strong>Impact:</strong> -4 Safety, -1 Morale. Repeated pillar splitting increases Rock Doctor resignation risk and ground-control concern.</p>`
-            });
-          }
+        if (clearingRubble) {
+          state.rubbleClearedThisYear = (state.rubbleClearedThisYear || 0) + 1;
+          spawnFloatingText(pos.x, pos.y - board.cell * 0.2, [
+            'RUBBLE CLEARED',
+            '+' + Math.round(target.tonnes).toLocaleString() + 't low value'
+          ], '#cbd5e1');
+          showProductionComment('Rubble cleared. The block is now traversable again. Finance has asked why collapsed ground produces less revenue than ore.', 'Ground Control', 5.5);
         }
 
         state.machine.q = target.q;
@@ -7262,11 +7284,13 @@
         state.machine.progress = 0;
 
         burst(pos.x, pos.y, target);
-        spawnFloatingText(pos.x, pos.y - board.cell * 0.2, [
-          '+' + Math.round(target.tonnes).toLocaleString() + 't',
-          '+' + money(displayedRevenue),
-          recoveredGrade.toFixed(1) + '% Grade'
-        ], '#fef3c7');
+        if (!clearingRubble) {
+          spawnFloatingText(pos.x, pos.y - board.cell * 0.2, [
+            '+' + Math.round(target.tonnes).toLocaleString() + 't',
+            '+' + money(revenue),
+            recoveredGrade.toFixed(1) + '% Grade'
+          ], '#fef3c7');
+        }
 
         if (Math.random() < 0.14) showRandomProductionComment();
 
@@ -7980,6 +8004,81 @@
         return true;
       }
 
+
+      function maybeHopeSupportEvent() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.hopeSupportEventDoneThisYear) return false;
+        if (state.year < 2) return false;
+        const doy = dayOfYear();
+        if (doy < 45 || doy > YEAR_LENGTH_DAYS - 35) return false;
+        const chance = state.assets && state.assets.secondMinerOwned ? 0.14 : 0.08;
+        if (Math.random() > chance) return false;
+        state.hopeSupportEventDoneThisYear = true;
+        const key = state.assets && state.assets.secondMinerOwned && Math.random() < 0.45 ? 'miner2' : 'miner1';
+        const miner = minerStateForKey(key);
+        const label = key === 'miner2' ? '2ndHOPE' : '1stHOPE';
+        if (miner && (miner.status === 'mining' || miner.status === 'tramming')) {
+          runWithMinerContext(miner, () => stopAutoMining(label + ' has stopped for a HOPE software support intervention.', 'Vendor Support'));
+        }
+        if (miner) miner.condition = Math.max(0, (miner.condition || 80) - 8);
+        const cost = scaledCost(2400 + (state.assets && state.assets.secondMinerOwned ? 900 : 0));
+        spend(cost, 'HOPE software support');
+        openOperationalEventModal({
+          title: 'HOPE: It’s Our Strategy',
+          image: 'assets/characters/hope-support-engineer.png',
+          character: 'HOPE Support Engineers',
+          department: 'Vendor Strategy and Rollback Services',
+          label: 'HOPE',
+          tone: 'warning',
+          body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p><p>HOPE would like to thank you for supporting its continuous improvement journey.</p>`,
+          button: 'Acknowledge the Strategy'
+        });
+        showProductionComment(label + ' has been returned to service in its previous condition, which HOPE describes as a successful upgrade.', 'Vendor Support', 7);
+        return true;
+      }
+
+      function maybeHeatVentilationEvent() {
+        if (!featureUnlocked('ventilation')) return false;
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.heatEventDoneThisYear) return false;
+        const doy = dayOfYear();
+        if (doy < 35 || doy > YEAR_LENGTH_DAYS - 20) return false;
+        const fan = !!(state.assets && state.assets.fanOwned);
+        const vent = ventilationEngineerOnCrew();
+        const chance = fan && vent ? 0.055 : fan || vent ? 0.11 : 0.18;
+        if (Math.random() > chance) return false;
+        state.heatEventDoneThisYear = true;
+        const penalty = fan && vent ? { morale: -1, productivity: -1, cost: 700, text: 'The ventilation system has achieved movement of air, which is being treated as progress.' }
+          : fan ? { morale: -2, productivity: -2, cost: 1200, text: 'The desk fan is oscillating with confidence, but nobody qualified has confirmed whether the air is going anywhere useful.' }
+          : { morale: -5, productivity: -4, cost: 2600, text: 'The crew report that the deeper level now feels like working inside a policy failure with humidity.' };
+        adjustTrait('morale', penalty.morale);
+        adjustTrait('productivity', penalty.productivity);
+        spend(scaledCost(penalty.cost), 'Heat and ventilation response');
+        openOperationalEventModal({
+          title: 'Heat Complaint — Ventilation Required',
+          image: 'assets/characters/ventilation-engineer.png',
+          character: 'Ventilation Engineering',
+          department: 'Air Movement Assurance',
+          label: 'VENT',
+          tone: fan && vent ? 'info' : 'warning',
+          body: `<p>Crew heat complaints have increased on ${currentLevelName()}.</p><p>${penalty.text}</p><p><strong>Impact:</strong> ${penalty.productivity} Productivity, ${penalty.morale} Morale, ${money(scaledCost(penalty.cost))} response cost.</p><p>Ventilation Engineering recommends hiring a Ventilation Engineer and purchasing a mine fan, currently represented by a surface desk fan because CAPEX remains aspirational.</p>`,
+          button: 'Return to Warmth Management'
+        });
+        return true;
+      }
+
+      function buyMineFan() {
+        if (!featureUnlocked('ventilation')) {
+          openMiniWindow('Mine Fan Not Yet Authorised', '<p>The mine fan becomes available on the -1400 Level, once heat complaints have become a measurable leadership issue.</p>', true);
+          return;
+        }
+        if (state.assets.fanOwned) return;
+        spend(scaledCost(MINE_FAN_PURCHASE_COST), 'Mine fan');
+        state.assets.fanOwned = true;
+        showProductionComment('Mine fan purchased. Ventilation Engineering has confirmed that air movement has been achieved near the winder. Further investigation is required underground.', 'Ventilation', 6.5);
+        openWindow('assets');
+      }
+
       function openOperationalEventModal(ev) {
         if (!ev) return;
         if (isModalOpen()) {
@@ -8560,7 +8659,7 @@
 
       function extendBeltLine() {
         if (!featureUnlocked('beltAdvancement')) {
-          openMiniWindow('Belt Advancement Not Yet Authorised', '<p>Belt advancement becomes available in Year 4, after the Mining Engineer completes a detailed study discovering the belt is too far away.</p>', true);
+          openMiniWindow('Belt Advancement Not Yet Authorised', '<p>Belt advancement becomes available on the -1200 Level, after scale-up discovers the belt is too far away.</p>', true);
           return;
         }
         if (!surveyorOnCrew()) {
@@ -8804,6 +8903,7 @@
         drawMinerTargetHighlight();
         drawBolterTargetHighlight();
         drawShaft();
+        drawVentilationFan();
         drawExplorationDrill();
         bubbleHits = [];
         drawStaff();
@@ -8894,6 +8994,23 @@
             ctx.strokeStyle = 'rgba(255,255,255,0.09)';
             ctx.lineWidth = 1;
             ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+            ctx.restore();
+            continue;
+          }
+
+          if (block.status === 'damaged') {
+            ctx.save();
+            ctx.fillStyle = '#2a1712';
+            ctx.fillRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+            ctx.strokeStyle = 'rgba(248,113,113,0.85)';
+            ctx.lineWidth = Math.max(2, r.w * 0.055);
+            ctx.strokeRect(r.x + r.w * 0.10, r.y + r.h * 0.10, r.w * 0.80, r.h * 0.80);
+            drawCracks(r, 82);
+            ctx.fillStyle = 'rgba(254,202,202,0.94)';
+            ctx.font = '900 ' + Math.max(8, r.w * 0.20) + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('UNSAFE', r.x + r.w / 2, r.y + r.h / 2);
             ctx.restore();
             continue;
           }
@@ -9315,6 +9432,77 @@
         ctx.font = '700 ' + Math.max(7, cs * 0.14) + 'px Arial';
         ctx.fillStyle = '#cbd5e1';
         ctx.fillText('winder-ish', headX + rigW * 0.51, baseY + cs * 0.46);
+        ctx.restore();
+      }
+
+
+      function drawVentilationFan() {
+        if (!board || (!featureUnlocked('ventilation') && !(state.assets && state.assets.fanOwned))) return;
+        const b = board;
+        const cs = b.cell;
+        const owned = !!(state.assets && state.assets.fanOwned);
+        const x = b.x + b.w - cs * 1.35;
+        const y = b.infraY + b.infraH * 0.52;
+        const scale = Math.max(0.75, Math.min(1.25, cs / 38));
+        const osc = owned ? Math.sin(anim * 2.4) * 0.42 : 0;
+        const bladeAngle = owned ? anim * 7.0 : anim * 0.35;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.globalAlpha = owned ? 1 : 0.42;
+
+        // pedestal
+        ctx.strokeStyle = owned ? '#93c5fd' : '#64748b';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(0, 22);
+        ctx.lineTo(0, 52);
+        ctx.stroke();
+        ctx.fillStyle = owned ? '#1e293b' : '#111827';
+        roundRect(ctx, -22, 50, 44, 10, 5);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(226,232,240,0.6)';
+        ctx.stroke();
+
+        // oscillating head
+        ctx.save();
+        ctx.translate(0, 14);
+        ctx.rotate(osc);
+        ctx.fillStyle = owned ? '#0f172a' : '#334155';
+        ctx.strokeStyle = owned ? '#bae6fd' : '#94a3b8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 23, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(191,219,254,0.55)';
+        ctx.lineWidth = 1.2;
+        for (let i = 0; i < 8; i++) {
+          const a = i * Math.PI / 4;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * 5, Math.sin(a) * 5);
+          ctx.lineTo(Math.cos(a) * 22, Math.sin(a) * 22);
+          ctx.stroke();
+        }
+        ctx.rotate(bladeAngle);
+        ctx.fillStyle = owned ? 'rgba(125,211,252,0.72)' : 'rgba(148,163,184,0.42)';
+        for (let i = 0; i < 3; i++) {
+          ctx.rotate(Math.PI * 2 / 3);
+          ctx.beginPath();
+          ctx.ellipse(9, 0, 14, 5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#fef3c7';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = owned ? '#bae6fd' : '#cbd5e1';
+        ctx.font = '900 9px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(owned ? 'MINE FAN' : 'FAN?', 0, 70);
         ctx.restore();
       }
 
@@ -9994,8 +10182,8 @@
       function drawMiners() {
         machineHit = null;
         machineHits = [];
-        drawMachineFor(state.machine1, 'miner1', 'HOPE1');
-        if (state.assets && state.assets.secondMinerOwned) drawMachineFor(state.machine2, 'miner2', 'HOPE2');
+        drawMachineFor(state.machine1, 'miner1', '1stHOPE');
+        if (state.assets && state.assets.secondMinerOwned) drawMachineFor(state.machine2, 'miner2', '2ndHOPE');
       }
 
       function drawMachine() {
@@ -10029,7 +10217,7 @@
         } else if (state.machine.condition < 45) {
           drawMachineStatusLabel(p.x, p.y - board.cell * 0.78, 'WORN', '#fed7aa', '#9a3412');
         }
-        const label = state._drawingMinerLabel || (state.machine === state.machine2 ? 'HOPE2' : 'HOPE1');
+        const label = state._drawingMinerLabel || (state.machine === state.machine2 ? '2ndHOPE' : '1stHOPE');
         drawMachineStatusLabel(p.x, p.y + board.cell * 0.66, label, activeMinerState && state.machine === activeMinerState() ? '#fef3c7' : '#e5e7eb', activeMinerState && state.machine === activeMinerState() ? '#78350f' : '#1f2937');
       }
 
@@ -10330,7 +10518,7 @@
           });
         }
 
-        for (const [key, miner, label] of [['miner1', state.machine1, 'HOPE1'], ['miner2', state.assets && state.assets.secondMinerOwned ? state.machine2 : null, 'HOPE2']]) {
+        for (const [key, miner, label] of [['miner1', state.machine1, '1stHOPE'], ['miner2', state.assets && state.assets.secondMinerOwned ? state.machine2 : null, '2ndHOPE']]) {
           if (miner && miner.status === 'broken') {
             items.push({
               key,
@@ -10493,7 +10681,7 @@
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Geology Depth Proposal';
         $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Conference Delegation for Enthusiastic Rock Lickers', 'After attending an informative conference, the geology department has realised that it can drill down as well as sideways.', 'GEO')}
-          <div class="letter"><h2>Decline Investment Proposal</h2><p>After attending an informative conference for enthusiastic rock lickers, the geology department has realised that they can drill down as well as sideways.</p><p>The current map is the <strong>${currentLevelName()}</strong>. The next proposal is to invest in a decline to access the <strong>${state.mineLevel - 100} Level</strong>.</p><p>Deeper levels may contain gas pockets, water, higher ground pressure, and new ways for equipment to become expensive.</p><p><strong>Decline investment:</strong> ${money(scaledCost(DECLINE_INVESTMENT_COST))}</p></div>
+          <div class="letter"><h2>Decline Investment Proposal</h2><p>After attending an informative conference for enthusiastic rock lickers, the geology department has realised that they can drill down as well as sideways.</p><p>The current map is the <strong>${currentLevelName()}</strong>. The next proposal is to invest in a decline to access the <strong>${state.mineLevel - 100} Level</strong>.</p><p>Deeper levels unlock new systems. -1100 adds ground control, -1200 adds fleet and belt scale-up, -1300 adds gas and water, and -1400 adds heat and ventilation.</p><p><strong>Decline investment:</strong> ${money(scaledCost(DECLINE_INVESTMENT_COST))}</p></div>
           <div class="btnRow"><button class="primary" data-invest-decline>Invest in decline</button><button data-close-decline>Defer geology enthusiasm</button></div>`;
         $('modalOverlay').classList.add('show');
       }
@@ -10546,7 +10734,7 @@
           character: 'Geology Department',
           department: 'Decline Development',
           title: currentLevelName() + ' Opened',
-          body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>. The geology department has confirmed that down is a valid direction.</p><p>New level hazards are now active. Gas pockets may damage the miner, and ground pressure will increase pillar deterioration.</p>`
+          body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>. The geology department has confirmed that down is a valid direction.</p><p>New level mechanics are now active according to depth: ground control at -1100, second-machine logistics at -1200, gas and water at -1300, and heat/ventilation at -1400.</p>`
         });
         showProductionComment(currentLevelName() + ' is now available. Exploration has reset to a fresh level of optimism.', 'Geology');
       }
@@ -10581,7 +10769,7 @@
       }
 
       function exploredRowSummary(row) {
-        const blocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble');
+        const blocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble' && b.status !== 'damaged');
         const tonnes = blocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
         const gradeT = blocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade) || Number(b.grade) || 0), 0);
         const confidence = blocks.length ? blocks.reduce((sum, b) => sum + (Number(b.gradeConfidence) || 0), 0) / blocks.length : 0;
@@ -10631,9 +10819,9 @@
           block.isPillar = isPillarCell(block.r, block.c);
           const depth = Math.max(0, Number(state.depthIndex) || 0);
           const idx = block.r * MINE_COLS + block.c + 8843 + depth * 1379;
-          block.gasPocket = depth >= 1 && !block.isPillar && seeded(idx + 71) > 0.925;
+          block.gasPocket = depth >= 3 && !block.isPillar && seeded(idx + 71) > 0.925;
           block.gasReleased = false;
-          block.waterPocket = depth >= 2 && !block.isPillar && seeded(idx + 83) > 0.955;
+          block.waterPocket = depth >= 3 && !block.isPillar && seeded(idx + 83) > 0.955;
           block.waterReleased = false;
           if (block.isPillar) block.pillarState = 'stable';
         }
@@ -10730,12 +10918,12 @@
 
 
       function secondMinerUnlocked() {
-        return (state.depthIndex || 0) >= 1;
+        return featureUnlocked('secondMiner');
       }
 
       function buySecondMiner() {
         if (!secondMinerUnlocked()) {
-          openMiniWindow('Second Miner Not Yet Authorised', '<p>A second continuous miner becomes available once the operation has advanced below the initial -1000 Level and created enough chaos to justify multiplying it.</p>', true);
+          openMiniWindow('Second Miner Not Yet Authorised', '<p>A second continuous miner becomes available on the -1200 Level, once the operation has enough scale to justify multiplying confusion.</p>', true);
           return;
         }
         if (state.assets.secondMinerOwned) {
@@ -10760,7 +10948,7 @@
           character: 'Mining Engineering Department',
           department: 'Fleet Multiplication',
           title: 'Second Miner Commissioned',
-          body: '<p>A second mining unit has been authorised and placed on the board as <strong>HOPE2</strong>. The original miner is now <strong>HOPE1</strong>.</p><p>Use the HOPE remote toggle to switch between HOPE1, HOPE2, and the bolter.</p><p><strong>Impact:</strong> +4 Productivity, -2 Safety. Actual second-machine output is available, while random fleet-chaos events become possible.</p>'
+          body: '<p>A second mining unit has been authorised and placed on the board as <strong>2ndHOPE</strong>. The original miner is now <strong>1stHOPE</strong>.</p><p>Use the HOPE remote toggle to switch between 1stHOPE, 2ndHOPE, and the bolter.</p><p><strong>Impact:</strong> +4 Productivity, -2 Safety. Actual second-machine output is available, while random fleet-chaos events become possible.</p>'
         });
         openWindow('assets');
       }
@@ -10890,8 +11078,8 @@
         ];
         if (target.technicalHires) list.push({ key: 'technical', title: 'Technical Team', status: progressKpiStatus(technicalTeamCoverage(), target.technicalHires) });
         if (target.beltExtensions) list.push({ key: 'belt', title: 'Belt Advancement', status: progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions) });
-        if (target.pillarSplitTonnes) list.push({ key: 'pillar', title: 'Pillar Splitting', status: progressKpiStatus(state.pillarSplitTonnesThisYear || 0, target.pillarSplitTonnes) });
         if (target.pillarSupports) list.push({ key: 'pillarSupport', title: 'Pillar Support', status: progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports) });
+        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) list.push({ key: 'pillarFailures', title: 'Pillar Failures', status: annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing' });
         return list;
       }
 
@@ -10916,7 +11104,6 @@
         const exp = state.exploration.discoveredRowsThisYear || 0;
         const techHires = technicalTeamCoverage();
         const beltExt = state.beltExtensionsThisYear || 0;
-        const pillarSplit = state.pillarSplitTonnesThisYear || 0;
         const pillarSupports = state.pillarSupportsThisYear || 0;
         const lom = lifeOfMineMetrics();
         const gradePct = target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100;
@@ -10926,8 +11113,8 @@
         const optionalCards = [];
         if (target.technicalHires) optionalCards.push(kpiCardHtml('Technical Team', `${techHires} / ${target.technicalHires}`, pct(techHires, target.technicalHires), progressKpiStatus(techHires, target.technicalHires), 'Mining Engineer and Rock Doctor required'));
         if (target.beltExtensions) optionalCards.push(kpiCardHtml('Belt Advancement', `${beltExt} / ${target.beltExtensions}`, pct(beltExt, target.beltExtensions), progressKpiStatus(beltExt, target.beltExtensions), 'Survey-controlled infrastructure promise'));
-        if (target.pillarSplitTonnes) optionalCards.push(kpiCardHtml('Pillar Splitting', `${Math.round(pillarSplit).toLocaleString()} / ${Math.round(target.pillarSplitTonnes).toLocaleString()}t`, pct(pillarSplit, target.pillarSplitTonnes), progressKpiStatus(pillarSplit, target.pillarSplitTonnes), 'Consultant-recovered value'));
         if (target.pillarSupports) optionalCards.push(kpiCardHtml('Pillar Support', `${pillarSupports} / ${target.pillarSupports}`, pct(pillarSupports, target.pillarSupports), progressKpiStatus(pillarSupports, target.pillarSupports), 'Preventative support, not safety-score farming')); 
+        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) optionalCards.push(kpiCardHtml('Pillar Failures', `${annualPillarFailures()} / ${target.maxPillarFailures} allowed`, annualPillarFailures() <= target.maxPillarFailures ? 100 : 0, annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing', 'Pillar bursts now damage surrounding ground')); 
         const gr = gradeRestrictionActive();
         if (gr) optionalCards.push(kpiCardHtml('Grade Restriction', gradeRestrictionShortLabel(gr), 100, 'atRisk', gr.source || 'Temporary product specification'));
         const statusList = annualKpiStatusList();
@@ -10969,8 +11156,8 @@
           (state.exploration.discoveredRowsThisYear || 0) >= (t.discoveredRows || 0) &&
           technicalTeamCoverage() >= (t.technicalHires || 0) &&
           (state.beltExtensionsThisYear || 0) >= (t.beltExtensions || 0) &&
-          (state.pillarSplitTonnesThisYear || 0) >= (t.pillarSplitTonnes || 0) &&
           (state.pillarSupportsThisYear || 0) >= (t.pillarSupports || 0) &&
+          ((typeof t.maxPillarFailures !== 'number') || annualPillarFailures() <= t.maxPillarFailures) &&
           traitValue('safety') >= (t.safetyMin || 0);
       }
 
@@ -11084,8 +11271,8 @@
                <strong>Exploration rows:</strong> ${state.exploration.discoveredRowsThisYear || 0} / ${target.discoveredRows || 0}<br>
                <strong>Technical team:</strong> ${technicalTeamCoverage()} / ${target.technicalHires || 0}<br>
                <strong>Belt advancements:</strong> ${state.beltExtensionsThisYear || 0} / ${target.beltExtensions || 0}<br>
-               <strong>Pillar splitting tonnes:</strong> ${Math.round(state.pillarSplitTonnesThisYear || 0).toLocaleString()} / ${Math.round(target.pillarSplitTonnes || 0).toLocaleString()}t<br>
-               <strong>Pillar supports:</strong> ${state.pillarSupportsThisYear || 0} / ${target.pillarSupports || 0}</p>
+               <strong>Pillar supports:</strong> ${state.pillarSupportsThisYear || 0} / ${target.pillarSupports || 0}<br>
+               <strong>Pillar failures:</strong> ${annualPillarFailures()} / ${typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99 ? target.maxPillarFailures : 'n/a'} allowed</p>
             ${pipText}
             ${successRecognitionHtml}
             <p>${rating === 'successful'
@@ -11340,6 +11527,7 @@
         state.yearStartDay = state.day;
         state.yearStartTonnes = state.tonnes;
         state.yearStartK2oTonnes = state.k2oTonnes;
+        state.yearStartPillarFailures = state.pillarFailures || 0;
         state.midYearReviewDone = false;
         state.yearReviewDue = false;
         state.exploration.discoveredRowsThisYear = 0;
@@ -11356,11 +11544,13 @@
         state.meetingEventDoneThisYear = false;
         state.externalAffairsDoneThisYear = false;
         state.gradeConstraintEventDoneThisYear = false;
+        state.hopeSupportEventDoneThisYear = false;
+        state.heatEventDoneThisYear = false;
         if (state.gradeRestriction && state.gradeRestriction.expiresDay <= state.day) state.gradeRestriction = null;
         state.annualTargets = targetsForYear(state.year);
         applyAnnualFinanceReset(state.year, state.cash, state.revenue, state.expenditure);
         restoreMinedBlockSnapshot(minedSnapshot);
-        if (state.year >= 5) state.pillarSplittingUnlocked = true;
+        state.pillarSplittingUnlocked = false;
         state.paused = true;
         if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
         $('modalOverlay').classList.remove('show');
@@ -11368,33 +11558,39 @@
       }
 
       function yearStartBriefingHtml(year) {
-        if (year === 2) {
-          return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a 10,000 tonne bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now be converted into a scalable mining operation.</p><p>Unfortunately, no exploration programme was completed before this commitment was made. Exploration is needed to confirm what the SLT has already declared to the board.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock two new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
+        const depth = Number(state.depthIndex) || 0;
+        if (year === 2 && depth === 0) {
+          return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now support scalable mining.</p><p>Roughly half of the -1000 Level is already interpreted. The rest requires cash to be converted into drill core so Geology can confirm what has already been promised externally.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
         }
-        if (year === 3) {
-          return `<div class="letter"><h2>Year 3 KPI Notice — Technical Legitimacy</h2><p>The Superior Leadership Team has approved production ramp-up from an area originally described as temporary. As no feasibility study was completed before this decision, a technical team is now required to make the decision appear planned.</p><p><strong>New requirements:</strong> hire a Mining Engineer and a Rock Doctor. Once the Rock Doctor is legally attached to the ground conditions, production may be interrupted until a bolter is purchased.</p><p class="sig">Superior Leadership Team<br>Professional Oversight After Commitment</p></div>`;
+        if (depth === 0) {
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Reach the -1100 Level</h2><p>The annual KPI curve continues to increase because the forecast already assumes the operation has advanced deeper.</p><p><strong>Current strategic objective:</strong> fully explore enough of the -1000 Level, maintain a positive Operating Surplus, and invest in decline development to reach the <strong>-1100 Level</strong>.</p><p>Remaining at -1000 is permitted, but the SLT would like to remind you that the target does not care where the tonnes come from.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
         }
-        if (year === 4) {
-          return `<div class="letter"><h2>Year 4 KPI Notice — Infrastructure Realisation</h2><p>The Mining Engineer has concluded a detailed study and discovered that the belt is too far away from the working area.</p><p>This conclusion has produced a radical technical recommendation: install more belt closer to the mining. A Surveyor is recommended to keep the belt line straight enough for the drawing to survive scrutiny.</p><p><strong>New requirement:</strong> advance the belt through mined-out centreline ground.</p><p class="sig">Mining Engineering Department<br>Radical Solutions Using Existing Concepts</p></div>`;
+        if (depth === 1) {
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Ground Control</h2><p>The -1100 Level introduces pillar deterioration, pillar bursts, rubble, damaged ground, and the uncomfortable idea that roof support is not optional.</p><p><strong>New requirements:</strong> hire a Mining Engineer and a Rock Doctor, purchase a bolter, and support pillars before they convert surrounding ground into a lesson.</p><p>Pillar splitting has been removed from the approved operating model. Pillars now return to their original purpose: holding the mine open.</p><p class="sig">Rock Doctor<br>Legally Interested in the Roof</p></div>`;
         }
-        if (year === 5) {
-          return `<div class="letter"><h2>Year 5 KPI Notice — Pillar Splitting Initiative</h2><p>The Superior Leadership Team has commissioned an external consultant to review mining efficiency. The consultant has identified that previous technical caution left viable mining grade behind in pillars.</p><p>This has been branded <strong>Pillar Splitting</strong>. Pillar extraction is now permitted where operational value can be recovered faster than concern can be documented.</p><p><strong>New requirement:</strong> recover tonnes from pillar splitting zones while pretending ground-control risk has been optimised.</p><p class="sig">External Technical Consultant<br>Value Recovery From Previous Competence</p></div>`;
+        if (depth === 2) {
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Fleet and Belt Scale-Up</h2><p>The -1200 Level authorises <strong>2ndHOPE</strong>, because the SLT has concluded that one continuous miner was insufficient to explain the gap between plan and reality.</p><p><strong>New requirements:</strong> hire a Surveyor, advance the belt through mined-out centreline ground, and manage two mining machines without pretending the belt will simply cope.</p><p class="sig">Mining Engineering Department<br>Radical Solutions Using Existing Concepts</p></div>`;
         }
-        if ((Number(state.depthIndex) || 0) === 0) {
-          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Decline Development</h2><p>The -1000 Level has now generated enough activity to justify further ambition, additional capital, and a larger future problem.</p><p><strong>Current strategic objective:</strong> fully explore the -1000 Level, confirm sufficient remaining value, and invest in development to reach the -1100 Level.</p><p>The SLT has described this as a growth opportunity, despite previously describing the same ground as mature, depleted, and someone else’s problem.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
+        if (depth === 3) {
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Gas and Water</h2><p>The -1300 Level has introduced ground with more atmosphere and moisture than the plan allowed for.</p><p><strong>New operating reality:</strong> gas pockets and water inflows may now damage machines, reduce productivity, trigger costs, and give Safety additional material for future learning moments.</p><p class="sig">Superior Leadership Team<br>Environmental Reality Acceptance Programme</p></div>`;
         }
-        return `<div class="letter"><h2>Operating Year ${year} KPI Notice</h2><p>All major systems are now active. Continued success has confirmed that future targets should be larger, more specific, and less forgiving.</p><p>The operation will continue until the mine is exhausted, the budget is exhausted, or your career is reallocated to a development opportunity.</p><p class="sig">Superior Leadership Team<br>Escalation Based on Demonstrated Capability</p></div>`;
+        if (depth >= 4) {
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Heat and Ventilation</h2><p>The -1400 Level has introduced crew heat complaints, which are being handled through the approved deep-mine ventilation strategy.</p><p><strong>New requirements:</strong> hire a Ventilation Engineer and purchase a Mine Fan. The fan will sit near the winder and oscillate with confidence, demonstrating that air movement has been achieved somewhere.</p><p class="sig">Ventilation Engineering<br>Air Movement Assurance</p></div>`;
+        }
+        return `<div class="letter"><h2>Operating Year ${year} KPI Notice</h2><p>The annual targets continue to increase. This is not linked to whether the mine is ready; it is linked to whether the target has already appeared in a slide deck.</p><p class="sig">Superior Leadership Team<br>Escalation Based on Demonstrated Capability</p></div>`;
       }
 
 
 
       function yearStartCharacterHtml(year) {
-        if (year === 2) return modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Reserve Confidence Through Retrospective Evidence', 'Exploration is needed to confirm what the SLT has already declared to the board.', 'GEO');
-        if (year === 3) return modalCharacterHtml('assets/characters/mining-engineer.png', 'Technical Team', 'Professional Oversight After Commitment', 'The company has approved production ramp-up and now requires people qualified enough to describe the obvious risks professionally.', 'TECH');
-        if (year === 4) return modalCharacterHtml('assets/characters/mining-engineer-belt-study.png', 'Mining Engineering Department', 'Radical Solutions Using Existing Concepts', 'A detailed study has discovered that the belt works better when it is closer to where mining is happening.', 'ENG');
-        if (year === 5) return modalCharacterHtml('assets/characters/pillar-splitting-consultant.png', 'External Technical Consultant', 'Value Recovery From Previous Competence', 'A consultant has identified that pillars contain value, which is different from saying they contain consequences.', 'CONS');
-        if ((Number(state.depthIndex) || 0) === 0 && year >= 6) return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Growth Through Deeper Accountability', 'The -1000 Level must now justify the next level of ambition, capital, and personal exposure.', 'SLT');
-        return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Escalation Based on Demonstrated Capability', 'Continued success has confirmed that future targets should be larger, more specific, and less forgiving.', 'SLT');
+        const depth = Number(state.depthIndex) || 0;
+        if (depth === 0 && year === 2) return modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Reserve Confidence Through Retrospective Evidence', 'Exploration is needed to confirm what the SLT has already declared to the board.', 'GEO');
+        if (depth === 0) return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Growth Through Deeper Accountability', 'The -1000 Level must now justify the next level of ambition, capital, and personal exposure.', 'SLT');
+        if (depth === 1) return modalCharacterHtml('assets/characters/rock-doctor.png', 'Rock Doctor', 'Legally Interested in the Roof', 'Pillars are not spare ore. They are roof support with a poor attitude toward quarterly targets.', 'RD');
+        if (depth === 2) return modalCharacterHtml('assets/characters/mining-engineer-belt-study.png', 'Mining Engineering Department', 'Fleet and Belt Scale-Up', 'Two miners improve output and multiply the number of ways the belt can be too far away.', 'ENG');
+        if (depth === 3) return modalCharacterHtml('assets/characters/ventilation-warning.png', 'Mine Environment', 'Gas and Water', 'The deeper level has developed atmosphere and moisture, both of which now belong to Production.', 'ENV');
+        if (depth >= 4) return modalCharacterHtml('assets/characters/ventilation-engineer.png', 'Ventilation Engineering', 'Air Movement Assurance', 'The mine fan is small, oscillating, and technically present.', 'VENT');
+        return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Escalation Based on Demonstrated Capability', 'Annual targets continue to scale by year because the slide deck says so.', 'SLT');
       }
 
       function openYearStartBriefing(year) {
@@ -11407,11 +11603,13 @@
       }
 
       function financeContinueLabel(year) {
-        if (year === 2) return 'Proceed to hire Geologist and Drillers';
-        if (year === 3) return 'Proceed to hire Technical Team';
-        if (year === 4) return 'Proceed to hire Surveyor';
-        if (year === 5) return 'Review Pillar Splitting Controls';
-        if (year >= 6 && (Number(state.depthIndex) || 0) === 0) return 'Prepare -1100 Development';
+        const depth = Number(state.depthIndex) || 0;
+        if (depth === 0 && year === 2) return 'Proceed to hire Geologist and Drillers';
+        if (depth === 0) return 'Prepare -1100 Development';
+        if (depth === 1) return 'Proceed to Ground Control Team';
+        if (depth === 2) return 'Proceed to Fleet and Belt Controls';
+        if (depth === 3) return 'Review Gas and Water Risks';
+        if (depth >= 4) return 'Proceed to Ventilation Planning';
         return 'Review Annual KPIs';
       }
 
@@ -11490,22 +11688,81 @@
         }
       }
 
-      function failPillar(block) {
-        block.pillarState = 'failed';
+      function setBlockToRubble(block, severe = false) {
+        if (!block || block.status === 'locked') return;
         block.status = 'rubble';
-        block.progress = 100;
+        block.progress = 0;
+        block.isPillar = false;
         block.support = false;
+        block.pillarState = null;
+        block.tonnes = Math.max(severe ? 180 : 120, Math.round((Number(block.tonnes) || 600) * (severe ? 0.18 : 0.10)));
+        block.actualGrade = 0;
+        block.estimatedGrade = 0;
+        block.grade = 0;
+        block.gradeConfidence = 1;
+        block.gasPocket = false;
+        block.waterPocket = false;
+      }
+
+      function setBlockToDamagedGround(block) {
+        if (!block || block.status === 'locked') return;
+        if (block.status === 'void' || block.status === 'rubble') {
+          setBlockToRubble(block, false);
+          return;
+        }
+        if (block.isPillar) {
+          block.pillarState = block.support ? 'spalling' : 'fractured';
+          block.support = false;
+          block.exposureAge = Math.max(block.exposureAge || 0, 190);
+          return;
+        }
+        block.status = 'damaged';
+        block.progress = 0;
+        block.tonnes = 0;
+        block.actualGrade = 0;
+        block.estimatedGrade = 0;
+        block.grade = 0;
+        block.gradeConfidence = 1;
+        block.gasPocket = false;
+        block.waterPocket = false;
+      }
+
+      function failPillar(block) {
+        if (!block || block.pillarState === 'failed') return;
+        block.pillarState = 'failed';
+        setBlockToRubble(block, true);
+
+        let rubbleCreated = 1;
+        let damagedGround = 0;
+        let stressedPillars = 0;
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const n = blockAt(MINE_ID, block.r + dr, block.c + dc);
+            if (!n || n.status === 'locked') continue;
+            const priorStatus = n.status;
+            const priorPillar = !!n.isPillar;
+            setBlockToDamagedGround(n);
+            if (n.status === 'rubble' && priorStatus !== 'rubble') rubbleCreated++;
+            else if (n.status === 'damaged') damagedGround++;
+            else if (priorPillar) stressedPillars++;
+          }
+        }
+
         state.pillarFailures = (state.pillarFailures || 0) + 1;
-        adjustTrait('safety', -12);
-        adjustTrait('morale', -8);
-        adjustTrait('productivity', -4);
-        spend(8000, 'Ground-control consequence');
+        adjustTrait('safety', -20);
+        adjustTrait('morale', -14);
+        adjustTrait('productivity', -8);
+        spend(18000, 'Ground-control collapse');
         pushQueueEvent({
           tone: 'danger',
           icon: '⛏',
           label: 'GND',
-          title: 'Ground Control Event',
-          body: `<p>A pillar has failed after prolonged exposure to operational optimism.</p><p><strong>Impact:</strong> -12 Safety, -8 Morale, -4 Productivity, ${money(8000)} clean-up, reporting, and explanation cost.</p><p>Rock Doctor note: the pillar was not holding up well under the weight of revised expectations.</p>`
+          image: 'assets/characters/rock-doctor.png',
+          character: 'Rock Doctor',
+          department: 'Ground Control',
+          title: 'Pillar Burst — Area Destabilised',
+          body: `<p>A pillar has burst after prolonged exposure to operational optimism. The collapse has destabilised the surrounding 3×3 area.</p><p><strong>Immediate impact:</strong> ${rubbleCreated} rubble block${rubbleCreated === 1 ? '' : 's'} created, ${damagedGround} unmined block${damagedGround === 1 ? '' : 's'} condemned as unsafe, ${stressedPillars} adjacent pillar${stressedPillars === 1 ? '' : 's'} stressed.</p><p>Mined-out adjacent ground has become rubble and must be cleared by the miner before it is traversable. Unmined ground affected by the collapse is now unstable and can no longer be mined as normal ore.</p><p><strong>Penalty:</strong> -20 Safety, -14 Morale, -8 Productivity, ${money(18000)} investigation and recovery cost.</p>`
         });
       }
 
@@ -11518,7 +11775,7 @@
           { key: 'supervisors', label: 'Supervisors', roles: ['supervisor'] },
           { key: 'miners', label: 'Miners', roles: ['miner'] },
           { key: 'tradesmen', label: 'Tradesmen', roles: ['fitter', 'electrician'] },
-          { key: 'technical', label: 'Technical', roles: ['geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor'] }
+          { key: 'technical', label: 'Technical', roles: ['geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor', 'ventilationEngineer'] }
         ];
       }
 
@@ -11563,9 +11820,10 @@
           ['Drillers', staffGroup('driller').length >= 2, 'Two named drillers required for exploration.'],
           ['Mining Engineer', staffGroup('miningEngineer').length >= 1, 'Unlocks research, analysis, and preventable meetings.'],
           ['Rock Doctor', staffGroup('rockDoctor').length >= 1, 'Required for bolter support decisions.'],
-          ['Surveyor', staffGroup('surveyor').length >= 1, 'Required from Year 4 to advance the belt line straight enough for audit.']
+          ['Surveyor', staffGroup('surveyor').length >= 1, 'Required from -1200 to advance the belt line straight enough for audit.'],
+          ['Ventilation Engineer', staffGroup('ventilationEngineer').length >= 1, 'Required from -1400 to make air movement defensible.']
         ];
-        const roleMap = { 'Supervisor': 'supervisor', 'Miner': 'miner', 'Fitter': 'fitter', 'Electrician': 'electrician', 'Geologist': 'geologist', 'Drillers': 'driller', 'Mining Engineer': 'miningEngineer', 'Rock Doctor': 'rockDoctor', 'Surveyor': 'surveyor' };
+        const roleMap = { 'Supervisor': 'supervisor', 'Miner': 'miner', 'Fitter': 'fitter', 'Electrician': 'electrician', 'Geologist': 'geologist', 'Drillers': 'driller', 'Mining Engineer': 'miningEngineer', 'Rock Doctor': 'rockDoctor', 'Surveyor': 'surveyor', 'Ventilation Engineer': 'ventilationEngineer' };
         return `<div class="roleCoverageGrid">${checks.map(([name, ok, note]) => {
           const role = roleMap[name];
           const cap = role ? roleHeadcountStatus(role) : null;
@@ -11635,7 +11893,7 @@
 
       function buyBolter() {
         if (!featureUnlocked('groundSupport')) {
-          openMiniWindow('Bolter Not Yet Authorised', '<p>Ground support equipment becomes available in Year 3, after the company hires someone qualified enough to stop pretending pillars are decorative.</p>', true);
+          openMiniWindow('Bolter Not Yet Authorised', '<p>Ground support equipment becomes available on the -1100 Level, after the company reaches enough depth to stop pretending pillars are decorative.</p>', true);
           return;
         }
         if (state.assets.bolterOwned) return;
@@ -11845,14 +12103,14 @@
         const pillarHud = $('pillarHud');
         const pillarLabel = $('pillarHudLabel');
         if (pillarPill && pillarHud) {
-          const hasSplit = !!target.pillarSplitTonnes;
           const hasSupport = !!target.pillarSupports;
-          if (hasSplit || hasSupport) {
+          const hasFailureLimit = typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99;
+          if (hasSupport || hasFailureLimit) {
             pillarPill.style.display = '';
-            if (pillarLabel) pillarLabel.textContent = hasSplit && hasSupport ? 'Ground Control' : hasSupport ? 'Pillar Support' : 'Pillar Split';
-            const splitText = hasSplit ? ((Math.round((state.pillarSplitTonnesThisYear || 0) / 100) / 10).toFixed(1) + ' / ' + (Math.round((target.pillarSplitTonnes || 0) / 100) / 10).toFixed(1) + 'kt') : '';
+            if (pillarLabel) pillarLabel.textContent = hasSupport ? 'Pillar Support' : 'Ground Control';
             const supportText = hasSupport ? ((state.pillarSupportsThisYear || 0) + ' / ' + target.pillarSupports + ' bolted') : '';
-            pillarHud.textContent = [supportText, splitText].filter(Boolean).join(' · ');
+            const failureText = hasFailureLimit ? (annualPillarFailures() + ' / ' + target.maxPillarFailures + ' failures') : '';
+            pillarHud.textContent = [supportText, failureText].filter(Boolean).join(' · ');
           } else {
             pillarPill.style.display = 'none';
           }
@@ -11867,10 +12125,10 @@
         setPillStatus('kpiHud', kpiStatus);
         if ($('lomHud')) setPillStatus('lomHud', lifeOfMineMetrics().tonnes >= Math.max(1, (target.tonnes || 0) * 0.8) ? 'onTrack' : 'atRisk');
         if ($('gradeRestrictionHud') && grActive) setPillStatus('gradeRestrictionHud', 'atRisk');
-        if ($('pillarHud') && (target.pillarSplitTonnes || target.pillarSupports)) {
-          const splitStatus = target.pillarSplitTonnes ? progressKpiStatus(state.pillarSplitTonnesThisYear || 0, target.pillarSplitTonnes) : 'onTrack';
+        if ($('pillarHud') && (target.pillarSupports || (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99))) {
           const supportStatus = target.pillarSupports ? progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports) : 'onTrack';
-          setPillStatus('pillarHud', aggregateKpiStatus([{status: splitStatus}, {status: supportStatus}]));
+          const failureStatus = (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) ? (annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing') : 'onTrack';
+          setPillStatus('pillarHud', aggregateKpiStatus([{status: supportStatus}, {status: failureStatus}]));
         }
 
         const hudMiner = activeMinerState ? activeMinerState() : state.machine;
@@ -12022,6 +12280,14 @@
           showProductionComment('Mined-out ground. Value has been extracted and Finance has already started asking where it went.', 'Production', 3.8);
           return;
         }
+        if (block.status === 'rubble') {
+          showProductionComment('Rubble block. The miner must clear this low-value collapse material before the route is traversable again.', 'Ground Control', 5.5);
+          return;
+        }
+        if (block.status === 'damaged') {
+          showProductionComment('Unstable damaged ground. The Rock Doctor has advised this area can no longer be mined safely, which Production has recorded as inconvenient.', 'Ground Control', 6.5);
+          return;
+        }
         const estGrade = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
         const restrictionReason = gradeRestrictionBlockReason(block);
         if (restrictionReason) {
@@ -12117,7 +12383,10 @@
 
         if (state.machine.status === 'mining') {
           const target = state.machine.target ? blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c) : null;
-          if (target && target.status === 'mining') target.status = 'solid';
+          if (target && target.status === 'mining') {
+            target.status = target.wasRubble ? 'rubble' : 'solid';
+            target.wasRubble = false;
+          }
         }
 
         if (state.machine.status === 'mining' || state.machine.status === 'tramming') {
@@ -12175,6 +12444,19 @@
           return;
         }
 
+        if (next.status === 'damaged') {
+          state.machine.autoMining = false;
+          state.machine.status = 'idle';
+          showProductionComment('The block ahead is unstable damaged ground. The Rock Doctor has advised that this area is no longer mineable, which is inconvenient but difficult to appeal.', 'Ground Control', 6.5);
+          return;
+        }
+
+        if (next.status === 'rubble') {
+          startMining(next);
+          showProductionComment('Clearing rubble. This produces a small amount of low-value tonnes and restores access, which is not the same as mining ore.', 'Ground Control', 4.5);
+          return;
+        }
+
         if (next.status === 'solid') {
           if (!isBlockAllowedByGradeRestriction(next)) {
             state.machine.autoMining = false;
@@ -12207,6 +12489,7 @@
       }
 
       function startMining(block) {
+        block.wasRubble = block.status === 'rubble';
         block.status = 'mining';
         block.progress = block.progress || 0;
         state.machine.status = 'mining';
@@ -12587,10 +12870,12 @@
           const beltUnlocked = featureUnlocked('beltAdvancement');
           const bolterUnlocked = featureUnlocked('groundSupport');
           const surveyor = surveyorOnCrew();
+          const ventUnlocked = featureUnlocked('ventilation');
+          const ventEng = ventilationEngineerOnCrew();
           const beltHead = beltHeadLabel();
           const beltNext = beltStatus.row === null ? 'No further row' : 'Row ' + (beltStatus.row + 1) + ', Column ' + (beltColumn() + 1);
 
-          body = `<p><strong>HOPE1 Continuous Miner</strong></p>
+          body = `<p><strong>1stHOPE Continuous Miner</strong></p>
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:${state.machine.status === 'broken' ? '#ef4444' : state.machine.status === 'maintenance' ? '#38bdf8' : '#facc15'}"></div><div><strong>Status</strong><span>${state.machine.status}</span></div><span class="tag">${Math.round(state.machine.progress)}%</span></div>
               <div class="row"><div class="avatarDot" style="background:${state.machine.condition < 45 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.machine.condition.toFixed(1)}%</span></div><span class="tag">${conditionTag}</span></div>
@@ -12609,8 +12894,8 @@
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:${state.conveyor.status === 'running' ? '#22c55e' : state.conveyor.status === 'maintenance' ? '#38bdf8' : '#ef4444'}"></div><div><strong>Status</strong><span>${conveyorStatus}</span></div><span class="tag">${state.conveyor.status}</span></div>
               <div class="row"><div class="avatarDot" style="background:${state.conveyor.condition < 55 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.conveyor.condition.toFixed(1)}%</span></div><span class="tag">${state.conveyor.condition < 55 ? 'Fragile' : 'Usable'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Belt Head</strong><span>${beltHead}. Next extension target: ${beltNext}. ${beltUnlocked ? beltStatus.reason : 'Belt advancement unlocks in Year 4 after an engineering study discovers distance.'}</span></div><span class="tag">${beltUnlocked ? money(scaledCost(BELT_EXTENSION_COST)) : 'Year 4'}</span></div>
-              <div class="row"><div class="avatarDot" style="background:${surveyor ? '#22c55e' : '#ef4444'}"></div><div><strong>Surveyor</strong><span>${surveyor ? surveyor.name + ' · Skill ' + surveyor.skill + '/5' : 'Required for belt advancement from Year 4.'}</span></div><span class="tag">${surveyor ? 'Assigned' : 'Missing'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Belt Head</strong><span>${beltHead}. Next extension target: ${beltNext}. ${beltUnlocked ? beltStatus.reason : 'Belt advancement unlocks on the -1200 Level after scale-up discovers distance.'}</span></div><span class="tag">${beltUnlocked ? money(scaledCost(BELT_EXTENSION_COST)) : '-1200'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${surveyor ? '#22c55e' : '#ef4444'}"></div><div><strong>Surveyor</strong><span>${surveyor ? surveyor.name + ' · Skill ' + surveyor.skill + '/5' : 'Required for belt advancement from the -1200 Level.'}</span></div><span class="tag">${surveyor ? 'Assigned' : 'Missing'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Required Response</strong><span>${state.conveyor.status === 'running' ? 'No immediate action required. This is suspicious.' : conveyorInfo.action + ' · Required: ' + roleName(conveyorInfo.role)}</span></div><span class="tag">${state.conveyor.status === 'running' ? 'Available' : money(scaledCost(conveyorInfo.cost))}</span></div>
               ${state.conveyor.status === 'maintenance' ? `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Intervention Progress</strong><span>${Math.round(state.conveyor.progress)}%</span></div><span class="tag">${conveyorWorker ? conveyorWorker.name : 'Searching'}</span></div>` : ''}
             </div>
@@ -12623,20 +12908,29 @@
             <hr style="border:0;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">
             <p><strong>Ground Support</strong></p>
             <div class="rows">
-              <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'On the board. Switch the HOPE remote to BOLTER, face a pillar, then press BOLT.' : bolterUnlocked ? 'Not purchased. The Rock Doctor will keep reminding everyone.' : 'Unlocks in Year 3 when technical responsibility becomes fashionable.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : 'Year 3'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'On the board. Switch the HOPE remote to BOLTER, face a pillar, then press BOLT.' : bolterUnlocked ? 'Not purchased. The Rock Doctor will keep reminding everyone.' : 'Unlocks on the -1100 Level when technical responsibility becomes unavoidable.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : '-1100'}</span></div>
               <div class="row"><div class="avatarDot" style="background:${rockDoctorOnCrew() ? '#22c55e' : '#ef4444'}"></div><div><strong>Rock Doctor</strong><span>${rockDoctorOnCrew() ? rockDoctorOnCrew().name + ' · Skill ' + rockDoctorOnCrew().skill + '/5' : 'Required for support decisions.'}</span></div><span class="tag">${rockDoctorOnCrew() ? 'Assigned' : 'Missing'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Worst Pillar</strong><span>${worstPillar() ? 'Row ' + (worstPillar().r + 1) + ', Column ' + (worstPillar().c + 1) + ' · ' + worstPillar().pillarState : 'No unsupported exposed pillars identified.'}</span></div><span class="tag">${worstPillar() ? money(scaledCost(PILLAR_SUPPORT_COST)) : 'Stable'}</span></div>
             </div>
             <div class="btnRow">
-              <button class="primary" data-buy-bolter ${state.assets.bolterOwned || !bolterUnlocked ? 'disabled' : ''}>Buy Bolter · ${bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : 'Year 3'}</button>
+              <button class="primary" data-buy-bolter ${state.assets.bolterOwned || !bolterUnlocked ? 'disabled' : ''}>Buy Bolter · ${bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : '-1100'}</button>
               <button class="primary" data-support-pillar ${state.assets.bolterOwned && bolterUnlocked ? '' : 'disabled'}>Use Bolter Remote</button>
             </div>
             <section class="crewRoleSection">
-              <div class="crewRoleHeader"><h3>Fleet Expansion</h3><span>${secondMinerUnlocked() ? 'Available below -1000 Level' : 'Requires deeper level access'}</span></div>
+              <div class="crewRoleHeader"><h3>Fleet Expansion</h3><span>${secondMinerUnlocked() ? 'Available on -1200 Level' : 'Requires -1200 Level access'}</span></div>
               <div class="rows">
-                <div class="row"><div class="avatarDot" style="background:${state.assets.secondMinerOwned ? '#22c55e' : '#64748b'}"></div><div><strong>Second Continuous Miner</strong><span>${state.assets.secondMinerOwned ? 'Active. More tonnes, more traffic, more reasons for a meeting.' : 'Adds production capacity after decline access, but increases fleet chaos.'}</span></div><span class="tag">${state.assets.secondMinerOwned ? 'Active' : money(scaledCost(SECOND_MINER_PURCHASE_COST))}</span></div>
+                <div class="row"><div class="avatarDot" style="background:${state.assets.secondMinerOwned ? '#22c55e' : '#64748b'}"></div><div><strong>Second Continuous Miner</strong><span>${state.assets.secondMinerOwned ? 'Active. More tonnes, more traffic, more reasons for a meeting.' : 'Adds production capacity from -1200, but increases fleet chaos.'}</span></div><span class="tag">${state.assets.secondMinerOwned ? 'Active' : money(scaledCost(SECOND_MINER_PURCHASE_COST))}</span></div>
               </div>
               <div class="btnRow"><button class="primary" data-buy-second-miner ${!state.assets.secondMinerOwned && secondMinerUnlocked() ? '' : 'disabled'}>Authorise Second Miner</button></div>
+            </section>
+
+            <section class="crewRoleSection">
+              <div class="crewRoleHeader"><h3>Ventilation</h3><span>${ventUnlocked ? 'Available on -1400 Level' : 'Requires -1400 Level access'}</span></div>
+              <div class="rows">
+                <div class="row"><div class="avatarDot" style="background:${state.assets.fanOwned ? '#22c55e' : '#64748b'}"></div><div><strong>Mine Fan</strong><span>${state.assets.fanOwned ? 'Installed near the winder. Oscillating heroically at surface.' : 'A CAPEX-approved desk fan representing the future of deep-mine ventilation.'}</span></div><span class="tag">${state.assets.fanOwned ? 'Owned' : ventUnlocked ? money(scaledCost(MINE_FAN_PURCHASE_COST)) : '-1400'}</span></div>
+                <div class="row"><div class="avatarDot" style="background:${ventEng ? '#22c55e' : '#ef4444'}"></div><div><strong>Ventilation Engineer</strong><span>${ventEng ? ventEng.name + ' · Skill ' + ventEng.skill + '/5' : 'Required once crew heat complaints become strategic.'}</span></div><span class="tag">${ventEng ? 'Assigned' : 'Missing'}</span></div>
+              </div>
+              <div class="btnRow"><button class="primary" data-buy-mine-fan ${!state.assets.fanOwned && ventUnlocked ? '' : 'disabled'}>Purchase Mine Fan · ${ventUnlocked ? money(scaledCost(MINE_FAN_PURCHASE_COST)) : '-1400'}</button></div>
             </section>`;
         }
 
@@ -12745,13 +13039,15 @@
         if (role === 'geologist' || role === 'driller') return featureUnlocked('exploration');
         if (role === 'miningEngineer' || role === 'rockDoctor') return featureUnlocked('technicalTeam');
         if (role === 'surveyor') return featureUnlocked('beltAdvancement');
+        if (role === 'ventilationEngineer') return featureUnlocked('ventilation');
         return true;
       }
 
       function roleUnlockText(role) {
         if (role === 'geologist' || role === 'driller') return 'Unlocks Year 2';
-        if (role === 'miningEngineer' || role === 'rockDoctor') return 'Unlocks Year 3';
-        if (role === 'surveyor') return 'Unlocks Year 4';
+        if (role === 'miningEngineer' || role === 'rockDoctor') return 'Unlocks -1100 Level';
+        if (role === 'surveyor') return 'Unlocks -1200 Level';
+        if (role === 'ventilationEngineer') return 'Unlocks -1400 Level';
         return 'Available';
       }
 
@@ -12768,6 +13064,7 @@
         if (role === 'miningEngineer') return 1;
         if (role === 'rockDoctor') return 1;
         if (role === 'surveyor') return 1;
+        if (role === 'ventilationEngineer') return 1;
         return 1;
       }
 
@@ -12838,6 +13135,7 @@
         if (role === 'miningEngineer') return 'Mining Engineer';
         if (role === 'rockDoctor') return 'Rock Doctor';
         if (role === 'surveyor') return 'Surveyor';
+        if (role === 'ventilationEngineer') return 'Ventilation Engineer';
         return 'Miner';
       }
 
@@ -13311,7 +13609,7 @@
           name,
           role,
           model: initials,
-          salary: role === 'miningEngineer' || role === 'rockDoctor' ? 70000 : role === 'geologist' || role === 'surveyor' ? 62000 : role === 'driller' ? 52000 : role === 'fitter' || role === 'electrician' ? 50000 : 46000,
+          salary: role === 'miningEngineer' || role === 'rockDoctor' ? 70000 : role === 'geologist' || role === 'surveyor' || role === 'ventilationEngineer' ? 62000 : role === 'driller' ? 52000 : role === 'fitter' || role === 'electrician' ? 50000 : 46000,
           skill: 3,
           morale: 3,
           attendance: 3,
@@ -13331,7 +13629,8 @@
           driller: 2,
           miningEngineer: 2,
           rockDoctor: 2,
-          surveyor: 2
+          surveyor: 2,
+          ventilationEngineer: 2
         };
         return minima[role] || 1;
       }
@@ -13339,7 +13638,7 @@
       function ensureCandidatePool(roles, forceNotice = false) {
         const roleList = Array.isArray(roles) && roles.length
           ? roles
-          : ['supervisor', 'miner', 'fitter', 'electrician', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor'];
+          : ['supervisor', 'miner', 'fitter', 'electrician', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor', 'ventilationEngineer'];
         let created = 0;
         for (const role of roleList) {
           if (!roleHireUnlocked(role)) continue;
@@ -13609,7 +13908,7 @@
         }
         state.staff.push({ ...c, bubble: null });
         spend(hireCost(c), 'Hiring/onboarding');
-        if (['miningEngineer', 'rockDoctor', 'surveyor', 'geologist', 'driller'].includes(c.role)) state.technicalHiresThisYear = (state.technicalHiresThisYear || 0) + 1;
+        if (['miningEngineer', 'rockDoctor', 'surveyor', 'geologist', 'driller', 'ventilationEngineer'].includes(c.role)) state.technicalHiresThisYear = (state.technicalHiresThisYear || 0) + 1;
         adjustTrait('morale', 1);
         ensureCandidatePool([c.role], false);
         if (['geologist', 'driller'].includes(c.role) && explorationStaffReady() && state.exploration && !state.exploration.drillGuideDismissed && (state.exploration.discoveredRowsThisYear || 0) === 0) {
@@ -13753,11 +14052,12 @@
             state.paused = false;
             if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
             resumeMusicAfterFormalModal();
-            if (state.year === 2 || state.year === 3 || state.year === 4) {
+            const depth = Number(state.depthIndex) || 0;
+            if ((depth === 0 && state.year === 2) || depth === 1 || depth === 2 || depth >= 4) {
               state.hiringTab = 'technical';
               openWindow('hr', false, financeContinueLabel(state.year));
             }
-            else if (state.year === 5) openWindow('assets', false, 'Pillar Splitting Controls');
+            else if (depth === 0) openDeclineProposal();
             else openWindow('targets', false, 'New Annual KPI Notice');
             return;
           }
@@ -13832,6 +14132,9 @@
 
           const buySecondMinerBtn = e.target.closest('[data-buy-second-miner]');
           if (buySecondMinerBtn) { buySecondMiner(); return; }
+
+          const buyMineFanBtn = e.target.closest('[data-buy-mine-fan]');
+          if (buyMineFanBtn) { buyMineFan(); return; }
 
           const startExplorationBtn = e.target.closest('[data-start-exploration]');
           if (startExplorationBtn) { startExplorationProgram(); openWindow('exploration'); return; }
