@@ -5365,7 +5365,7 @@
 
       const BASE_REVENUE_PER_TONNE = 4.8;
       const TRAM_COST = 55;
-      const EXPLORATION_ROW_DAYS = 90;
+      const EXPLORATION_ROW_DAYS = 65;
       const WAGE_ACCRUAL_FACTOR = 0.12;
       const SAFETY_ROLL_INTERVAL_SECONDS = 120;
       const BASE_SHIFT_TRAIT = 75;
@@ -6156,6 +6156,9 @@
 
       function isPillarCell(r, c) {
         if (r >= MINE_ROWS - 1) return false;
+        // The centre column is the long-term decline / belt corridor.
+        // It may contain ore, locked ground, void or clearable rubble, but not permanent pillars.
+        if (c === START_COL) return false;
         if (Math.abs(r - START_ROW) <= 1 && Math.abs(c - START_COL) <= 1) return false;
         if (c <= 0 || c >= MINE_COLS - 1) return false;
         const rowBand = Math.floor(Math.max(0, r - LOCKED_ROWS) / 2);
@@ -6170,9 +6173,10 @@
           for (let c = 0; c < MINE_COLS; c++) {
             const idx = r * MINE_COLS + c + 8843 + depth * 1379;
             const unlocked = r >= LOCKED_ROWS;
-            const centralLobe = r >= LOCKED_ROWS - 1 && r <= LOCKED_ROWS + 5 && c >= START_COL - 2 && c <= START_COL + 1;
-            const sideLobe = r >= LOCKED_ROWS + 2 && r <= LOCKED_ROWS + 8 && c >= Math.min(MINE_COLS - 1, START_COL + 2) && c <= MINE_COLS - 1;
-            const sweetSpot = centralLobe || sideLobe;
+            const centralLobe = r >= LOCKED_ROWS - 1 && r <= LOCKED_ROWS + 5 && c >= START_COL - 1 && c <= START_COL + 1;
+            const leftLobe = r >= LOCKED_ROWS + 2 && r <= LOCKED_ROWS + 7 && c >= 1 && c <= Math.max(1, START_COL - 2);
+            const rightLobe = r >= LOCKED_ROWS + 3 && r <= LOCKED_ROWS + 8 && c >= Math.min(MINE_COLS - 2, START_COL + 2) && c <= MINE_COLS - 2;
+            const sweetSpot = centralLobe || leftLobe || rightLobe;
             const lowerDilution = r > MINE_ROWS - 5;
 
             let actualGrade = 12.1 + seeded(idx) * 3.55 + depth * 0.16;
@@ -6363,8 +6367,12 @@
         return Math.max(0, (state.pillarFailures || 0) - (state.yearStartPillarFailures || 0));
       }
 
+      function isMineableReserveBlock(b) {
+        return !!(b && !b.isPillar && b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble' && b.status !== 'damaged' && typeof b.estimatedGrade === 'number' && b.tonnes > 0);
+      }
+
       function lifeOfMineMetrics() {
-        const discovered = (state.blocks[MINE_ID] || []).filter(b => b.status !== 'locked' && b.status !== 'void' && b.status !== 'rubble' && b.status !== 'damaged' && typeof b.estimatedGrade === 'number' && b.tonnes > 0);
+        const discovered = (state.blocks[MINE_ID] || []).filter(isMineableReserveBlock);
         const tonnes = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
         const gradeT = discovered.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade) || 0), 0);
         return { tonnes, grade: tonnes > 0 ? gradeT / tonnes : 0, blocks: discovered.length };
@@ -6541,9 +6549,10 @@
       }
 
       function levelTransitionTargetGridRow() {
-        // The decline threshold starts at Grid Row 10 on -1000 and moves progressively farther away by depth.
+        // The decline threshold starts at Grid Row 9 on -1000 and moves progressively farther away by depth.
+        // It is capped below the very top row so exploration still has visible headroom.
         const depth = Math.max(0, Number(state.depthIndex) || 0);
-        return Math.min(MINE_ROWS - 1, 10 + depth);
+        return Math.min(MINE_ROWS - 1, 9 + depth);
       }
 
       function levelTransitionRow() {
@@ -9368,7 +9377,7 @@
 
 
       function rowReserveEstimate(row) {
-        const rowBlocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && b.status !== 'locked' && b.status !== 'void' && b.status !== 'mining');
+        const rowBlocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && isMineableReserveBlock(b));
         const tonnes = rowBlocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
         const gradeT = rowBlocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade ?? b.grade) || 0), 0);
         return { tonnes, grade: tonnes > 0 ? gradeT / tonnes : 0, blocks: rowBlocks.length };
@@ -11071,7 +11080,7 @@
         state.exploration.active = true;
         state.exploration.row = row;
         state.exploration.progress = 0;
-        showProductionComment('Exploration has started. A row now takes roughly a quarter of the operating year to confirm, because reserves are apparently easier to declare than drill.', 'Exploration');
+        showProductionComment('Exploration has started. A row now takes roughly two months to confirm, because reserves are apparently easier to declare than drill.', 'Exploration');
       }
 
       function exploredRowSummary(row) {
@@ -11595,7 +11604,7 @@
         if (target.technicalHires) optionalCards.push(kpiCardHtml('Technical Team', `${techHires} / ${target.technicalHires}`, pct(techHires, target.technicalHires), progressKpiStatus(techHires, target.technicalHires), 'Mining Engineer and Rock Doctor required'));
         if (target.beltExtensions) optionalCards.push(kpiCardHtml('Belt Advancement', `${beltExt} / ${target.beltExtensions}`, pct(beltExt, target.beltExtensions), progressKpiStatus(beltExt, target.beltExtensions), 'Survey-controlled infrastructure promise'));
         if (target.pillarSupports) optionalCards.push(kpiCardHtml('Pillar Support', `${pillarSupports} / ${target.pillarSupports}`, pct(pillarSupports, target.pillarSupports), progressKpiStatus(pillarSupports, target.pillarSupports), 'Preventative support, not safety-score farming')); 
-        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) optionalCards.push(kpiCardHtml('Pillar Failures', `${annualPillarFailures()} / ${target.maxPillarFailures} allowed`, annualPillarFailures() <= target.maxPillarFailures ? 100 : 0, annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing', 'Pillar bursts now damage surrounding ground')); 
+        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) optionalCards.push(kpiCardHtml('Pillar Failures', `${annualPillarFailures()} / ${target.maxPillarFailures} allowed`, annualPillarFailures() <= target.maxPillarFailures ? 100 : 0, annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing', 'Pillar bursts now damage the failed pillar and two adjacent blocks')); 
         const gr = gradeRestrictionActive();
         if (gr) optionalCards.push(kpiCardHtml('Grade Restriction', gradeRestrictionShortLabel(gr), 100, 'atRisk', gr.source || 'Temporary product specification'));
         const statusList = annualKpiStatusList();
@@ -12228,33 +12237,88 @@
         block.waterPocket = false;
       }
 
+      function adjacentBlocks(block) {
+        const out = [];
+        if (!block) return out;
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const n = blockAt(MINE_ID, block.r + dr, block.c + dc);
+            if (n && n.status !== 'locked') out.push(n);
+          }
+        }
+        return out;
+      }
+
+      function weightedRandomAdjacentDamage(block, count = 2) {
+        const selected = [];
+        let candidates = adjacentBlocks(block);
+        while (selected.length < count && candidates.length) {
+          const weighted = [];
+          for (const n of candidates) {
+            let w = 3;
+            if (n.status === 'void' || n.status === 'rubble') w += 4;
+            if (n.isPillar) w += 2;
+            if (n.c === START_COL) w -= 2;
+            if (n.c === START_COL && n.status !== 'void' && n.status !== 'rubble') w -= 2;
+            w = Math.max(1, w);
+            weighted.push({ n, w });
+          }
+          const total = weighted.reduce((sum, item) => sum + item.w, 0);
+          let roll = Math.random() * total;
+          let picked = weighted[0].n;
+          for (const item of weighted) {
+            roll -= item.w;
+            if (roll <= 0) { picked = item.n; break; }
+          }
+          selected.push(picked);
+          candidates = candidates.filter(n => n !== picked);
+        }
+        return selected;
+      }
+
+      function applyPillarCollateralDamage(block) {
+        if (!block || block.status === 'locked') return 'none';
+        const wasPillar = !!block.isPillar;
+        const priorStatus = block.status;
+
+        // Do not condemn the strategic centreline as irreversible unsafe ground.
+        // If a pillar burst reaches the decline/belt corridor, convert it to clearable rubble instead.
+        if (block.c === START_COL && !wasPillar && priorStatus !== 'void' && priorStatus !== 'rubble') {
+          setBlockToRubble(block, false);
+          return 'rubble';
+        }
+
+        setBlockToDamagedGround(block);
+        if (wasPillar) return 'pillar';
+        if (block.status === 'rubble' && priorStatus !== 'rubble') return 'rubble';
+        if (block.status === 'damaged') return 'damaged';
+        return 'none';
+      }
+
       function failPillar(block) {
         if (!block || block.pillarState === 'failed') return;
         block.pillarState = 'failed';
+        const failedGrid = gridRef(block);
         setBlockToRubble(block, true);
 
         let rubbleCreated = 1;
         let damagedGround = 0;
         let stressedPillars = 0;
-        for (let dr = -1; dr <= 1; dr++) {
-          for (let dc = -1; dc <= 1; dc++) {
-            if (dr === 0 && dc === 0) continue;
-            const n = blockAt(MINE_ID, block.r + dr, block.c + dc);
-            if (!n || n.status === 'locked') continue;
-            const priorStatus = n.status;
-            const priorPillar = !!n.isPillar;
-            setBlockToDamagedGround(n);
-            if (n.status === 'rubble' && priorStatus !== 'rubble') rubbleCreated++;
-            else if (n.status === 'damaged') damagedGround++;
-            else if (priorPillar) stressedPillars++;
-          }
+        const affected = weightedRandomAdjacentDamage(block, 2);
+        for (const n of affected) {
+          const result = applyPillarCollateralDamage(n);
+          if (result === 'rubble') rubbleCreated++;
+          else if (result === 'damaged') damagedGround++;
+          else if (result === 'pillar') stressedPillars++;
         }
+        const affectedRefs = affected.length ? affected.map(b => 'Grid ' + gridRef(b)).join(', ') : 'no adjacent blocks';
 
         state.pillarFailures = (state.pillarFailures || 0) + 1;
-        adjustTrait('safety', -20);
-        adjustTrait('morale', -14);
-        adjustTrait('productivity', -8);
-        spend(18000, 'Ground-control collapse');
+        adjustTrait('safety', -16);
+        adjustTrait('morale', -10);
+        adjustTrait('productivity', -6);
+        spend(14000, 'Ground-control collapse');
         pushQueueEvent({
           tone: 'danger',
           icon: '⛏',
@@ -12262,8 +12326,8 @@
           image: 'assets/characters/rock-doctor.png',
           character: 'Rock Doctor',
           department: 'Ground Control',
-          title: 'Pillar Burst — Area Destabilised',
-          body: `<p>A pillar has burst after prolonged exposure to operational optimism. The collapse has destabilised the surrounding 3×3 area.</p><p><strong>Immediate impact:</strong> ${rubbleCreated} rubble block${rubbleCreated === 1 ? '' : 's'} created, ${damagedGround} unmined block${damagedGround === 1 ? '' : 's'} condemned as unsafe, ${stressedPillars} adjacent pillar${stressedPillars === 1 ? '' : 's'} stressed.</p><p>Mined-out adjacent ground has become rubble and must be cleared by the miner before it is traversable. Unmined ground affected by the collapse is now unstable and can no longer be mined as normal ore.</p><p><strong>Penalty:</strong> -20 Safety, -14 Morale, -8 Productivity, ${money(18000)} investigation and recovery cost.</p>`
+          title: 'Pillar Burst — Local Ground Damage',
+          body: `<p>A pillar at <strong>Grid ${failedGrid}</strong> has burst after prolonged exposure to operational optimism.</p><p>The damage is now localised to the failed pillar and <strong>two adjacent blocks</strong>: ${escapeHtml(affectedRefs)}.</p><p><strong>Immediate impact:</strong> ${rubbleCreated} rubble block${rubbleCreated === 1 ? '' : 's'} created, ${damagedGround} unmined block${damagedGround === 1 ? '' : 's'} condemned as unsafe, ${stressedPillars} adjacent pillar${stressedPillars === 1 ? '' : 's'} stressed.</p><p>Mined-out affected ground becomes rubble and must be cleared by the miner before it is traversable. Affected unmined ground becomes unstable unless it is part of the centreline corridor, in which case it becomes clearable rubble to prevent the decline from becoming an abstract concept.</p><p><strong>Penalty:</strong> -16 Safety, -10 Morale, -6 Productivity, ${money(14000)} investigation and recovery cost.</p>`
         });
       }
 
@@ -13393,7 +13457,7 @@
         const person = randomItem(staff);
         state.crewAccidentDoneThisYear = true;
         state.lastCrewAccidentDay = state.day;
-        state.pendingCrewAccident = { staffId: person.id, text: template.text.replace('{name}', person.name), name: person.name };
+        state.pendingCrewAccident = { id: 'acc_' + Date.now() + '_' + Math.floor(Math.random() * 100000), staffId: person.id, text: template.text.replace('{name}', person.name), name: person.name, resolved: false };
         openOperationalEventModal({
           title: 'Crew Accident Report',
           image: portraitPath(person) || 'assets/characters/safety-standdown.png',
@@ -13420,7 +13484,10 @@
       }
 
       function resolveCrewAccidentChoice(choice) {
-        const ev = state.pendingCrewAccident || {};
+        const ev = state.pendingCrewAccident;
+        if (!ev || ev.resolved) return;
+        ev.resolved = true;
+        document.querySelectorAll('[data-crew-accident-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
         let title = 'Accident Response Logged';
         let body = '';
         if (choice === 'investigate') {
@@ -15106,7 +15173,7 @@
           if (pleaChoiceBtn) { resolvePleaChoice(pleaChoiceBtn.dataset.pleaChoice); return; }
 
           const externalChoiceBtn = e.target.closest('[data-external-choice]');
-          if (externalChoiceBtn) { resolveExternalAffairsChoice(externalChoiceBtn.dataset.externalChoice); return; }
+          if (externalChoiceBtn) { document.querySelectorAll('[data-external-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); }); resolveExternalAffairsChoice(externalChoiceBtn.dataset.externalChoice); return; }
 
           const accidentChoiceBtn = e.target.closest('[data-crew-accident-choice]');
           if (accidentChoiceBtn) { resolveCrewAccidentChoice(accidentChoiceBtn.dataset.crewAccidentChoice); return; }
