@@ -5674,6 +5674,19 @@
           ]
         },
         {
+          type: 'trainingRequest',
+          icon: '🎓',
+          title: 'Invest in Yourself',
+          roles: ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor', 'ventilationEngineer'],
+          quote: '“I would like to invest in myself.”',
+          text: '{trainingText}',
+          buttons: [
+            { label: 'Approve Training', style: 'good', choice: 'trainingApprove' },
+            { label: 'Reject Request', style: 'warn', choice: 'trainingReject' },
+            { label: 'Offer Internal Coaching', choice: 'trainingInternal' }
+          ]
+        },
+        {
           type: 'training',
           icon: '📋',
           roles: ['miner', 'fitter', 'electrician'],
@@ -5791,6 +5804,9 @@
         spreadsheetRhythm: { tone: 'negative', text: '-1 Morale, +1 Productivity, -£75' },
         quickFix: { tone: 'positive', text: '+2 Productivity, +2 Safety, -£350' },
         waitApproval: { tone: 'negative', text: '+1 Safety, -2 Productivity, machine wears, free' },
+        trainingApprove: { tone: 'positive', text: 'Costs budget; improves morale, uncertain operational value' },
+        trainingReject: { tone: 'negative', text: '-4 Morale, free, future resentment likely' },
+        trainingInternal: { tone: 'positive', text: '+1 Skill, small cost, limited enthusiasm' },
         comfortReview: { tone: 'positive', text: '+2 Morale, -£450, no production benefit' },
         remindUnderground: { tone: 'negative', text: '-2 Supervisor morale, +1 Productivity, free' },
         officialClipboard: { tone: 'positive', text: '+1 Morale, -£90, compliance optics improved' },
@@ -6604,6 +6620,44 @@
       function adjustTrait(name, delta) {
         if (!state.traits || typeof state.traits[name] !== 'number') return;
         state.traits[name] = clamp(state.traits[name] + delta, 0, 100);
+      }
+
+      function annualMoraleDecayFor(value) {
+        const morale = Math.round(Number(value) || 0);
+        if (morale >= 90) return morale - 70;
+        if (morale >= 80) return 12;
+        if (morale >= 70) return 8;
+        if (morale >= 55) return 5;
+        if (morale >= 40) return 2;
+        return 0;
+      }
+
+      function annualMoraleNoticeHtml() {
+        const notice = state.lastMoraleNotice;
+        if (!notice || !notice.delta) return '';
+        return `<div class="pipNotice"><strong>${escapeHtml(notice.title)}:</strong> ${escapeHtml(notice.text)} <strong>Morale ${notice.delta > 0 ? '+' : ''}${notice.delta}</strong> (${notice.before} → ${notice.after}).</div>`;
+      }
+
+      function applyAnnualMoraleDecay() {
+        const before = Math.round(traitValue('morale'));
+        const decay = annualMoraleDecayFor(before);
+        if (!decay) {
+          state.lastMoraleNotice = { title: 'Annual Pay Negotiation Outcome', before, after: before, delta: 0, text: 'The crew was already sufficiently disappointed that the annual pay process struggled to make things worse.' };
+          return state.lastMoraleNotice;
+        }
+        adjustTrait('morale', -decay);
+        const after = Math.round(traitValue('morale'));
+        for (const s of state.staff || []) {
+          if (decay >= 10) s.morale = Math.max(1, (Number(s.morale) || 3) - 1);
+        }
+        const variants = [
+          'The crew are unhappy because despite missing all of their KPIs last year, the union was only able to negotiate an 8% pay rise this year.',
+          'The workforce has expressed concern that last year’s exceptional effort has been recognised with a branded water bottle and access to an optional webinar.',
+          'S.H.A.F.T. has reminded the crew that pay is only one part of the employee value proposition. The crew has requested the other parts.',
+          'Annual pay talks have concluded. The company has described the offer as fair, competitive, and already budgeted. The crew has described it differently.'
+        ];
+        state.lastMoraleNotice = { title: 'Annual Pay Negotiation Outcome', before, after, delta: -decay, text: variants[Math.floor(Math.random() * variants.length)] };
+        return state.lastMoraleNotice;
       }
 
       function productivityFactor() {
@@ -11641,6 +11695,7 @@
         if (state.gameOver) return;
         const minedSnapshot = captureMinedBlockSnapshot();
         state.year += 1;
+        applyAnnualMoraleDecay();
         state.yearStartDay = state.day;
         state.yearStartTonnes = state.tonnes;
         state.yearStartK2oTonnes = state.k2oTonnes;
@@ -11663,6 +11718,7 @@
         state.gradeConstraintEventDoneThisYear = false;
         state.hopeSupportEventDoneThisYear = false;
         state.heatEventDoneThisYear = false;
+        state.trainingEventsThisYear = 0;
         if (state.gradeRestriction && state.gradeRestriction.expiresDay <= state.day) state.gradeRestriction = null;
         state.annualTargets = targetsForYear(state.year);
         applyAnnualFinanceReset(state.year, state.cash, state.revenue, state.expenditure);
@@ -11715,7 +11771,7 @@
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Annual KPI Notice';
-        $('modalBody').innerHTML = yearStartCharacterHtml(year) + yearStartBriefingHtml(year) + '<div class="btnRow"><button class="primary" data-open-finance-after-briefing>Proceed to Annual Budget Alignment</button></div>';
+        $('modalBody').innerHTML = yearStartCharacterHtml(year) + annualMoraleNoticeHtml() + yearStartBriefingHtml(year) + '<div class="btnRow"><button class="primary" data-open-finance-after-briefing>Proceed to Annual Budget Alignment</button></div>';
         $('modalOverlay').classList.add('show');
       }
 
@@ -12818,10 +12874,187 @@
         showProductionComment('Dev reset: shift traits returned to respectable corporate optimism.', 'Dev Tools', 5);
       }
 
+
+      function forceCrewBubbleForRole(role, type = null) {
+        const staff = (state.staff || []).find(s => !role || s.role === role) || (state.staff || [])[0];
+        if (!staff) { openMiniWindow('Dev Tool', '<p>No staff available for this HR test.</p>', true); return; }
+        const template = type ? staffBubbleTemplates.find(t => t.type === type && (!t.roles || t.roles.includes(staff.role))) : chooseStaffBubbleTemplate(staff);
+        if (!template) { openMiniWindow('Dev Tool', '<p>No matching HR event template was found.</p>', true); return; }
+        staff.bubble = { type: template.type, icon: template.icon };
+        playGameSound('hr');
+        openStaffEvent(staff.id);
+      }
+
+      function forceYearSuccessDev() {
+        const target = state.annualTargets || targetsForYear(state.year);
+        const needed = Math.max(0, (target.tonnes || TARGET_TONNES) - annualTonnes());
+        state.tonnes += needed;
+        state.k2oTonnes += needed * Math.max(target.grade || TARGET_GRADE, TARGET_GRADE + 0.5);
+        if (state.exploration) state.exploration.discoveredRowsThisYear = Math.max(state.exploration.discoveredRowsThisYear || 0, target.discoveredRows || 0);
+        state.technicalHiresThisYear = Math.max(state.technicalHiresThisYear || 0, target.technicalHires || 0);
+        state.beltExtensionsThisYear = Math.max(state.beltExtensionsThisYear || 0, target.beltExtensions || 0);
+        state.pillarSupportsThisYear = Math.max(state.pillarSupportsThisYear || 0, target.pillarSupports || 0);
+        adjustTrait('safety', Math.max(0, (target.safetyMin || 0) - traitValue('safety')) + 1);
+        state.yearReviewDue = false;
+        triggerYearEndReview();
+      }
+
+      function forceYearNeedsDev(fired = false) {
+        state.needsImprovementStreak = fired ? 1 : 0;
+        const current = state.annualTargets || targetsForYear(state.year);
+        state.annualTargets = { ...current, tonnes: Math.max(annualTonnes() + 10000, (current.tonnes || TARGET_TONNES) + 5000), grade: Math.max(annualGrade() + 1, (current.grade || TARGET_GRADE) + 0.8), safetyMin: Math.min(95, Math.max(traitValue('safety') + 15, 65)) };
+        state.yearReviewDue = false;
+        triggerYearEndReview();
+      }
+
+      function devAdvanceToNextLevel() {
+        state.declineOfferShown = false;
+        state.depthIndex = (state.depthIndex || 0) + 1;
+        state.mineLevel = -1000 - state.depthIndex * 100;
+        state.declineInvestments = (state.declineInvestments || 0) + 1;
+        resetMineForNewDepth();
+        state.paused = false;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+        openMiniWindow('Dev: Next Level', '<p>Advanced to <strong>' + escapeHtml(currentLevelName()) + '</strong>. Mechanics now follow the new depth.</p>', true);
+      }
+
+      function devExploreToTransition() {
+        if (!state.assets.drillOwned) state.assets.drillOwned = true;
+        let guard = 0;
+        while (!hasReachedLevelTransition() && nextExplorationRow() !== null && guard < MINE_ROWS) {
+          state.exploration.row = nextExplorationRow();
+          completeExplorationProgram();
+          guard++;
+        }
+        showProductionComment('Dev exploration complete to the decline guidance line. Geology has coloured enough blocks to request more money.', 'Dev Tools', 5);
+      }
+
+      function devRevealAllRows() {
+        let guard = 0;
+        while (nextExplorationRow() !== null && guard < MINE_ROWS) {
+          state.exploration.row = nextExplorationRow();
+          completeExplorationProgram();
+          guard++;
+        }
+        showProductionComment('Dev reveal: all rows interpreted. The model now contains maximum confidence and minimum accountability.', 'Dev Tools', 5);
+      }
+
+      function devTriggerPillarState(stateName = 'critical') {
+        const pillar = (state.blocks[MINE_ID] || []).find(b => b.isPillar && b.status === 'solid' && b.pillarState !== 'failed') || (state.blocks[MINE_ID] || []).find(b => b.isPillar);
+        if (!pillar) { openMiniWindow('Dev Tool', '<p>No pillar found on the current board.</p>', true); return; }
+        if (stateName === 'failure') triggerPillarFailure(pillar);
+        else { pillar.pillarState = stateName; pillar.exposureAge = 999; showBlockInfo(pillar); }
+      }
+
+      function devCreateRubble() {
+        const b = (state.blocks[MINE_ID] || []).find(x => x.status === 'void' && !isActiveBeltCell(x)) || blockAt(MINE_ID, START_ROW - 1, START_COL);
+        if (!b) return;
+        b.status = 'rubble';
+        b.tonnes = Math.max(80, Math.round((b.tonnes || 700) * 0.12));
+        b.grade = Math.min(12.5, b.grade || 12.0);
+        b.estimatedGrade = b.grade;
+        b.progress = 0;
+        showBlockInfo(b);
+      }
+
+      function devTriggerGasWater(kind) {
+        const b = (state.blocks[MINE_ID] || []).find(x => x.status === 'solid' && !x.isPillar) || blockAt(MINE_ID, START_ROW - 1, START_COL);
+        if (!b) return;
+        const cr = cellRect(MINE_ID, b.r, b.c);
+        const pos = { x: cr.x + cr.w / 2, y: cr.y + cr.h / 2 };
+        if (kind === 'gas') { b.gasPocket = true; b.gasReleased = false; triggerGasPocketEvent(b, pos); }
+        else { b.waterPocket = true; b.waterReleased = false; triggerWaterPocketEvent(b, pos); }
+      }
+
+      function forceExternalAffairsEvent() {
+        const list = externalAffairsEventList();
+        const ev = randomItem(list);
+        state.externalAffairsDoneThisYear = true;
+        if (ev.kind === 'community') state.communityEvents = (state.communityEvents || 0) + 1;
+        if (ev.kind === 'protest') state.protestEvents = (state.protestEvents || 0) + 1;
+        if (ev.kind && ev.kind.startsWith('government')) state.governmentEvents = (state.governmentEvents || 0) + 1;
+        if (ev.direct) {
+          if (typeof ev.apply === 'function') ev.apply();
+          openOperationalEventModal({ title: ev.title, image: ev.image, character: ev.character, department: ev.department, label: 'EXT', tone: ev.kind === 'governmentNegative' ? 'warning' : 'info', body: ev.body, button: 'Accept Policy Environment' });
+          return;
+        }
+        openOperationalEventModal({
+          title: ev.title,
+          image: ev.image,
+          character: ev.character,
+          department: ev.department,
+          label: 'EXT',
+          tone: 'warning',
+          body: ev.body + '<p><strong>Dev trigger:</strong> choose a response below.</p><div class="btnRow">' + ev.choices.map(ch => `<button class="eventChoiceBtn" data-external-choice="${ev.kind}:${ch[0]}"><strong>${escapeHtml(ch[1])}</strong><span>${escapeHtml(ch[2])}</span></button>`).join('') + '</div>',
+          button: 'Close Without Resolving'
+        });
+      }
+
+
+      function forceHeatVentilationEvent() {
+        if (state.depthIndex < 4) { state.depthIndex = 4; state.mineLevel = -1400; }
+        state.heatEventDoneThisYear = true;
+        const fan = !!(state.assets && state.assets.fanOwned);
+        const vent = ventilationEngineerOnCrew();
+        const penalty = fan && vent ? { morale: -1, productivity: -1, cost: 700, text: 'The ventilation system has achieved movement of air, which is being treated as progress.' }
+          : fan ? { morale: -2, productivity: -2, cost: 1200, text: 'The desk fan is oscillating with confidence, but nobody qualified has confirmed whether the air is going anywhere useful.' }
+          : { morale: -5, productivity: -4, cost: 2600, text: 'The crew report that the deeper level now feels like working inside a policy failure with humidity.' };
+        adjustTrait('morale', penalty.morale);
+        adjustTrait('productivity', penalty.productivity);
+        spend(scaledCost(penalty.cost), 'Heat and ventilation response');
+        openOperationalEventModal({
+          title: 'Heat Complaint — Ventilation Required',
+          image: 'assets/characters/ventilation-engineer.png',
+          character: 'Ventilation Engineering',
+          department: 'Air Movement Assurance',
+          label: 'VENT',
+          tone: fan && vent ? 'info' : 'warning',
+          body: `<p>Crew heat complaints have increased on ${currentLevelName()}.</p><p>${penalty.text}</p><p><strong>Impact:</strong> ${penalty.productivity} Productivity, ${penalty.morale} Morale, ${money(scaledCost(penalty.cost))} response cost.</p>`,
+          button: 'Return to Warmth Management'
+        });
+      }
+
       function devAction(action) {
         if (!action) return;
 
         startMusic();
+
+        if (action === 'dev-next-year') { advanceToNextYear(); return; }
+        if (action === 'dev-next-level') { devAdvanceToNextLevel(); return; }
+        if (action === 'year-success') { forceYearSuccessDev(); return; }
+        if (action === 'year-needs') { forceYearNeedsDev(false); return; }
+        if (action === 'year-fired') { forceYearNeedsDev(true); return; }
+        if (action === 'role-exploration') { openRoleUnlockIntro('exploration', 'Dev: Exploration Intro'); return; }
+        if (action === 'role-engineering') { openRoleUnlockIntro('miningEngineering', 'Dev: Mining Engineer Intro'); return; }
+        if (action === 'role-ground') { openRoleUnlockIntro('groundControl', 'Dev: Ground Control Intro'); return; }
+        if (action === 'role-survey') { openRoleUnlockIntro('survey', 'Dev: Survey Intro'); return; }
+        if (action === 'role-vent') { openRoleUnlockIntro('ventilation', 'Dev: Ventilation Intro'); return; }
+        if (action === 'morale-decay') { applyAnnualMoraleDecay(); openMiniWindow('Dev: Annual Morale Decay', annualMoraleNoticeHtml() || '<p>No morale decay applied.</p>', false); return; }
+        if (action === 'morale-high') { state.traits.morale = 100; showProductionComment('Dev: morale set to 100. The annual pay process now has something to ruin.', 'Dev Tools', 5); return; }
+        if (action === 'morale-low') { state.traits.morale = 35; showProductionComment('Dev: morale set to 35. The crew are now powered by spite and tea.', 'Dev Tools', 5); return; }
+        if (action === 'safety-high') { state.traits.safety = 100; showProductionComment('Dev: safety set to 100. HSE will be suspicious.', 'Dev Tools', 5); return; }
+        if (action === 'safety-low') { state.traits.safety = 25; showProductionComment('Dev: safety set to 25. The clipboard is vibrating.', 'Dev Tools', 5); return; }
+        if (action === 'safety-mandatory') { applySafetyEvent({ category: 'Safety Department', title: 'Mandatory Safety Standdown', text: 'Following a period of continued operation, the Safety Department has determined that work should stop so everyone can discuss why work should not stop.', cost: 0, traits: { productivity: -3, safety: 1, morale: -1 } }, false); return; }
+        if (action === 'hse-inspection') { triggerHseInspectionEvent(); return; }
+        if (action === 'skip-factor') { state.skipFactorDoneThisYear = false; if (annualTonnes() < 2500) { state.tonnes += 3000; state.k2oTonnes += 3000 * (annualGrade() || TARGET_GRADE); } applySkipFactorEvent(randomItem(skipFactorEvents())); return; }
+        if (action === 'meeting-event') { state.meetingEventDoneThisYear = false; applyPointlessMeetingEvent(randomItem(meetingEvents())); return; }
+        if (action === 'external-affairs') { forceExternalAffairsEvent(); return; }
+        if (action === 'grade-constraint') { state.gradeConstraintEventDoneThisYear = false; applyGradeConstraintEvent(randomItem(gradeConstraintEvents())); return; }
+        if (action === 'hope-support') { state.hopeSupportEventDoneThisYear = false; state.year = Math.max(2, state.year); const key = state.assets && state.assets.secondMinerOwned && Math.random() < 0.5 ? 'miner2' : 'miner1'; const miner = minerStateForKey(key); const label = key === 'miner2' ? '2ndHOPE' : '1stHOPE'; if (miner && (miner.status === 'mining' || miner.status === 'tramming')) runWithMinerContext(miner, () => stopAutoMining(label + ' has stopped for a HOPE software support intervention.', 'Vendor Support')); if (miner) miner.condition = Math.max(0, (miner.condition || 80) - 8); const cost = scaledCost(2400 + (state.assets && state.assets.secondMinerOwned ? 900 : 0)); spend(cost, 'HOPE software support'); openOperationalEventModal({ title: 'HOPE: It’s Our Strategy', image: 'assets/characters/hope-support-engineer.png', character: 'HOPE Support Engineers', department: 'Vendor Strategy and Rollback Services', label: 'HOPE', tone: 'warning', body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p>`, button: 'Acknowledge the Strategy' }); return; }
+        if (action === 'heat-event') { forceHeatVentilationEvent(); return; }
+        if (action === 'hr-training') { forceCrewBubbleForRole(null, 'trainingRequest'); return; }
+        if (action === 'hr-supervisor') { forceCrewBubbleForRole('supervisor'); return; }
+        if (action === 'explore-transition') { devExploreToTransition(); return; }
+        if (action === 'reveal-rows') { devRevealAllRows(); return; }
+        if (action === 'pillar-stress') { devTriggerPillarState('cracking'); return; }
+        if (action === 'pillar-critical') { devTriggerPillarState('critical'); return; }
+        if (action === 'pillar-failure') { devTriggerPillarState('failure'); return; }
+        if (action === 'create-rubble') { devCreateRubble(); return; }
+        if (action === 'gas-pocket') { devTriggerGasWater('gas'); return; }
+        if (action === 'water-inflow') { devTriggerGasWater('water'); return; }
+        if (action === 'buy-bolter-dev') { state.assets.bolterOwned = true; showProductionComment('Dev: bolter purchased without procurement debate.', 'Dev Tools', 4); return; }
+        if (action === 'buy-second-dev') { state.assets.secondMinerOwned = true; syncMinerAliases(); showProductionComment('Dev: 2ndHOPE authorised. The belt is already worried.', 'Dev Tools', 4); return; }
+        if (action === 'buy-fan-dev') { state.assets.fanOwned = true; showProductionComment('Dev: mine fan purchased. Air movement is now visible at surface.', 'Dev Tools', 4); return; }
 
         if (action === 'safety-random') forceSafetyEvent('random');
         if (action === 'safety-negative') forceSafetyEvent('negative');
@@ -12882,9 +13115,6 @@
           triggerEngineeringResearch();
         }
 
-        if ($('modalOverlay').classList.contains('show')) {
-          openWindow('dev');
-        }
       }
 
       function roleIntroKeyToTab(key) {
@@ -13201,67 +13431,17 @@
         if (type === 'dev') {
           title = 'Dev / Debug Tools';
           body = `
-            <p><strong>Test controls.</strong> These trigger events immediately without waiting for normal random rolls. Use this to check visuals, sounds, repair flows, and balance/trait effects.</p>
+            <p><strong>Test controls.</strong> Anything the game can trigger naturally should be available here for testing.</p>
             <div class="devToolGrid">
-              <section class="devToolCard">
-                <h3>Safety Events</h3>
-                <p>Trigger the safety standdown overlay and safety-professional alert.</p>
-                <div class="devToolBtns">
-                  <button data-dev-action="safety-random">Random Safety</button>
-                  <button data-dev-action="safety-negative">Negative Safety</button>
-                  <button data-dev-action="safety-positive">Positive Safety</button>
-                </div>
-              </section>
-
-              <section class="devToolCard">
-                <h3>Production / HR Events</h3>
-                <p>Force speech bubbles and production manager comments.</p>
-                <div class="devToolBtns">
-                  <button data-dev-action="pm-random">Random PM Comment</button>
-                  <button data-dev-action="geo-reinterpret">Geology Reinterpretation</button>
-                  <button data-dev-action="hr-random">Random HR Bubble</button>
-                  <button data-dev-action="hr-belt">Belt Moan Bubble</button>
-                </div>
-              </section>
-
-              <section class="devToolCard">
-                <h3>Continuous Miner</h3>
-                <p>Break or restore the miner without waiting for wear.</p>
-                <div class="devToolBtns">
-                  <button data-dev-action="miner-break">Break Miner</button>
-                  <button data-dev-action="miner-worn">Set Miner Worn</button>
-                  <button data-dev-action="miner-restore">Restore Miner</button>
-                </div>
-              </section>
-
-              <section class="devToolCard">
-                <h3>Conveyor Faults</h3>
-                <p>Test each belt availability state and the required repair role.</p>
-                <div class="devToolBtns">
-                  <button data-dev-action="belt-random">Random Belt Fault</button>
-                  <button data-dev-action="belt-trip">Electrical Trip</button>
-                  <button data-dev-action="belt-buried">Buried Belt</button>
-                  <button data-dev-action="belt-drive">Drive Fault</button>
-                  <button data-dev-action="belt-mechanical">Mechanical Fault</button>
-                  <button data-dev-action="belt-restore">Restore Belt</button>
-                </div>
-              </section>
-
-              <section class="devToolCard">
-                <h3>Game State</h3>
-                <p>Small helpers for repeat testing.</p>
-                <div class="devToolBtns">
-                  <button data-dev-action="cash-add">Add £10k</button>
-                  <button data-dev-action="traits-reset">Reset Traits</button>
-                  <button data-dev-action="complete-level">Trigger Year Pass</button>
-                  <button data-dev-action="explore-complete">Complete Exploration Row</button>
-                  <button data-dev-action="eng-event">Engineering Event</button>
-                </div>
-              </section>
-            </div>
-          `;
+              <section class="devToolCard"><h3>Progression</h3><p>Move time, force review outcomes, or jump deeper for mechanic testing.</p><div class="devToolBtns"><button data-dev-action="dev-next-year">Advance to Next Year</button><button data-dev-action="year-success">Finish Year: Successful</button><button data-dev-action="year-needs">Finish Year: Needs Improvement</button><button data-dev-action="year-fired">Finish Year: Fired</button><button data-dev-action="dev-next-level">Advance to Next Level</button></div></section>
+              <section class="devToolCard"><h3>Role / Mechanic Intros</h3><p>Open the satirical role explanation modals directly.</p><div class="devToolBtns"><button data-dev-action="role-exploration">Exploration Intro</button><button data-dev-action="role-engineering">Mining Engineer Intro</button><button data-dev-action="role-ground">Rock Doctor Intro</button><button data-dev-action="role-survey">Survey Intro</button><button data-dev-action="role-vent">Ventilation Intro</button></div></section>
+              <section class="devToolCard"><h3>Safety / External Events</h3><p>Trigger modal events without waiting for yearly rolls.</p><div class="devToolBtns"><button data-dev-action="safety-random">Random Safety</button><button data-dev-action="safety-negative">Negative Safety</button><button data-dev-action="safety-positive">Positive Safety</button><button data-dev-action="safety-mandatory">Mandatory Standdown</button><button data-dev-action="hse-inspection">HSE Inspection</button><button data-dev-action="skip-factor">Skip Factor</button><button data-dev-action="meeting-event">Pointless Meeting</button><button data-dev-action="external-affairs">External Affairs</button><button data-dev-action="grade-constraint">Grade Restriction</button><button data-dev-action="hope-support">HOPE Support</button><button data-dev-action="heat-event">Heat / Ventilation</button></div></section>
+              <section class="devToolCard"><h3>Production / HR Events</h3><p>Force PM comments, HR bubbles, and morale loops.</p><div class="devToolBtns"><button data-dev-action="pm-random">Random PM Comment</button><button data-dev-action="geo-reinterpret">Geology Reinterpretation</button><button data-dev-action="hr-random">Random HR Bubble</button><button data-dev-action="hr-training">Training Request</button><button data-dev-action="hr-supervisor">Supervisor Issue</button><button data-dev-action="hr-belt">Belt Moan Bubble</button></div></section>
+              <section class="devToolCard"><h3>Mine State</h3><p>Manipulate exploration and hazard states.</p><div class="devToolBtns"><button data-dev-action="explore-complete">Explore Next Row</button><button data-dev-action="explore-transition">Explore to -1100 Line</button><button data-dev-action="reveal-rows">Reveal All Rows</button><button data-dev-action="pillar-stress">Pillar Stressed</button><button data-dev-action="pillar-critical">Pillar Critical</button><button data-dev-action="pillar-failure">Pillar Failure</button><button data-dev-action="create-rubble">Create Rubble</button><button data-dev-action="gas-pocket">Gas Pocket</button><button data-dev-action="water-inflow">Water Inflow</button></div></section>
+              <section class="devToolCard"><h3>Assets</h3><p>Break, restore, and unlock major assets.</p><div class="devToolBtns"><button data-dev-action="miner-break">Break Selected Miner</button><button data-dev-action="miner-worn">Set Miner Worn</button><button data-dev-action="miner-restore">Restore Miner</button><button data-dev-action="belt-random">Random Belt Fault</button><button data-dev-action="belt-trip">Electrical Trip</button><button data-dev-action="belt-buried">Buried Belt</button><button data-dev-action="belt-drive">Drive Fault</button><button data-dev-action="belt-mechanical">Mechanical Fault</button><button data-dev-action="belt-restore">Restore Belt</button><button data-dev-action="buy-bolter-dev">Add Bolter</button><button data-dev-action="buy-second-dev">Add 2ndHOPE</button><button data-dev-action="buy-fan-dev">Add Mine Fan</button></div></section>
+              <section class="devToolCard"><h3>Finance / Traits</h3><p>Set test conditions for morale decay, HSE, and finance.</p><div class="devToolBtns"><button data-dev-action="cash-add">Add £10k</button><button data-dev-action="traits-reset">Reset Traits</button><button data-dev-action="morale-high">Morale 100</button><button data-dev-action="morale-low">Morale 35</button><button data-dev-action="safety-high">Safety 100</button><button data-dev-action="safety-low">Safety 25</button><button data-dev-action="morale-decay">Apply Annual Morale Decay</button></div></section>
+            </div>`;
         }
-
 
         $('modalTitle').textContent = title;
         $('modalBody').innerHTML = body + '<div class="btnRow"><button class="primary" data-close>Close</button></div>';
@@ -14014,8 +14194,42 @@
         return staffBubbleTemplates.find(t => t.type === type) || staffBubbleTemplates.find(t => t.type === 'morale');
       }
 
+      function trainingRequestForStaff(staff) {
+        const safeName = escapeHtml(staff && staff.name ? staff.name : 'The employee');
+        const role = staff ? staff.role : 'miner';
+        const generic = { cost: 1800, morale: 4, skill: 1, productivity: -1, safety: 0, text: `${safeName} has requested funding for a professional development course which appears only indirectly related to the mine, but very directly related to their continued morale.` };
+        const map = {
+          fitter: { cost: 2000, morale: 5, skill: 1, productivity: -2, safety: 0, text: `${safeName} has requested training in the repair and maintenance of classic cars, which they believe is directly transferable to underground equipment maintenance, particularly corrosion, swearing, and guessing what the previous owner did.` },
+          electrician: { cost: 1700, morale: 4, skill: 1, productivity: -1, safety: -1, text: `${safeName} has requested a domestic smart-home wiring course. They believe this will help with underground electrical systems, assuming the mine ever requests a voice-controlled conveyor.` },
+          miner: { cost: 1500, morale: 4, skill: 1, productivity: -1, safety: 0, text: `${safeName} has requested an advanced remote-control confidence course. The brochure promises improved operator presence, though not necessarily improved direction.` },
+          supervisor: { cost: 2400, morale: 5, skill: 0, productivity: -3, safety: 0, text: `${safeName} has requested a strategic leadership retreat. The course involves reflection, laminated values, and no direct exposure to the mining face.` },
+          geologist: { cost: 1900, morale: 4, skill: 1, productivity: -1, safety: 0, text: `${safeName} has requested an advanced colouring pencil interpretation workshop. Geology states this will improve model quality, or at least make uncertainty more visually persuasive.` },
+          driller: { cost: 1200, morale: 4, skill: 0, productivity: -1, safety: 0, text: `${safeName} has requested a course titled Mindfulness Through Percussive Drilling. The objectives are unclear, but the title is difficult to challenge.` },
+          miningEngineer: { cost: 2200, morale: 4, skill: 1, productivity: -1, safety: 0, text: `${safeName} has requested a short course on precision planning under geological uncertainty. Geology has described this as sharpening the crayons with extra steps.` },
+          rockDoctor: { cost: 3200, morale: 4, skill: 1, productivity: -1, safety: 1, text: `${safeName} has requested attendance at an international conference on things not falling down. The registration fee is high because gravity remains a premium topic.` },
+          surveyor: { cost: 1600, morale: 3, skill: 1, productivity: 0, safety: 0, text: `${safeName} has requested precision measurement CPD. Production is concerned this may create more evidence that the plan and reality are different places.` },
+          ventilationEngineer: { cost: 2100, morale: 4, skill: 1, productivity: -1, safety: 1, text: `${safeName} has requested fan-curve training. The mine fan is already oscillating, so the department now requires theory to support the movement.` }
+        };
+        return map[role] || generic;
+      }
+
+      function trainingImpactText(staff) {
+        const o = trainingRequestForStaff(staff);
+        const parts = [`Cost ${money(scaledCost(o.cost))}`];
+        if (o.morale) parts.push(`${o.morale > 0 ? '+' : ''}${o.morale} Morale`);
+        if (o.skill) parts.push(`${o.skill > 0 ? '+' : ''}${o.skill} Skill`);
+        if (o.productivity) parts.push(`${o.productivity > 0 ? '+' : ''}${o.productivity} Productivity`);
+        if (o.safety) parts.push(`${o.safety > 0 ? '+' : ''}${o.safety} Safety`);
+        return parts.join(' · ');
+      }
+
       function renderStaffEventText(template, staff) {
-        return String(template.text || '').replaceAll('{name}', escapeHtml(staff.name));
+        let text = String(template.text || '').replaceAll('{name}', escapeHtml(staff.name));
+        if (text.includes('{trainingText}')) {
+          const o = trainingRequestForStaff(staff);
+          text = text.replaceAll('{trainingText}', o.text + '</p><p><strong>Expected impact:</strong> ' + escapeHtml(trainingImpactText(staff)));
+        }
+        return text;
       }
 
       function openStaffEvent(staffId) {
@@ -14023,13 +14237,14 @@
         if (!s || !s.bubble) return;
 
         const template = staffBubbleTemplate(s.bubble.type);
-        const title = s.name + ' — Staff Engagement Event';
+        const title = template.title ? (template.title + ' — ' + s.name) : (s.name + ' — Staff Engagement Event');
         const quote = template.quote || '“Can I just say something?”';
         const msg = '<p><strong>' + quote + '</strong></p><p>' + renderStaffEventText(template, s) + '</p>';
         const buttons = (template.buttons || [])
           .map(b => {
             const impact = choiceImpactMeta[b.choice] || { tone: 'negative', text: 'Operational impact uncertain' };
-            return `<button class="eventChoiceBtn ${impact.tone}" data-event-choice="${s.id}:${b.choice}"><strong>${b.label}</strong><span>${impact.text}</span></button>`;
+            const impactText = b.choice === 'trainingApprove' ? trainingImpactText(s) : impact.text;
+            return `<button class="eventChoiceBtn ${impact.tone}" data-event-choice="${s.id}:${b.choice}"><strong>${b.label}</strong><span>${escapeHtml(impactText)}</span></button>`;
           })
           .join('');
 
@@ -14100,6 +14315,18 @@
         if (choice === 'spreadsheetRhythm') { spend(75, 'Spreadsheet governance'); adjustTrait('morale', -1); adjustTrait('productivity', 1); }
         if (choice === 'quickFix') { improveMachine(12); spend(350, 'Cheap proactive fix'); adjustTrait('productivity', 2); adjustTrait('safety', 2); }
         if (choice === 'waitApproval') { adjustTrait('safety', 1); adjustTrait('productivity', -2); wearMachine(3); }
+
+        if (choice === 'trainingApprove') {
+          const o = trainingRequestForStaff(s);
+          spend(scaledCost(o.cost), 'Training request');
+          if (o.morale) { improveMorale(o.morale > 0 ? 1 : 0); adjustTrait('morale', o.morale); }
+          if (o.skill) { if (o.skill > 0) improveSkill(1); adjustTrait('skill', o.skill); }
+          if (o.productivity) adjustTrait('productivity', o.productivity);
+          if (o.safety) adjustTrait('safety', o.safety);
+          showProductionComment(s.name + ' has been approved for training. The business case is now described as development, regardless of relevance.', 'S.H.A.F.T.', 6);
+        }
+        if (choice === 'trainingReject') { reduceMorale(1); adjustTrait('morale', -4); showProductionComment('Training request declined. The employee has been encouraged to grow through existing disappointment.', 'S.H.A.F.T.', 5); }
+        if (choice === 'trainingInternal') { improveSkill(1); spend(400, 'Internal coaching'); adjustTrait('skill', 1); adjustTrait('morale', -1); showProductionComment('Internal coaching delivered. It was cheaper, shorter, and less popular than the course requested.', 'S.H.A.F.T.', 5); }
 
         if (choice === 'beltRecoverySupport') { spend(500, 'Belt recovery support'); adjustTrait('morale', 3); adjustTrait('productivity', 2); showProductionComment('The crew appreciates the rare decision to treat belt availability as related to production.', 'Mine Services'); }
         if (choice === 'beltOpportunity') { adjustTrait('morale', -3); adjustTrait('productivity', -2); showProductionComment('The stoppage has been logged as an opportunity. Nobody feels improved.', 'HR'); }
