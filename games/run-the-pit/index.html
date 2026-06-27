@@ -15527,6 +15527,482 @@
         requestAnimationFrame(frame);
       }
 
+
+
+      /* ------------------------------------------------------------------
+         Late-stage design pass: Shift Manager involvement, supervisor guard,
+         progressive KPI dashboard, share price, trait events, BORC review.
+         ------------------------------------------------------------------ */
+
+      function ensureSharePriceState() {
+        if (typeof state.sharePrice !== 'number' || !Number.isFinite(state.sharePrice)) state.sharePrice = 100;
+        if (typeof state.yearStartSharePrice !== 'number' || !Number.isFinite(state.yearStartSharePrice)) state.yearStartSharePrice = state.sharePrice;
+        if (typeof state.sharePriceTarget !== 'number' || !Number.isFinite(state.sharePriceTarget)) state.sharePriceTarget = Math.round((state.yearStartSharePrice || 100) + 4 + Math.max(0, (state.year || 1) - 4));
+      }
+
+      function sharePriceMetricActive() {
+        return Math.max(1, Number(state.year) || 1) >= 4;
+      }
+
+      function formatSharePrice(value = state.sharePrice) {
+        return Math.max(1, Number(value) || 0).toFixed(1) + 'p';
+      }
+
+      function adjustSharePrice(delta, reason = 'Market sentiment') {
+        ensureSharePriceState();
+        if (!sharePriceMetricActive()) return 0;
+        const before = state.sharePrice;
+        state.sharePrice = clamp(before + Number(delta || 0), 2, 500);
+        const actualDelta = state.sharePrice - before;
+        if (Math.abs(actualDelta) >= 0.01) {
+          state.sharePriceEvents = state.sharePriceEvents || [];
+          state.sharePriceEvents.push({ day: state.day, year: state.year, delta: actualDelta, reason, price: state.sharePrice });
+          if (state.sharePriceEvents.length > 20) state.sharePriceEvents.shift();
+        }
+        return actualDelta;
+      }
+
+      function sharePriceKpiStatus() {
+        ensureSharePriceState();
+        return directKpiStatus(state.sharePrice, state.sharePriceTarget || ((state.yearStartSharePrice || 100) + 4), 1.5);
+      }
+
+      function activeKpiMetrics() {
+        const y = Math.max(1, Number(state.year) || 1);
+        return {
+          tonnes: true,
+          grade: true,
+          revenue: y >= 2,
+          finance: y >= 3,
+          sharePrice: y >= 4,
+          safety: y >= 3,
+          lom: y >= 2
+        };
+      }
+
+      function ensureSharePriceHudPill() {
+        const hud = document.querySelector('.dashboardHud');
+        if (!hud || $('sharePriceHud')) return;
+        const pill = document.createElement('div');
+        pill.className = 'pill wide';
+        pill.id = 'sharePriceHudPill';
+        pill.innerHTML = 'Share Price <strong id="sharePriceHud">100.0p</strong>';
+        const gradeRestriction = $('gradeRestrictionHudPill');
+        if (gradeRestriction && gradeRestriction.parentNode === hud) hud.insertBefore(pill, gradeRestriction);
+        else hud.appendChild(pill);
+      }
+
+      function setParentPillVisible(strongId, visible) {
+        const el = $(strongId);
+        if (el && el.parentElement) el.parentElement.style.display = visible ? '' : 'none';
+      }
+
+      function applyProgressiveDashboardVisibility() {
+        ensureSharePriceState();
+        ensureSharePriceHudPill();
+        const m = activeKpiMetrics();
+        setParentPillVisible('revenueHud', m.revenue);
+        setParentPillVisible('expenditureHud', m.finance);
+        setParentPillVisible('cashHud', m.finance);
+        setParentPillVisible('lomHud', m.lom);
+        const sharePill = $('sharePriceHudPill');
+        if (sharePill) sharePill.style.display = m.sharePrice ? '' : 'none';
+        const shareHud = $('sharePriceHud');
+        if (shareHud) shareHud.textContent = formatSharePrice();
+        if ($('cashHud')) setPillStatus('cashHud', budgetKpiStatus());
+        if ($('sharePriceHud')) setPillStatus('sharePriceHud', sharePriceKpiStatus());
+      }
+
+      const baseUpdateHudForProgressiveKpis = updateHud;
+      updateHud = function() {
+        baseUpdateHudForProgressiveKpis();
+        applyProgressiveDashboardVisibility();
+      };
+
+      function progressiveKpiRows() {
+        ensureSharePriceState();
+        const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        const metrics = activeKpiMetrics();
+        const rows = [
+          { key: 'tonnes', title: 'Mined Tonnes', status: progressKpiStatus(yrTonnes, target.tonnes || 0) },
+          { key: 'grade', title: 'Goldilocks Grade', status: gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes) }
+        ];
+        if (metrics.revenue) rows.push({ key: 'revenue', title: 'Revenue', status: progressKpiStatus(state.revenue || 0, state.revenueTarget || 0) });
+        if (metrics.finance) rows.push({ key: 'surplus', title: 'Operating Surplus', status: budgetKpiStatus() });
+        if ((target.discoveredRows || 0) > 0) rows.push({ key: 'exploration', title: 'Exploration', status: progressKpiStatus(exp, target.discoveredRows || 0) });
+        if (target.technicalHires) rows.push({ key: 'technical', title: 'Technical Team', status: progressKpiStatus(technicalTeamCoverage(), target.technicalHires) });
+        if (target.beltExtensions) rows.push({ key: 'belt', title: 'Belt Advancement', status: progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions) });
+        if (target.pillarSupports) rows.push({ key: 'pillarSupport', title: 'Pillar Support', status: progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports) });
+        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) rows.push({ key: 'pillarFailures', title: 'Pillar Failures', status: annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing' });
+        if (metrics.safety) rows.push({ key: 'safety', title: 'Safety Floor', status: directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8) });
+        if (metrics.sharePrice) rows.push({ key: 'sharePrice', title: 'Share Price', status: sharePriceKpiStatus() });
+        return rows;
+      }
+
+      annualKpiStatusList = function() {
+        return progressiveKpiRows();
+      };
+
+      annualTargetPassed = function() {
+        return annualKpiStatusList().every(x => x.status === 'onTrack');
+      };
+
+      annualKpiTrackerHtml = function() {
+        ensureSharePriceState();
+        const target = state.annualTargets || { tonnes: TARGET_TONNES, grade: TARGET_GRADE, discoveredRows: 0, safetyMin: 45 };
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        const finance = currentFinanceStatus();
+        const metrics = activeKpiMetrics();
+        const cards = [];
+        cards.push(kpiCardHtml('Mined Tonnes', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t`, pct(yrTonnes, target.tonnes), progressKpiStatus(yrTonnes, target.tonnes || 0), `Expected by now: ${Math.round((target.tonnes || 0) * finance.elapsed).toLocaleString()}t`));
+        cards.push(kpiCardHtml('Goldilocks Grade', `${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%`, target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100, gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes), 'Reconciled when mined'));
+        if (metrics.revenue) cards.push(kpiCardHtml('Revenue', `${money(state.revenue || 0)} / ${money(state.revenueTarget || 0)}`, pct(state.revenue || 0, state.revenueTarget || 1), progressKpiStatus(state.revenue || 0, state.revenueTarget || 0), 'SLT has discovered that some tonnes are worth more than others'));
+        if (metrics.finance) cards.push(kpiCardHtml('Operating Surplus', `${money(state.cash)} current`, state.cash >= 0 ? 100 : 0, budgetKpiStatus(), 'Revenue is important, but Finance now insists costs also exist'));
+        if ((target.discoveredRows || 0) > 0) cards.push(kpiCardHtml('Exploration', `${exp} / ${target.discoveredRows || 0} rows`, pct(exp, target.discoveredRows || 1), progressKpiStatus(exp, target.discoveredRows || 0), (target.discoveredRows || 0) ? `Expected by now: ${((target.discoveredRows || 0) * finance.elapsed).toFixed(1)} rows` : 'No formal requirement'));
+        if (target.technicalHires) cards.push(kpiCardHtml('Technical Team', `${technicalTeamCoverage()} / ${target.technicalHires}`, pct(technicalTeamCoverage(), target.technicalHires), progressKpiStatus(technicalTeamCoverage(), target.technicalHires), 'Mining Engineer and Rock Doctor required'));
+        if (target.beltExtensions) cards.push(kpiCardHtml('Belt Advancement', `${state.beltExtensionsThisYear || 0} / ${target.beltExtensions}`, pct(state.beltExtensionsThisYear || 0, target.beltExtensions), progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions), 'Survey-controlled infrastructure promise'));
+        if (target.pillarSupports) cards.push(kpiCardHtml('Pillar Support', `${state.pillarSupportsThisYear || 0} / ${target.pillarSupports}`, pct(state.pillarSupportsThisYear || 0, target.pillarSupports), progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports), 'Preventative support, not safety-score farming'));
+        if (typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99) cards.push(kpiCardHtml('Pillar Failures', `${annualPillarFailures()} / ${target.maxPillarFailures} allowed`, annualPillarFailures() <= target.maxPillarFailures ? 100 : 0, annualPillarFailures() <= target.maxPillarFailures ? 'onTrack' : 'failing', 'Pillar bursts damage the failed pillar and two adjacent blocks'));
+        if (metrics.safety) cards.push(kpiCardHtml('Safety Floor', `${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}`, target.safetyMin ? clamp((traitValue('safety') / target.safetyMin) * 100, 0, 120) : 100, directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8), 'Safety must survive year end'));
+        if (metrics.sharePrice) cards.push(kpiCardHtml('Share Price', `${formatSharePrice()} / ${formatSharePrice(state.sharePriceTarget)}`, pct(state.sharePrice, state.sharePriceTarget || 1), sharePriceKpiStatus(), 'External confidence, market gossip, and executive share awards'));
+        const overallStatus = aggregateKpiStatus(annualKpiStatusList());
+        const summaryBits = [`Year ${state.year}`, `Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}`, `${Math.round(finance.elapsed * 100)}% elapsed`];
+        if (metrics.sharePrice) summaryBits.push(`Share ${formatSharePrice()}`);
+        return `<div class="financeSummaryGrid">
+          <div class="financeSummaryCard ${statusCssClass(overallStatus)}"><strong>Annual Position</strong>${summaryBits.join(' · ')}</div>
+          <div class="financeSummaryCard"><strong>Active SLT Metrics</strong>${annualKpiStatusList().map(x => escapeHtml(x.title)).join(' · ')}</div>
+        </div><div class="kpiTrackerGrid">${cards.join('')}</div>`;
+      };
+
+      const baseYearStartBriefingHtmlForMetricUnlocks = yearStartBriefingHtml;
+      yearStartBriefingHtml = function(year) {
+        const y = Math.max(1, Number(year) || 1);
+        let extra = '';
+        if (y === 2) {
+          extra = `<div class="letter"><h2>New SLT Metric — Revenue</h2><p>The Superior Leadership Team has discovered that some tonnes are worth more than other tonnes.</p><p>Revenue has now been added to the dashboard, replacing the previous assumption that all rocks are equally exciting.</p></div>`;
+        } else if (y === 3) {
+          extra = `<div class="letter"><h2>New SLT Metric — Operating Surplus</h2><p>The SLT has reviewed revenue performance and reached an important conclusion: income is better when expenditure is not also happening.</p><p>Operating Surplus is now a formal dashboard metric. Finance has asked why this was not obvious earlier.</p></div>`;
+        } else if (y === 4) {
+          extra = `<div class="letter"><h2>New SLT Metric — Share Price</h2><p>The company has decided to go public. The SLT has been awarded shares to ensure strategic alignment, personal motivation, and a sudden interest in public perception.</p><p>Please remember your fiduciary responsibility to shareholders, especially the shareholders currently sitting in the executive car park.</p></div>`;
+        }
+        return extra + baseYearStartBriefingHtmlForMetricUnlocks(year);
+      };
+
+      const baseAdvanceToNextYearForSharePrice = advanceToNextYear;
+      advanceToNextYear = function() {
+        baseAdvanceToNextYearForSharePrice();
+        ensureSharePriceState();
+        state.yearStartSharePrice = state.sharePrice;
+        state.sharePriceTarget = Math.round(state.yearStartSharePrice + 4 + Math.max(0, (state.year || 1) - 4));
+      };
+
+      const baseApplyAnnualFinanceResetForSharePrice = applyAnnualFinanceReset;
+      applyAnnualFinanceReset = function(year, priorCash = state.cash, priorRevenue = state.revenue, priorExpenditure = state.expenditure) {
+        const result = baseApplyAnnualFinanceResetForSharePrice(year, priorCash, priorRevenue, priorExpenditure);
+        ensureSharePriceState();
+        state.yearStartSharePrice = state.sharePrice;
+        state.sharePriceTarget = Math.round(state.yearStartSharePrice + 4 + Math.max(0, (state.year || 1) - 4));
+        return result;
+      };
+
+      function managerCrewMember() {
+        const m = currentManager();
+        if (!m) return null;
+        return {
+          ...m,
+          id: 'shift_manager_' + m.id,
+          role: 'shiftManager',
+          salary: 0,
+          skill: Math.max(2, Math.round(3 + (m.operatorSkillAdjust || 0) / 5)),
+          morale: Math.max(1, Math.round(3 + (m.moraleAdjust || 0))),
+          safety: Math.max(1, Math.round(3 + (m.safetyAdjust || 0) / 5)),
+          attendance: Math.max(1, 4 + Math.round((m.attendanceAdjust || 0) / 5)),
+          trait: 'Blame Allocation Authority · attends meetings professionally',
+          bubble: null
+        };
+      }
+
+      const basePanelCrewForShiftManager = panelCrew;
+      panelCrew = function(qid) {
+        const crew = basePanelCrewForShiftManager(qid);
+        if (qid === 'SHIFT') {
+          const manager = managerCrewMember();
+          if (manager) return [manager, ...crew];
+        }
+        return crew;
+      };
+
+      const baseRoleNameForShiftManager = roleName;
+      roleName = function(role) {
+        if (role === 'shiftManager') return 'Shift Manager';
+        return baseRoleNameForShiftManager(role);
+      };
+
+      const baseRoleColourForShiftManager = roleColour;
+      roleColour = function(role) {
+        if (role === 'shiftManager') return '#fde68a';
+        return baseRoleColourForShiftManager(role);
+      };
+
+      function hasSupervisorHired() {
+        return state.staff.some(s => s.role === 'supervisor');
+      }
+
+      function supervisorBlockHtml() {
+        return `<p>Mining cannot proceed without a Supervisor.</p><p>The operational reason remains unclear, as the Supervisor rarely leaves the meeting station. However, in the event of an incident, management requires a named individual to be blamed before work can continue.</p>`;
+      }
+
+      function blockMiningNoSupervisor() {
+        openMiniWindow('Mining Blocked: No Supervisor Available', supervisorBlockHtml(), true);
+        showProductionComment('Mining is blocked until a Supervisor is available. Accountability requires a named person sitting somewhere else.', 'S.H.A.F.T.', 6);
+      }
+
+      const baseStartAutoMiningForSupervisorGuard = startAutoMining;
+      startAutoMining = function() {
+        if (!hasSupervisorHired()) {
+          blockMiningNoSupervisor();
+          return;
+        }
+        return baseStartAutoMiningForSupervisorGuard();
+      };
+
+      function stopMiningForSupervisorLoss() {
+        let stopped = false;
+        [state.machine, state.machine2].forEach(m => {
+          if (m && (m.status === 'mining' || m.status === 'tramming' || m.autoMining)) {
+            m.status = 'idle';
+            m.autoMining = false;
+            m.target = null;
+            m.progress = 0;
+            stopped = true;
+          }
+        });
+        if (stopped) showProductionComment('Mining has stopped because no Supervisor is available to receive blame.', 'S.H.A.F.T.', 7);
+      }
+
+      const traitDriftEvents = [
+        { key: 'processDrag', title: 'Process Improvement Initiative', tone: 'warning', body: 'A consultant has streamlined the mining process by adding three approval stages and a dashboard. The dashboard is green, which has been mistaken for progress.', effects: { productivity: -5, skill: -1 }, cost: 900 },
+        { key: 'crewRhythm', title: 'Crew Rhythm', tone: 'good', body: 'The crew has developed an efficient rhythm before management noticed. Operations briefly resemble a functioning system.', effects: { productivity: 4, morale: 2 } },
+        { key: 'trainingDrift', title: 'Training Matrix Drift', tone: 'warning', body: 'The training matrix has been updated, but nobody can prove the crew were trained on the current version of reality.', effects: { skill: -3, safety: -1 } },
+        { key: 'usefulCoaching', title: 'Useful Coaching', tone: 'good', body: 'An experienced operator has explained the machine in words the manual avoided. The crew appear briefly more competent.', effects: { skill: 4, morale: 1 } },
+        { key: 'shortcutCulture', title: 'Normalisation of Deviation', tone: 'warning', body: 'The crew has done the unsafe shortcut so many times that it has become the standard method.', effects: { safety: -5, productivity: 2 } },
+        { key: 'nearMiss', title: 'Near Miss Reported', tone: 'good', body: 'A near miss was reported before it became a reportable incident. Safety has described this as cultural maturity and asked for a case study.', effects: { safety: 5, productivity: -1 }, cost: 250 },
+        { key: 'productionPressure', title: 'Production Pressure', tone: 'warning', body: 'SLT has reminded the crew that safety is the top priority, immediately after asking why production is behind.', effects: { safety: -4, productivity: 3, morale: -2 } }
+      ];
+
+      function applyTraitDriftEvent(key = null) {
+        const ev = key ? traitDriftEvents.find(x => x.key === key) : randomItem(traitDriftEvents);
+        if (!ev) return;
+        for (const [trait, delta] of Object.entries(ev.effects || {})) adjustTrait(trait, delta);
+        if (ev.cost) spend(ev.cost, ev.title);
+        const effectsText = Object.entries(ev.effects || {}).map(([trait, delta]) => `${delta >= 0 ? '+' : ''}${delta} ${traitLabel(trait)}`).join(', ');
+        openOperationalEventModal({
+          title: ev.title,
+          image: 'assets/characters/slt-silhouette.png',
+          character: 'Operating Culture Monitor',
+          department: 'Behavioural KPI Drift',
+          label: 'KPI',
+          tone: ev.tone || 'info',
+          body: `<p>${escapeHtml(ev.body)}</p><p><strong>Impact:</strong> ${escapeHtml(effectsText || 'No measurable impact')}${ev.cost ? ', ' + money(scaledCost(ev.cost)) + ' cost' : ''}.</p>`,
+          button: 'Accept Cultural Learning'
+        });
+      }
+
+      const shiftManagerEvents = [
+        { key: 'pauseAssessment', title: 'Shift Manager Escalation', body: '{name} has requested a pause in operations until the team can confirm whether the pause itself requires a risk assessment.', effects: { safety: 3, productivity: -3 } },
+        { key: 'meetingStationGravity', title: 'Meeting Station Gravity', body: '{name} has spent so long at the meeting station that several actions now require verbal alignment before occurring.', effects: { productivity: -4, morale: 1 } },
+        { key: 'leadershipVisibility', title: 'Leadership Visibility', body: '{name} has visited the meeting station and confirmed that operations appear to be happening somewhere else.', effects: { morale: 2, productivity: -1 } },
+        { key: 'blameReadiness', title: 'Blame Readiness Review', body: '{name} has confirmed that in the event of an incident, an accountability pathway exists. Production may continue.', effects: { safety: 1, productivity: 1 } }
+      ];
+
+      function triggerShiftManagerEvent(key = null) {
+        const manager = currentManager();
+        if (!manager) { openMiniWindow('No Shift Manager', '<p>No Shift Manager is currently available to attend the meeting station or absorb blame.</p>', true); return; }
+        const ev = key ? shiftManagerEvents.find(x => x.key === key) : randomItem(shiftManagerEvents);
+        if (!ev) return;
+        for (const [trait, delta] of Object.entries(ev.effects || {})) adjustTrait(trait, delta);
+        const effectsText = Object.entries(ev.effects || {}).map(([trait, delta]) => `${delta >= 0 ? '+' : ''}${delta} ${traitLabel(trait)}`).join(', ');
+        openOperationalEventModal({
+          title: ev.title,
+          image: manager.portrait || 'assets/characters/portraits/production_manager.png',
+          character: manager.name,
+          department: 'Shift Management',
+          label: 'MGR',
+          tone: (ev.effects.productivity || 0) < 0 ? 'warning' : 'info',
+          body: `<p>${escapeHtml(ev.body.replace('{name}', manager.name))}</p><p><strong>Impact:</strong> ${escapeHtml(effectsText)}.</p>`,
+          button: 'Return to Supervised Uncertainty'
+        });
+      }
+
+      function maybeTriggerTraitOrManagerEventForDay(previousDay) {
+        if (!state.running || state.paused || isModalOpen()) return;
+        if (state.day === previousDay) return;
+        if (state.lastTraitSystemEventDay === state.day) return;
+        if (state.day % 29 !== 0) return;
+        if (Math.random() > 0.42) return;
+        state.lastTraitSystemEventDay = state.day;
+        if (currentManager() && Math.random() < 0.38) triggerShiftManagerEvent();
+        else applyTraitDriftEvent();
+      }
+
+      function inferShareDeltaFromDecisionOutcome(ev) {
+        if (!sharePriceMetricActive()) return 0;
+        if (typeof ev.shareDelta === 'number') return ev.shareDelta;
+        const text = ((ev.title || '') + ' ' + (ev.body || '')).toLowerCase();
+        if (/bribe|scandal|major fine|prosecution|failed|crash|escalated|found the operating panel/.test(text)) return -7;
+        if (/fine|penalty|unsafe|whistleblower|cover up|cover-up|worsens|model worsens/.test(text)) return -4;
+        if (/passed|validated|improved|success|strong external validation|minor issues/.test(text)) return 3;
+        if (/inconclusive|neutral|broadly adequate/.test(text)) return -1;
+        return 0;
+      }
+
+      const baseOpenDecisionOutcomeModalForSharePrice = openDecisionOutcomeModal;
+      openDecisionOutcomeModal = function(ev) {
+        const delta = inferShareDeltaFromDecisionOutcome(ev || {});
+        if (delta) {
+          adjustSharePrice(delta, (ev && ev.title) || 'Decision outcome');
+          ev = { ...ev, body: (ev.body || '') + `<p><strong>Share Price:</strong> ${delta > 0 ? '+' : ''}${delta.toFixed(1)}p · now ${formatSharePrice()}.</p>` };
+        }
+        return baseOpenDecisionOutcomeModalForSharePrice(ev);
+      };
+
+      function triggerExternalTechnicalReviewEvent(force = false) {
+        if (!force && sharePriceMetricActive() && state.externalTechnicalReviewDoneThisYear) return false;
+        state.externalTechnicalReviewDoneThisYear = true;
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'External Technical Review';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'BORC Review Team', 'External Technical Assurance', 'The Brilliant Ore Reserve Committee has arrived with questions, lanyards, and a working knowledge of appendices.', 'BORC')}
+          <div class="letter"><h2>External Technical Review</h2><p>BORC have targeted your site for external technical review, to audit the Mine’s Competent Person.</p><p>This is surprising because you were not aware that the site had a Competent Person, or that BORC has ever done anything like this before.</p><p>The review team has requested access to the technical report, the geological model, the mining assumptions, and the person responsible for signing things they may not have read.</p></div>
+          <div class="btnRow">
+            <button class="eventChoiceBtn positive" data-borc-review-choice="transparent"><strong>Be Open and Transparent, We’ve Got Nothing to Hide</strong><span>A phrase traditionally spoken immediately before discovering something hidden.</span></button>
+            <button class="eventChoiceBtn" data-borc-review-choice="competence"><strong>Send Employees with Dangerous Levels of Competence Home for the Day</strong><span>Reduce the risk of someone answering accurately.</span></button>
+            <button class="eventChoiceBtn" data-borc-review-choice="report"><strong>Ask if Anyone on Site Has Ever Read the 350-page Technical Report</strong><span>Find the assumptions page before BORC does.</span></button>
+            <button class="eventChoiceBtn negative" data-borc-review-choice="bribe"><strong>Attempt Bribe</strong><span>High risk, negligible judgement, catastrophic downside.</span></button>
+          </div>`;
+        $('modalOverlay').classList.add('show');
+        return true;
+      }
+
+      function resolveExternalTechnicalReviewChoice(choice) {
+        document.querySelectorAll('[data-borc-review-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+        const geo = geologistOnCrew();
+        const eng = miningEngineerOnCrew();
+        const technicalSkill = ((geo ? geo.skill : 1) + (eng ? eng.skill : 1)) / 2;
+        let body = '';
+        let shareDelta = 0;
+        let tone = 'warning';
+        if (choice === 'transparent') {
+          const pass = Math.random() < clamp(0.28 + technicalSkill * 0.09 + traitValue('skill') / 300, 0.22, 0.82);
+          if (pass) {
+            adjustTrait('skill', 2); adjustTrait('morale', 1); shareDelta = 5; tone = 'good';
+            body = '<p>BORC completed the review and found only minor inconsistencies, most of which were already hidden in Appendix 14.</p><p>The SLT has described this as strong external validation.</p><p><strong>Impact:</strong> +2 Skill, +1 Morale, external confidence improved.</p>';
+          } else {
+            spend(24000, 'Technical review findings'); adjustTrait('morale', -3); adjustTrait('skill', -1); shareDelta = -8;
+            body = '<p>BORC has discovered that the Competent Person was selected on the basis that they owned a highlighter and had once attended a webinar.</p><p>The review has been escalated.</p><p><strong>Impact:</strong> technical remediation cost, -3 Morale, -1 Skill.</p>';
+          }
+        } else if (choice === 'competence') {
+          const pass = Math.random() < 0.45;
+          if (pass) {
+            adjustTrait('productivity', -2); shareDelta = -1; tone = 'info';
+            body = '<p>The review became confused but inconclusive after BORC found only managers available and nobody willing to describe a variogram without legal present.</p><p><strong>Impact:</strong> -2 Productivity, review unresolved but survivable.</p>';
+          } else {
+            spend(18000, 'Suspicious review follow-up'); adjustTrait('morale', -2); shareDelta = -6;
+            body = '<p>BORC noticed that every technically competent employee had simultaneously developed a calendar conflict. This has been recorded as unusual, which is auditor language for suspicious.</p><p><strong>Impact:</strong> follow-up cost, -2 Morale.</p>';
+          }
+        } else if (choice === 'report') {
+          const pass = Math.random() < clamp(0.20 + technicalSkill * 0.10, 0.20, 0.72);
+          if (pass) {
+            adjustTrait('skill', 3); shareDelta = 3; tone = 'good';
+            body = '<p>Someone found the assumptions page, the caveat page, and a paragraph explaining that confidence is a spectrum.</p><p>BORC has accepted that the report was probably read by at least one person, once.</p><p><strong>Impact:</strong> +3 Skill, technical confidence improved.</p>';
+          } else {
+            adjustTrait('morale', -3); adjustTrait('skill', -2); shareDelta = -5;
+            body = '<p>Nobody has read the 350-page technical report. Several people recognised the cover image, which was not enough.</p><p><strong>Impact:</strong> -3 Morale, -2 Skill, technical confidence reduced.</p>';
+          }
+        } else {
+          const works = Math.random() < 0.04;
+          if (works) {
+            spend(12000, 'Hospitality and biscuits'); adjustTrait('morale', -1); shareDelta = 1; tone = 'info';
+            body = '<p>The attempted bribe was accidentally processed as hospitality and biscuits. BORC has accepted the biscuits while reserving judgement on the mine.</p><p><strong>Impact:</strong> hospitality cost, -1 Morale, no meaningful assurance gained.</p>';
+          } else {
+            spend(75000, 'Technical assurance scandal'); adjustTrait('safety', -4); adjustTrait('morale', -6); shareDelta = -28;
+            body = '<p>The attempted bribe was rejected after BORC clarified that biscuits are not a recognised form of technical assurance.</p><p>The SLT has denied authorising the strategy and has asked why Production would do this.</p><p><strong>Impact:</strong> major scandal cost, -4 Safety, -6 Morale.</p>';
+          }
+        }
+        openDecisionOutcomeModal({ title: 'External Technical Review Outcome', image: 'assets/characters/geology-rock-lickers.png', character: 'BORC Review Team', department: 'External Technical Assurance', label: 'BORC', tone, body, shareDelta, button: 'Return to Technical Uncertainty' });
+      }
+
+      function maybeExternalTechnicalReviewEvent() {
+        if (!sharePriceMetricActive() || state.externalTechnicalReviewDoneThisYear || !state.running || state.paused || state.levelComplete) return false;
+        if (Math.random() > 0.10) return false;
+        return triggerExternalTechnicalReviewEvent(false);
+      }
+
+      const baseUpdateForNewSystems = update;
+      update = function(dt) {
+        const beforeDay = state.day;
+        baseUpdateForNewSystems(dt);
+        if (!hasSupervisorHired()) stopMiningForSupervisorLoss();
+        maybeTriggerTraitOrManagerEventForDay(beforeDay);
+        if (state.day !== beforeDay && state.day % 37 === 0 && !isModalOpen()) maybeExternalTechnicalReviewEvent();
+      };
+
+      const baseDevActionForNewSystems = devAction;
+      devAction = function(action) {
+        if (action === 'trait-random') { applyTraitDriftEvent(); return; }
+        if (action === 'trait-productivity-down') { applyTraitDriftEvent('processDrag'); return; }
+        if (action === 'trait-skill-up') { applyTraitDriftEvent('usefulCoaching'); return; }
+        if (action === 'trait-safety-down') { applyTraitDriftEvent('shortcutCulture'); return; }
+        if (action === 'trait-safety-up') { applyTraitDriftEvent('nearMiss'); return; }
+        if (action === 'shift-manager-event') { triggerShiftManagerEvent(); return; }
+        if (action === 'supervisor-remove') { state.staff = state.staff.filter(s => s.role !== 'supervisor'); state.shiftCrewRenderSignature = ''; updatePanelCrewTiles(true); blockMiningNoSupervisor(); return; }
+        if (action === 'supervisor-add') { if (!hasSupervisorHired()) { const sup = startingCrewPool.find(c => c.role === 'supervisor'); if (sup) state.staff.unshift({ ...sup, id: sup.id + '_dev_' + Date.now(), bubble: null }); } state.shiftCrewRenderSignature = ''; updatePanelCrewTiles(true); showProductionComment('Dev: Supervisor restored. Blame continuity has been re-established.', 'Dev Tools', 5); return; }
+        if (action === 'share-price-up') { state.year = Math.max(4, state.year || 1); ensureSharePriceState(); adjustSharePrice(6, 'Dev optimism'); showProductionComment('Dev: share price increased. The market briefly believed the slide deck.', 'Dev Tools', 5); return; }
+        if (action === 'share-price-down') { state.year = Math.max(4, state.year || 1); ensureSharePriceState(); adjustSharePrice(-8, 'Dev concern'); showProductionComment('Dev: share price decreased. The market has read an appendix.', 'Dev Tools', 5); return; }
+        if (action === 'borc-review') { state.year = Math.max(4, state.year || 1); ensureSharePriceState(); triggerExternalTechnicalReviewEvent(true); return; }
+        return baseDevActionForNewSystems(action);
+      };
+
+      const baseOpenWindowForDevAndShare = openWindow;
+      openWindow = function(type, forceReportComplete = false, customTitle = null) {
+        baseOpenWindowForDevAndShare(type, forceReportComplete, customTitle);
+        if (type === 'dev') enhanceDevToolsForNewSystems();
+        if (type === 'finance' || type === 'targets' || type === 'reports') enhanceWindowWithSharePrice(type);
+      };
+
+      function enhanceWindowWithSharePrice(type) {
+        if (!sharePriceMetricActive()) return;
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-share-price-summary]')) return;
+        const html = `<section class="crewRoleSection" data-share-price-summary><div class="crewRoleHeader"><h3>Share Price</h3><span>${formatSharePrice()} / target ${formatSharePrice(state.sharePriceTarget)}</span></div><p>The company is now public. Decision events, reputation failures, HSE findings, technical reviews and external confidence can affect the share price.</p></section>`;
+        body.insertAdjacentHTML('afterbegin', html);
+      }
+
+      function enhanceDevToolsForNewSystems() {
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-new-system-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-new-system-dev-tools>
+          <section class="devToolCard"><h3>Progressive KPI / Share Price</h3><p>Test year-gated dashboard metrics and public-company reputation pressure.</p><div class="devToolBtns"><button data-dev-action="share-price-up">Share Price Up</button><button data-dev-action="share-price-down">Share Price Down</button><button data-dev-action="borc-review">External Technical Review</button></div></section>
+          <section class="devToolCard"><h3>Shift Manager / Supervisor Guard</h3><p>Test manager events and the requirement for a blame-ready Supervisor before mining.</p><div class="devToolBtns"><button data-dev-action="shift-manager-event">Shift Manager Event</button><button data-dev-action="supervisor-remove">Remove Supervisor</button><button data-dev-action="supervisor-add">Add Supervisor</button></div></section>
+          <section class="devToolCard"><h3>Trait Drift Events</h3><p>Trigger non-morale trait movements for Productivity, Skill and Safety.</p><div class="devToolBtns"><button data-dev-action="trait-random">Random Trait Event</button><button data-dev-action="trait-productivity-down">Process Drag</button><button data-dev-action="trait-skill-up">Useful Coaching</button><button data-dev-action="trait-safety-down">Shortcut Culture</button><button data-dev-action="trait-safety-up">Near Miss Reported</button></div></section>
+        </div>`);
+      }
+
+      document.addEventListener('click', function(e) {
+        const borcChoice = e.target.closest('[data-borc-review-choice]');
+        if (borcChoice) {
+          e.preventDefault();
+          resolveExternalTechnicalReviewChoice(borcChoice.dataset.borcReviewChoice);
+        }
+      }, true);
+
+      ensureSharePriceState();
+
       applyResponsiveLayout();
       initBlocks();
       bind();
