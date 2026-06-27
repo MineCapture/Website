@@ -5985,6 +5985,9 @@
         depthIndex: 0,
         declineOfferShown: false,
         declineInvestments: 0,
+        shaftDeepeningAvailable: false,
+        shaftDeepeningOfferShown: false,
+        shaftDeepeningInvestments: 0,
         yearStartDay: 0,
         yearStartTonnes: 0,
         yearStartK2oTonnes: 0,
@@ -6156,7 +6159,7 @@
 
       function isPillarCell(r, c) {
         if (r >= MINE_ROWS - 1) return false;
-        // The centre column is the long-term decline / belt corridor.
+        // The centre column is the long-term shaft / belt corridor.
         // It may contain ore, locked ground, void or clearable rubble, but not permanent pillars.
         if (c === START_COL) return false;
         if (Math.abs(r - START_ROW) <= 1 && Math.abs(c - START_COL) <= 1) return false;
@@ -6549,7 +6552,7 @@
       }
 
       function levelTransitionTargetGridRow() {
-        // The decline threshold starts at Grid Row 9 on -1000 and moves progressively farther away by depth.
+        // The shaft deepening threshold starts at Grid Row 9 on -1000 and moves progressively farther away by depth.
         // It is capped below the very top row so exploration still has visible headroom.
         const depth = Math.max(0, Number(state.depthIndex) || 0);
         return Math.min(MINE_ROWS - 1, 9 + depth);
@@ -6561,7 +6564,7 @@
       }
 
       function levelTransitionText() {
-        return 'Explore to Grid Row ' + levelTransitionTargetGridRow() + ' to unlock the ' + (state.mineLevel - 100) + ' Level';
+        return 'Explore to Grid Row ' + levelTransitionTargetGridRow() + ' to justify shaft deepening to the ' + (state.mineLevel - 100) + ' Level';
       }
 
       function hasReachedLevelTransition() {
@@ -6571,6 +6574,31 @@
           if (!row.length || row.every(b => b.status === 'locked')) return false;
         }
         return true;
+      }
+
+      function canApproveShaftDeepening() {
+        return !!(state.shaftDeepeningAvailable || hasReachedLevelTransition());
+      }
+
+      function markShaftDeepeningAvailable(showModal = true) {
+        state.shaftDeepeningAvailable = true;
+        if (showModal && !state.shaftDeepeningOfferShown) {
+          state.shaftDeepeningOfferShown = true;
+          openShaftDeepeningProposal();
+        }
+      }
+
+      function shaftDeepeningStatusHtml(context = 'targets') {
+        const available = canApproveShaftDeepening();
+        const nextLevel = state.mineLevel - 100;
+        const tag = available ? 'Available' : 'Not justified';
+        const text = available
+          ? 'Exploration has reached the required line. Approve shaft deepening to unlock the ' + nextLevel + ' Level.'
+          : 'Explore to Grid Row ' + levelTransitionTargetGridRow() + ' before asking Finance to deepen the shaft.';
+        const button = available
+          ? '<button class="primary" data-open-shaft-deepening>Approve Shaft Deepening</button>'
+          : '<button data-open-shaft-deepening>Review Shaft Deepening Status</button>';
+        return `<section class="crewRoleSection"><div class="crewRoleHeader"><h3>Shaft Deepening</h3><span>${tag}</span></div><div class="rows"><div class="row"><div class="avatarDot" style="background:${available ? '#22c55e' : '#64748b'}"></div><div><strong>${available ? 'Shaft Deepening Available' : 'Shaft Deepening Not Yet Justified'}</strong><span>${escapeHtml(text)}</span></div><span class="tag">${available ? money(scaledCost(DECLINE_INVESTMENT_COST)) : 'Explore'}</span></div></div><div class="btnRow">${button}</div></section>`;
       }
 
       function modalCharacterHtml(src, name, department, text, initialsText = '?') {
@@ -9668,7 +9696,7 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const text = reached ? 'Decline threshold reached: ' + nextLevel + ' proposal available' : label;
+        const text = reached ? 'Shaft deepening justified: ' + nextLevel + ' access available' : label;
         ctx.font = '900 ' + Math.max(9, b.cell * 0.20) + 'px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -11122,32 +11150,32 @@
             next: 'miningEngineering',
             next2: 'groundControl',
             title: 'Welcome to the -1100 Level',
-            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong> than the starting level. ${gradeText}</p><p>Crews are reporting that pillars are making strange and unusual noises. The Rock Doctor has advised that this is either early ground behaviour or the roof attempting to communicate.</p>`
+            body: `<p>Shaft deepening has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong> than the starting level. ${gradeText}</p><p>Crews are reporting that pillars are making strange and unusual noises. The Rock Doctor has advised that this is either early ground behaviour or the roof attempting to communicate.</p>`
           };
         }
         if (depth === 2) {
           return {
             next: 'survey',
             title: 'Welcome to the -1200 Level',
-            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>. The SLT has approved higher production expectations and the possibility of a second machine.</p><p>Mine Services has discovered that twice the mining produces twice the material, which unfortunately requires the material to go somewhere.</p>`
+            body: `<p>Shaft deepening has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>. The SLT has approved higher production expectations and the possibility of a second machine.</p><p>Mine Services has discovered that twice the mining produces twice the material, which unfortunately requires the material to go somewhere.</p>`
           };
         }
         if (depth === 3) {
           return {
             title: 'Welcome to the -1300 Level',
-            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>, along with the first signs that the ground has retained water, gas, and a sense of humour.</p><p>Gas and water events may now affect production, safety, morale, and your ability to describe the plan as controlled.</p>`
+            body: `<p>Shaft deepening has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>, along with the first signs that the ground has retained water, gas, and a sense of humour.</p><p>Gas and water events may now affect production, safety, morale, and your ability to describe the plan as controlled.</p>`
           };
         }
         if (depth >= 4) {
           return {
             next: 'ventilation',
             title: 'Welcome to the ' + currentLevelName(),
-            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>, but crews have started describing the working environment using words normally reserved for soup.</p><p>Heat and ventilation are now strategic. Procurement has identified a desk fan near the winder as the preferred first-stage air movement solution.</p>`
+            body: `<p>Shaft deepening has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>, but crews have started describing the working environment using words normally reserved for soup.</p><p>Heat and ventilation are now strategic. Procurement has identified a desk fan near the winder as the preferred first-stage air movement solution.</p>`
           };
         }
         return {
           title: 'New Level Opened',
-          body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>. Deeper levels contain more tonnes, more confidence, and more reasons the original plan should have been longer.</p>`
+          body: `<p>Shaft deepening has reached the <strong>${currentLevelName()}</strong>. Deeper levels contain more tonnes, more confidence, and more reasons the original plan should have been longer.</p>`
         };
       }
 
@@ -11156,7 +11184,7 @@
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = details.title;
-        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Decline Development', 'The geology department has confirmed that down continues to be a valid direction.', 'DECL')}
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Shaft Deepening', 'The geology department has confirmed that down continues to be a valid direction.', 'SHAFT')}
           <div class="letter"><h2>${escapeHtml(details.title)}</h2>${details.body}</div>
           <div class="btnRow"><button class="primary" data-level-arrival-continue data-next-intro="${escapeHtml(details.next || '')}" data-next-intro-2="${escapeHtml(details.next2 || '')}">Continue Operational Escalation</button></div>`;
         $('modalOverlay').classList.add('show');
@@ -11165,16 +11193,25 @@
 
 
       function openDeclineProposal() {
-        if (state.declineOfferShown && isModalOpen()) return;
+        return openShaftDeepeningProposal();
+      }
+
+      function openShaftDeepeningProposal() {
+        if (!canApproveShaftDeepening()) {
+          openMiniWindow('Shaft Deepening Not Yet Justified', `<p>The SLT would like to announce the ${state.mineLevel - 100} Level, but Exploration has not yet produced enough coloured evidence to support the decision.</p><p>Explore to <strong>Grid Row ${levelTransitionTargetGridRow()}</strong> before requesting capital approval for shaft deepening.</p>`, true);
+          return;
+        }
+        state.shaftDeepeningAvailable = true;
+        state.shaftDeepeningOfferShown = true;
         state.declineOfferShown = true;
         state.paused = true;
         if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
         setModalClosable(false);
         $('modalWindow').className = 'window medium';
-        $('modalTitle').textContent = 'Geology Depth Proposal';
-        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Conference Delegation for Enthusiastic Rock Lickers', 'After attending an informative conference, the geology department has realised that it can drill down as well as sideways.', 'GEO')}
-          <div class="letter"><h2>Decline Investment Proposal</h2><p>After attending an informative conference for enthusiastic rock lickers, the geology department has realised that they can drill down as well as sideways.</p><p>The current map is the <strong>${currentLevelName()}</strong>. The next proposal is to invest in a decline to access the <strong>${state.mineLevel - 100} Level</strong>.</p><p>Deeper levels contain more tonnes and precariously promised higher grades, but deeper mining introduces new challenges. Most were known about previously but were not included in the original business case.</p><p>The next level will explain the latest opportunity once the decline has finished converting operating surplus into geological confidence.</p><p><strong>Decline investment:</strong> ${money(scaledCost(DECLINE_INVESTMENT_COST))}</p></div>
-          <div class="btnRow"><button class="primary" data-invest-decline>Invest in decline</button><button data-close-decline>Defer geology enthusiasm</button></div>`;
+        $('modalTitle').textContent = 'Shaft Deepening Justified';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Shaft Deepening Delegation', 'Exploration has produced enough coloured evidence for Finance to begin worrying.', 'GEO')}
+          <div class="letter"><h2>Shaft Deepening Investment</h2><p>Exploration has now produced enough coloured evidence to support access to the <strong>${state.mineLevel - 100} Level</strong>.</p><p>The Superior Leadership Team has approved a capital request for shaft deepening, subject to cost, timing, optimism, and whether Finance has noticed the number.</p><p>Deeper levels contain more tonnes and precariously promised higher grades, but deeper mining introduces new challenges. Most were known about previously but were not included in the original business case.</p><p>Approving this work will unlock the <strong>${state.mineLevel - 100} Level</strong>. Reviewing later is allowed; the opportunity remains available once justified.</p><p><strong>Shaft deepening cost:</strong> ${money(scaledCost(DECLINE_INVESTMENT_COST))}</p></div>
+          <div class="btnRow"><button class="primary" data-invest-shaft-deepening data-invest-decline>Approve Shaft Deepening</button><button data-close-decline>Review Later</button></div>`;
         $('modalOverlay').classList.add('show');
       }
 
@@ -11208,18 +11245,25 @@
       }
 
       function investInDecline() {
-        spend(DECLINE_INVESTMENT_COST, 'Decline development');
+        if (!canApproveShaftDeepening()) {
+          openShaftDeepeningProposal();
+          return;
+        }
+        spend(DECLINE_INVESTMENT_COST, 'Shaft deepening');
         state.depthIndex = (state.depthIndex || 0) + 1;
         state.mineLevel = -1000 - state.depthIndex * 100;
         state.declineInvestments = (state.declineInvestments || 0) + 1;
+        state.shaftDeepeningInvestments = (state.shaftDeepeningInvestments || 0) + 1;
         state.declineOfferShown = false;
+        state.shaftDeepeningAvailable = false;
+        state.shaftDeepeningOfferShown = false;
         resetMineForNewDepth();
         setModalClosable(true);
         $('modalOverlay').classList.remove('show');
         state.paused = true;
         if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
         openLevelArrivalModal();
-        showProductionComment(currentLevelName() + ' is now available. Exploration has reset to a fresh level of optimism.', 'Geology');
+        showProductionComment(currentLevelName() + ' is now available. Shaft deepening has converted operating surplus into deeper accountability.', 'Shaft Deepening');
       }
 
       function startExplorationProgram() {
@@ -12244,7 +12288,7 @@
           return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now support scalable mining.</p><p>Only the first four rows of the -1000 Level are already interpreted. The rest requires cash to be converted into drill core so Geology can confirm what has already been promised externally.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
         }
         if (depth === 0) {
-          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Reach the -1100 Level</h2><p>The annual KPI curve continues to increase because the forecast already assumes the operation has advanced deeper.</p><p><strong>Current strategic objective:</strong> fully explore enough of the -1000 Level, maintain a positive Operating Surplus, and invest in decline development to reach the <strong>-1100 Level</strong>.</p><p>Remaining at -1000 is permitted, but the SLT would like to remind you that the target does not care where the tonnes come from.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Reach the -1100 Level</h2><p>The annual KPI curve continues to increase because the forecast already assumes the operation has advanced deeper.</p><p><strong>Current strategic objective:</strong> fully explore enough of the -1000 Level, maintain a positive Operating Surplus, and approve shaft deepening to reach the <strong>-1100 Level</strong>.</p><p>Remaining at -1000 is permitted, but the SLT would like to remind you that the target does not care where the tonnes come from.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
         }
         if (depth === 1) {
           return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Ground Control</h2><p>The -1100 Level introduces pillar deterioration, pillar bursts, rubble, damaged ground, and the uncomfortable idea that roof support is not optional.</p><p><strong>New requirements:</strong> hire a Mining Engineer and a Rock Doctor, purchase a bolter, and support pillars before they convert surrounding ground into a lesson.</p><p>Pillar splitting has been removed from the approved operating model. Pillars now return to their original purpose: holding the mine open.</p><p class="sig">Rock Doctor<br>Legally Interested in the Roof</p></div>`;
@@ -12286,7 +12330,7 @@
       function financeContinueLabel(year) {
         const depth = Number(state.depthIndex) || 0;
         if (depth === 0 && year === 2) return 'Proceed to hire Geologist and Drillers';
-        if (depth === 0) return 'Prepare -1100 Development';
+        if (depth === 0) return 'Review Shaft Deepening Plan';
         if (depth === 1) return 'Proceed to Ground Control Team';
         if (depth === 2) return 'Proceed to Fleet and Belt Controls';
         if (depth === 3) return 'Review Gas and Water Risks';
@@ -12455,7 +12499,7 @@
         const priorStatus = block.status;
 
         // Do not condemn the strategic centreline as irreversible unsafe ground.
-        // If a pillar burst reaches the decline/belt corridor, convert it to clearable rubble instead.
+        // If a pillar burst reaches the shaft/belt corridor, convert it to clearable rubble instead.
         if (block.c === START_COL && !wasPillar && priorStatus !== 'void' && priorStatus !== 'rubble') {
           setBlockToRubble(block, false);
           return 'rubble';
@@ -12499,12 +12543,33 @@
           character: 'Rock Doctor',
           department: 'Ground Control',
           title: 'Pillar Burst — Local Ground Damage',
-          body: `<p>A pillar at <strong>Grid ${failedGrid}</strong> has burst after prolonged exposure to operational optimism.</p><p>The damage is now localised to the failed pillar and <strong>two adjacent blocks</strong>: ${escapeHtml(affectedRefs)}.</p><p><strong>Immediate impact:</strong> ${rubbleCreated} rubble block${rubbleCreated === 1 ? '' : 's'} created, ${damagedGround} unmined block${damagedGround === 1 ? '' : 's'} condemned as unsafe, ${stressedPillars} adjacent pillar${stressedPillars === 1 ? '' : 's'} stressed.</p><p>Mined-out affected ground becomes rubble and must be cleared by the miner before it is traversable. Affected unmined ground becomes unstable unless it is part of the centreline corridor, in which case it becomes clearable rubble to prevent the decline from becoming an abstract concept.</p><p><strong>Penalty:</strong> -16 Safety, -10 Morale, -6 Productivity, ${money(14000)} investigation and recovery cost.</p>`
+          body: `<p>A pillar at <strong>Grid ${failedGrid}</strong> has burst after prolonged exposure to operational optimism.</p><p>The damage is now localised to the failed pillar and <strong>two adjacent blocks</strong>: ${escapeHtml(affectedRefs)}.</p><p><strong>Immediate impact:</strong> ${rubbleCreated} rubble block${rubbleCreated === 1 ? '' : 's'} created, ${damagedGround} unmined block${damagedGround === 1 ? '' : 's'} condemned as unsafe, ${stressedPillars} adjacent pillar${stressedPillars === 1 ? '' : 's'} stressed.</p><p>Mined-out affected ground becomes rubble and must be cleared by the miner before it is traversable. Affected unmined ground becomes unstable unless it is part of the centreline corridor, in which case it becomes clearable rubble to prevent the shaft deepening from becoming an abstract concept.</p><p><strong>Penalty:</strong> -16 Safety, -10 Morale, -6 Productivity, ${money(14000)} investigation and recovery cost.</p>`
         });
       }
 
       function staffGroup(role) {
         return state.staff.filter(s => s.role === role);
+      }
+
+      function candidateRoleOrder(role) {
+        const order = {
+          supervisor: 10,
+          miner: 20,
+          fitter: 30,
+          electrician: 40,
+          geologist: 50,
+          driller: 60,
+          miningEngineer: 70,
+          rockDoctor: 80,
+          surveyor: 90,
+          ventilationEngineer: 100
+        };
+        return order[role] || 999;
+      }
+
+      function sortCandidatesByRole() {
+        if (!Array.isArray(state.candidates)) return;
+        state.candidates.sort((a, b) => candidateRoleOrder(a.role) - candidateRoleOrder(b.role) || roleName(a.role).localeCompare(roleName(b.role)) || String(a.name || '').localeCompare(String(b.name || '')));
       }
 
       function hiringDisciplineTabs() {
@@ -12526,9 +12591,13 @@
         if (!tabs.some(t => t.key === state.hiringTab)) state.hiringTab = 'supervisors';
         const active = tabs.find(t => t.key === state.hiringTab) || tabs[0];
         ensureCandidatePool(active.roles, false);
+        sortCandidatesByRole();
         const tabHtml = `<div class="hiringTabBar">${tabs.map(t => `<button class="hiringTabBtn ${t.key === active.key ? 'active' : ''}" data-hiring-tab="${t.key}">${t.label}</button>`).join('')}</div>`;
-        const cards = state.candidates.filter(c => active.roles.includes(c.role)).map(c => candidateCard(c)).join('') || '<p>No candidates currently available in this discipline. S.H.A.F.T. is checking whether anyone still answers unknown numbers.</p>';
-        return `${tabHtml}<section class="crewRoleSection"><div class="crewRoleHeader"><h3>${active.label}</h3><span>${active.roles.map(roleName).join(' · ')}</span></div><div class="gridCards">${cards}</div></section>`;
+        const roleSections = active.roles.map(role => {
+          const cards = state.candidates.filter(c => c.role === role).map(c => candidateCard(c)).join('') || '<p>No ' + escapeHtml(roleName(role).toLowerCase()) + ' candidates currently available. S.H.A.F.T. is checking whether anyone still answers unknown numbers.</p>';
+          return `<section class="crewRoleSection"><div class="crewRoleHeader"><h3>${escapeHtml(roleName(role))}</h3><span>${escapeHtml(roleUnlockText(role))}</span></div><div class="gridCards">${cards}</div></section>`;
+        }).join('');
+        return `${tabHtml}${roleSections}`;
       }
 
       function staffHierarchyHtml() {
@@ -12600,6 +12669,7 @@
         adjustTrait('morale', -2);
         state.formerStaff.push({ ...s, bubble: null, exitReason: 'Fired after HR lost the Performance Improvement Plan and disciplinary documents' });
         state.candidates.push({ ...s, id: s.id + '_rehire_' + Date.now(), bubble: null, trait: (s.trait || '') + ' · Previously managed out' });
+        sortCandidatesByRole();
         showProductionComment(s.name + ' has left the organisation via a settlement agreement. HR confirms the paperwork would have supported this if it existed.', 'HR');
         openWindow('staff');
       }
@@ -12610,6 +12680,7 @@
         const s = state.staff.splice(idx, 1)[0];
         state.formerStaff.push({ ...s, bubble: null, exitReason: reason || 'Resigned' });
         if (!state.candidates.some(c => c.role === s.role)) state.candidates.push(createReplacementCandidate(s.role));
+        sortCandidatesByRole();
         adjustTrait('morale', -3);
         pushQueueEvent({
           tone: 'warning',
@@ -13480,6 +13551,20 @@
         state.depthIndex = (state.depthIndex || 0) + 1;
         state.mineLevel = -1000 - state.depthIndex * 100;
         state.declineInvestments = (state.declineInvestments || 0) + 1;
+        state.shaftDeepeningInvestments = (state.shaftDeepeningInvestments || 0) + 1;
+        state.shaftDeepeningAvailable = false;
+        state.shaftDeepeningOfferShown = false;
+        resetMineForNewDepth();
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        openLevelArrivalModal();
+      }
+
+      function devSetDepthLevel(depth) {
+        state.depthIndex = Math.max(0, Number(depth) || 0);
+        state.mineLevel = -1000 - state.depthIndex * 100;
+        state.shaftDeepeningAvailable = false;
+        state.shaftDeepeningOfferShown = false;
         resetMineForNewDepth();
         state.paused = true;
         if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
@@ -13494,7 +13579,7 @@
           completeExplorationProgram();
           guard++;
         }
-        showProductionComment('Dev exploration complete to the current decline guidance line. Geology has coloured enough blocks to request more money.', 'Dev Tools', 5);
+        showProductionComment('Dev exploration complete to the current shaft deepening target. Geology has coloured enough blocks to request more money.', 'Dev Tools', 5);
       }
 
       function devRevealAllRows() {
@@ -13710,8 +13795,16 @@
 
         startMusic();
 
+        if (action === 'dev-advance-30') { state.day += 30; showProductionComment('Dev: advanced 30 operating days. The calendar has been updated without consulting Production.', 'Dev Tools', 5); return; }
         if (action === 'dev-next-year') { advanceToNextYear(); return; }
+        if (action === 'shaft-enable') { markShaftDeepeningAvailable(false); showProductionComment('Dev: shaft deepening eligibility unlocked. Finance can now be invited to panic.', 'Dev Tools', 5); openWindow('targets'); return; }
+        if (action === 'shaft-approve') { markShaftDeepeningAvailable(false); investInDecline(); return; }
         if (action === 'dev-next-level') { devAdvanceToNextLevel(); return; }
+        if (action === 'level-1000') { devSetDepthLevel(0); return; }
+        if (action === 'level-1100') { devSetDepthLevel(1); return; }
+        if (action === 'level-1200') { devSetDepthLevel(2); return; }
+        if (action === 'level-1300') { devSetDepthLevel(3); return; }
+        if (action === 'level-1400') { devSetDepthLevel(4); return; }
         if (action === 'year-success') { forceYearSuccessDev(); return; }
         if (action === 'year-needs') { forceYearNeedsDev(false); return; }
         if (action === 'year-fired') { forceYearNeedsDev(true); return; }
@@ -13741,6 +13834,13 @@
           startEngineeringResearch(randomItem(engineeringResearchOptions()).key);
           return;
         }
+        if (action === 'eng-complete') {
+          if (!miningEngineerOnCrew()) state.staff.push({ ...technicalCrewPool.find(c => c.role === 'miningEngineer'), bubble: null });
+          if (!state.engineeringResearch) startEngineeringResearch(randomItem(engineeringResearchOptions()).key);
+          if (state.engineeringResearch) state.engineeringResearch.progress = state.engineeringResearch.days;
+          completeEngineeringResearch();
+          return;
+        }
         if (action === 'hr-training') { forceCrewBubbleForRole(null, 'trainingRequest'); return; }
         if (action === 'hr-supervisor') { forceCrewBubbleForRole('supervisor'); return; }
         if (action === 'explore-transition') { devExploreToTransition(); return; }
@@ -13754,6 +13854,7 @@
         if (action === 'buy-bolter-dev') { state.assets.bolterOwned = true; showProductionComment('Dev: bolter purchased without procurement debate.', 'Dev Tools', 4); return; }
         if (action === 'buy-second-dev') { state.assets.secondMinerOwned = true; syncMinerAliases(); showProductionComment('Dev: 2ndHOPE authorised. The belt is already worried.', 'Dev Tools', 4); return; }
         if (action === 'buy-fan-dev') { state.assets.fanOwned = true; showProductionComment('Dev: mine fan purchased. Air movement is now visible at surface.', 'Dev Tools', 4); return; }
+        if (action === 'restore-lighting-dev') { restoreLighting(); return; }
 
         if (action === 'safety-random') forceSafetyEvent('random');
         if (action === 'safety-negative') forceSafetyEvent('negative');
@@ -13959,10 +14060,11 @@
             ${annualKpiTrackerHtml()}
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Year Clock</strong><span>Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}. Year-end review occurs automatically at day ${YEAR_LENGTH_DAYS}. One operating year now lasts about three real minutes.</span></div><span class="tag">${daysLeft} days left</span></div>
-              <div class="row"><div class="avatarDot" style="background:#7c3aed"></div><div><strong>Mining Level</strong><span>Current canvas is ${currentLevelName()}. The marked exploration line on the canvas shows where decline development to the next level becomes available; it moves farther away on deeper levels.</span></div><span class="tag">Depth ${state.depthIndex || 0}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Only the first four rows are initially available on a fresh level; the rest requires drill core and optimism.</span></div><span class="tag">${hasReachedLevelTransition() ? 'Decline ready' : 'Explore'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#7c3aed"></div><div><strong>Mining Level</strong><span>Current canvas is ${currentLevelName()}. The marked exploration line on the canvas shows where shaft deepening to the next level becomes available; it moves farther away on deeper levels.</span></div><span class="tag">Depth ${state.depthIndex || 0}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Only the first four rows are initially available on a fresh level; the rest requires drill core and optimism.</span></div><span class="tag">${canApproveShaftDeepening() ? 'Shaft ready' : 'Explore'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Belt Head</strong><span>${beltHeadLabel()}. The belt can only be advanced through mined-out centreline ground.</span></div><span class="tag">Centreline</span></div>
             </div>
+            ${shaftDeepeningStatusHtml('targets')}
             ${state.setupComplete && !state.running ? '<div class="btnRow"><button class="primary" data-accept-objective>Accept Objective and Start Operating Year</button></div>' : ''}`;
           if (state.setupComplete && !state.running) setModalClosable(false);
         }
@@ -13988,7 +14090,7 @@
           const daysRemaining = state.exploration.active && activeRate > 0 ? Math.ceil((100 - state.exploration.progress) / activeRate) : EXPLORATION_ROW_DAYS;
           const statusText = state.exploration.active
             ? 'Drilling Grid Row ' + gridRowNumber(state.exploration.row) + ' · ' + Math.round(state.exploration.progress) + '% · about ' + daysRemaining + ' days remaining'
-            : hasReachedLevelTransition() ? 'Decline threshold reached · ' + (state.mineLevel - 100) + ' Level proposal available' : nextRow === null ? 'All rows interpreted' : 'Next programme: Grid Row ' + gridRowNumber(nextRow) + ' · about ' + EXPLORATION_ROW_DAYS + ' days';
+            : hasReachedLevelTransition() ? 'Shaft deepening justified · ' + (state.mineLevel - 100) + ' Level access available' : nextRow === null ? 'All rows interpreted' : 'Next programme: Grid Row ' + gridRowNumber(nextRow) + ' · about ' + EXPLORATION_ROW_DAYS + ' days';
           body = `<p>${explorationUnlocked ? 'Exploration reveals interpreted grade, not truth. Better geologists reduce surprise; worse geologists create opportunity for later clarification.' : 'Exploration becomes available in Year 2, once the SLT requires evidence for the reserve position it has already declared.'}</p>
             <div class="explorationStatusStrip">
               <div><strong>Programme Status</strong>${statusText}</div>
@@ -14000,7 +14102,7 @@
               <div class="row"><div class="avatarDot" style="background:${state.assets.drillOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Exploration Drill</strong><span>${state.assets.drillOwned ? 'Purchased and waiting to turn money into holes.' : 'Not purchased.'}</span></div><span class="tag">${state.assets.drillOwned ? 'Owned' : money(scaledCost(DRILL_PURCHASE_COST))}</span></div>
               <div class="row"><div class="avatarDot" style="background:${geo ? '#22c55e' : '#ef4444'}"></div><div><strong>Geologist</strong><span>${geo ? geo.name + ' · Skill ' + geo.skill + '/5 · ' + geo.trait : 'Required for grade interpretation.'}</span></div><span class="tag">${geo ? 'Assigned' : 'Missing'}</span></div>
               <div class="row"><div class="avatarDot" style="background:${drillers.length >= 2 ? '#22c55e' : '#ef4444'}"></div><div><strong>Drillers</strong><span>${drillers.length ? drillers.map(d => d.name).join(', ') : 'Two named drillers required.'}</span></div><span class="tag">${drillers.length}/2</span></div>
-              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Next Row</strong><span>${hasReachedLevelTransition() ? levelTransitionText() : nextRow === null ? 'All rows discovered.' : 'Grid Row ' + gridRowNumber(nextRow) + ' is available for the next left-to-right drilling programme.'}</span></div><span class="tag">${state.exploration.active ? Math.round(state.exploration.progress) + '%' : (hasReachedLevelTransition() ? 'Decline' : 'Ready')}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Next Row</strong><span>${hasReachedLevelTransition() ? levelTransitionText() : nextRow === null ? 'All rows discovered.' : 'Grid Row ' + gridRowNumber(nextRow) + ' is available for the next left-to-right drilling programme.'}</span></div><span class="tag">${state.exploration.active ? Math.round(state.exploration.progress) + '%' : (hasReachedLevelTransition() ? 'Shaft' : 'Ready')}</span></div>
             </div>
             <div class="btnRow">
               <button class="primary" data-buy-drill ${state.assets.drillOwned || !explorationUnlocked ? 'disabled' : ''}>Buy Drill · ${money(scaledCost(DRILL_PURCHASE_COST))}</button>
@@ -14076,6 +14178,8 @@
               <button class="primary" data-belt-extend ${beltUnlocked && surveyor && beltStatus.canExtend ? '' : 'disabled'}>Extend Belt Line · ${money(scaledCost(BELT_EXTENSION_COST))}</button>
             </div>
 
+            ${shaftDeepeningStatusHtml('assets')}
+
             <hr style="border:0;border-top:1px solid rgba(255,255,255,0.12);margin:14px 0;">
             <p><strong>Ground Support</strong></p>
             <div class="rows">
@@ -14119,6 +14223,7 @@
                     <div class="row"><div class="avatarDot" style="background:#f97316"></div><div><strong>Spend Plan</strong><span>Expected spend by today: ${money(finance.plannedSpend)}. Actual variance: ${money(finance.spendVariance)}.</span></div><span class="tag">${budgetKpiStatus() === 'onTrack' ? 'On track' : budgetKpiStatus() === 'atRisk' ? 'At risk' : 'Failing'}</span></div>
                     <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Current Wage Accrual</strong><span>Charged every game day while the shift is running.</span></div><span class="tag">${money(dailyWageCost())}/day</span></div>
                   </div>
+                  ${shaftDeepeningStatusHtml('finance')}
                   <p>CAPEX status: <strong>${state.capexFreezeUntil > state.day ? 'Frozen until Day ' + state.capexFreezeUntil : 'Nominally available'}</strong></p>
                   <p>Finance note: unspent budget may be clawed back. Overspend may also be clawed back from next year, which Finance describes as learning.</p>`;
         }
@@ -14137,15 +14242,18 @@
         if (type === 'dev') {
           title = 'Dev / Debug Tools';
           body = `
-            <p><strong>Test controls.</strong> Anything the game can trigger naturally should be available here for testing.</p>
+            <p><strong>Test controls.</strong> Grouped by player-facing flow type so each modal family can be tested consistently.</p>
             <div class="devToolGrid">
-              <section class="devToolCard"><h3>Progression</h3><p>Move time, force review outcomes, or jump deeper for mechanic testing.</p><div class="devToolBtns"><button data-dev-action="dev-next-year">Advance to Next Year</button><button data-dev-action="year-success">Finish Year: Successful</button><button data-dev-action="year-needs">Finish Year: Needs Improvement</button><button data-dev-action="year-fired">Finish Year: Fired</button><button data-dev-action="dev-next-level">Advance to Next Level</button></div></section>
-              <section class="devToolCard"><h3>Role / Mechanic Intros</h3><p>Open the satirical role explanation modals directly.</p><div class="devToolBtns"><button data-dev-action="role-exploration">Exploration Intro</button><button data-dev-action="role-engineering">Mining Engineer Intro</button><button data-dev-action="role-ground">Rock Doctor Intro</button><button data-dev-action="role-survey">Survey Intro</button><button data-dev-action="role-vent">Ventilation Intro</button></div></section>
-              <section class="devToolCard"><h3>Safety / External Events</h3><p>Trigger modal events without waiting for yearly rolls.</p><div class="devToolBtns"><button data-dev-action="safety-random">Random Safety</button><button data-dev-action="safety-negative">Negative Safety</button><button data-dev-action="safety-positive">Positive Safety</button><button data-dev-action="safety-mandatory">Mandatory Standdown</button><button data-dev-action="hse-inspection">HSE Inspection</button><button data-dev-action="skip-factor">Skip Factor</button><button data-dev-action="meeting-event">Pointless Meeting</button><button data-dev-action="external-affairs">External Affairs</button><button data-dev-action="grade-constraint">Grade Restriction</button><button data-dev-action="hope-support">HOPE Support</button><button data-dev-action="power-outage">Power Outage</button><button data-dev-action="crew-accident">Crew Accident</button><button data-dev-action="heat-event">Heat / Ventilation</button></div></section>
-              <section class="devToolCard"><h3>Production / HR Events</h3><p>Force PM comments, HR bubbles, and morale loops.</p><div class="devToolBtns"><button data-dev-action="pm-random">Random PM Comment</button><button data-dev-action="geo-reinterpret">Geology Reinterpretation</button><button data-dev-action="eng-event">Engineering Finding</button><button data-dev-action="eng-study">Start Engineering Study</button><button data-dev-action="hr-random">Random HR Bubble</button><button data-dev-action="hr-training">Training Request</button><button data-dev-action="hr-supervisor">Supervisor Issue</button><button data-dev-action="hr-belt">Belt Moan Bubble</button></div></section>
-              <section class="devToolCard"><h3>Mine State</h3><p>Manipulate exploration and hazard states.</p><div class="devToolBtns"><button data-dev-action="explore-complete">Explore Next Row</button><button data-dev-action="explore-transition">Explore to Decline Line</button><button data-dev-action="reveal-rows">Reveal All Rows</button><button data-dev-action="pillar-stress">Pillar Stressed</button><button data-dev-action="pillar-critical">Pillar Critical</button><button data-dev-action="pillar-failure">Pillar Failure</button><button data-dev-action="create-rubble">Create Rubble</button><button data-dev-action="gas-pocket">Gas Pocket</button><button data-dev-action="water-inflow">Water Inflow</button></div></section>
-              <section class="devToolCard"><h3>Assets</h3><p>Break, restore, and unlock major assets.</p><div class="devToolBtns"><button data-dev-action="miner-break">Break Selected Miner</button><button data-dev-action="miner-worn">Set Miner Worn</button><button data-dev-action="miner-restore">Restore Miner</button><button data-dev-action="belt-random">Random Belt Fault</button><button data-dev-action="belt-trip">Electrical Trip</button><button data-dev-action="belt-buried">Buried Belt</button><button data-dev-action="belt-drive">Drive Fault</button><button data-dev-action="belt-mechanical">Mechanical Fault</button><button data-dev-action="belt-restore">Restore Belt</button><button data-dev-action="buy-bolter-dev">Add Bolter</button><button data-dev-action="buy-second-dev">Add 2ndHOPE</button><button data-dev-action="buy-fan-dev">Add Mine Fan</button></div></section>
-              <section class="devToolCard"><h3>Finance / Traits</h3><p>Set test conditions for morale decay, HSE, and finance.</p><div class="devToolBtns"><button data-dev-action="cash-add">Add £10k</button><button data-dev-action="traits-reset">Reset Traits</button><button data-dev-action="morale-high">Morale 100</button><button data-dev-action="morale-low">Morale 35</button><button data-dev-action="safety-high">Safety 100</button><button data-dev-action="safety-low">Safety 25</button><button data-dev-action="morale-decay">Apply Annual Morale Decay</button></div></section>
+              <section class="devToolCard"><h3>Progression / Game State</h3><p>Move time, force annual review outcomes, and test shaft deepening gating.</p><div class="devToolBtns"><button data-dev-action="dev-advance-30">Advance 30 Days</button><button data-dev-action="dev-next-year">Advance to Next Year</button><button data-dev-action="year-success">Finish Year: Successful</button><button data-dev-action="year-needs">Finish Year: Needs Improvement</button><button data-dev-action="year-fired">Finish Year: Fired</button><button data-dev-action="shaft-enable">Unlock Shaft Deepening Eligibility</button><button data-dev-action="shaft-approve">Approve Shaft Deepening</button><button data-dev-action="dev-next-level">Move to Next Level</button><button data-dev-action="level-1000">Move to -1000</button><button data-dev-action="level-1100">Move to -1100</button><button data-dev-action="level-1200">Move to -1200</button><button data-dev-action="level-1300">Move to -1300</button><button data-dev-action="level-1400">Move to -1400</button></div></section>
+              <section class="devToolCard"><h3>HR Bubble Events</h3><p>Crew-linked bubbles: open on staff, resolve with a compact HR choice, then clear.</p><div class="devToolBtns"><button data-dev-action="hr-random">Random HR Bubble</button><button data-dev-action="hr-training">Training Request</button><button data-dev-action="hr-supervisor">Supervisor Issue</button><button data-dev-action="hr-belt">Belt Moan Bubble</button></div></section>
+              <section class="devToolCard"><h3>Informative Modals</h3><p>One-stage events: information is shown, impact is applied, then the player acknowledges.</p><div class="devToolBtns"><button data-dev-action="skip-factor">Skip Factor</button><button data-dev-action="meeting-event">Pointless Meeting</button><button data-dev-action="grade-constraint">Grade Restriction</button><button data-dev-action="hope-support">HOPE Support Rollback</button><button data-dev-action="power-outage">Power Outage</button><button data-dev-action="heat-event">Heat / Ventilation</button><button data-dev-action="morale-decay">Annual Morale Decay</button></div></section>
+              <section class="devToolCard"><h3>Decision Modals</h3><p>Two-stage flow: decision modal closes, separate outcome modal opens.</p><div class="devToolBtns"><button data-dev-action="external-affairs">External Affairs</button><button data-dev-action="crew-accident">Crew Accident</button><button data-dev-action="geo-reinterpret">Geology Model Reinterpretation</button><button data-dev-action="hse-inspection">HSE Surprise Inspection</button></div></section>
+              <section class="devToolCard"><h3>Safety Holds</h3><p>Forced standdowns pause work and use their own hold-point flow.</p><div class="devToolBtns"><button data-dev-action="safety-random">Random Safety</button><button data-dev-action="safety-negative">Negative Safety</button><button data-dev-action="safety-positive">Positive Safety</button><button data-dev-action="safety-mandatory">Mandatory Standdown</button></div></section>
+              <section class="devToolCard"><h3>Role / Mechanic Intros</h3><p>Open progression explanations without waiting for level/year triggers.</p><div class="devToolBtns"><button data-dev-action="role-exploration">Exploration Intro</button><button data-dev-action="role-engineering">Mining Engineer Intro</button><button data-dev-action="role-ground">Rock Doctor Intro</button><button data-dev-action="role-survey">Survey Intro</button><button data-dev-action="role-vent">Ventilation Intro</button></div></section>
+              <section class="devToolCard"><h3>Mine / Ground State</h3><p>Manipulate exploration, ground-control states, rubble, gas and water.</p><div class="devToolBtns"><button data-dev-action="explore-complete">Explore Next Row</button><button data-dev-action="explore-transition">Explore to Shaft Target</button><button data-dev-action="reveal-rows">Reveal All Rows</button><button data-dev-action="pillar-stress">Pillar Stressed</button><button data-dev-action="pillar-critical">Pillar Critical</button><button data-dev-action="pillar-failure">Pillar Failure</button><button data-dev-action="create-rubble">Create Rubble</button><button data-dev-action="gas-pocket">Gas Pocket</button><button data-dev-action="water-inflow">Water Inflow</button></div></section>
+              <section class="devToolCard"><h3>Assets / Machines</h3><p>Break, restore, unlock and test major assets.</p><div class="devToolBtns"><button data-dev-action="miner-break">Break Selected Miner</button><button data-dev-action="miner-worn">Set Miner Worn</button><button data-dev-action="miner-restore">Restore Miner</button><button data-dev-action="belt-random">Random Belt Fault</button><button data-dev-action="belt-trip">Electrical Trip</button><button data-dev-action="belt-buried">Buried Belt</button><button data-dev-action="belt-drive">Drive Fault</button><button data-dev-action="belt-mechanical">Mechanical Fault</button><button data-dev-action="belt-restore">Restore Belt</button><button data-dev-action="restore-lighting-dev">Restore Lighting</button><button data-dev-action="buy-bolter-dev">Add Bolter</button><button data-dev-action="buy-second-dev">Add 2ndHOPE</button><button data-dev-action="buy-fan-dev">Add Mine Fan</button></div></section>
+              <section class="devToolCard"><h3>Engineering Research</h3><p>Test Mining Engineer research without waiting for the study timer.</p><div class="devToolBtns"><button data-dev-action="eng-study">Start Random Study</button><button data-dev-action="eng-event">Engineering Finding</button><button data-dev-action="eng-complete">Complete Active Research</button></div></section>
+              <section class="devToolCard"><h3>Finance / Traits</h3><p>Set conditions for morale, HSE, and operating surplus tests.</p><div class="devToolBtns"><button data-dev-action="cash-add">Add £10k</button><button data-dev-action="traits-reset">Reset Traits</button><button data-dev-action="morale-high">Morale 100</button><button data-dev-action="morale-low">Morale 35</button><button data-dev-action="safety-high">Safety 100</button><button data-dev-action="safety-low">Safety 25</button></div></section>
             </div>`;
         }
 
@@ -14704,6 +14812,7 @@
           if (!existingIds.has(reserve.id)) state.candidates.push(reserve);
         }
 
+        sortCandidatesByRole();
         ensureCandidatePool(null, false);
         applyInitialShiftTraits();
         state.setupComplete = true;
@@ -14774,6 +14883,7 @@
             created++;
           }
         }
+        sortCandidatesByRole();
         if (created && forceNotice) {
           pushQueueEvent({
             kind: 'recruitmentRefresh',
@@ -14797,6 +14907,7 @@
         const [s] = state.staff.splice(idx, 1);
         state.formerStaff.push({ ...s, bubble: null, exitReason: reason });
         if (!state.candidates.some(c => c.role === s.role)) state.candidates.push(createReplacementCandidate(s.role));
+        sortCandidatesByRole();
         ensureCandidatePool([s.role], true);
         state.hrCooldown = Math.max(state.hrCooldown || 0, 10);
         state.staffDepartureCooldownUntilDay = state.day + Math.max(65, 110 - Math.min(45, state.year * 6));
@@ -15081,6 +15192,7 @@
         if (['miningEngineer', 'rockDoctor', 'surveyor', 'geologist', 'driller', 'ventilationEngineer'].includes(c.role)) state.technicalHiresThisYear = (state.technicalHiresThisYear || 0) + 1;
         adjustTrait('morale', 1);
         ensureCandidatePool([c.role], false);
+        sortCandidatesByRole();
         if (['geologist', 'driller'].includes(c.role) && explorationStaffReady() && state.exploration && !state.exploration.drillGuideDismissed && (state.exploration.discoveredRowsThisYear || 0) === 0) {
           showProductionComment('Exploration crew ready. The HOPE exploration rig is now highlighted on the canvas; tap it to start opening new ground.', 'Exploration', 6);
         }
@@ -15227,7 +15339,7 @@
               state.hiringTab = 'technical';
               openWindow('hr', false, financeContinueLabel(state.year));
             }
-            else if (depth === 0) openDeclineProposal();
+            else if (canApproveShaftDeepening()) openShaftDeepeningProposal();
             else openWindow('targets', false, 'New Annual KPI Notice');
             return;
           }
@@ -15241,8 +15353,11 @@
             return;
           }
 
-          const investDeclineBtn = e.target.closest('[data-invest-decline]');
-          if (investDeclineBtn) { investInDecline(); return; }
+          const openShaftDeepeningBtn = e.target.closest('[data-open-shaft-deepening]');
+          if (openShaftDeepeningBtn) { openShaftDeepeningProposal(); return; }
+
+          const investShaftDeepeningBtn = e.target.closest('[data-invest-shaft-deepening], [data-invest-decline]');
+          if (investShaftDeepeningBtn) { investInDecline(); return; }
           const levelArrivalContinueBtn = e.target.closest('[data-level-arrival-continue]');
           if (levelArrivalContinueBtn) {
             const next = levelArrivalContinueBtn.dataset.nextIntro;
