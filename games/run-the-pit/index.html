@@ -5850,9 +5850,10 @@
       };
 
       const MINE_ID = 'MINE';
-      const MINE_COLS = 11;
-      const MINE_ROWS = 18;
-      const LOCKED_ROWS = MINE_ROWS - 5;
+      const MINE_COLS = 9;
+      const MINE_ROWS = 15;
+      const INITIAL_UNLOCKED_ROWS = 4;
+      const LOCKED_ROWS = MINE_ROWS - INITIAL_UNLOCKED_ROWS;
       const START_COL = Math.floor(MINE_COLS / 2);
       const ACCESS_ROW = MINE_ROWS;
       const START_ROW = ACCESS_ROW;
@@ -6180,7 +6181,9 @@
 
             const forwardScore = clamp((MINE_ROWS - 1 - r) / Math.max(1, MINE_ROWS - 1), 0, 1);
             const rowTonnageBonus = Math.round(forwardScore * 1250 + Math.pow(forwardScore, 1.75) * 650);
-            const tonnes = 1350 + Math.round(seeded(idx + 17) * 750) + rowTonnageBonus + Math.round(depth * 170);
+            const baseTonnes = 1350 + Math.round(seeded(idx + 17) * 750) + rowTonnageBonus + Math.round(depth * 170);
+            // Grid reduced from 11×18 to 9×15 while preserving level-scale tonnes.
+            const tonnes = Math.round(baseTonnes * 1.47);
             const riskVal = seeded(idx + 31);
             const risk = riskVal > 0.78 ? 'High' : riskVal > 0.44 ? 'Medium' : 'Low';
             const isPillar = unlocked && isPillarCell(r, c);
@@ -6412,7 +6415,7 @@
         const y = Math.max(1, Number(year) || 1);
         const base = {
           // Annual tonnage is now tuned for a three-minute operating year and larger mine blocks.
-          // A good year should require roughly 5 blocks in Year 1 and 10–20 blocks once the operation ramps up.
+          // A good year should require roughly 4–5 larger blocks in Year 1 and 8–16 blocks once the operation ramps up.
           // -1000 Level is the tutorial campaign: enough pressure to teach systems, not enough to trap most players.
           1: { tonnes: 9000, grade: 13.9, discoveredRows: 0, safetyMin: 42, technicalHires: 0, beltExtensions: 0, pillarSupports: 0, maxPillarFailures: 99 },
           2: { tonnes: 13000, grade: 14.0, discoveredRows: 2, safetyMin: 45, technicalHires: 0, beltExtensions: 0, pillarSupports: 0, maxPillarFailures: 99 },
@@ -6537,13 +6540,19 @@
         return block ? gridRefFor(block.r, block.c) : 'Unknown Grid';
       }
 
+      function levelTransitionTargetGridRow() {
+        // The decline threshold starts at Grid Row 10 on -1000 and moves progressively farther away by depth.
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
+        return Math.min(MINE_ROWS - 1, 10 + depth);
+      }
+
       function levelTransitionRow() {
-        // The row just below this line is the tenth row from the bottom.
-        return Math.max(0, MINE_ROWS - 10);
+        // Canvas row index for the line above the target bottom-up grid row.
+        return Math.max(1, MINE_ROWS - levelTransitionTargetGridRow());
       }
 
       function levelTransitionText() {
-        return 'Explore here to unlock the ' + (state.mineLevel - 100) + ' Level';
+        return 'Explore to Grid Row ' + levelTransitionTargetGridRow() + ' to unlock the ' + (state.mineLevel - 100) + ' Level';
       }
 
       function hasReachedLevelTransition() {
@@ -11918,7 +11927,7 @@
       function yearStartBriefingHtml(year) {
         const depth = Number(state.depthIndex) || 0;
         if (year === 2 && depth === 0) {
-          return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now support scalable mining.</p><p>Roughly half of the -1000 Level is already interpreted. The rest requires cash to be converted into drill core so Geology can confirm what has already been promised externally.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
+          return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2><p>In Year 1, the Superior Leadership Team confirmed this was only a bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now support scalable mining.</p><p>Only the first four rows of the -1000 Level are already interpreted. The rest requires cash to be converted into drill core so Geology can confirm what has already been promised externally.</p><p><strong>New requirements:</strong> buy a drill, hire one geologist and two named drillers, and unlock new rows.</p><p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
         }
         if (depth === 0) {
           return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Reach the -1100 Level</h2><p>The annual KPI curve continues to increase because the forecast already assumes the operation has advanced deeper.</p><p><strong>Current strategic objective:</strong> fully explore enough of the -1000 Level, maintain a positive Operating Surplus, and invest in decline development to reach the <strong>-1100 Level</strong>.</p><p>Remaining at -1000 is permitted, but the SLT would like to remind you that the target does not care where the tonnes come from.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
@@ -13111,7 +13120,7 @@
           completeExplorationProgram();
           guard++;
         }
-        showProductionComment('Dev exploration complete to the decline guidance line. Geology has coloured enough blocks to request more money.', 'Dev Tools', 5);
+        showProductionComment('Dev exploration complete to the current decline guidance line. Geology has coloured enough blocks to request more money.', 'Dev Tools', 5);
       }
 
       function devRevealAllRows() {
@@ -13582,8 +13591,8 @@
             ${annualKpiTrackerHtml()}
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:#2563eb"></div><div><strong>Year Clock</strong><span>Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}. Year-end review occurs automatically at day ${YEAR_LENGTH_DAYS}. One operating year now lasts about three real minutes.</span></div><span class="tag">${daysLeft} days left</span></div>
-              <div class="row"><div class="avatarDot" style="background:#7c3aed"></div><div><strong>Mining Level</strong><span>Current canvas is ${currentLevelName()}. The marked exploration line on the canvas shows where decline development to the next level becomes available.</span></div><span class="tag">Depth ${state.depthIndex || 0}</span></div>
-              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Only the first five rows are initially available on a fresh level; the rest requires drill core and optimism.</span></div><span class="tag">${hasReachedLevelTransition() ? 'Decline ready' : 'Explore'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#7c3aed"></div><div><strong>Mining Level</strong><span>Current canvas is ${currentLevelName()}. The marked exploration line on the canvas shows where decline development to the next level becomes available; it moves farther away on deeper levels.</span></div><span class="tag">Depth ${state.depthIndex || 0}</span></div>
+              <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Known Ground</strong><span>${countDiscoveredRows()} of ${MINE_ROWS} mine rows currently discovered. Only the first four rows are initially available on a fresh level; the rest requires drill core and optimism.</span></div><span class="tag">${hasReachedLevelTransition() ? 'Decline ready' : 'Explore'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Belt Head</strong><span>${beltHeadLabel()}. The belt can only be advanced through mined-out centreline ground.</span></div><span class="tag">Centreline</span></div>
             </div>
             ${state.setupComplete && !state.running ? '<div class="btnRow"><button class="primary" data-accept-objective>Accept Objective and Start Operating Year</button></div>' : ''}`;
@@ -13766,7 +13775,7 @@
               <section class="devToolCard"><h3>Role / Mechanic Intros</h3><p>Open the satirical role explanation modals directly.</p><div class="devToolBtns"><button data-dev-action="role-exploration">Exploration Intro</button><button data-dev-action="role-engineering">Mining Engineer Intro</button><button data-dev-action="role-ground">Rock Doctor Intro</button><button data-dev-action="role-survey">Survey Intro</button><button data-dev-action="role-vent">Ventilation Intro</button></div></section>
               <section class="devToolCard"><h3>Safety / External Events</h3><p>Trigger modal events without waiting for yearly rolls.</p><div class="devToolBtns"><button data-dev-action="safety-random">Random Safety</button><button data-dev-action="safety-negative">Negative Safety</button><button data-dev-action="safety-positive">Positive Safety</button><button data-dev-action="safety-mandatory">Mandatory Standdown</button><button data-dev-action="hse-inspection">HSE Inspection</button><button data-dev-action="skip-factor">Skip Factor</button><button data-dev-action="meeting-event">Pointless Meeting</button><button data-dev-action="external-affairs">External Affairs</button><button data-dev-action="grade-constraint">Grade Restriction</button><button data-dev-action="hope-support">HOPE Support</button><button data-dev-action="power-outage">Power Outage</button><button data-dev-action="crew-accident">Crew Accident</button><button data-dev-action="heat-event">Heat / Ventilation</button></div></section>
               <section class="devToolCard"><h3>Production / HR Events</h3><p>Force PM comments, HR bubbles, and morale loops.</p><div class="devToolBtns"><button data-dev-action="pm-random">Random PM Comment</button><button data-dev-action="geo-reinterpret">Geology Reinterpretation</button><button data-dev-action="eng-event">Engineering Finding</button><button data-dev-action="eng-study">Start Engineering Study</button><button data-dev-action="hr-random">Random HR Bubble</button><button data-dev-action="hr-training">Training Request</button><button data-dev-action="hr-supervisor">Supervisor Issue</button><button data-dev-action="hr-belt">Belt Moan Bubble</button></div></section>
-              <section class="devToolCard"><h3>Mine State</h3><p>Manipulate exploration and hazard states.</p><div class="devToolBtns"><button data-dev-action="explore-complete">Explore Next Row</button><button data-dev-action="explore-transition">Explore to -1100 Line</button><button data-dev-action="reveal-rows">Reveal All Rows</button><button data-dev-action="pillar-stress">Pillar Stressed</button><button data-dev-action="pillar-critical">Pillar Critical</button><button data-dev-action="pillar-failure">Pillar Failure</button><button data-dev-action="create-rubble">Create Rubble</button><button data-dev-action="gas-pocket">Gas Pocket</button><button data-dev-action="water-inflow">Water Inflow</button></div></section>
+              <section class="devToolCard"><h3>Mine State</h3><p>Manipulate exploration and hazard states.</p><div class="devToolBtns"><button data-dev-action="explore-complete">Explore Next Row</button><button data-dev-action="explore-transition">Explore to Decline Line</button><button data-dev-action="reveal-rows">Reveal All Rows</button><button data-dev-action="pillar-stress">Pillar Stressed</button><button data-dev-action="pillar-critical">Pillar Critical</button><button data-dev-action="pillar-failure">Pillar Failure</button><button data-dev-action="create-rubble">Create Rubble</button><button data-dev-action="gas-pocket">Gas Pocket</button><button data-dev-action="water-inflow">Water Inflow</button></div></section>
               <section class="devToolCard"><h3>Assets</h3><p>Break, restore, and unlock major assets.</p><div class="devToolBtns"><button data-dev-action="miner-break">Break Selected Miner</button><button data-dev-action="miner-worn">Set Miner Worn</button><button data-dev-action="miner-restore">Restore Miner</button><button data-dev-action="belt-random">Random Belt Fault</button><button data-dev-action="belt-trip">Electrical Trip</button><button data-dev-action="belt-buried">Buried Belt</button><button data-dev-action="belt-drive">Drive Fault</button><button data-dev-action="belt-mechanical">Mechanical Fault</button><button data-dev-action="belt-restore">Restore Belt</button><button data-dev-action="buy-bolter-dev">Add Bolter</button><button data-dev-action="buy-second-dev">Add 2ndHOPE</button><button data-dev-action="buy-fan-dev">Add Mine Fan</button></div></section>
               <section class="devToolCard"><h3>Finance / Traits</h3><p>Set test conditions for morale decay, HSE, and finance.</p><div class="devToolBtns"><button data-dev-action="cash-add">Add £10k</button><button data-dev-action="traits-reset">Reset Traits</button><button data-dev-action="morale-high">Morale 100</button><button data-dev-action="morale-low">Morale 35</button><button data-dev-action="safety-high">Safety 100</button><button data-dev-action="safety-low">Safety 25</button><button data-dev-action="morale-decay">Apply Annual Morale Decay</button></div></section>
             </div>`;
