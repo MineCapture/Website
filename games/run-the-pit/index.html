@@ -4661,7 +4661,7 @@
           <div class="pill">Spend <strong id="expenditureHud">£0</strong></div>
           <div class="pill wide">KPI <strong id="kpiHud">0✓ · 0!</strong></div>
           <div class="pill wide">Mined Tonnes <strong id="tonnesHud">0 / 10,000t</strong></div>
-          <div class="pill wide">Goldilocks <strong id="gradeHud">0.0%</strong></div>
+          <div class="pill wide">Goldilocks Grade <strong id="gradeHud">0.0%</strong></div>
           <div class="pill wide">LOM Reserve <strong id="lomHud">0kt @ 0.0%</strong></div>
           <div class="pill wide machinePill">Machine <strong id="machineHud">Idle</strong></div>
         </div>
@@ -5106,6 +5106,7 @@
       let machineHit = null;
       let bolterHit = null;
       let drillRigHit = null;
+      let beltHits = [];
       let dayTimer = 0;
       let lastPanelCrewTilesHtml = '';
       const portraitImageCache = new Map();
@@ -5166,6 +5167,11 @@
         {
           category: 'Geology',
           text: 'Geology has reinterpreted the seam again. The good news is the model is now more colourful.',
+          effect: 'geologyReinterpretation'
+        },
+        {
+          category: 'Geology',
+          text: 'Geology would like to remind you that all models are wrong, but some are useful. It is up to Production to determine how useful this model is.',
           effect: 'none'
         },
         {
@@ -5315,6 +5321,50 @@
           buttons: [
             { label: 'Authorise tea solution', style: 'good', choice: 'tea' },
             { label: 'Refer to procedure', style: 'warn', choice: 'ignore' }
+          ]
+        },
+        {
+          type: 'supervisorAircon',
+          icon: '❄',
+          roles: ['supervisor'],
+          quote: '“How am I supposed to work in these conditions?”',
+          text: '{name} reports that the air conditioning unit is broken at the meeting station. S.H.A.F.T. notes that visible supervision requires an environment suitable for visible supervision.',
+          buttons: [
+            { label: 'Approve Comfort Review', style: 'good', choice: 'comfortReview' },
+            { label: 'Remind Them They Are Underground', style: 'warn', choice: 'remindUnderground' }
+          ]
+        },
+        {
+          type: 'supervisorClipboard',
+          icon: '📋',
+          roles: ['supervisor'],
+          quote: '“I cannot supervise without the correct clipboard.”',
+          text: '{name} has raised a compliance concern after being issued a clipboard that does not project sufficient authority.',
+          buttons: [
+            { label: 'Issue Official Clipboard', style: 'good', choice: 'officialClipboard' },
+            { label: 'Use Existing Clipboard', style: 'warn', choice: 'existingClipboard' }
+          ]
+        },
+        {
+          type: 'supervisorMeeting',
+          icon: '☷',
+          roles: ['supervisor'],
+          quote: '“The pre-start contained too much operational detail.”',
+          text: '{name} believes the pre-start has drifted away from high-level leadership themes and into the work people are actually doing.',
+          buttons: [
+            { label: 'Schedule Alignment Meeting', style: 'good', choice: 'alignmentMeeting' },
+            { label: 'Keep It Practical', style: 'warn', choice: 'practicalPrestart' }
+          ]
+        },
+        {
+          type: 'supervisorAccountability',
+          icon: '!',
+          roles: ['supervisor'],
+          quote: '“People keep asking me what the plan is.”',
+          text: '{name} is concerned the crew may be confusing supervision with responsibility for outcomes.',
+          buttons: [
+            { label: 'Clarify Accountability', style: 'good', choice: 'clarifyAccountability' },
+            { label: 'Ask Them to Help', style: 'warn', choice: 'askSupervisorHelp' }
           ]
         },
         {
@@ -5533,7 +5583,15 @@
         protectRhythm: { tone: 'positive', text: '+3 Morale, +3 Productivity, free' },
         spreadsheetRhythm: { tone: 'negative', text: '-1 Morale, +1 Productivity, -£75' },
         quickFix: { tone: 'positive', text: '+2 Productivity, +2 Safety, -£350' },
-        waitApproval: { tone: 'negative', text: '+1 Safety, -2 Productivity, machine wears, free' }
+        waitApproval: { tone: 'negative', text: '+1 Safety, -2 Productivity, machine wears, free' },
+        comfortReview: { tone: 'positive', text: '+2 Morale, -£450, no production benefit' },
+        remindUnderground: { tone: 'negative', text: '-2 Supervisor morale, +1 Productivity, free' },
+        officialClipboard: { tone: 'positive', text: '+1 Morale, -£90, compliance optics improved' },
+        existingClipboard: { tone: 'negative', text: '-1 Morale, free' },
+        alignmentMeeting: { tone: 'negative', text: '+1 Morale, -2 Productivity, -£120' },
+        practicalPrestart: { tone: 'positive', text: '+1 Productivity, -1 Supervisor morale, free' },
+        clarifyAccountability: { tone: 'positive', text: '+1 Safety, -£180, responsibility redistributed' },
+        askSupervisorHelp: { tone: 'negative', text: '-2 Morale, +1 Productivity, cultural risk' }
       };
 
       const MINE_ID = 'MINE';
@@ -5766,6 +5824,8 @@
         capexFreezeUntil: 0,
         randomEventCount: 0,
         queueEvents: [],
+        lastBeltDistanceConcernDay: -999,
+        lastGeologyReinterpretationDay: -999,
         staff: [],
         formerStaff: [],
         candidates: [],
@@ -6470,14 +6530,13 @@
         state.bolter.status = 'idle';
         state.bolter.target = null;
         state.bolter.progress = 0;
-        adjustTrait('safety', 2);
         spawnFloatingText(p.x, p.y - board.cell * 0.6, ['BOLTED', '-' + money(scaledCost(PILLAR_SUPPORT_COST))], '#bfdbfe');
         pushQueueEvent({
           tone: 'good',
           icon: '⛏',
           label: 'GND',
           title: 'Pillar Supported',
-          body: `<p>${rockDoc.name} has authorised and installed support on a pillar using the bolter.</p><p><strong>Impact:</strong> +2 Safety, ${money(scaledCost(PILLAR_SUPPORT_COST))} support cost.</p>`
+          body: `<p>${rockDoc.name} has authorised and installed support on a pillar using the bolter.</p><p><strong>Impact:</strong> ${money(scaledCost(PILLAR_SUPPORT_COST))} support cost. No safety score gain: preventing the roof from falling in is the minimum acceptable condition.</p>`
         });
       }
 
@@ -6491,6 +6550,11 @@
         }
         updateProductionComment(dt);
         updateMachineSmoke(dt);
+
+        // Modal/event lock: game time and operational timers pause while a modal is open.
+        // This prevents HR, reviews, geology notices, and belt events from stacking over each other.
+        if (isModalOpen()) return;
+
         if (state.running && !state.paused) updateConveyor(dt);
 
         if (!state.running || state.paused) return;
@@ -6627,18 +6691,112 @@
         return true;
       }
 
+      function gradeBandIndex(g) {
+        if (g >= 15.2) return 4;
+        if (g >= 14.6) return 3;
+        if (g >= 14.0) return 2;
+        if (g >= 13.2) return 1;
+        return 0;
+      }
+
+      function gradeBandNameFromIndex(idx) {
+        return ['Poor', 'Marginal', 'Good', 'High', 'Premium'][clamp(Math.round(idx), 0, 4)] || 'Unknown';
+      }
+
+      function randomGradeInBand(idx) {
+        const ranges = [
+          [12.35, 13.15],
+          [13.22, 13.92],
+          [14.02, 14.55],
+          [14.62, 15.12],
+          [15.22, 16.10]
+        ];
+        const r = ranges[clamp(Math.round(idx), 0, 4)] || ranges[2];
+        return rand(r[0], r[1]);
+      }
+
+      function geologyReinterpretationTargets() {
+        return (state.blocks[MINE_ID] || []).filter(b => {
+          if (!b || b.status !== 'solid') return false;
+          if (b.reconciled || b.status === 'void' || b.status === 'locked') return false;
+          if (b.isPillar && !featureUnlocked('pillarSplitting')) return false;
+          return typeof b.estimatedGrade === 'number' && typeof b.actualGrade === 'number';
+        });
+      }
+
+      function canTriggerGeologyReinterpretation() {
+        if (!state.running || state.year < 2) return false;
+        if ((state.day - (state.lastGeologyReinterpretationDay || -999)) < 120) return false;
+        return geologyReinterpretationTargets().length >= 4;
+      }
+
+      function triggerGeologyReinterpretationEvent() {
+        if (!canTriggerGeologyReinterpretation()) return false;
+        const targets = geologyReinterpretationTargets();
+        const geo = geologistOnCrew();
+        let improved = 0;
+        let worsened = 0;
+        let premiumNow = 0;
+        let poorNow = 0;
+
+        for (const b of targets) {
+          const oldBand = gradeBandIndex(typeof b.estimatedGrade === 'number' ? b.estimatedGrade : b.actualGrade);
+          const direction = Math.random() < 0.52 ? 1 : -1;
+          const magnitude = Math.random() < 0.18 ? 2 : 1;
+          let newBand = clamp(oldBand + direction * magnitude, 0, 4);
+          if (newBand === oldBand) newBand = oldBand <= 1 ? oldBand + 1 : oldBand - 1;
+
+          const oldActual = b.actualGrade;
+          const newActual = randomGradeInBand(newBand);
+          const estimate = estimateGradeForBlock(newActual, geo);
+          b.actualGrade = newActual;
+          b.estimatedGrade = estimate.estimatedGrade;
+          b.grade = estimate.estimatedGrade;
+          b.gradeConfidence = Math.max(0.25, Math.min(0.9, estimate.confidence * 0.92));
+
+          if (newActual > oldActual) improved++;
+          else worsened++;
+          if (newBand >= 4) premiumNow++;
+          if (newBand <= 0) poorNow++;
+        }
+
+        state.lastGeologyReinterpretationDay = state.day;
+        const lom = lifeOfMineMetrics();
+        const title = 'Geology Model Reinterpretation';
+        const body = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Interpretation of Reality Unit', 'The model changed. The ground has been invited to align with the model. Production remains accountable for the outcome.', 'GEO')}
+          <div class="letter"><h2>Updated Truth Issued</h2>
+          <p>Geology has reinterpreted the seam model following a technical review, two revised assumptions, and one spreadsheet that was previously hidden in someone's Downloads folder.</p>
+          <p><strong>${targets.length}</strong> explored, unmined blocks have been recalibrated. Both interpreted grade and actual hidden grade have changed to maintain alignment between the model and the newly approved version of reality.</p>
+          <p><strong>Movement:</strong> ${improved} blocks improved · ${worsened} blocks worsened · ${premiumNow} now Premium · ${poorNow} now Poor.</p>
+          <p><strong>LOM Reserve now:</strong> ${(lom.tonnes / 1000).toFixed(lom.tonnes >= 100000 ? 0 : 1)}kt @ ${lom.grade.toFixed(1)}% Goldilocks Grade.</p>
+          <p>The Geology Department would like to clarify that the ground has not changed. Only its underlying truth has been recalibrated.</p></div>`;
+
+        setModalClosable(true);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = title;
+        $('modalBody').innerHTML = body + '<div class="btnRow"><button class="primary" data-close>Accept the Updated Truth</button></div>';
+        $('modalOverlay').classList.add('show');
+        showProductionComment('Geology has issued an updated truth. The model changed, the ground changed to match it, and Production remains responsible.', 'Geology', 7.5);
+        return true;
+      }
+
       function showRandomProductionComment() {
         if (maybeShowProductionGuidance()) return;
-        if (!productionManagerEvents.length) return;
-        const event = productionManagerEvents[Math.floor(Math.random() * productionManagerEvents.length)];
-        applyProductionManagerEvent(event);
-        showProductionComment(event.text, event.category, 7.5);
+        const availableEvents = productionManagerEvents.filter(ev => ev.effect !== 'geologyReinterpretation' || canTriggerGeologyReinterpretation());
+        if (!availableEvents.length) return;
+        const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+        const handledAsModal = applyProductionManagerEvent(event);
+        if (!handledAsModal) showProductionComment(event.text, event.category, 7.5);
       }
 
       function applyProductionManagerEvent(event) {
         state.randomEventCount++;
 
-        if (!event || event.effect === 'none') return;
+        if (!event || event.effect === 'none') return false;
+
+        if (event.effect === 'geologyReinterpretation') {
+          return triggerGeologyReinterpretationEvent();
+        }
 
         if (event.effect === 'capexFreeze') {
           state.capexFreezeUntil = Math.max(state.capexFreezeUntil, state.day + 24);
@@ -6659,6 +6817,7 @@
           adjustTrait('morale', -2);
           adjustTrait('productivity', -1);
         }
+        return false;
       }
 
       function updateProductionComment(dt) {
@@ -7343,19 +7502,30 @@
       }
 
       function maybeQueueBeltDistanceConcern(force = false) {
-        if (!featureUnlocked('beltAdvancement') && !force) return;
+        if (!featureUnlocked('beltAdvancement')) return;
+        if (!state.conveyor || state.conveyor.status !== 'running') return;
+        if (!surveyorOnCrew()) return;
+
+        const extension = beltExtensionStatus();
+        if (!extension.canExtend) return;
+
         const active = machinePreviewOrigin(state.machine) || blockAt(MINE_ID, state.machine.r, state.machine.c);
         const distance = beltServiceDistance(active);
-        if (!force && distance < 4.5) return;
+        if (!force && distance < 4.0) return;
+
+        const cooldown = (Number(state.depthIndex) || 0) === 0 ? YEAR_LENGTH_DAYS : 130;
+        if (!force && state.day - (state.lastBeltDistanceConcernDay || -999) < cooldown) return;
+
         const unresolved = state.queueEvents.some(ev => ev && ev.kind === 'beltDistance');
         if (unresolved) return;
+        state.lastBeltDistanceConcernDay = state.day;
         pushQueueEvent({
           kind: 'beltDistance',
           tone: 'warning',
           icon: '↻',
           label: 'BELT',
-          title: 'Crew Fatigue Report',
-          body: `<p>The crew have reported that the belt is now far enough from the working area that walking to it has become “a form of unpaid exploration”.</p><p><strong>Operational issue:</strong> belt distance is reducing productivity and increasing wear. Extend the centreline belt through mined-out ground to reduce the penalty.</p><p>If ignored repeatedly, this may become a formal HR grievance, because poor infrastructure eventually learns the language of people management.</p>`
+          title: 'Crew Haulage Complaint',
+          body: `<p>The crew have noted that the belt has not been advanced into available mined centreline ground.</p><p><strong>Operational issue:</strong> belt distance is reducing productivity and increasing wear. Mine Services believes this is logistics. Production believes it is character building.</p><p>The belt is only complained about when it can legally be advanced and has not been. This is a rare moment of fairness.</p>`
         });
       }
 
@@ -7830,6 +8000,12 @@
 
           if (block.isPillar) {
             ctx.save();
+            if (block.pillarState === 'critical') {
+              ctx.translate(Math.sin(anim * 24 + block.r) * r.w * 0.045, Math.cos(anim * 21 + block.c) * r.h * 0.035);
+            }
+            if (block.pillarState === 'failed') {
+              ctx.translate(Math.sin(anim * 10 + block.c) * r.w * 0.025, 0);
+            }
             const danger = block.pillarState === 'failed' ? '#dc2626' : block.pillarState === 'critical' ? '#ef4444' : block.pillarState === 'fractured' ? '#f97316' : block.pillarState === 'spalling' ? '#fbbf24' : block.pillarState === 'cracking' ? '#fde68a' : '#e5e7eb';
             ctx.fillStyle = 'rgba(15,23,42,0.38)';
             ctx.fillRect(r.x + r.w * 0.10, r.y + r.h * 0.10, r.w * 0.80, r.h * 0.80);
@@ -7856,6 +8032,14 @@
 
             if (block.pillarState === 'cracking' || block.pillarState === 'spalling' || block.pillarState === 'fractured' || block.pillarState === 'critical' || block.pillarState === 'failed') {
               drawCracks(r, block.pillarState === 'failed' ? 100 : block.pillarState === 'critical' ? 88 : block.pillarState === 'fractured' ? 70 : block.pillarState === 'spalling' ? 48 : 28);
+            }
+            if (block.pillarState === 'critical') {
+              ctx.save();
+              ctx.globalAlpha = 0.45 + Math.sin(anim * 12) * 0.18;
+              ctx.strokeStyle = '#fecaca';
+              ctx.lineWidth = Math.max(2, r.w * 0.06);
+              ctx.strokeRect(r.x + r.w * 0.06, r.y + r.h * 0.06, r.w * 0.88, r.h * 0.88);
+              ctx.restore();
             }
             if (block.support) {
               ctx.fillStyle = 'rgba(147,197,253,0.92)';
@@ -8175,6 +8359,8 @@
         const dy = y2 - y1;
         const len = Math.hypot(dx, dy);
         const angle = Math.atan2(dy, dx);
+        const hitPad = Math.max(18, board.cell * 0.42);
+        beltHits.push({ x: Math.min(x1, x2) - hitPad, y: Math.min(y1, y2) - hitPad, w: Math.abs(dx) + hitPad * 2, h: Math.abs(dy) + hitPad * 2 });
 
         ctx.translate(x1, y1);
         ctx.rotate(angle);
@@ -8240,6 +8426,7 @@
 
       function drawConveyorNetwork(shaftX, shaftY) {
         if (!board) return;
+        beltHits = [];
         const beltCol = beltColumn();
         const startRect = cellRect(MINE_ID, START_ROW, beltCol);
         const infraJoinX = startRect.x + startRect.w / 2;
@@ -9406,6 +9593,42 @@
         showProductionComment('Exploration has started. A row now takes roughly a quarter of the operating year to confirm, because reserves are apparently easier to declare than drill.', 'Exploration');
       }
 
+      function exploredRowSummary(row) {
+        const blocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row && b.status !== 'locked' && b.status !== 'void');
+        const tonnes = blocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0);
+        const gradeT = blocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0) * (Number(b.estimatedGrade) || Number(b.grade) || 0), 0);
+        const confidence = blocks.length ? blocks.reduce((sum, b) => sum + (Number(b.gradeConfidence) || 0), 0) / blocks.length : 0;
+        const grade = tonnes > 0 ? gradeT / tonnes : 0;
+        return { blocks, tonnes, grade, confidence };
+      }
+
+      function exploredRowSatire(summary) {
+        const grade = summary.grade || 0;
+        const tonnes = summary.tonnes || 0;
+        const highTonnes = tonnes >= 21000;
+        const lowTonnes = tonnes <= 15500;
+        const highGrade = grade >= 14.65;
+        const premiumGrade = grade >= 15.15;
+        const poorGrade = grade < 13.45;
+        const lowConfidence = (summary.confidence || 0) < 0.58;
+
+        if (premiumGrade && highTonnes) return 'The Geology Department is pleased to report that the new row contains both tonnes and grade, a combination they describe as helpful, pending reconciliation.';
+        if (highTonnes && poorGrade) return 'The new row contains a significant number of tonnes. Unfortunately, some of them appear to be more enthusiastic than valuable.';
+        if (lowTonnes && highGrade) return 'Geology has identified a high-grade area of limited physical extent. Finance has asked whether it can be stretched.';
+        if (poorGrade) return 'The Geology Department would like to remind you that they are not responsible for events that happened 200 million years ago.';
+        if (lowConfidence) return 'The new row has been interpreted with limited confidence. Geology is confident that confidence will improve once the result is no longer useful.';
+        if (highGrade) return 'The model suggests good ground ahead. Production is advised to mine it quickly before the next reinterpretation.';
+        return 'The Geology Department has issued a balanced interpretation. This means nobody is happy, which is usually a sign of technical robustness.';
+      }
+
+      function explorationDiscoveryBody(row, geo) {
+        const summary = exploredRowSummary(row);
+        return `<p><strong>Row ${row + 1} has been discovered on ${currentLevelName()}.</strong></p>
+          <p><strong>Estimated reserve:</strong> ${(summary.tonnes / 1000).toFixed(summary.tonnes >= 100000 ? 0 : 1)}kt · <strong>Estimated grade:</strong> ${summary.grade.toFixed(2)}% Goldilocks Grade · <strong>Confidence:</strong> ${Math.round((summary.confidence || 0) * 100)}%</p>
+          <p>${geo ? geo.name : 'The geology function'} has converted drill information into a colourful interpretation. The colours are now available for operational overconfidence.</p>
+          <p>${exploredRowSatire(summary)}</p>`;
+      }
+
       function completeExplorationProgram() {
         const row = state.exploration.row;
         const geo = geologistOnCrew();
@@ -9440,7 +9663,7 @@
           character: 'Geology Department',
           department: 'Exploration Interpretation',
           title: 'Exploration row discovered',
-          body: `<p><strong>Row ${row + 1} has been discovered on ${currentLevelName()}.</strong></p><p>${geo ? geo.name : 'The geology function'} has converted drill information into a colourful interpretation. The colours are now available for operational overconfidence.</p><p>Geologist skill controls how close these estimates are to the eventual mined grade.</p>`
+          body: explorationDiscoveryBody(row, geo)
         });
         if (nextExplorationRow() === null) openDeclineProposal();
       }
@@ -10079,20 +10302,44 @@
         $('modalOverlay').classList.add('show');
       }
 
+      function pillarDeteriorationSettings() {
+        const depth = Number(state.depthIndex) || 0;
+        const y = Math.max(1, Number(state.year) || 1);
+        if (depth === 0 && y <= 3) return { rate: 0.26, cracking: 95, spalling: 165, fractured: 245, critical: 330, fail: 410, failChance: 0.004, maxActive: 2, maxCritical: 1 };
+        if (depth === 0 && y === 4) return { rate: 0.38, cracking: 78, spalling: 138, fractured: 210, critical: 295, fail: 365, failChance: 0.008, maxActive: 3, maxCritical: 1 };
+        if (depth === 0) return { rate: 0.48, cracking: 64, spalling: 118, fractured: 180, critical: 250, fail: 315, failChance: 0.013, maxActive: 4, maxCritical: 2 };
+        return { rate: 0.58 * depthRiskFactor(), cracking: 48, spalling: 92, fractured: 145, critical: 205, fail: 260, failChance: 0.020, maxActive: 5 + depth, maxCritical: 2 + depth };
+      }
+
       function updateExposedPillarsOneDay() {
         if (!featureUnlocked('groundSupport')) return;
         const blocks = state.blocks[MINE_ID] || [];
+        const cfg = pillarDeteriorationSettings();
+        let activeCount = blocks.filter(b => b.isPillar && !b.support && b.pillarState && !['stable', 'supported', 'failed'].includes(b.pillarState)).length;
+        let criticalCount = blocks.filter(b => b.isPillar && !b.support && b.pillarState === 'critical').length;
+
         for (const b of blocks) {
           if (!b.isPillar || b.status === 'void' || b.support || b.pillarState === 'failed') continue;
           const neighbours = [[1,0],[-1,0],[0,1],[0,-1]].map(([dr, dc]) => blockAt(MINE_ID, b.r + dr, b.c + dc)).filter(Boolean);
           const exposed = neighbours.filter(n => n.status === 'void').length;
           if (exposed <= 0) continue;
-          b.exposureAge = (b.exposureAge || 0) + exposed * 0.45 * depthRiskFactor();
-          if (b.exposureAge > 180) b.pillarState = 'critical';
-          else if (b.exposureAge > 130) b.pillarState = 'fractured';
-          else if (b.exposureAge > 82) b.pillarState = 'spalling';
-          else if (b.exposureAge > 42) b.pillarState = 'cracking';
-          if (b.exposureAge > 210 && Math.random() < 0.025) failPillar(b);
+
+          if ((b.pillarState === 'stable' || !b.pillarState) && activeCount >= cfg.maxActive) continue;
+
+          b.exposureAge = (b.exposureAge || 0) + exposed * cfg.rate;
+          const prior = b.pillarState || 'stable';
+          let nextState = 'stable';
+          if (b.exposureAge > cfg.critical) nextState = 'critical';
+          else if (b.exposureAge > cfg.fractured) nextState = 'fractured';
+          else if (b.exposureAge > cfg.spalling) nextState = 'spalling';
+          else if (b.exposureAge > cfg.cracking) nextState = 'cracking';
+
+          if (nextState === 'critical' && prior !== 'critical' && criticalCount >= cfg.maxCritical) nextState = 'fractured';
+          if (prior === 'stable' && nextState !== 'stable') activeCount++;
+          if (prior !== 'critical' && nextState === 'critical') criticalCount++;
+          b.pillarState = nextState;
+
+          if (b.exposureAge > cfg.fail && b.pillarState === 'critical' && Math.random() < cfg.failChance) failPillar(b);
         }
       }
 
@@ -10589,6 +10836,12 @@
           openExplorationRig();
           return;
         }
+        for (const hit of beltHits) {
+          if (inside(x, y, hit)) {
+            openWindow('assets', false, 'Belt / Asset Reliability');
+            return;
+          }
+        }
         for (const hit of blockHits) {
           if (inside(x, y, hit.rect)) {
             const block = blockAt(hit.q, hit.r, hit.c);
@@ -10931,6 +11184,10 @@
         if (action === 'safety-positive') forceSafetyEvent('positive');
 
         if (action === 'pm-random') showRandomProductionComment();
+        if (action === 'geo-reinterpret') {
+          state.lastGeologyReinterpretationDay = -999;
+          if (!triggerGeologyReinterpretationEvent()) showProductionComment('Dev trigger: no eligible explored, unmined blocks are available for reinterpretation.', 'Dev Tools', 5);
+        }
         if (action === 'hr-random') forceCrewBubble();
         if (action === 'hr-belt') {
           addBeltMoanBubble();
@@ -11185,6 +11442,7 @@
                 <p>Force speech bubbles and production manager comments.</p>
                 <div class="devToolBtns">
                   <button data-dev-action="pm-random">Random PM Comment</button>
+                  <button data-dev-action="geo-reinterpret">Geology Reinterpretation</button>
                   <button data-dev-action="hr-random">Random HR Bubble</button>
                   <button data-dev-action="hr-belt">Belt Moan Bubble</button>
                 </div>
@@ -12017,6 +12275,15 @@
         if (choice === 'beltOpportunity') { adjustTrait('morale', -3); adjustTrait('productivity', -2); showProductionComment('The stoppage has been logged as an opportunity. Nobody feels improved.', 'HR'); }
         if (choice === 'beltProperFix') { spend(800, 'Proper belt fix'); adjustTrait('safety', 2); adjustTrait('productivity', 2); state.conveyor.condition = Math.min(100, state.conveyor.condition + 10); }
         if (choice === 'beltResilience') { adjustTrait('morale', -2); adjustTrait('productivity', -3); }
+
+        if (choice === 'comfortReview') { improveMorale(1); spend(450, 'Supervisor comfort review'); adjustTrait('morale', 2); showProductionComment('The supervisor environment has been reviewed. Production remains largely untouched by this improvement.', 'S.H.A.F.T.'); }
+        if (choice === 'remindUnderground') { reduceMorale(1); adjustTrait('morale', -1); adjustTrait('productivity', 1); showProductionComment('The supervisor has been reminded that the mine is underground. This has not improved the air conditioning.', 'S.H.A.F.T.'); }
+        if (choice === 'officialClipboard') { spend(90, 'Official clipboard'); adjustTrait('morale', 1); showProductionComment('A clipboard with appropriate authority has been issued. Compliance optics have improved.', 'S.H.A.F.T.'); }
+        if (choice === 'existingClipboard') { reduceMorale(1); adjustTrait('morale', -1); }
+        if (choice === 'alignmentMeeting') { improveMorale(1); spend(120, 'Alignment meeting'); adjustTrait('productivity', -2); showProductionComment('An alignment meeting has aligned the need for further alignment.', 'S.H.A.F.T.'); }
+        if (choice === 'practicalPrestart') { reduceMorale(1); adjustTrait('productivity', 1); showProductionComment('The pre-start remains practical. The supervisor has recorded this as culturally concerning.', 'Production'); }
+        if (choice === 'clarifyAccountability') { spend(180, 'Accountability clarification'); adjustTrait('safety', 1); showProductionComment('Accountability has been clarified sufficiently to become less useful.', 'S.H.A.F.T.'); }
+        if (choice === 'askSupervisorHelp') { reduceMorale(1); adjustTrait('morale', -2); adjustTrait('productivity', 1); showProductionComment('The supervisor has been asked to help directly. Organisational boundaries have been tested.', 'Production'); }
 
         if (choice === 'ignore') {
           if (s.role === 'fitter' || s.role === 'electrician') wearMachine(2);
