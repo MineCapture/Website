@@ -4163,6 +4163,38 @@
       font-weight: 700;
     }
 
+
+    .pipNotice.moralePenalty {
+      border-color: rgba(248,113,113,0.95);
+      background: linear-gradient(180deg, rgba(127,29,29,0.94), rgba(69,10,10,0.94));
+      color: #fee2e2;
+      box-shadow: 0 0 0 1px rgba(248,113,113,0.26), inset 0 1px rgba(255,255,255,0.08);
+    }
+
+    .pipNotice.moralePenalty strong {
+      color: #fecaca;
+    }
+
+    .researchCard {
+      border: 1px solid rgba(56,189,248,0.28);
+      background: rgba(14,116,144,0.12);
+    }
+
+    .researchProgressBar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+      margin-top: 7px;
+    }
+
+    .researchProgressBar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #38bdf8, #fbbf24);
+    }
+
     @media (max-width: 620px) {
       .annualRatingPanel { grid-template-columns: 1fr; }
       .remoteMachineToggle { font-size: 7px; padding-inline: 5px; }
@@ -6000,6 +6032,12 @@
         gradeRestriction: null,
         hopeSupportEventDoneThisYear: false,
         heatEventDoneThisYear: false,
+        powerOutageDoneThisYear: false,
+        crewAccidentDoneThisYear: false,
+        powerOutage: null,
+        crewAccidents: 0,
+        engineeringResearch: null,
+        researchBonuses: { miningSpeed: 0, maintenance: 0, gradeRecovery: 0, beltReliability: 0, groundControl: 0 },
         lifetimeRevenue: 0,
         lifetimeExpenditure: 0,
         skipFactorTotalTonnes: 0,
@@ -6635,7 +6673,8 @@
       function annualMoraleNoticeHtml() {
         const notice = state.lastMoraleNotice;
         if (!notice || !notice.delta) return '';
-        return `<div class="pipNotice"><strong>${escapeHtml(notice.title)}:</strong> ${escapeHtml(notice.text)} <strong>Morale ${notice.delta > 0 ? '+' : ''}${notice.delta}</strong> (${notice.before} → ${notice.after}).</div>`;
+        const cls = notice.delta < 0 ? 'pipNotice moralePenalty' : 'pipNotice';
+        return `<div class="${cls}"><strong>${escapeHtml(notice.title)}:</strong> ${escapeHtml(notice.text)} <strong>Morale ${notice.delta > 0 ? '+' : ''}${notice.delta}</strong> (${notice.before} → ${notice.after}).</div>`;
       }
 
       function applyAnnualMoraleDecay() {
@@ -6669,7 +6708,8 @@
       }
 
       function skillGradeFactor() {
-        return clamp(0.94 + traitValue('skill') / 100 * 0.12, 0.90, 1.08);
+        const researchBonus = clamp((state.researchBonuses && state.researchBonuses.gradeRecovery) || 0, -0.025, 0.08);
+        return clamp(0.94 + traitValue('skill') / 100 * 0.12 + researchBonus, 0.90, 1.12);
       }
 
       function recoveredGradeForBlock(block) {
@@ -6974,6 +7014,7 @@
           spend(dailyWageCost(), 'Crew salary');
           updateAnnualReviewTriggers();
           expireGradeRestrictionIfNeeded();
+          expirePowerOutageIfNeeded();
           updateExposedPillarsOneDay();
           if (state.day % 16 === 0) showRandomProductionComment();
           if (state.day % 24 === 0) maybeGenerateStaffBubble();
@@ -6987,6 +7028,8 @@
             if (maybeExternalAffairsEvent()) break;
             if (maybeGradeConstraintEvent()) break;
             if (maybeHopeSupportEvent()) break;
+            if (maybePowerOutageEvent()) break;
+            if (maybeCrewAccidentEvent()) break;
             if (maybeHeatVentilationEvent()) break;
           }
           maybeConveyorFault();
@@ -7243,7 +7286,8 @@
         const manager = currentManager();
         const managerMult = manager ? manager.miningSpeedMult : 1;
         const secondMinerMult = 1;
-        return (4.5 + avgSkill * 0.9) * managerMult * productivityFactor() * moraleFactor() * secondMinerMult;
+        const researchBonus = clamp((state.researchBonuses && state.researchBonuses.miningSpeed) || 0, -0.08, 0.22);
+        return (4.5 + avgSkill * 0.9) * managerMult * productivityFactor() * moraleFactor() * secondMinerMult * (1 + researchBonus);
       }
 
       function tramSpeed() {
@@ -7275,7 +7319,8 @@
 
         const safetyWear = clamp(1.15 - traitValue('safety') / 130, 0.45, 1.25);
         const fleetWear = state.assets && state.assets.secondMinerOwned ? 1.12 : 1;
-        const wearRate = 0.16 * riskMult(target.risk) * safetyWear * beltWearFactor(target) * depthRiskFactor() * fleetWear;
+        const maintenanceBonus = clamp((state.researchBonuses && state.researchBonuses.maintenance) || 0, -0.10, 0.24);
+        const wearRate = 0.16 * riskMult(target.risk) * safetyWear * beltWearFactor(target) * depthRiskFactor() * fleetWear * (1 - maintenanceBonus);
         state.machine.condition = Math.max(0, state.machine.condition - wearRate * dt);
 
         if (state.machine.condition < 45 && !state.machine.warnedSmoking) {
@@ -8572,7 +8617,8 @@
         const y = Math.max(1, Number(state.year) || 1);
         const baseChance = y <= 1 ? 0.18 : y === 2 ? 0.22 : y === 3 ? 0.27 : 0.32;
         const conditionChance = state.conveyor.condition < 50 ? 0.10 : 0;
-        if (Math.random() < baseChance + conditionChance) {
+        const beltReliabilityBonus = clamp((state.researchBonuses && state.researchBonuses.beltReliability) || 0, -0.10, 0.25);
+        if (Math.random() < Math.max(0.04, baseChance + conditionChance - beltReliabilityBonus)) {
           triggerConveyorFault(weightedConveyorFaultType());
         } else {
           scheduleNextConveyorFault(18);
@@ -9006,7 +9052,43 @@
         drawMiners();
         drawParticles();
         drawFloatingTexts();
+        drawPowerOutageOverlay();
         updateHud();
+      }
+
+
+      function powerOutageActive() {
+        return !!(state.powerOutage && state.powerOutage.active && (!state.powerOutage.expiresDay || state.day < state.powerOutage.expiresDay));
+      }
+
+      function drawPowerOutageOverlay() {
+        if (!powerOutageActive() || !board) return;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.76)';
+        ctx.fillRect(board.x, board.y, board.w, board.h);
+        ctx.globalAlpha = 0.22 + Math.sin(anim * 7) * 0.06;
+        ctx.fillStyle = '#fef3c7';
+        for (let i = 0; i < 26; i++) {
+          const x = board.x + seeded(i + state.day) * board.w;
+          const y = board.y + seeded(i + 91 + state.day) * board.h;
+          ctx.beginPath();
+          ctx.arc(x, y, 1.2 + seeded(i + 44) * 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = 'rgba(250,204,21,0.65)';
+        ctx.setLineDash([8, 6]);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(board.x + 5, board.y + 5, board.w - 10, board.h - 10);
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#fef3c7';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '900 ' + Math.max(18, board.cell * 0.72) + 'px Arial';
+        ctx.fillText('LIGHTING OUTAGE', board.x + board.w / 2, board.y + board.h / 2);
+        ctx.font = '700 ' + Math.max(10, board.cell * 0.28) + 'px Arial';
+        ctx.fillText('Machines may still be operating. Visibility has submitted a ticket.', board.x + board.w / 2, board.y + board.h / 2 + Math.max(22, board.cell * 0.65));
+        ctx.restore();
       }
 
       function drawBackground() {
@@ -9157,6 +9239,9 @@
 
           if (block.isPillar) {
             ctx.save();
+            ctx.beginPath();
+            ctx.rect(r.x + 0.8, r.y + 0.8, r.w - 1.6, r.h - 1.6);
+            ctx.clip();
             if (block.pillarState === 'critical') {
               ctx.translate(Math.sin(anim * 24 + block.r) * r.w * 0.045, Math.cos(anim * 21 + block.c) * r.h * 0.035);
             }
@@ -10838,6 +10923,56 @@
       }
 
 
+      function levelArrivalDetails(depthIndex = state.depthIndex || 0) {
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        const tonnesPct = Math.round((operatingScaleFactor() - 1) * 100);
+        const gradeText = depth > 0 ? 'The grade model has become more confident because it is now further away from the people checking it.' : 'The grade model remains close enough to be argued with.';
+        if (depth === 1) {
+          return {
+            next: 'miningEngineering',
+            next2: 'groundControl',
+            title: 'Welcome to the -1100 Level',
+            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong> than the starting level. ${gradeText}</p><p>Crews are reporting that pillars are making strange and unusual noises. The Rock Doctor has advised that this is either early ground behaviour or the roof attempting to communicate.</p>`
+          };
+        }
+        if (depth === 2) {
+          return {
+            next: 'survey',
+            title: 'Welcome to the -1200 Level',
+            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>. The SLT has approved higher production expectations and the possibility of a second machine.</p><p>Mine Services has discovered that twice the mining produces twice the material, which unfortunately requires the material to go somewhere.</p>`
+          };
+        }
+        if (depth === 3) {
+          return {
+            title: 'Welcome to the -1300 Level',
+            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>, along with the first signs that the ground has retained water, gas, and a sense of humour.</p><p>Gas and water events may now affect production, safety, morale, and your ability to describe the plan as controlled.</p>`
+          };
+        }
+        if (depth >= 4) {
+          return {
+            next: 'ventilation',
+            title: 'Welcome to the ' + currentLevelName(),
+            body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain roughly <strong>${tonnesPct}% more tonnes</strong>, but crews have started describing the working environment using words normally reserved for soup.</p><p>Heat and ventilation are now strategic. Procurement has identified a desk fan near the winder as the preferred first-stage air movement solution.</p>`
+          };
+        }
+        return {
+          title: 'New Level Opened',
+          body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>. Deeper levels contain more tonnes, more confidence, and more reasons the original plan should have been longer.</p>`
+        };
+      }
+
+      function openLevelArrivalModal() {
+        const details = levelArrivalDetails();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = details.title;
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Decline Development', 'The geology department has confirmed that down continues to be a valid direction.', 'DECL')}
+          <div class="letter"><h2>${escapeHtml(details.title)}</h2>${details.body}</div>
+          <div class="btnRow"><button class="primary" data-level-arrival-continue data-next-intro="${escapeHtml(details.next || '')}" data-next-intro-2="${escapeHtml(details.next2 || '')}">Continue Operational Escalation</button></div>`;
+        $('modalOverlay').classList.add('show');
+      }
+
+
 
       function openDeclineProposal() {
         if (state.declineOfferShown && isModalOpen()) return;
@@ -10848,7 +10983,7 @@
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = 'Geology Depth Proposal';
         $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/geology-rock-lickers.png', 'Geology Department', 'Conference Delegation for Enthusiastic Rock Lickers', 'After attending an informative conference, the geology department has realised that it can drill down as well as sideways.', 'GEO')}
-          <div class="letter"><h2>Decline Investment Proposal</h2><p>After attending an informative conference for enthusiastic rock lickers, the geology department has realised that they can drill down as well as sideways.</p><p>The current map is the <strong>${currentLevelName()}</strong>. The next proposal is to invest in a decline to access the <strong>${state.mineLevel - 100} Level</strong>.</p><p>Deeper levels unlock new systems. -1100 adds ground control, -1200 adds fleet and belt scale-up, -1300 adds gas and water, and -1400 adds heat and ventilation.</p><p><strong>Decline investment:</strong> ${money(scaledCost(DECLINE_INVESTMENT_COST))}</p></div>
+          <div class="letter"><h2>Decline Investment Proposal</h2><p>After attending an informative conference for enthusiastic rock lickers, the geology department has realised that they can drill down as well as sideways.</p><p>The current map is the <strong>${currentLevelName()}</strong>. The next proposal is to invest in a decline to access the <strong>${state.mineLevel - 100} Level</strong>.</p><p>Deeper levels contain more tonnes and precariously promised higher grades, but deeper mining introduces new challenges. Most were known about previously but were not included in the original business case.</p><p>The next level will explain the latest opportunity once the decline has finished converting operating surplus into geological confidence.</p><p><strong>Decline investment:</strong> ${money(scaledCost(DECLINE_INVESTMENT_COST))}</p></div>
           <div class="btnRow"><button class="primary" data-invest-decline>Invest in decline</button><button data-close-decline>Defer geology enthusiasm</button></div>`;
         $('modalOverlay').classList.add('show');
       }
@@ -10891,18 +11026,9 @@
         resetMineForNewDepth();
         setModalClosable(true);
         $('modalOverlay').classList.remove('show');
-        state.paused = false;
-        if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
-        pushQueueEvent({
-          tone: 'info',
-          icon: '↓',
-          label: 'DECL',
-          image: 'assets/characters/geology-rock-lickers.png',
-          character: 'Geology Department',
-          department: 'Decline Development',
-          title: currentLevelName() + ' Opened',
-          body: `<p>The decline has reached the <strong>${currentLevelName()}</strong>. The geology department has confirmed that down is a valid direction.</p><p>New level mechanics are now active according to depth: ground control at -1100, second-machine logistics at -1200, gas and water at -1300, and heat/ventilation at -1400.</p>`
-        });
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        openLevelArrivalModal();
         showProductionComment(currentLevelName() + ' is now available. Exploration has reset to a fresh level of optimism.', 'Geology');
       }
 
@@ -11067,92 +11193,134 @@
         return Math.max(0, actual * skillGradeFactor());
       }
 
-      function engineeringResearchEvents() {
+      function engineeringResearchOptions() {
         return [
-          { title: 'New Cutter Pick Trial', tone: 'good', icon: '⚙', label: 'ENG', body: '<p>The Mining Engineer has identified a new cutter pick pattern. Cutting speed improves, but crews take longer to change them because the box says innovation.</p><p><strong>Impact:</strong> +4 Productivity, -2 Morale, -£1,200.</p>', apply: () => { adjustTrait('productivity', 4); adjustTrait('morale', -2); spend(1200, 'Engineering pick trial'); } },
-          { title: 'Utilisation Report', tone: 'warning', icon: '📋', label: 'ENG', body: '<p>The Mining Engineering Department reports continuous miner utilisation is 20%. This does not account for belt availability, maintenance, tramming, access, or the belt being stopped.</p><p><strong>Impact:</strong> -5 Morale.</p>', apply: () => adjustTrait('morale', -5) },
-          { title: 'Pillar Optimisation Memo', tone: 'warning', icon: '⛏', label: 'ENG', body: '<p>A pillar optimisation study has identified recoverable value in the ground currently holding the mine open.</p><p><strong>Impact:</strong> +2 Productivity, -3 Safety.</p>', apply: () => { adjustTrait('productivity', 2); adjustTrait('safety', -3); } },
-          { title: 'Belt Capacity Model', tone: 'good', icon: '↻', label: 'ENG', body: '<p>The Mining Engineer has modelled belt capacity and concluded that moving material requires the belt to be available. This is technically a finding.</p><p><strong>Impact:</strong> +2 Skill, +5 Conveyor condition.</p>', apply: () => { adjustTrait('skill', 2); state.conveyor.condition = Math.min(100, state.conveyor.condition + 5); } },
-          { title: 'Sequence Improvement Workshop', tone: 'info', icon: '📈', label: 'ENG', body: '<p>A workshop has aligned the plan with the plan. The crew remains unconvinced but the arrows are cleaner.</p><p><strong>Impact:</strong> +2 Skill, -1 Productivity.</p>', apply: () => { adjustTrait('skill', 2); adjustTrait('productivity', -1); } }
+          { key: 'cutting', title: 'Mining Machine Techniques', cost: 8500, days: 42, field: 'miningSpeed', good: 0.06, desc: 'Study improved cutting technique to reduce the time required to mine each block.', goodText: 'Mining time per block reduced by 6%.', badText: 'The proposed technique mostly increases cutter wear and confidence.' },
+          { key: 'maintenance', title: 'Preventative Maintenance Review', cost: 7200, days: 38, field: 'maintenance', good: 0.08, desc: 'Review maintenance routines before they become breakdown stories.', goodText: 'Machine wear reduced by 8%.', badText: 'The review recommends more inspections, slightly reducing productivity.' },
+          { key: 'processing', title: 'Mineral Processing Improvement', cost: 9400, days: 50, field: 'gradeRecovery', good: 0.015, desc: 'Investigate whether recovered Goldilocks Grade can be improved by process optimism.', goodText: 'Recovered grade improved by 1.5 percentage points of recovery factor.', badText: 'The plant has responded by introducing a stricter feed restriction.' },
+          { key: 'belt', title: 'Belt Logistics Study', cost: 6800, days: 35, field: 'beltReliability', good: 0.08, desc: 'Review why material that has been mined still insists on needing transport.', goodText: 'Belt fault probability reduced by 8%.', badText: 'The study identifies logistics as a people problem. Morale has suffered.' },
+          { key: 'ground', title: 'Ground-Control Method Review', cost: 7800, days: 46, field: 'groundControl', good: 0.08, desc: 'Review support practice, pillar behaviour, and how often the roof appears to be negotiating.', goodText: 'Pillar deterioration slowed by 8%.', badText: 'The Rock Doctor has identified further concerns previously hidden by optimism.' }
         ];
       }
 
-      function triggerEngineeringResearch() {
+      function engineeringResearchEvents() {
+        return [
+          { title: 'Mining Engineering Note', text: 'Engineering has reviewed the mining sequence and confirmed that the plan looks precise enough to be blamed later.', traits: { skill: 1 }, cost: 0 },
+          { title: 'Design Clarification', text: 'Engineering has converted geological uncertainty into a line with two decimal places. Confidence has increased in the drawing, if not the ground.', traits: { skill: 1, productivity: -1 }, cost: 250 },
+          { title: 'Method Improvement', text: 'The Mining Engineer has found a small improvement in how the machine approaches the cut. Operators have described it as obvious in retrospect.', traits: { productivity: 2 }, cost: 500 }
+        ];
+      }
+
+      function engineeringResearchPanelHtml() {
+        if (!featureUnlocked('technicalTeam')) return '';
         const eng = miningEngineerOnCrew();
-        if (!eng) return;
+        if (!eng) {
+          return `<section class="crewRoleSection researchCard"><div class="crewRoleHeader"><h3>Mining Engineering Research</h3><span>Requires Mining Engineer</span></div><p>Research becomes available once a Mining Engineer is present to convert budget into recommendations.</p></section>`;
+        }
+        const active = state.engineeringResearch;
+        const bonus = state.researchBonuses || {};
+        if (active) {
+          const pct = clamp((active.progress || 0) / Math.max(1, active.days) * 100, 0, 100);
+          return `<section class="crewRoleSection researchCard"><div class="crewRoleHeader"><h3>Mining Engineering Research</h3><span>${escapeHtml(active.title)}</span></div>
+            <p>${escapeHtml(active.desc || 'Research in progress.')}</p>
+            <div class="researchProgressBar"><span style="width:${pct.toFixed(0)}%"></span></div>
+            <p><strong>Progress:</strong> ${pct.toFixed(0)}% · Engineer skill ${eng.skill || 3}/5.</p>
+          </section>`;
+        }
+        const rows = engineeringResearchOptions().map(opt => `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>${escapeHtml(opt.title)}</strong><span>${escapeHtml(opt.desc)} Cost ${money(scaledCost(opt.cost))}. Duration ${opt.days} days.</span></div><button data-start-engineering-research="${opt.key}">Start</button></div>`).join('');
+        return `<section class="crewRoleSection researchCard"><div class="crewRoleHeader"><h3>Mining Engineering Research</h3><span>Budget into possible improvement</span></div>
+          <p>Engineering studies take time, cost money, and resolve by skill plus roll. Success produces operational benefit. Failure produces a report.</p>
+          <div class="rows">${rows}</div>
+          <p>Current bonuses: Mining ${(100 * (bonus.miningSpeed || 0)).toFixed(0)}% · Wear ${(100 * (bonus.maintenance || 0)).toFixed(0)}% · Grade ${(100 * (bonus.gradeRecovery || 0)).toFixed(1)}% · Belt ${(100 * (bonus.beltReliability || 0)).toFixed(0)}% · Ground ${(100 * (bonus.groundControl || 0)).toFixed(0)}%.</p>
+        </section>`;
+      }
+
+      function startEngineeringResearch(key) {
+        if (!featureUnlocked('technicalTeam')) { openMiniWindow('Research Not Authorised', '<p>Mining Engineering research unlocks when the mine reaches the ground-control phase.</p>', true); return false; }
+        const eng = miningEngineerOnCrew();
+        if (!eng) { openMiniWindow('Mining Engineer Missing', '<p>Research requires a Mining Engineer, because someone must add decimal places to the obvious.</p>', true); return false; }
+        if (state.engineeringResearch) { openMiniWindow('Research Already In Progress', '<p>The Mining Engineer is already converting budget into a recommendation.</p>', true); return false; }
+        const opt = engineeringResearchOptions().find(x => x.key === key) || randomItem(engineeringResearchOptions());
+        spend(opt.cost, 'Engineering research');
+        state.engineeringResearch = { ...opt, progress: 0, startedDay: state.day };
+        openOperationalEventModal({
+          title: 'Mining Engineering Study',
+          image: 'assets/characters/mining-engineer.png',
+          character: 'Mining Engineer',
+          department: 'Precision Applied to Uncertainty',
+          label: 'ENG',
+          tone: 'info',
+          body: `<p>The Mining Engineer proposes a study into <strong>${escapeHtml(opt.title)}</strong>.</p><p>${escapeHtml(opt.desc)}</p><p>The study will take <strong>${opt.days} days</strong>, cost <strong>${money(scaledCost(opt.cost))}</strong>, and may improve operations if the ground agrees with the spreadsheet.</p><p>Geology has asked whether the study accounts for variable ground. Engineering has replied with a decimal place.</p>`,
+          button: 'Authorise the Decimal Places'
+        });
+        return true;
+      }
+
+      function completeEngineeringResearch() {
+        const active = state.engineeringResearch;
+        const eng = miningEngineerOnCrew();
+        if (!active || !eng) { state.engineeringResearch = null; return; }
+        const skill = clamp(Number(eng.skill) || 3, 1, 5);
+        const roll = Math.random();
+        const successChance = clamp(0.28 + skill * 0.10, 0.35, 0.78);
+        const backfireChance = clamp(0.22 - skill * 0.025, 0.08, 0.18);
+        let title = 'Research Completed';
+        let body = '';
+        let tone = 'info';
+
+        if (roll < successChance) {
+          state.researchBonuses = state.researchBonuses || { miningSpeed: 0, maintenance: 0, gradeRecovery: 0, beltReliability: 0, groundControl: 0 };
+          state.researchBonuses[active.field] = clamp((state.researchBonuses[active.field] || 0) + active.good, -0.15, active.field === 'gradeRecovery' ? 0.05 : 0.30);
+          title = 'Research Useful, Somehow';
+          tone = 'positive';
+          body = `<p>The Mining Engineer has completed the <strong>${escapeHtml(active.title)}</strong> study and produced a recommendation that appears useful.</p><p><strong>Outcome:</strong> ${escapeHtml(active.goodText)}</p><p>Production has agreed to implement the finding immediately, before anyone can request a steering committee.</p>`;
+        } else if (roll > 1 - backfireChance) {
+          title = 'Research Completed, Harmfully';
+          tone = 'warning';
+          if (active.key === 'cutting') { state.machine.condition = Math.max(0, state.machine.condition - 10); if (state.machine2) state.machine2.condition = Math.max(0, (state.machine2.condition || 78) - 6); }
+          if (active.key === 'maintenance') adjustTrait('productivity', -2);
+          if (active.key === 'processing') { state.gradeConstraintEventDoneThisYear = false; applyGradeConstraintEvent(gradeConstraintEvents()[2] || randomItem(gradeConstraintEvents())); }
+          if (active.key === 'belt') adjustTrait('morale', -2);
+          if (active.key === 'ground') { adjustTrait('safety', -2); state.rockDoctorConcern = (state.rockDoctorConcern || 0) + 1; }
+          body = `<p>The Mining Engineer has completed the <strong>${escapeHtml(active.title)}</strong> study.</p><p><strong>Outcome:</strong> ${escapeHtml(active.badText)}</p><p>The report is technically complete and therefore successful.</p>`;
+        } else {
+          title = 'Research Confirms Existing Practice';
+          body = `<p>The Mining Engineer has completed the <strong>${escapeHtml(active.title)}</strong> study.</p><p>The study has confirmed that the current method is broadly adequate, which is not the same as helpful.</p><p>No measurable benefit has been identified, but the appendix is extremely confident.</p>`;
+        }
+        state.engineeringResearch = null;
+        openOperationalEventModal({ title, image: 'assets/characters/mining-engineer.png', character: 'Mining Engineer', department: 'Applied Recommendations', label: 'ENG', tone, body, button: 'File the Report' });
+      }
+
+      function triggerEngineeringResearch() {
         const list = engineeringResearchEvents();
         const event = list[Math.floor(Math.random() * list.length)];
-        if (event.apply) event.apply();
-        pushQueueEvent({ tone: event.tone, icon: event.icon, label: event.label, title: event.title, body: `<p><strong>${eng.name} — ${roleName(eng.role)}</strong></p>${event.body}` });
-      }
-
-
-
-      function secondMinerUnlocked() {
-        return featureUnlocked('secondMiner');
-      }
-
-      function buySecondMiner() {
-        if (!secondMinerUnlocked()) {
-          openMiniWindow('Second Miner Not Yet Authorised', '<p>A second continuous miner becomes available on the -1200 Level, once the operation has enough scale to justify multiplying confusion.</p>', true);
-          return;
-        }
-        if (state.assets.secondMinerOwned) {
-          openMiniWindow('Second Miner Already Active', '<p>The second mining unit is already contributing to production, maintenance demand, and general misunderstanding.</p>', true);
-          return;
-        }
-        spend(SECOND_MINER_PURCHASE_COST, 'Second continuous miner');
-        state.assets.secondMinerOwned = true;
-        state.machine2.q = MINE_ID;
-        state.machine2.r = START_ROW;
-        state.machine2.c = Math.min(MINE_COLS - 1, START_COL + 1);
-        state.machine2.status = 'idle';
-        state.machine2.dir = 'up';
-        state.activeMachine = 'miner2';
-        adjustTrait('productivity', 4);
-        adjustTrait('safety', -2);
-        pushQueueEvent({
-          tone: 'warning',
-          icon: 'CM2',
-          label: 'CM2',
+        spend(event.cost || 0, 'Engineering review');
+        for (const [trait, delta] of Object.entries(event.traits || {})) adjustTrait(trait, delta);
+        openOperationalEventModal({
+          title: event.title,
           image: 'assets/characters/mining-engineer.png',
-          character: 'Mining Engineering Department',
-          department: 'Fleet Multiplication',
-          title: 'Second Miner Commissioned',
-          body: '<p>A second mining unit has been authorised and placed on the board as <strong>2ndHOPE</strong>. The original miner is now <strong>1stHOPE</strong>.</p><p>Use the HOPE remote toggle to switch between 1stHOPE, 2ndHOPE, and the bolter.</p><p><strong>Impact:</strong> +4 Productivity, -2 Safety. Actual second-machine output is available, while random fleet-chaos events become possible.</p>'
-        });
-        openWindow('assets');
-      }
-
-      function updateSecondMinerChaos(dt) {
-        if (!state.assets || !state.assets.secondMinerOwned || !state.running || state.paused) return;
-        state.secondMinerChaosTimer += dt;
-        if (state.secondMinerChaosTimer < 55) return;
-        state.secondMinerChaosTimer = 0;
-        if (Math.random() > 0.36) return;
-        const cost = 1100 + Math.round((state.depthIndex || 0) * 550);
-        spend(cost, 'Second miner coordination');
-        adjustTrait('morale', -1);
-        pushQueueEvent({
-          tone: 'warning',
-          icon: 'CM2',
-          label: 'CM2',
-          image: 'assets/characters/mining-engineer.png',
-          character: 'Mining Engineering Department',
-          department: 'Fleet Coordination',
-          title: 'Second Miner Coordination Issue',
-          body: `<p>The second miner has increased production potential and also the number of people asking which machine the plan meant.</p><p><strong>Impact:</strong> -1 Morale, ${money(scaledCost(cost))} coordination cost.</p>`
+          character: 'Mining Engineer',
+          department: 'Technical Services Precision Unit',
+          label: 'ENG',
+          tone: 'info',
+          body: `<p>${escapeHtml(event.text)}</p><p><strong>Impact:</strong> ${(event.cost || 0) ? money(scaledCost(event.cost)) + ' cost. ' : ''}${Object.entries(event.traits || {}).map(([k,v]) => (v > 0 ? '+' : '') + v + ' ' + traitLabel(k)).join(' · ') || 'No measurable impact, but a drawing was revised.'}</p>`,
+          button: 'Accept Technical Clarification'
         });
       }
 
       function updateEngineeringResearch(dt) {
         const eng = miningEngineerOnCrew();
         if (!featureUnlocked('technicalTeam') || !eng || !state.running || state.paused) return;
+        if (state.engineeringResearch) {
+          state.engineeringResearch.progress = (state.engineeringResearch.progress || 0) + dt * DAYS_PER_REAL_SECOND;
+          if (state.engineeringResearch.progress >= state.engineeringResearch.days) completeEngineeringResearch();
+          return;
+        }
         state.engineeringTimer += dt;
-        const interval = interpolate(clamp(eng.skill || 3, 1, 5), 1, 80, 5, 45);
+        const interval = interpolate(clamp(eng.skill || 3, 1, 5), 1, 155, 5, 105);
         if (state.engineeringTimer >= interval) {
           state.engineeringTimer = 0;
-          if (Math.random() < 0.65) triggerEngineeringResearch();
+          if (Math.random() < 0.28) triggerEngineeringResearch();
         }
       }
 
@@ -11403,6 +11571,20 @@
         }
       }
 
+      function annualSuccessRecognitionHtml(year) {
+        const y = Math.max(1, Number(year) || 1);
+        const rewards = [
+          { max: 1, bonus: 50000, slt: 'a leadership bonus, revised titles, and a modest offsite in a room with windows', player: 'a 0.5% pay rise, subject to payroll interpretation' },
+          { max: 2, bonus: 85000, slt: 'a leadership bonus and a premium coffee machine with a grinder nobody is authorised to clean', player: 'a 0.6% pay rise and access to the old kettle' },
+          { max: 3, bonus: 140000, slt: 'ergonomic executive chairs, a leadership bonus, and a refreshed strategic colour palette', player: 'a 0.7% pay rise, rounded down for affordability' },
+          { max: 4, bonus: 250000, slt: 'a strategy away session, luxury office chairs, and a leadership performance award', player: 'a £15 voucher redeemable against approved wellbeing materials' },
+          { max: 5, bonus: 400000, slt: 'a Cayman Islands leadership retreat to discuss domestic critical mineral resilience', player: 'a deferred 0.8% pay rise pending continued resilience' },
+          { max: 999, bonus: 650000, slt: 'a Value Creation Incentive Scheme, upgraded office plants, consultancy support, and another coffee machine', player: 'a branded notebook and the opportunity to remain accountable' }
+        ];
+        const r = rewards.find(x => y <= x.max) || rewards[rewards.length - 1];
+        return `<div class="pipNotice"><strong>Leadership recognition:</strong> The SLT is pleased to confirm that your operational delivery has validated their strategic direction. In recognition of Year ${y} success, the SLT has awarded itself <strong>${money(r.bonus)}</strong> for ${escapeHtml(r.slt)}. You have been awarded ${escapeHtml(r.player)}.</div>`;
+      }
+
       function openAnnualPerformanceReview(rating, fired) {
         pauseMusicForFormalModal();
         setModalClosable(false);
@@ -11424,7 +11606,7 @@
           ? `<button class="primary" data-accept-reassignment>Accept Reassignment</button>${pleadButton}`
           : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>${pleadButton}`;
         const successRecognitionHtml = rating === 'successful'
-          ? `<div class="pipNotice"><strong>Leadership recognition:</strong> The SLT is pleased to confirm that your operational delivery has validated their strategic direction. In recognition of this success, the SLT has awarded itself a performance bonus, revised titles, and a leadership offsite. You have been awarded a pay rise of 0.6%, subject to payroll alignment, affordability, and whether the form survives Finance.</div>`
+          ? annualSuccessRecognitionHtml(state.year)
           : '';
 
         $('modalBody').innerHTML = `
@@ -11718,6 +11900,9 @@
         state.gradeConstraintEventDoneThisYear = false;
         state.hopeSupportEventDoneThisYear = false;
         state.heatEventDoneThisYear = false;
+        state.powerOutageDoneThisYear = false;
+        state.crewAccidentDoneThisYear = false;
+        state.powerOutage = null;
         state.trainingEventsThisYear = 0;
         if (state.gradeRestriction && state.gradeRestriction.expiresDay <= state.day) state.gradeRestriction = null;
         state.annualTargets = targetsForYear(state.year);
@@ -11833,6 +12018,7 @@
         if (!featureUnlocked('groundSupport')) return;
         const blocks = state.blocks[MINE_ID] || [];
         const cfg = pillarDeteriorationSettings();
+        cfg.rate *= (1 - clamp((state.researchBonuses && state.researchBonuses.groundControl) || 0, -0.10, 0.25));
         let activeCount = blocks.filter(b => b.isPillar && !b.support && b.pillarState && !['stable', 'supported', 'failed'].includes(b.pillarState)).length;
         let criticalCount = blocks.filter(b => b.isPillar && !b.support && b.pillarState === 'critical').length;
 
@@ -12908,14 +13094,13 @@
       }
 
       function devAdvanceToNextLevel() {
-        state.declineOfferShown = false;
         state.depthIndex = (state.depthIndex || 0) + 1;
         state.mineLevel = -1000 - state.depthIndex * 100;
         state.declineInvestments = (state.declineInvestments || 0) + 1;
         resetMineForNewDepth();
-        state.paused = false;
-        if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
-        openMiniWindow('Dev: Next Level', '<p>Advanced to <strong>' + escapeHtml(currentLevelName()) + '</strong>. Mechanics now follow the new depth.</p>', true);
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        openLevelArrivalModal();
       }
 
       function devExploreToTransition() {
@@ -12991,6 +13176,135 @@
       }
 
 
+      function expirePowerOutageIfNeeded() {
+        if (!state.powerOutage || !state.powerOutage.active) return;
+        if (state.powerOutage.expiresDay && state.day >= state.powerOutage.expiresDay) {
+          state.powerOutage.active = false;
+          showProductionComment('Lighting has been restored. Electrical has confirmed that darkness was not a sustainable operating model.', 'Electrical Department', 6);
+        }
+      }
+
+      function triggerPowerOutageEvent(force = false) {
+        if (!force) {
+          if (state.powerOutageDoneThisYear || powerOutageActive() || state.day - (state.lastPowerOutageDay || -999) < 55) return false;
+        }
+        state.powerOutageDoneThisYear = true;
+        state.lastPowerOutageDay = state.day;
+        const duration = 10 + Math.floor(Math.random() * 14);
+        state.powerOutage = { active: true, startDay: state.day, expiresDay: state.day + duration };
+        adjustTrait('safety', -3);
+        adjustTrait('morale', -2);
+        openOperationalEventModal({
+          title: 'Power Outage — Lighting Circuit',
+          image: 'assets/characters/electrical-outage.png',
+          character: 'Electrical Department',
+          department: 'Selective Power Availability',
+          label: 'PWR',
+          tone: 'danger',
+          body: `<p>The underground lighting circuit has tripped.</p><p>Maintenance has confirmed that the machines still have power, which is reassuring from a production perspective and less reassuring from every other perspective.</p><p>Visibility has been reduced for approximately <strong>${duration} days</strong>. Machines may continue operating in the dark because lights and consequences are apparently on different circuits.</p><p><strong>Impact:</strong> -3 Safety, -2 Morale. Use Assets to restore lighting early if an Electrician is available.</p>`,
+          button: 'Continue in Reduced Visibility'
+        });
+        return true;
+      }
+
+      function maybePowerOutageEvent() {
+        if (!state.running || state.paused || state.levelComplete || state.depthIndex < 1) return false;
+        const chance = clamp(0.05 + (state.depthIndex || 0) * 0.018 + (traitValue('safety') < 55 ? 0.03 : 0), 0.04, 0.14);
+        if (Math.random() > chance) return false;
+        return triggerPowerOutageEvent(false);
+      }
+
+      function restoreLighting() {
+        if (!powerOutageActive()) { openMiniWindow('Lighting Already Available', '<p>The lights are currently on. This is statistically suspicious but operationally helpful.</p>', true); return; }
+        const spark = crewByRole('electrician');
+        if (!spark) { openMiniWindow('Electrician Required', '<p>Lighting restoration requires an Electrician. Production has been asked not to solve this with a headlamp and confidence.</p>', true); return; }
+        const cost = 900;
+        spend(cost, 'Lighting restoration');
+        state.powerOutage.active = false;
+        adjustTrait('safety', 1);
+        showProductionComment('Lighting restored. Electrical has recorded the repair as temporary, which is the most permanent category available.', 'Electrical Department', 6);
+        openWindow('assets');
+      }
+
+      function crewAccidentTemplates() {
+        return [
+          { role: 'supervisor', text: '{name} has strained their calf after briefly considering standing up and leaving the meeting station. The incident has been classified as work-related because the thought occurred during paid time.' },
+          { role: 'miner', text: '{name} has reported wrist discomfort after aggressively pointing at the belt and explaining that it was definitely the belt.' },
+          { role: 'electrician', text: '{name} has suffered a minor pride injury after the fault fixed itself before they arrived.' },
+          { role: 'fitter', text: '{name} has trapped a finger in a toolbox while demonstrating why apprentices should not touch his tools.' },
+          { role: null, text: '{name} has experienced meeting-station fatigue after prolonged exposure to laminated action plans.' }
+        ];
+      }
+
+      function triggerCrewAccidentEvent(force = false) {
+        if (!state.staff || !state.staff.length) return false;
+        if (!force && (state.crewAccidentDoneThisYear || state.day - (state.lastCrewAccidentDay || -999) < 65)) return false;
+        const templates = crewAccidentTemplates();
+        let template = randomItem(templates);
+        let staff = template.role ? state.staff.filter(s => s.role === template.role) : [];
+        if (!staff.length) { template = randomItem(templates.filter(t => !t.role)); staff = state.staff; }
+        const person = randomItem(staff);
+        state.crewAccidentDoneThisYear = true;
+        state.lastCrewAccidentDay = state.day;
+        state.pendingCrewAccident = { staffId: person.id, text: template.text.replace('{name}', person.name), name: person.name };
+        openOperationalEventModal({
+          title: 'Crew Accident Report',
+          image: portraitPath(person) || 'assets/characters/safety-standdown.png',
+          character: person.name,
+          department: 'Incident Classification and Blame Identification',
+          label: 'ACC',
+          tone: 'warning',
+          body: `<p>${escapeHtml(state.pendingCrewAccident.text)}</p><p>The incident requires a management response before it becomes a statistic with a more expensive name.</p><div class="gridCards">
+            <button class="eventChoiceBtn" data-crew-accident-choice="investigate"><strong>Perform Investigation to Find Blame</strong><span>Improve procedure, reduce goodwill, and identify the nearest accountable person.</span></button>
+            <button class="eventChoiceBtn negative" data-crew-accident-choice="hide"><strong>Try to Hide It</strong><span>No immediate cost, unless the hidden thing becomes visible.</span></button>
+            <button class="eventChoiceBtn" data-crew-accident-choice="pay"><strong>Pay for Their Silence</strong><span>Resolve the human element through discretionary support.</span></button>
+            <button class="eventChoiceBtn positive" data-crew-accident-choice="medical"><strong>Send Them to Medical</strong><span>Do the correct thing, which is expensive and inconvenient.</span></button>
+          </div>`,
+          button: 'Delay Decision'
+        });
+        return true;
+      }
+
+      function maybeCrewAccidentEvent() {
+        if (!state.running || state.paused || state.levelComplete || !state.staff.length) return false;
+        const chance = clamp(0.04 + (100 - traitValue('safety')) * 0.0007 + (100 - traitValue('morale')) * 0.00035, 0.035, 0.12);
+        if (Math.random() > chance) return false;
+        return triggerCrewAccidentEvent(false);
+      }
+
+      function resolveCrewAccidentChoice(choice) {
+        const ev = state.pendingCrewAccident || {};
+        let title = 'Accident Response Logged';
+        let body = '';
+        if (choice === 'investigate') {
+          spend(1200, 'Accident investigation');
+          adjustTrait('safety', 2); adjustTrait('morale', -2); adjustTrait('productivity', -1);
+          body = '<p>An investigation has been performed to find blame. Corrective actions have been issued to people who were easiest to invite.</p><p><strong>Impact:</strong> +2 Safety, -2 Morale, -1 Productivity, investigation cost.</p>';
+        } else if (choice === 'hide') {
+          if (Math.random() < 0.35) {
+            spend(5200, 'Hidden incident escalation');
+            adjustTrait('safety', -6); adjustTrait('morale', -4);
+            state.hseInspectionDoneThisYear = false;
+            title = 'Incident Became Visible';
+            body = '<p>The attempt to hide the incident has failed after someone used the phrase “hypothetically reportable” in an email.</p><p><strong>Impact:</strong> major budget cost, -6 Safety, -4 Morale, increased inspection risk.</p>';
+          } else {
+            adjustTrait('safety', -2);
+            body = '<p>The incident has been hidden successfully for now. Safety has decreased because reality remains undefeated.</p><p><strong>Impact:</strong> -2 Safety.</p>';
+          }
+        } else if (choice === 'pay') {
+          spend(3200, 'Discretionary silence support');
+          adjustTrait('morale', 1); adjustTrait('safety', -1);
+          body = '<p>Discretionary support has been provided. The employee is quieter, the process is not safer, and Finance has asked for a less descriptive cost code.</p><p><strong>Impact:</strong> +1 Morale, -1 Safety, budget cost.</p>';
+        } else {
+          spend(1600, 'Medical response');
+          adjustTrait('safety', 3); adjustTrait('productivity', -2);
+          body = '<p>The crew member has been sent to medical. This was the correct decision and therefore has created operational inconvenience.</p><p><strong>Impact:</strong> +3 Safety, -2 Productivity, medical cost.</p>';
+        }
+        state.crewAccidents = (state.crewAccidents || 0) + 1;
+        state.pendingCrewAccident = null;
+        openOperationalEventModal({ title, image: 'assets/characters/safety-standdown.png', character: 'Incident Review', department: 'Accident Response', label: 'ACC', tone: 'warning', body, button: 'Return to Managed Risk' });
+      }
+
       function forceHeatVentilationEvent() {
         if (state.depthIndex < 4) { state.depthIndex = 4; state.mineLevel = -1400; }
         state.heatEventDoneThisYear = true;
@@ -13042,6 +13356,14 @@
         if (action === 'grade-constraint') { state.gradeConstraintEventDoneThisYear = false; applyGradeConstraintEvent(randomItem(gradeConstraintEvents())); return; }
         if (action === 'hope-support') { state.hopeSupportEventDoneThisYear = false; state.year = Math.max(2, state.year); const key = state.assets && state.assets.secondMinerOwned && Math.random() < 0.5 ? 'miner2' : 'miner1'; const miner = minerStateForKey(key); const label = key === 'miner2' ? '2ndHOPE' : '1stHOPE'; if (miner && (miner.status === 'mining' || miner.status === 'tramming')) runWithMinerContext(miner, () => stopAutoMining(label + ' has stopped for a HOPE software support intervention.', 'Vendor Support')); if (miner) miner.condition = Math.max(0, (miner.condition || 80) - 8); const cost = scaledCost(2400 + (state.assets && state.assets.secondMinerOwned ? 900 : 0)); spend(cost, 'HOPE software support'); openOperationalEventModal({ title: 'HOPE: It’s Our Strategy', image: 'assets/characters/hope-support-engineer.png', character: 'HOPE Support Engineers', department: 'Vendor Strategy and Rollback Services', label: 'HOPE', tone: 'warning', body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p>`, button: 'Acknowledge the Strategy' }); return; }
         if (action === 'heat-event') { forceHeatVentilationEvent(); return; }
+        if (action === 'power-outage') { state.powerOutageDoneThisYear = false; triggerPowerOutageEvent(true); return; }
+        if (action === 'crew-accident') { state.crewAccidentDoneThisYear = false; triggerCrewAccidentEvent(true); return; }
+        if (action === 'eng-study') {
+          if (!miningEngineerOnCrew()) state.staff.push({ ...technicalCrewPool.find(c => c.role === 'miningEngineer'), bubble: null });
+          state.engineeringResearch = null;
+          startEngineeringResearch(randomItem(engineeringResearchOptions()).key);
+          return;
+        }
         if (action === 'hr-training') { forceCrewBubbleForRole(null, 'trainingRequest'); return; }
         if (action === 'hr-supervisor') { forceCrewBubbleForRole('supervisor'); return; }
         if (action === 'explore-transition') { devExploreToTransition(); return; }
@@ -13214,7 +13536,7 @@
         return null;
       }
 
-      function openRoleUnlockIntro(key, customTitle = null) {
+      function openRoleUnlockIntro(key, customTitle = null, nextKey = null) {
         const intro = roleIntroContent(key);
         if (!intro) return false;
         if (!state.roleIntroShown) state.roleIntroShown = {};
@@ -13223,9 +13545,12 @@
         setModalClosable(true);
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = customTitle || intro.title;
+        const btn = nextKey
+          ? `<button class="primary" data-open-role-intro="${escapeHtml(nextKey)}">Continue to Next Explanation</button>`
+          : `<button class="primary" data-window="hr">${escapeHtml(intro.button || 'Proceed to Recruitment')}</button>`;
         $('modalBody').innerHTML = modalCharacterHtml(intro.image, intro.character, intro.department, 'A new department has arrived to define what success would have looked like if requested earlier.', intro.initials)
           + intro.body
-          + `<div class="btnRow"><button class="primary" data-window="hr">${escapeHtml(intro.button || 'Proceed to Recruitment')}</button></div>`;
+          + `<div class="btnRow">${btn}</div>`;
         $('modalOverlay').classList.add('show');
         return true;
       }
@@ -13364,11 +13689,13 @@
               <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Belt Head</strong><span>${beltHead}. Next extension target: ${beltNext}. ${beltUnlocked ? beltStatus.reason : 'Belt advancement unlocks on the -1200 Level after scale-up discovers distance.'}</span></div><span class="tag">${beltUnlocked ? money(scaledCost(BELT_EXTENSION_COST)) : '-1200'}</span></div>
               <div class="row"><div class="avatarDot" style="background:${surveyor ? '#22c55e' : '#ef4444'}"></div><div><strong>Surveyor</strong><span>${surveyor ? surveyor.name + ' · Skill ' + surveyor.skill + '/5' : 'Required for belt advancement from the -1200 Level.'}</span></div><span class="tag">${surveyor ? 'Assigned' : 'Missing'}</span></div>
               <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Required Response</strong><span>${state.conveyor.status === 'running' ? 'No immediate action required. This is suspicious.' : conveyorInfo.action + ' · Required: ' + roleName(conveyorInfo.role)}</span></div><span class="tag">${state.conveyor.status === 'running' ? 'Available' : money(scaledCost(conveyorInfo.cost))}</span></div>
+              ${powerOutageActive() ? `<div class="row"><div class="avatarDot" style="background:#111827"></div><div><strong>Lighting Outage</strong><span>Blocks and machines are hidden because the lighting circuit is selective about responsibility.</span></div><span class="tag">${money(scaledCost(900))}</span></div>` : ''}
               ${state.conveyor.status === 'maintenance' ? `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Intervention Progress</strong><span>${Math.round(state.conveyor.progress)}%</span></div><span class="tag">${conveyorWorker ? conveyorWorker.name : 'Searching'}</span></div>` : ''}
             </div>
             <p>If the conveyor stops, the miner stops automatically. Production describes this as a dependency; Finance describes it as proof that one belt was too many.</p>
             <div class="btnRow">
               <button class="primary" data-conveyor-fix ${state.conveyor.status === 'stopped' && conveyorWorker ? '' : 'disabled'}>${state.conveyor.status === 'stopped' ? conveyorInfo.action + ' (' + money(scaledCost(conveyorInfo.cost)) + ')' : state.conveyor.status === 'maintenance' ? 'Intervention in Progress' : 'Conveyor Running'}</button>
+              <button class="primary" data-restore-lighting ${powerOutageActive() && crewByRole('electrician') ? '' : 'disabled'}>Restore Lighting · ${money(scaledCost(900))}</button>
               <button class="primary" data-belt-extend ${beltUnlocked && surveyor && beltStatus.canExtend ? '' : 'disabled'}>Extend Belt Line · ${money(scaledCost(BELT_EXTENSION_COST))}</button>
             </div>
 
@@ -13383,6 +13710,8 @@
               <button class="primary" data-buy-bolter ${state.assets.bolterOwned || !bolterUnlocked ? 'disabled' : ''}>Buy Bolter · ${bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : '-1100'}</button>
               <button class="primary" data-support-pillar ${state.assets.bolterOwned && bolterUnlocked ? '' : 'disabled'}>Use Bolter Remote</button>
             </div>
+            ${engineeringResearchPanelHtml()}
+
             <section class="crewRoleSection">
               <div class="crewRoleHeader"><h3>Fleet Expansion</h3><span>${secondMinerUnlocked() ? 'Available on -1200 Level' : 'Requires -1200 Level access'}</span></div>
               <div class="rows">
@@ -13435,8 +13764,8 @@
             <div class="devToolGrid">
               <section class="devToolCard"><h3>Progression</h3><p>Move time, force review outcomes, or jump deeper for mechanic testing.</p><div class="devToolBtns"><button data-dev-action="dev-next-year">Advance to Next Year</button><button data-dev-action="year-success">Finish Year: Successful</button><button data-dev-action="year-needs">Finish Year: Needs Improvement</button><button data-dev-action="year-fired">Finish Year: Fired</button><button data-dev-action="dev-next-level">Advance to Next Level</button></div></section>
               <section class="devToolCard"><h3>Role / Mechanic Intros</h3><p>Open the satirical role explanation modals directly.</p><div class="devToolBtns"><button data-dev-action="role-exploration">Exploration Intro</button><button data-dev-action="role-engineering">Mining Engineer Intro</button><button data-dev-action="role-ground">Rock Doctor Intro</button><button data-dev-action="role-survey">Survey Intro</button><button data-dev-action="role-vent">Ventilation Intro</button></div></section>
-              <section class="devToolCard"><h3>Safety / External Events</h3><p>Trigger modal events without waiting for yearly rolls.</p><div class="devToolBtns"><button data-dev-action="safety-random">Random Safety</button><button data-dev-action="safety-negative">Negative Safety</button><button data-dev-action="safety-positive">Positive Safety</button><button data-dev-action="safety-mandatory">Mandatory Standdown</button><button data-dev-action="hse-inspection">HSE Inspection</button><button data-dev-action="skip-factor">Skip Factor</button><button data-dev-action="meeting-event">Pointless Meeting</button><button data-dev-action="external-affairs">External Affairs</button><button data-dev-action="grade-constraint">Grade Restriction</button><button data-dev-action="hope-support">HOPE Support</button><button data-dev-action="heat-event">Heat / Ventilation</button></div></section>
-              <section class="devToolCard"><h3>Production / HR Events</h3><p>Force PM comments, HR bubbles, and morale loops.</p><div class="devToolBtns"><button data-dev-action="pm-random">Random PM Comment</button><button data-dev-action="geo-reinterpret">Geology Reinterpretation</button><button data-dev-action="hr-random">Random HR Bubble</button><button data-dev-action="hr-training">Training Request</button><button data-dev-action="hr-supervisor">Supervisor Issue</button><button data-dev-action="hr-belt">Belt Moan Bubble</button></div></section>
+              <section class="devToolCard"><h3>Safety / External Events</h3><p>Trigger modal events without waiting for yearly rolls.</p><div class="devToolBtns"><button data-dev-action="safety-random">Random Safety</button><button data-dev-action="safety-negative">Negative Safety</button><button data-dev-action="safety-positive">Positive Safety</button><button data-dev-action="safety-mandatory">Mandatory Standdown</button><button data-dev-action="hse-inspection">HSE Inspection</button><button data-dev-action="skip-factor">Skip Factor</button><button data-dev-action="meeting-event">Pointless Meeting</button><button data-dev-action="external-affairs">External Affairs</button><button data-dev-action="grade-constraint">Grade Restriction</button><button data-dev-action="hope-support">HOPE Support</button><button data-dev-action="power-outage">Power Outage</button><button data-dev-action="crew-accident">Crew Accident</button><button data-dev-action="heat-event">Heat / Ventilation</button></div></section>
+              <section class="devToolCard"><h3>Production / HR Events</h3><p>Force PM comments, HR bubbles, and morale loops.</p><div class="devToolBtns"><button data-dev-action="pm-random">Random PM Comment</button><button data-dev-action="geo-reinterpret">Geology Reinterpretation</button><button data-dev-action="eng-event">Engineering Finding</button><button data-dev-action="eng-study">Start Engineering Study</button><button data-dev-action="hr-random">Random HR Bubble</button><button data-dev-action="hr-training">Training Request</button><button data-dev-action="hr-supervisor">Supervisor Issue</button><button data-dev-action="hr-belt">Belt Moan Bubble</button></div></section>
               <section class="devToolCard"><h3>Mine State</h3><p>Manipulate exploration and hazard states.</p><div class="devToolBtns"><button data-dev-action="explore-complete">Explore Next Row</button><button data-dev-action="explore-transition">Explore to -1100 Line</button><button data-dev-action="reveal-rows">Reveal All Rows</button><button data-dev-action="pillar-stress">Pillar Stressed</button><button data-dev-action="pillar-critical">Pillar Critical</button><button data-dev-action="pillar-failure">Pillar Failure</button><button data-dev-action="create-rubble">Create Rubble</button><button data-dev-action="gas-pocket">Gas Pocket</button><button data-dev-action="water-inflow">Water Inflow</button></div></section>
               <section class="devToolCard"><h3>Assets</h3><p>Break, restore, and unlock major assets.</p><div class="devToolBtns"><button data-dev-action="miner-break">Break Selected Miner</button><button data-dev-action="miner-worn">Set Miner Worn</button><button data-dev-action="miner-restore">Restore Miner</button><button data-dev-action="belt-random">Random Belt Fault</button><button data-dev-action="belt-trip">Electrical Trip</button><button data-dev-action="belt-buried">Buried Belt</button><button data-dev-action="belt-drive">Drive Fault</button><button data-dev-action="belt-mechanical">Mechanical Fault</button><button data-dev-action="belt-restore">Restore Belt</button><button data-dev-action="buy-bolter-dev">Add Bolter</button><button data-dev-action="buy-second-dev">Add 2ndHOPE</button><button data-dev-action="buy-fan-dev">Add Mine Fan</button></div></section>
               <section class="devToolCard"><h3>Finance / Traits</h3><p>Set test conditions for morale decay, HSE, and finance.</p><div class="devToolBtns"><button data-dev-action="cash-add">Add £10k</button><button data-dev-action="traits-reset">Reset Traits</button><button data-dev-action="morale-high">Morale 100</button><button data-dev-action="morale-low">Morale 35</button><button data-dev-action="safety-high">Safety 100</button><button data-dev-action="safety-low">Safety 25</button><button data-dev-action="morale-decay">Apply Annual Morale Decay</button></div></section>
@@ -14537,6 +14866,16 @@
 
           const investDeclineBtn = e.target.closest('[data-invest-decline]');
           if (investDeclineBtn) { investInDecline(); return; }
+          const levelArrivalContinueBtn = e.target.closest('[data-level-arrival-continue]');
+          if (levelArrivalContinueBtn) {
+            const next = levelArrivalContinueBtn.dataset.nextIntro;
+            const next2 = levelArrivalContinueBtn.dataset.nextIntro2;
+            if (next) openRoleUnlockIntro(next, null, next2 || null);
+            else { state.paused = false; if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause'; levelArrivalContinueBtn.closest('.overlay').classList.remove('show'); }
+            return;
+          }
+          const openRoleIntroBtn = e.target.closest('[data-open-role-intro]');
+          if (openRoleIntroBtn) { openRoleUnlockIntro(openRoleIntroBtn.dataset.openRoleIntro); return; }
           const closeDeclineBtn = e.target.closest('[data-close-decline]');
           if (closeDeclineBtn) {
             state.paused = false;
@@ -14582,6 +14921,9 @@
           const conveyorFixBtn = e.target.closest('[data-conveyor-fix]');
           if (conveyorFixBtn) { startConveyorFix(); return; }
 
+          const restoreLightingBtn = e.target.closest('[data-restore-lighting]');
+          if (restoreLightingBtn) { restoreLighting(); return; }
+
           const beltExtendBtn = e.target.closest('[data-belt-extend]');
           if (beltExtendBtn) { extendBeltLine(); return; }
 
@@ -14600,6 +14942,9 @@
           const buyMineFanBtn = e.target.closest('[data-buy-mine-fan]');
           if (buyMineFanBtn) { buyMineFan(); return; }
 
+          const researchBtn = e.target.closest('[data-start-engineering-research]');
+          if (researchBtn) { startEngineeringResearch(researchBtn.dataset.startEngineeringResearch); return; }
+
           const startExplorationBtn = e.target.closest('[data-start-exploration]');
           if (startExplorationBtn) {
             startExplorationProgram();
@@ -14615,6 +14960,9 @@
 
           const externalChoiceBtn = e.target.closest('[data-external-choice]');
           if (externalChoiceBtn) { resolveExternalAffairsChoice(externalChoiceBtn.dataset.externalChoice); return; }
+
+          const accidentChoiceBtn = e.target.closest('[data-crew-accident-choice]');
+          if (accidentChoiceBtn) { resolveCrewAccidentChoice(accidentChoiceBtn.dataset.crewAccidentChoice); return; }
 
           const nextYearBtn = e.target.closest('[data-next-year]');
           if (nextYearBtn) { advanceToNextYear(); return; }
