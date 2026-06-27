@@ -4596,6 +4596,157 @@
       color: inherit;
     }
 
+
+    /* Final reassignment / local leaderboard screen. */
+    .gameOverScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: none;
+      overflow: auto;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(59,130,246,0.22), transparent 32%),
+        radial-gradient(circle at 80% 0%, rgba(248,113,113,0.18), transparent 34%),
+        linear-gradient(135deg, #020617 0%, #111827 54%, #0f172a 100%);
+      color: #e5e7eb;
+    }
+
+    .gameOverScreen.show { display: block; }
+
+    body.gameFinished #game,
+    body.gameFinished #splashOverlay,
+    body.gameFinished #letterOverlay,
+    body.gameFinished #modalOverlay,
+    body.gameFinished #safetyStanddownOverlay {
+      display: none !important;
+    }
+
+    .finalStatsShell {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .finalStatsHero,
+    .finalStatsPanel {
+      border: 1px solid rgba(148,163,184,0.28);
+      border-radius: 22px;
+      background: rgba(15,23,42,0.86);
+      box-shadow: 0 28px 90px rgba(0,0,0,0.38);
+      padding: 20px;
+    }
+
+    .finalStatsHero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .finalStatsHero h1 { margin: 0 0 6px; font-size: clamp(28px, 4vw, 48px); letter-spacing: -0.04em; }
+    .finalStatsHero p { margin: 0; color: #cbd5e1; max-width: 760px; line-height: 1.45; }
+    .finalStatsSeal {
+      width: 110px;
+      height: 110px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(248,250,252,0.24);
+      background: linear-gradient(135deg, rgba(30,41,59,0.95), rgba(127,29,29,0.58));
+      color: #fee2e2;
+      font-weight: 1000;
+      font-size: 28px;
+      text-align: center;
+      line-height: 0.9;
+      transform: rotate(-2deg);
+    }
+
+    .finalStatsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 10px;
+    }
+
+    .finalStatCard {
+      border: 1px solid rgba(148,163,184,0.24);
+      border-radius: 16px;
+      background: rgba(2,6,23,0.42);
+      padding: 12px;
+    }
+
+    .finalStatCard span {
+      display: block;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 5px;
+    }
+
+    .finalStatCard strong {
+      display: block;
+      color: #f8fafc;
+      font-size: 20px;
+    }
+
+    .nicknameRow {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .nicknameRow input {
+      width: 100%;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(2,6,23,0.72);
+      color: #f8fafc;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 850;
+    }
+
+    .leaderboardGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .leaderboardList {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .leaderboardRow {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(148,163,184,0.18);
+      border-radius: 12px;
+      background: rgba(15,23,42,0.72);
+      padding: 9px 10px;
+      color: #cbd5e1;
+      font-size: 12px;
+    }
+
+    .leaderboardRow strong { color: #f8fafc; }
+    .leaderboardValue { font-weight: 1000; color: #fde68a; }
+    .hallShame .leaderboardValue { color: #fecaca; }
+    .finalRestartRow { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+    @media (max-width: 720px) {
+      .gameOverScreen { padding: 14px; }
+      .finalStatsHero { grid-template-columns: 1fr; }
+      .finalStatsSeal { width: 86px; height: 86px; font-size: 22px; }
+      .nicknameRow { grid-template-columns: 1fr; }
+    }
+
+
   </style>
 </head>
 <body>
@@ -4881,6 +5032,49 @@
       <div class="windowBody" id="modalBody"></div>
     </div>
   </div>
+
+
+  <div id="gameOverScreen" class="gameOverScreen" aria-live="polite">
+    <div class="finalStatsShell">
+      <section class="finalStatsHero">
+        <div>
+          <h1>Reassignment Complete</h1>
+          <p>Your contribution has been reviewed, archived, and selectively remembered. Please enter a nickname so S.H.A.F.T. can preserve the useful parts of your performance record.</p>
+        </div>
+        <div class="finalStatsSeal">SLT<br>EXIT</div>
+      </section>
+
+      <section class="finalStatsPanel">
+        <h2>Final Performance Statement</h2>
+        <div id="finalStatsGrid" class="finalStatsGrid"></div>
+      </section>
+
+      <section class="finalStatsPanel">
+        <h2>Nickname Submission</h2>
+        <p class="smallNote">Future online leaderboards can upsert by this nickname. For now, results are stored locally in this browser.</p>
+        <div class="nicknameRow">
+          <input id="nicknameInput" maxlength="24" placeholder="Enter nickname" autocomplete="off">
+          <button class="primary" data-save-score>Submit to Selective Memory</button>
+        </div>
+      </section>
+
+      <section class="leaderboardGrid">
+        <div class="finalStatsPanel">
+          <h2>Hall of Fame</h2>
+          <div id="hallOfFameList" class="leaderboardList"></div>
+        </div>
+        <div class="finalStatsPanel hallShame">
+          <h2>Hall of Shame</h2>
+          <div id="hallOfShameList" class="leaderboardList"></div>
+        </div>
+      </section>
+
+      <div class="finalRestartRow">
+        <button class="warn" data-restart-game>Proceed with Opportunity to Improve</button>
+      </div>
+    </div>
+  </div>
+
 
   <script>
 
@@ -5755,6 +5949,19 @@
         selectedBlock: null,
         safetyTimer: 0,
         safetyAlertTimeout: null,
+        safetyStanddownDoneThisYear: false,
+        safetyStanddownScheduledDay: 0,
+        safetyStanddownScheduledYear: 0,
+        skipFactorDoneThisYear: false,
+        hseInspectionDoneThisYear: false,
+        hseFines: 0,
+        hseInspections: 0,
+        lifetimeRevenue: 0,
+        lifetimeExpenditure: 0,
+        skipFactorTotalTonnes: 0,
+        pillarFailures: 0,
+        hrEventsResolved: 0,
+        hrEventsIgnored: 0,
         traits: { productivity: 70, skill: 70, morale: 70, safety: 70 },
         activeMachine: 'miner',
         pipActive: false,
@@ -6252,6 +6459,7 @@
         if (!unscaledReasons.includes(reason)) amount = scaledCost(amount);
         state.cash -= amount;
         state.expenditure += amount;
+        state.lifetimeExpenditure = (state.lifetimeExpenditure || 0) + amount;
         if (pos) spawnFloatingText(pos.x, pos.y, ['-' + money(amount), reason], '#fecaca');
       }
 
@@ -6260,6 +6468,7 @@
         amount = scaledRevenue(amount);
         state.cash += amount;
         state.revenue += amount;
+        state.lifetimeRevenue = (state.lifetimeRevenue || 0) + amount;
         if (pos) spawnFloatingText(pos.x, pos.y, ['+' + money(amount), reason], '#bbf7d0');
       }
 
@@ -6578,6 +6787,11 @@
           if (state.day % 24 === 0) maybeGenerateStaffBubble();
           if (state.day % 31 === 0) maybeGenerateStaffDeparture();
           if (state.day % 20 === 0) maybeQueueBeltDistanceConcern();
+          if (state.day % 17 === 0) {
+            if (maybeMandatorySafetyStanddown()) break;
+            if (maybeHseInspectionEvent()) break;
+            if (maybeSkipFactorEvent()) break;
+          }
           maybeConveyorFault();
         }
 
@@ -7108,6 +7322,166 @@
         };
       }
 
+
+      function ensureAnnualSafetyStanddownScheduled() {
+        if (!state.safetyStanddownScheduledDay || state.safetyStanddownScheduledYear !== state.year) {
+          const minDay = 35;
+          const maxDay = Math.max(minDay + 1, YEAR_LENGTH_DAYS - 55);
+          state.safetyStanddownScheduledDay = minDay + Math.floor(Math.random() * (maxDay - minDay));
+          state.safetyStanddownScheduledYear = state.year;
+        }
+      }
+
+      function maybeMandatorySafetyStanddown() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        ensureAnnualSafetyStanddownScheduled();
+        if (state.safetyStanddownDoneThisYear) return false;
+        if (dayOfYear() < state.safetyStanddownScheduledDay) return false;
+        const event = {
+          category: 'Safety Department',
+          title: 'Mandatory Safety Standdown',
+          text: 'Following a period of continued operation, the Safety Department has determined that work should stop so everyone can discuss why work should not stop.',
+          cost: 0,
+          traits: { productivity: -3, safety: 1, morale: -1 }
+        };
+        applySafetyEvent(event, false);
+        return true;
+      }
+
+      function skipFactorEvents() {
+        return [
+          {
+            pct: -0.02,
+            tone: 'warning',
+            text: 'The Shaft Maintenance crew have discovered that the skip volume is deformed, presumably from repeated impact with operational reality. The mine hoist is running short.'
+          },
+          {
+            pct: -0.015,
+            tone: 'warning',
+            text: 'A hoist-counter calibration check has concluded that some tonnes were more aspirational than physical. Finance has asked whether this can be described as timing.'
+          },
+          {
+            pct: 0.03,
+            tone: 'good',
+            text: 'The shaft weigh cell has malfunctioned and has been overfilling the skips. This may present a safety or engineering issue. More importantly, we have hoisted more tonnes this year.'
+          },
+          {
+            pct: 0.02,
+            tone: 'good',
+            text: 'The skip factor has been revalidated using a method nobody fully understands but several people prefer. Reported hoisted tonnes have improved.'
+          }
+        ];
+      }
+
+      function applySkipFactorEvent(event) {
+        if (!event) return false;
+        const annual = annualTonnes();
+        if (annual < 2500) return false;
+        const delta = Math.round(annual * event.pct);
+        if (!delta) return false;
+        const currentGrade = annualGrade() || grade() || TARGET_GRADE;
+        state.tonnes = Math.max(state.yearStartTonnes || 0, state.tonnes + delta);
+        state.k2oTonnes = Math.max(state.yearStartK2oTonnes || 0, state.k2oTonnes + delta * currentGrade);
+        state.skipFactorTotalTonnes = (state.skipFactorTotalTonnes || 0) + delta;
+        state.skipFactorDoneThisYear = true;
+        const pctText = (event.pct > 0 ? '+' : '') + Math.round(event.pct * 100) + '%';
+        openOperationalEventModal({
+          title: 'Skip Factor Adjustment',
+          image: 'assets/characters/shaft-maintenance.png',
+          character: 'Shaft Maintenance',
+          department: 'Hoisting Reconciliation Unit',
+          label: 'SKIP',
+          tone: event.tone,
+          body: `<p>${escapeHtml(event.text)}</p><p><strong>Impact:</strong> ${pctText} to annual mined tonnes (${delta > 0 ? '+' : ''}${Math.round(delta).toLocaleString()}t).</p><p>The SLT Dashboard has been updated to reflect the most convenient version of hoisted reality.</p>`,
+          button: 'Accept Reconciled Tonnage'
+        });
+        showProductionComment('Skip factor adjustment applied. The mine did not necessarily change, but the tonnes have become more aligned with expectation.', 'Shaft', 7);
+        return true;
+      }
+
+      function maybeSkipFactorEvent() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.skipFactorDoneThisYear) return false;
+        const doy = dayOfYear();
+        if (doy < 65 || doy > YEAR_LENGTH_DAYS - 35) return false;
+        if (Math.random() > 0.10 + Math.min(0.08, Math.max(0, state.year - 1) * 0.015)) return false;
+        const list = skipFactorEvents();
+        return applySkipFactorEvent(list[Math.floor(Math.random() * list.length)]);
+      }
+
+      function maybeHseInspectionEvent() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.hseInspectionDoneThisYear) return false;
+        const doy = dayOfYear();
+        if (doy < 80 || doy > YEAR_LENGTH_DAYS - 25) return false;
+        const safety = traitValue('safety');
+        const baseChance = clamp(0.055 + (70 - safety) * 0.0025 + (state.year - 1) * 0.006, 0.035, 0.18);
+        if (Math.random() > baseChance) return false;
+        triggerHseInspectionEvent();
+        return true;
+      }
+
+      function triggerHseInspectionEvent() {
+        state.hseInspectionDoneThisYear = true;
+        state.hseInspections = (state.hseInspections || 0) + 1;
+        const safety = traitValue('safety');
+        const supervisor = staffGroup('supervisor')[0];
+        const supervisorBonus = supervisor ? (Number(supervisor.safety) || 3) * 4 : -8;
+        const incidentPenalty = (state.pillarFailures || 0) * 2 + Math.max(0, (state.hseFines || 0) / 2500);
+        const passChance = clamp(0.22 + safety / 120 + supervisorBonus / 100 - incidentPenalty / 100, 0.12, 0.88);
+        const passed = Math.random() < passChance;
+        const fine = Math.round((9000 + state.year * 1200 + (state.depthIndex || 0) * 3500) * operatingScaleFactor());
+        let body;
+
+        if (passed) {
+          adjustTrait('safety', 1);
+          body = `<p>The Health and Safety Executive has arrived following an anonymous email alleging that existing procedures may not be entirely compatible with survival.</p><p>The inspection team questioned the supervisor and crew on safe working procedures. The IT Department is working hard to determine whether the anonymous whistleblower can be identified.</p><p><strong>Outcome:</strong> The HSE was unable to identify any material infractions, this time. +1 Safety.</p>`;
+        } else {
+          state.cash -= fine;
+          state.expenditure += fine;
+          state.lifetimeExpenditure = (state.lifetimeExpenditure || 0) + fine;
+          state.hseFines = (state.hseFines || 0) + fine;
+          adjustTrait('safety', -6);
+          adjustTrait('morale', -4);
+          body = `<p>The Health and Safety Executive has arrived following an anonymous email alleging that existing procedures may not be entirely compatible with survival.</p><p>The inspection team questioned the supervisor and crew on safe working procedures. The IT Department is working hard to determine whether the anonymous whistleblower can be identified.</p><p><strong>Outcome:</strong> several areas appear to rely on optimism rather than procedure. A fine of ${money(fine)} has been issued to your budget. -6 Safety, -4 Morale.</p>`;
+        }
+
+        openOperationalEventModal({
+          title: passed ? 'HSE Surprise Inspection — Passed' : 'HSE Surprise Inspection — Failed',
+          image: 'assets/characters/hse-inspector.png',
+          character: 'Health and Safety Executive',
+          department: 'Unexpected Procedure Reality Check',
+          label: 'HSE',
+          tone: passed ? 'good' : 'danger',
+          body,
+          button: passed ? 'File the Report Before They Change Their Mind' : 'Accept Statutory Learning Opportunity'
+        });
+        showProductionComment(passed ? 'HSE found no infractions, this time. Paperwork has briefly aligned with reality.' : 'HSE has issued a fine. Safety has asked whether this can be coded to Production.', 'Safety', 8);
+      }
+
+      function openOperationalEventModal(ev) {
+        if (!ev) return;
+        if (isModalOpen()) {
+          pushQueueEvent({
+            tone: ev.tone || 'warning',
+            icon: ev.label || 'EVT',
+            label: ev.label || 'EVT',
+            image: ev.image,
+            character: ev.character,
+            department: ev.department,
+            title: ev.title,
+            body: ev.body
+          });
+          return;
+        }
+        setModalClosable(true);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = ev.title || 'Operational Event';
+        const eventImage = ev.image ? modalCharacterHtml(ev.image, ev.character || ev.title || 'Operational Event', ev.department || 'Operational Update', 'A department has arrived with findings and implications.', ev.label || 'EVT') : '';
+        $('modalBody').innerHTML = eventImage + (ev.body || '<p>Event details unavailable.</p>') + `<div class="btnRow"><button class="primary" data-close>${escapeHtml(ev.button || 'Accept Operational Reality')}</button></div>`;
+        $('modalOverlay').classList.add('show');
+      }
+
       function maybeSafetyEvent() {
         if (!state.running || state.paused || state.levelComplete) return;
 
@@ -7123,6 +7497,7 @@
 
       function applySafetyEvent(event, positive) {
         if (!event) return;
+        state.safetyStanddownDoneThisYear = true;
 
         const impacts = [];
         if (event.cost) {
@@ -10067,7 +10442,7 @@
           ? `<button class="warn" data-plead-case>${fired ? 'Plead for Reconsideration' : 'Plead Your Case'}</button>`
           : '';
         const buttonHtml = fired
-          ? `<button class="primary" data-close>Accept Reassignment</button>${pleadButton}`
+          ? `<button class="primary" data-accept-reassignment>Accept Reassignment</button>${pleadButton}`
           : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>${pleadButton}`;
 
         $('modalBody').innerHTML = `
@@ -10191,7 +10566,7 @@
         $('modalWindow').className = 'window medium';
         $('modalTitle').textContent = title;
         const button = dismissalPending && state.gameOver
-          ? '<button class="primary" data-close>Accept Reassignment</button>'
+          ? '<button class="primary" data-accept-reassignment>Accept Reassignment</button>'
           : '<button class="primary" data-next-year>Proceed to Next Operating Year</button>';
         $('modalBody').innerHTML = `
           ${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', helped ? 'Contextual Reinterpretation' : 'Accountability Maintained', helped ? 'Your explanation has created just enough uncertainty to be useful.' : 'Your explanation has been recorded without altering the expected learning outcome.', 'SLT')}
@@ -10199,6 +10574,151 @@
           <div class="btnRow">${button}</div>
         `;
         $('modalOverlay').classList.add('show');
+      }
+
+
+      function finalGameStats() {
+        const yearsServed = Math.max(1, Number(state.year) || 1);
+        const deepest = Number(state.mineLevel) || -1000;
+        const totalTonnes = Math.max(0, Number(state.tonnes) || 0);
+        const totalRevenue = Math.max(0, Number(state.lifetimeRevenue || state.revenue) || 0);
+        const totalSpend = Math.max(0, Number(state.lifetimeExpenditure || state.expenditure) || 0);
+        return {
+          yearsServed,
+          deepestLevel: deepest,
+          totalTonnes,
+          totalRevenue,
+          totalSpend,
+          finalBudget: Number(state.cash) || 0,
+          averageGrade: grade() || 0,
+          safetyRecord: Math.round(traitValue('safety')),
+          pillarFailures: Number(state.pillarFailures) || 0,
+          hseFines: Number(state.hseFines) || 0,
+          hseInspections: Number(state.hseInspections) || 0,
+          skipFactorTotalTonnes: Number(state.skipFactorTotalTonnes) || 0,
+          hrResolved: Number(state.hrEventsResolved) || 0,
+          hrIgnored: Number(state.hrEventsIgnored) || 0,
+          netPosition: totalRevenue - totalSpend,
+          endedAt: new Date().toISOString()
+        };
+      }
+
+      function finalStatCard(label, value) {
+        return `<div class="finalStatCard"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+      }
+
+      function renderFinalStatsScreen() {
+        const stats = finalGameStats();
+        const grid = $('finalStatsGrid');
+        if (grid) {
+          grid.innerHTML = [
+            finalStatCard('Years served', stats.yearsServed),
+            finalStatCard('Deepest level', stats.deepestLevel + ' Level'),
+            finalStatCard('Total mined tonnes', Math.round(stats.totalTonnes).toLocaleString() + 't'),
+            finalStatCard('Total revenue earned', money(stats.totalRevenue)),
+            finalStatCard('Final budget', money(stats.finalBudget)),
+            finalStatCard('Average Goldilocks Grade', stats.averageGrade.toFixed(2) + '%'),
+            finalStatCard('Safety record', stats.safetyRecord),
+            finalStatCard('Pillar failures', stats.pillarFailures),
+            finalStatCard('HSE fines', money(stats.hseFines)),
+            finalStatCard('Skip factor adjustment', (stats.skipFactorTotalTonnes > 0 ? '+' : '') + Math.round(stats.skipFactorTotalTonnes).toLocaleString() + 't')
+          ].join('');
+        }
+        renderLeaderboards();
+      }
+
+      function openFinalStatsScreen() {
+        state.gameOver = true;
+        state.running = false;
+        state.paused = true;
+        stopMusic();
+        const modal = $('modalOverlay');
+        if (modal) modal.classList.remove('show');
+        const safety = $('safetyStanddownOverlay');
+        if (safety) safety.classList.remove('show');
+        document.body.classList.add('gameFinished');
+        const screen = $('gameOverScreen');
+        if (screen) screen.classList.add('show');
+        renderFinalStatsScreen();
+        setTimeout(() => {
+          const input = $('nicknameInput');
+          if (input) input.focus();
+        }, 50);
+      }
+
+      function leaderboardKey() { return 'runThePitLocalLeaderboardV1'; }
+
+      function loadLeaderboard() {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(leaderboardKey()) || '{}');
+          return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (err) {
+          return {};
+        }
+      }
+
+      function saveLeaderboard(data) {
+        try { localStorage.setItem(leaderboardKey(), JSON.stringify(data || {})); } catch (err) {}
+      }
+
+      function submitScoreToLocalLeaderboard() {
+        const input = $('nicknameInput');
+        const nickname = String(input && input.value ? input.value : '').trim().slice(0, 24) || 'Anonymous Manager';
+        const stats = finalGameStats();
+        const board = loadLeaderboard();
+        const prev = board[nickname] || { nickname };
+        board[nickname] = {
+          nickname,
+          bestRevenue: Math.max(Number(prev.bestRevenue) || 0, stats.totalRevenue),
+          bestTonnes: Math.max(Number(prev.bestTonnes) || 0, stats.totalTonnes),
+          longestService: Math.max(Number(prev.longestService) || 0, stats.yearsServed),
+          deepestLevel: Math.min(Number(prev.deepestLevel) || stats.deepestLevel, stats.deepestLevel),
+          bestSafety: Math.max(Number(prev.bestSafety) || 0, stats.safetyRecord),
+          worstSafety: Math.min(prev.worstSafety === undefined ? stats.safetyRecord : Number(prev.worstSafety), stats.safetyRecord),
+          mostMoneyLost: Math.max(Number(prev.mostMoneyLost) || 0, Math.max(0, -stats.netPosition, -stats.finalBudget)),
+          mostHseFines: Math.max(Number(prev.mostHseFines) || 0, stats.hseFines),
+          mostPillarFailures: Math.max(Number(prev.mostPillarFailures) || 0, stats.pillarFailures),
+          shortestTenure: Math.min(prev.shortestTenure === undefined ? stats.yearsServed : Number(prev.shortestTenure), stats.yearsServed),
+          updatedAt: stats.endedAt
+        };
+        saveLeaderboard(board);
+        if (input) input.value = nickname;
+        renderLeaderboards();
+        showProductionComment('Score submitted to selective memory. S.H.A.F.T. will remember whichever category is most useful.', 'S.H.A.F.T.', 5);
+      }
+
+      function leaderboardRows(entries, specs) {
+        if (!entries.length) return '<div class="leaderboardRow"><strong>No recorded managers yet</strong><span class="leaderboardValue">Awaiting blame</span></div>';
+        return specs.map(spec => {
+          const sorted = entries.slice().sort((a, b) => (spec.asc ? (a[spec.key] || 0) - (b[spec.key] || 0) : (b[spec.key] || 0) - (a[spec.key] || 0)));
+          const top = sorted[0];
+          const value = top ? spec.format(top[spec.key] || 0, top) : '—';
+          return `<div class="leaderboardRow"><strong>${escapeHtml(spec.label)}<br><small>${escapeHtml(top ? top.nickname : '—')}</small></strong><span class="leaderboardValue">${escapeHtml(value)}</span></div>`;
+        }).join('');
+      }
+
+      function renderLeaderboards() {
+        const entries = Object.values(loadLeaderboard());
+        const fame = $('hallOfFameList');
+        const shame = $('hallOfShameList');
+        if (fame) fame.innerHTML = leaderboardRows(entries, [
+          { label: 'Most Revenue Earned', key: 'bestRevenue', format: v => money(v) },
+          { label: 'Most Tonnes Mined', key: 'bestTonnes', format: v => Math.round(v).toLocaleString() + 't' },
+          { label: 'Longest Service', key: 'longestService', format: v => Math.round(v) + ' years' },
+          { label: 'Deepest Level Reached', key: 'deepestLevel', asc: true, format: v => Math.round(v) + ' Level' },
+          { label: 'Best Safety Record', key: 'bestSafety', format: v => Math.round(v) }
+        ]);
+        if (shame) shame.innerHTML = leaderboardRows(entries, [
+          { label: 'Worst Safety Record', key: 'worstSafety', asc: true, format: v => Math.round(v) },
+          { label: 'Most Money Lost', key: 'mostMoneyLost', format: v => money(v) },
+          { label: 'Most Pillars Failed', key: 'mostPillarFailures', format: v => Math.round(v) },
+          { label: 'Most HSE Fines', key: 'mostHseFines', format: v => money(v) },
+          { label: 'Shortest Tenure', key: 'shortestTenure', asc: true, format: v => Math.round(v) + ' years' }
+        ]);
+      }
+
+      function restartAfterReassignment() {
+        window.location.reload();
       }
 
       function advanceToNextYear() {
@@ -10215,6 +10735,11 @@
         state.technicalHiresThisYear = 0;
         state.beltExtensionsThisYear = 0;
         state.pillarSplitTonnesThisYear = 0;
+        state.safetyStanddownDoneThisYear = false;
+        state.safetyStanddownScheduledDay = 0;
+        state.safetyStanddownScheduledYear = 0;
+        state.skipFactorDoneThisYear = false;
+        state.hseInspectionDoneThisYear = false;
         state.annualTargets = targetsForYear(state.year);
         applyAnnualFinanceReset(state.year, state.cash, state.revenue, state.expenditure);
         restoreMinedBlockSnapshot(minedSnapshot);
@@ -10345,6 +10870,7 @@
 
       function failPillar(block) {
         block.pillarState = 'failed';
+        state.pillarFailures = (state.pillarFailures || 0) + 1;
         adjustTrait('safety', -6);
         adjustTrait('morale', -3);
         spend(3200, 'Ground-control consequence');
@@ -11827,7 +12353,7 @@
         $('modalTitle').textContent = 'Select Shift Manager';
         $('modalBody').innerHTML = `
           <div class="setupIntro">
-            <p><strong>S.H.A.F.T. Assessment Requirement:</strong> choose the person who will be blamed for Module 1.</p>
+            <p><strong>S.H.A.F.T. Assessment Requirement:</strong> choose the person who will take the blame for SLT decision making.</p>
           </div>
           <div class="choiceGrid">${managerOptions.map(managerCard).join('')}</div>`;
         $('modalOverlay').classList.add('show');
@@ -12286,8 +12812,11 @@
         if (choice === 'askSupervisorHelp') { reduceMorale(1); adjustTrait('morale', -2); adjustTrait('productivity', 1); showProductionComment('The supervisor has been asked to help directly. Organisational boundaries have been tested.', 'Production'); }
 
         if (choice === 'ignore') {
+          state.hrEventsIgnored = (state.hrEventsIgnored || 0) + 1;
           if (s.role === 'fitter' || s.role === 'electrician') wearMachine(2);
           if (Math.random() < 0.25) reduceAttendance(1);
+        } else {
+          state.hrEventsResolved = (state.hrEventsResolved || 0) + 1;
         }
 
         s.bubble = null;
@@ -12537,6 +13066,15 @@
 
           const nextYearBtn = e.target.closest('[data-next-year]');
           if (nextYearBtn) { advanceToNextYear(); return; }
+
+          const acceptReassignmentBtn = e.target.closest('[data-accept-reassignment]');
+          if (acceptReassignmentBtn) { openFinalStatsScreen(); return; }
+
+          const saveScoreBtn = e.target.closest('[data-save-score]');
+          if (saveScoreBtn) { submitScoreToLocalLeaderboard(); return; }
+
+          const restartGameBtn = e.target.closest('[data-restart-game]');
+          if (restartGameBtn) { restartAfterReassignment(); return; }
 
           const fireStaffBtn = e.target.closest('[data-fire-staff]');
           if (fireStaffBtn) { fireStaff(fireStaffBtn.dataset.fireStaff); return; }
