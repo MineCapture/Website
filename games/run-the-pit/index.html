@@ -19032,9 +19032,9 @@
         openDecisionOutcomeModal({ title, image: PASS21_ASSETS.sltVisit, character: 'Superior Leadership Team', department: 'Strategic Visit Consequences', label: 'SLT', tone, body, shareDelta, button: 'Return to Work Before They Suggest Something' });
       }
 
-      function openPass21PayrollFreezeEvent(force = false) {
+      function openPayrollFreezeEvent(force = false) {
         if (!force && !pass21CanRunAnnualEvent('payrollFreeze', 1)) return false;
-        if (!force && pass21ActiveStaff && pass21ActiveStaff().length < 4) return false;
+        if (!force && getActiveStaff().length < 4) return false;
         pass21MarkAnnualEvent('payrollFreeze');
         const cost = scaledCost(900 + Math.max(0, (state.staff || []).length - 3) * 110);
         spend(cost, 'Payroll exception handling');
@@ -19323,7 +19323,7 @@
         const day = Number(state.day) || 0;
         if (y >= 2 && day % 73 === 0 && state.pass21_externalLocalComplaint_year !== state.year && Math.random() < 0.18) return openPass21ExternalLocalComplaintEvent(false);
         if (y >= 2 && day % 97 === 0 && state.pass21_sltSiteVisit_year !== state.year && Math.random() < 0.16) return openPass21SltSiteVisitEvent(false);
-        if (day % 83 === 0 && state.pass21_payrollFreeze_year !== state.year && (state.staff || []).length >= 4 && Math.random() < 0.15) return openPass21PayrollFreezeEvent(false);
+        if (day % 83 === 0 && state.pass21_payrollFreeze_year !== state.year && (state.staff || []).length >= 4 && Math.random() < 0.15) return openPayrollFreezeEvent(false);
         if (y >= 2 && day % 67 === 0 && state.pass21_modelVersionConflict_year !== state.year && Math.random() < 0.16) return openPass21ModelVersionConflictEvent(false);
         return false;
       }
@@ -19340,7 +19340,7 @@
       devAction = function(action) {
         if (action === 'external-local-complaint') { openPass21ExternalLocalComplaintEvent(true); return; }
         if (action === 'slt-site-visit') { openPass21SltSiteVisitEvent(true); return; }
-        if (action === 'payroll-freeze') { openPass21PayrollFreezeEvent(true); return; }
+        if (action === 'payroll-freeze') { openPayrollFreezeEvent(true); return; }
         if (action === 'model-version-conflict') { openPass21ModelVersionConflictEvent(true); return; }
         if (action && action.startsWith('hr21-')) { pass21ForceHrBubble(action.replace('hr21-', '')); return; }
         return pass21DevActionBase(action);
@@ -24175,9 +24175,9 @@
         openDecisionOutcomeModal({ title, image: PASS21_ASSETS.sltVisit, character: 'Superior Leadership Team', department: 'Strategic Visit Consequences', label: 'SLT', tone, body, shareDelta, button: 'Return to Work Before They Suggest Something' });
       }
 
-      function openPass21PayrollFreezeEvent(force = false) {
+      function openPayrollFreezeEvent(force = false) {
         if (!force && !pass21CanRunAnnualEvent('payrollFreeze', 1)) return false;
-        if (!force && pass21ActiveStaff && pass21ActiveStaff().length < 4) return false;
+        if (!force && getActiveStaff().length < 4) return false;
         pass21MarkAnnualEvent('payrollFreeze');
         const cost = scaledCost(900 + Math.max(0, (state.staff || []).length - 3) * 110);
         spend(cost, 'Payroll exception handling');
@@ -24466,7 +24466,7 @@
         const day = Number(state.day) || 0;
         if (y >= 2 && day % 73 === 0 && state.pass21_externalLocalComplaint_year !== state.year && Math.random() < 0.18) return openPass21ExternalLocalComplaintEvent(false);
         if (y >= 2 && day % 97 === 0 && state.pass21_sltSiteVisit_year !== state.year && Math.random() < 0.16) return openPass21SltSiteVisitEvent(false);
-        if (day % 83 === 0 && state.pass21_payrollFreeze_year !== state.year && (state.staff || []).length >= 4 && Math.random() < 0.15) return openPass21PayrollFreezeEvent(false);
+        if (day % 83 === 0 && state.pass21_payrollFreeze_year !== state.year && (state.staff || []).length >= 4 && Math.random() < 0.15) return openPayrollFreezeEvent(false);
         if (y >= 2 && day % 67 === 0 && state.pass21_modelVersionConflict_year !== state.year && Math.random() < 0.16) return openPass21ModelVersionConflictEvent(false);
         return false;
       }
@@ -24483,7 +24483,7 @@
       devAction = function(action) {
         if (action === 'external-local-complaint') { openPass21ExternalLocalComplaintEvent(true); return; }
         if (action === 'slt-site-visit') { openPass21SltSiteVisitEvent(true); return; }
-        if (action === 'payroll-freeze') { openPass21PayrollFreezeEvent(true); return; }
+        if (action === 'payroll-freeze') { openPayrollFreezeEvent(true); return; }
         if (action === 'model-version-conflict') { openPass21ModelVersionConflictEvent(true); return; }
         if (action && action.startsWith('hr21-')) { pass21ForceHrBubble(action.replace('hr21-', '')); return; }
         return pass21DevActionBase(action);
@@ -24915,6 +24915,78 @@
         const result = pass22UpdateBase(dt);
         if (state.pass22LevelTransitionPending && !isModalOpen() && state.paused) pass22ResumeAfterLevelTransition('update-normalise');
         return result;
+      };
+
+
+      /* Runtime hardening: stable helper names and optional-event safety net.
+         Pass numbers must not be required by runtime gameplay systems. */
+      function getActiveStaff() {
+        return (state.staff || []).filter(staff => {
+          if (!staff) return false;
+          if (staff.isFired || staff.fired || staff.dismissed || staff.removed) return false;
+          const status = String(staff.status || '').toLowerCase();
+          if (status === 'fired' || status === 'dismissed' || status === 'removed') return false;
+          return true;
+        });
+      }
+
+      function logOptionalEventError(label, err) {
+        const message = err && err.message ? err.message : String(err || 'Unknown optional event error');
+        state.runtimeSuppressedErrors = state.runtimeSuppressedErrors || [];
+        const key = `${label}: ${message}`;
+        const alreadyLogged = state.runtimeSuppressedErrors.includes(key);
+        if (!alreadyLogged) {
+          state.runtimeSuppressedErrors.push(key);
+          if (state.runtimeSuppressedErrors.length > 20) state.runtimeSuppressedErrors.shift();
+          console.warn(`[Run the Pit] Optional event skipped: ${label}`, err);
+        }
+      }
+
+      function safeRunOptionalEvent(label, runner) {
+        try {
+          if (typeof runner !== 'function') return false;
+          return !!runner();
+        } catch (err) {
+          logOptionalEventError(label, err);
+          return false;
+        }
+      }
+
+      if (typeof maybePass19SatiricalDecisionEvents === 'function') {
+        const satiricalDecisionEventCheck = maybePass19SatiricalDecisionEvents;
+        maybePass19SatiricalDecisionEvents = function() {
+          return safeRunOptionalEvent('satirical decision events', satiricalDecisionEventCheck);
+        };
+      }
+
+      if (typeof maybePass21Events === 'function') {
+        const informativeAndHrEventCheck = maybePass21Events;
+        maybePass21Events = function() {
+          return safeRunOptionalEvent('informative and HR events', informativeAndHrEventCheck);
+        };
+      }
+
+      // Backwards-compatible alias for any older Dev/event code that still calls the previous name.
+      if (typeof openPayrollFreezeEvent === 'function') {
+        try { openPass21PayrollFreezeEvent = openPayrollFreezeEvent; } catch (err) {}
+      }
+
+      function isRecoverableOptionalRuntimeError(err) {
+        const text = `${err && err.name ? err.name : ''} ${err && err.message ? err.message : ''} ${err && err.stack ? err.stack : ''}`;
+        return err instanceof ReferenceError && new RegExp('\\bpass\\d+[A-Za-z0-9_]*\\b').test(text);
+      }
+
+      const runtimeSafetyNetUpdateBase = update;
+      update = function(dt) {
+        try {
+          return runtimeSafetyNetUpdateBase(dt);
+        } catch (err) {
+          if (isRecoverableOptionalRuntimeError(err)) {
+            logOptionalEventError('runtime safety net', err);
+            return false;
+          }
+          throw err;
+        }
       };
 
 
