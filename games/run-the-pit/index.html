@@ -19413,6 +19413,13 @@
         });
 
         // De-duplicate buttons by dev action within each group.
+        const shiftMgrCard = cardByTitle('Shift Manager Events');
+        if (shiftMgrCard) {
+          body.querySelectorAll('[data-dev-action^="shift-manager"]').forEach(btn => {
+            if (!shiftMgrCard.contains(btn)) btn.remove();
+          });
+        }
+
         body.querySelectorAll('.devToolBtns').forEach(group => {
           const seen = new Set();
           Array.from(group.querySelectorAll('[data-dev-action]')).forEach(btn => {
@@ -19429,6 +19436,438 @@
         const visitBtn = e.target.closest('[data-pass21-slt-visit-choice]');
         if (visitBtn) { e.preventDefault(); resolvePass21SltSiteVisit(visitBtn.dataset.pass21SltVisitChoice); return; }
       }, true);
+
+      /* Pass 23: Shift Manager decision event set, Sales & Marketing artwork reinforcement, pillar support art/KPI cleanup. */
+      const PASS23_ASSETS = {
+        salesMarketing: 'assets/characters/sales-marketing.png',
+        pillarSupported: 'assets/images/pillar_supported.png'
+      };
+
+      function pass23HasText(obj, pattern) {
+        const text = `${obj && obj.title ? obj.title : ''} ${obj && obj.character ? obj.character : ''} ${obj && obj.department ? obj.department : ''} ${obj && obj.body ? obj.body : ''}`;
+        return pattern.test(text);
+      }
+
+      function pass23ForceSalesMarketingAsset(ev) {
+        if (!ev) return ev;
+        if (pass23HasText(ev, /Sales\s*(?:&|and)\s*Marketing|Sales has|Marketing would|customer specification|Customer Specification|product quality|Product Quality/i)) {
+          return {
+            character: 'Sales and Marketing',
+            department: 'Customer Promise Translation Unit',
+            label: ev.label || 'SAL',
+            imageText: 'Sales & Marketing — Asset pending',
+            ...ev,
+            image: ev.image || PASS23_ASSETS.salesMarketing
+          };
+        }
+        return ev;
+      }
+
+      function pass23ForcePillarSupportedAsset(ev) {
+        if (!ev) return ev;
+        if (/Pillar Supported|Pillar Support Installed|Support Installed/i.test(String(ev.title || '') + ' ' + String(ev.character || '') + ' ' + String(ev.body || ''))) {
+          return {
+            character: 'Pillar Support Installed',
+            department: 'Ground Control',
+            label: ev.label || 'GND',
+            imageText: 'Pillar Support Installed — Asset pending',
+            ...ev,
+            image: PASS23_ASSETS.pillarSupported
+          };
+        }
+        return ev;
+      }
+
+      const pass23PushQueueEventBase = pushQueueEvent;
+      pushQueueEvent = function(ev) {
+        ev = pass23ForceSalesMarketingAsset(pass23ForcePillarSupportedAsset(ev));
+        return pass23PushQueueEventBase(ev);
+      };
+
+      const pass23OpenOperationalEventModalBase = openOperationalEventModal;
+      openOperationalEventModal = function(ev) {
+        ev = pass23ForceSalesMarketingAsset(pass23ForcePillarSupportedAsset(ev));
+        return pass23OpenOperationalEventModalBase(ev);
+      };
+
+      if (typeof gradeConstraintEvents === 'function') {
+        const pass23GradeConstraintEventsBase = gradeConstraintEvents;
+        gradeConstraintEvents = function() {
+          return (pass23GradeConstraintEventsBase() || []).map(ev => pass23ForceSalesMarketingAsset(ev));
+        };
+      }
+
+      function pass23NormaliseGroundTarget(target = state.annualTargets) {
+        const t = target || {};
+        t.pillarSupports = 0;
+        if (Array.isArray(t.kpiKeys) && t.kpiKeys.includes('ground')) {
+          if (!(typeof t.maxPillarFailures === 'number') || t.maxPillarFailures >= 99) t.maxPillarFailures = 1;
+        }
+        return t;
+      }
+
+      function pass23GroundFailureTarget(target = activeAnnualTargets()) {
+        const t = pass23NormaliseGroundTarget(target || {});
+        const max = (typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99) ? Math.max(0, Math.round(t.maxPillarFailures)) : 1;
+        return max;
+      }
+
+      function pass23FailureWord(n) {
+        return Number(n) === 1 ? 'failure' : 'failures';
+      }
+
+      if (typeof fixedKpiPackageForCurrentPhase === 'function') {
+        const pass23FixedKpiPackageBase = fixedKpiPackageForCurrentPhase;
+        fixedKpiPackageForCurrentPhase = function() {
+          return pass23NormaliseGroundTarget(pass23FixedKpiPackageBase());
+        };
+      }
+
+      if (typeof sanitiseFixedPhaseTargets === 'function') {
+        const pass23SanitiseFixedPhaseTargetsBase = sanitiseFixedPhaseTargets;
+        sanitiseFixedPhaseTargets = function(target) {
+          return pass23NormaliseGroundTarget(pass23SanitiseFixedPhaseTargetsBase(target));
+        };
+      }
+
+      if (typeof applyAnnualTargetUnlockGuards === 'function') {
+        const pass23ApplyAnnualTargetUnlockGuardsBase = applyAnnualTargetUnlockGuards;
+        applyAnnualTargetUnlockGuards = function() {
+          const result = pass23ApplyAnnualTargetUnlockGuardsBase();
+          pass23NormaliseGroundTarget(state.annualTargets);
+          return result;
+        };
+      }
+
+      const pass23FormatMetricTargetValueBase = formatMetricTargetValue;
+      formatMetricTargetValue = function(key, target = activeAnnualTargets()) {
+        if (key === 'ground' || key === 'pillarSupport' || key === 'pillarSupports') {
+          const max = pass23GroundFailureTarget(target);
+          return `maximum ${max} pillar ${pass23FailureWord(max)} this year`;
+        }
+        return pass23FormatMetricTargetValueBase(key, target);
+      };
+
+      const pass23FocusedMetricCardBase = focusedMetricCard;
+      focusedMetricCard = function(key, target = activeAnnualTargets()) {
+        if (key === 'ground') {
+          const max = pass23GroundFailureTarget(target);
+          const failures = annualPillarFailures();
+          const status = failures <= max ? 'onTrack' : 'failing';
+          const progress = failures <= max ? 100 : 0;
+          return {
+            key,
+            title: metricLabelForKey(key),
+            status,
+            html: kpiCardHtml('Ground Stability', `${failures} / ${max} pillar ${pass23FailureWord(max)}`, progress, status, 'Support is a risk-control tool. The KPI measures whether pillars failed, not whether SLT can count bolts.')
+          };
+        }
+        return pass23FocusedMetricCardBase(key, target);
+      };
+
+      if (typeof pass15KpiActualText === 'function') {
+        const pass23Pass15KpiActualTextBase = pass15KpiActualText;
+        pass15KpiActualText = function(key, target = activeAnnualTargets()) {
+          if (key === 'ground') {
+            const max = pass23GroundFailureTarget(target);
+            return `${annualPillarFailures()} / ${max} pillar ${pass23FailureWord(max)}`;
+          }
+          return pass23Pass15KpiActualTextBase(key, target);
+        };
+      }
+
+      const pass23AnnualTargetPassedBase = annualTargetPassed;
+      annualTargetPassed = function() {
+        pass23NormaliseGroundTarget(state.annualTargets);
+        return pass23AnnualTargetPassedBase();
+      };
+
+      if (typeof fixedKpiStrictPassed === 'function') {
+        const pass23FixedKpiStrictPassedBase = fixedKpiStrictPassed;
+        fixedKpiStrictPassed = function(target = activeAnnualTargets()) {
+          pass23NormaliseGroundTarget(target);
+          return pass23FixedKpiStrictPassedBase(target);
+        };
+      }
+
+      if (typeof annualKpiStatusList === 'function') {
+        const pass23AnnualKpiStatusListBase = annualKpiStatusList;
+        annualKpiStatusList = function(target = activeAnnualTargets()) {
+          pass23NormaliseGroundTarget(target);
+          const rows = pass23AnnualKpiStatusListBase(target) || [];
+          return rows.filter(r => r && r.key !== 'pillarSupport' && r.key !== 'pillarSupports');
+        };
+      }
+
+      if (typeof escalationTargetKeys === 'function') {
+        const pass23EscalationTargetKeysBase = escalationTargetKeys;
+        escalationTargetKeys = function(target = activeAnnualTargets()) {
+          return (pass23EscalationTargetKeysBase(target) || []).filter(k => k !== 'pillarSupport' && k !== 'pillarSupports');
+        };
+      }
+
+      if (typeof escalateSingleKpiTarget === 'function') {
+        const pass23EscalateSingleKpiTargetBase = escalateSingleKpiTarget;
+        escalateSingleKpiTarget = function(key, target) {
+          if (key === 'ground') {
+            pass23NormaliseGroundTarget(target);
+            const current = pass23GroundFailureTarget(target);
+            target.maxPillarFailures = Math.max(0, current - (current > 0 ? 1 : 0));
+            return `Ground Stability tightened to ${formatMetricTargetValue(key, target)}.`;
+          }
+          return pass23EscalateSingleKpiTargetBase(key, target);
+        };
+      }
+
+      if (typeof pass8EscalateSingleKpiTarget === 'function') {
+        const pass23Pass8EscalateSingleKpiTargetBase = pass8EscalateSingleKpiTarget;
+        pass8EscalateSingleKpiTarget = function(key, target) {
+          if (key === 'ground') {
+            pass23NormaliseGroundTarget(target);
+            const current = pass23GroundFailureTarget(target);
+            target.maxPillarFailures = Math.max(0, current - (current > 0 ? 1 : 0));
+            return `${escapeHtml(metricLabelForKey(key))} tightened to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`;
+          }
+          return pass23Pass8EscalateSingleKpiTargetBase(key, target);
+        };
+      }
+
+      const pass23ShiftManagerDecisionEvents = [
+        {
+          key: 'shiftPlanOptimisation',
+          title: 'Shift Plan Optimisation',
+          prompt: '{name} has improved the shift plan by moving every delayed task into the next shift. The current shift is now technically on plan, provided nobody asks the next shift.',
+          options: [
+            { key: 'acceptPlan', label: 'Accept the Improved Plan', hint: 'Short-term productivity optics. Next shift inherits reality.' },
+            { key: 'realisticPlan', label: 'Ask for a Realistic Plan', hint: 'Costs time now, but may improve control.' },
+            { key: 'tracker', label: 'Move the Delay into a Tracker', hint: 'No actual fix, but excellent visibility.' },
+            { key: 'nextShift', label: 'Tell the Next Shift It Builds Character', hint: 'Fast, cheap, and hostile.' }
+          ]
+        },
+        {
+          key: 'handoverIntegrity',
+          title: 'Handover Integrity Review',
+          prompt: '{name} reports that the previous shift left a handover consisting of three arrows, one exclamation mark, and the word “careful”.',
+          options: [
+            { key: 'standardise', label: 'Standardise Handover', hint: 'A useful process, which is why it will be unpopular.' },
+            { key: 'blamePrevious', label: 'Blame the Previous Shift', hint: 'Fast morale damage with minimal administrative effort.' },
+            { key: 'anotherForm', label: 'Add Another Form', hint: 'Improves evidence. Reduces work.' },
+            { key: 'operationalPoetry', label: 'Accept This as Operational Poetry', hint: 'Treat ambiguity as culture.' }
+          ]
+        },
+        {
+          key: 'dailyTargetCascade',
+          title: 'Daily Target Cascade',
+          prompt: '{name} has received the annual target and divided it into a daily target, hourly target, and emotional burden.',
+          options: [
+            { key: 'useCascade', label: 'Use the Cascade', hint: 'Push hard now. Pay for it in morale and safety.' },
+            { key: 'softenPressure', label: 'Soften the Daily Pressure', hint: 'More humane. Less impressive in slides.' },
+            { key: 'challengeLogic', label: 'Challenge the Target Logic', hint: 'Technically sensible. Politically unstable.' },
+            { key: 'poster', label: 'Ask SLT for a Motivational Poster', hint: 'Low value, high compliance.' }
+          ]
+        },
+        {
+          key: 'blameContinuity',
+          title: 'Blame Continuity Plan',
+          prompt: '{name} is concerned that if several things go wrong at once, there may not be enough documented blame to go around.',
+          options: [
+            { key: 'blameMatrix', label: 'Create a Blame Matrix', hint: 'Accountability architecture without fixing anything.' },
+            { key: 'fixIssues', label: 'Focus on Fixing the Issues', hint: 'Practical, costly, and hard to present as strategy.' },
+            { key: 'departmentColours', label: 'Assign Each Department a Colour', hint: 'Turns blame into a dashboard.' },
+            { key: 'preEscalate', label: 'Escalate to SLT Pre-emptively', hint: 'Bold. Dangerous. Possibly career-limiting.' }
+          ]
+        },
+        {
+          key: 'meetingDiscipline',
+          title: 'Meeting Discipline Failure',
+          prompt: '{name} says the pre-shift briefing has expanded into a full management conference with lamps.',
+          options: [
+            { key: 'essentials', label: 'Limit Briefings to Essentials', hint: 'Production improves. Feelings may not.' },
+            { key: 'everyoneSay', label: 'Let Everyone Have Their Say', hint: 'Morale improves. Time disappears.' },
+            { key: 'visualBoard', label: 'Replace the Meeting with a Board', hint: 'Useful if the board survives first contact with reality.' },
+            { key: 'shorterMeetingMeeting', label: 'Schedule a Meeting About Shorter Meetings', hint: 'The organisation eats itself productively.' }
+          ]
+        }
+      ];
+
+      function pass23ShiftManagerByKey(key) {
+        return pass23ShiftManagerDecisionEvents.find(ev => ev.key === key) || null;
+      }
+
+      function pass23ShiftManagerPortrait(manager) {
+        return (manager && manager.portrait) || 'assets/characters/portraits/production_manager.png';
+      }
+
+      function pass23ShiftManagerButtons(ev) {
+        return `<div class="beltDecisionGrid">${(ev.options || []).map((opt, idx) => `<button class="eventChoiceBtn ${idx === 1 ? 'positive' : idx === 3 ? 'negative' : ''}" data-pass23-shift-manager-choice="${escapeHtml(opt.key)}" data-pass23-shift-manager-event="${escapeHtml(ev.key)}"><strong>${escapeHtml(opt.label)}</strong><span>${escapeHtml(opt.hint)}</span></button>`).join('')}</div>`;
+      }
+
+      function openPass23ShiftManagerEvent(key = null, force = false) {
+        const manager = currentManager && currentManager();
+        if (!manager) {
+          openMiniWindow('No Shift Manager', '<p>No Shift Manager is currently available to turn operational confusion into structured accountability.</p>', true);
+          return false;
+        }
+        const ev = key ? pass23ShiftManagerByKey(key) : randomItem(pass23ShiftManagerDecisionEvents);
+        if (!ev) return false;
+        state.pass23ActiveShiftManagerEvent = ev.key;
+        const body = `${modalCharacterHtml(pass23ShiftManagerPortrait(manager), manager.name, 'Shift Management', 'The Shift Manager has identified an issue that can only be solved by creating a decision record.', 'MGR')}
+          <p>${escapeHtml(ev.prompt.replace('{name}', manager.name))}</p>
+          <p><strong>Management response required.</strong></p>
+          ${pass23ShiftManagerButtons(ev)}`;
+        showPreparedModal(ev.title, body, { closable: false, windowClass: 'window medium', images: [pass23ShiftManagerPortrait(manager)] });
+        return true;
+      }
+
+      function resolvePass23ShiftManagerEvent(eventKey, choice) {
+        const manager = currentManager && currentManager();
+        const ev = pass23ShiftManagerByKey(eventKey || state.pass23ActiveShiftManagerEvent);
+        if (!ev) return false;
+        let title = ev.title + ' Outcome';
+        let tone = 'info';
+        let body = '';
+        let shareDelta = 0;
+        let cost = 0;
+
+        if (choice === 'acceptPlan') {
+          adjustTrait('productivity', 2); adjustTrait('morale', -1); state.pass23NextShiftBurden = (state.pass23NextShiftBurden || 0) + 1; shareDelta = 1;
+          body = '<p>The improved plan has been accepted. The current shift is now compliant, and the next shift has inherited a development opportunity.</p><p><strong>Impact:</strong> +2 Productivity, -1 Morale, +1p short-term confidence. Future handover pressure increased.</p>';
+        } else if (choice === 'realisticPlan') {
+          cost = scaledCost(650); spend(cost, 'Realistic shift plan review'); adjustTrait('productivity', -1); adjustTrait('safety', 2); adjustTrait('skill', 1); tone = 'good';
+          body = `<p>The plan has been made more realistic. This has disappointed everyone who preferred the previous plan, where impossible things happened on time.</p><p><strong>Impact:</strong> ${money(cost)} planning cost, -1 Productivity, +2 Safety, +1 Skill.</p>`;
+        } else if (choice === 'tracker') {
+          adjustTrait('productivity', -1); shareDelta = 1;
+          body = '<p>The delay has been moved into a tracker. It is still a delay, but now it has a status, owner, colour, and weekly governance rhythm.</p><p><strong>Impact:</strong> -1 Productivity, +1p management confidence.</p>';
+        } else if (choice === 'nextShift') {
+          adjustTrait('morale', -3); adjustTrait('productivity', 1); tone = 'warning';
+          body = '<p>The next shift has been told the unresolved work will build character. The current shift appreciates the leadership clarity of leaving.</p><p><strong>Impact:</strong> +1 Productivity, -3 Morale.</p>';
+        } else if (choice === 'standardise') {
+          cost = scaledCost(500); spend(cost, 'Handover standardisation'); adjustTrait('skill', 2); adjustTrait('safety', 1); tone = 'good';
+          body = `<p>Handover has been standardised. The crew are annoyed, but now annoyed in a consistent format.</p><p><strong>Impact:</strong> ${money(cost)} process cost, +2 Skill, +1 Safety.</p>`;
+        } else if (choice === 'blamePrevious') {
+          adjustTrait('morale', -2); adjustTrait('productivity', 1); tone = 'warning';
+          body = '<p>The previous shift has been blamed. This is operationally efficient because they are not currently present to complicate the finding with evidence.</p><p><strong>Impact:</strong> +1 Productivity, -2 Morale.</p>';
+        } else if (choice === 'anotherForm') {
+          cost = scaledCost(350); spend(cost, 'Additional handover form'); adjustTrait('productivity', -2); adjustTrait('safety', 1);
+          body = `<p>A new handover form has been issued. It captures the same information as the old form, but with more mandatory fields and less trust.</p><p><strong>Impact:</strong> ${money(cost)} administration cost, -2 Productivity, +1 Safety.</p>`;
+        } else if (choice === 'operationalPoetry') {
+          const works = Math.random() < 0.42;
+          if (works) { adjustTrait('morale', 2); tone = 'good'; body = '<p>The handover has been accepted as operational poetry. Against all governance expectations, everyone understood roughly enough.</p><p><strong>Impact:</strong> +2 Morale.</p>'; }
+          else { adjustTrait('safety', -2); adjustTrait('skill', -1); tone = 'warning'; body = '<p>The handover has been accepted as poetry. Unfortunately, poetry remains a poor substitute for location, hazard, and task status.</p><p><strong>Impact:</strong> -2 Safety, -1 Skill.</p>'; }
+        } else if (choice === 'useCascade') {
+          adjustTrait('productivity', 3); adjustTrait('morale', -2); adjustTrait('safety', -1); shareDelta = 2; tone = 'warning';
+          body = '<p>The daily target cascade is live. Everyone now knows exactly how far behind they are at all times.</p><p><strong>Impact:</strong> +3 Productivity, -2 Morale, -1 Safety, +2p short-term confidence.</p>';
+        } else if (choice === 'softenPressure') {
+          adjustTrait('morale', 2); adjustTrait('productivity', -1); shareDelta = -1;
+          body = '<p>The daily pressure has been softened. The workforce has responded positively. The dashboard has not.</p><p><strong>Impact:</strong> +2 Morale, -1 Productivity, -1p target-confidence optics.</p>';
+        } else if (choice === 'challengeLogic') {
+          const success = Math.random() < 0.35;
+          if (success) { adjustTrait('skill', 2); adjustTrait('morale', 1); shareDelta = 1; tone = 'good'; body = '<p>The target logic was challenged and partially understood. SLT has agreed to describe this as mature challenge rather than resistance.</p><p><strong>Impact:</strong> +2 Skill, +1 Morale, +1p confidence.</p>'; }
+          else { adjustTrait('morale', -2); shareDelta = -2; tone = 'warning'; body = '<p>The target logic was challenged. SLT confirmed the target is correct because it has already been communicated.</p><p><strong>Impact:</strong> -2 Morale, -2p confidence.</p>'; }
+        } else if (choice === 'poster') {
+          cost = scaledCost(300); spend(cost, 'Motivational target poster'); adjustTrait('morale', -1); shareDelta = 1;
+          body = `<p>SLT has supplied a motivational poster. It contains a shovel, a sunrise, and a sentence nobody can apply underground.</p><p><strong>Impact:</strong> ${money(cost)} poster cost, -1 Morale, +1p optics.</p>`;
+        } else if (choice === 'blameMatrix') {
+          cost = scaledCost(420); spend(cost, 'Blame matrix workshop'); adjustTrait('morale', -2); adjustTrait('skill', 1); shareDelta = 2;
+          body = `<p>A blame matrix has been created. It does not reduce risk, but it dramatically improves post-event navigation.</p><p><strong>Impact:</strong> ${money(cost)} workshop cost, -2 Morale, +1 Skill, +2p governance confidence.</p>`;
+        } else if (choice === 'fixIssues') {
+          cost = scaledCost(1600); spend(cost, 'Actual issue fixing'); adjustTrait('safety', 3); adjustTrait('productivity', -1); tone = 'good'; shareDelta = 1;
+          body = `<p>The team focused on fixing actual issues. This has reduced future blame volume, creating concern in several governance forums.</p><p><strong>Impact:</strong> ${money(cost)} corrective-action cost, +3 Safety, -1 Productivity, +1p confidence.</p>`;
+        } else if (choice === 'departmentColours') {
+          cost = scaledCost(260); spend(cost, 'Department colour allocation'); adjustTrait('morale', -1); shareDelta = 1;
+          body = `<p>Each department has been assigned a colour. Production is red because most discussions end there.</p><p><strong>Impact:</strong> ${money(cost)} dashboard cost, -1 Morale, +1p visibility.</p>`;
+        } else if (choice === 'preEscalate') {
+          const lucky = Math.random() < 0.28;
+          if (lucky) { adjustTrait('safety', 1); shareDelta = 2; tone = 'good'; body = '<p>The issue was escalated to SLT before it became measurable. SLT has described this as proactive leadership, mostly because no one has failed yet.</p><p><strong>Impact:</strong> +1 Safety, +2p confidence.</p>'; }
+          else { adjustTrait('productivity', -2); adjustTrait('morale', -1); shareDelta = -3; tone = 'warning'; body = '<p>The issue was escalated to SLT. It has returned as a broader strategic concern with no additional resources.</p><p><strong>Impact:</strong> -2 Productivity, -1 Morale, -3p confidence.</p>'; }
+        } else if (choice === 'essentials') {
+          adjustTrait('productivity', 2); adjustTrait('morale', -1); tone = 'good';
+          body = '<p>Briefings have been limited to essentials. Several people are upset that their update was not classified as essential by anyone else.</p><p><strong>Impact:</strong> +2 Productivity, -1 Morale.</p>';
+        } else if (choice === 'everyoneSay') {
+          adjustTrait('morale', 2); adjustTrait('productivity', -3); tone = 'warning';
+          body = '<p>Everyone was allowed to have their say. The meeting achieved excellent participation and negligible movement.</p><p><strong>Impact:</strong> +2 Morale, -3 Productivity.</p>';
+        } else if (choice === 'visualBoard') {
+          cost = scaledCost(700); spend(cost, 'Shift visual board'); adjustTrait('skill', 1); adjustTrait('safety', 1); adjustTrait('productivity', 1); tone = 'good';
+          body = `<p>The meeting has been replaced with a visual board. This is risky because useful information is now visible without a meeting invite.</p><p><strong>Impact:</strong> ${money(cost)} board cost, +1 Skill, +1 Safety, +1 Productivity.</p>`;
+        } else if (choice === 'shorterMeetingMeeting') {
+          cost = scaledCost(380); spend(cost, 'Meeting efficiency meeting'); adjustTrait('productivity', -3); adjustTrait('morale', -1); shareDelta = 1; tone = 'warning';
+          body = `<p>A meeting about shorter meetings has been scheduled. It ran over time due to strong engagement.</p><p><strong>Impact:</strong> ${money(cost)} meeting cost, -3 Productivity, -1 Morale, +1p process confidence.</p>`;
+        } else {
+          return false;
+        }
+        state.pass23ActiveShiftManagerEvent = null;
+        openDecisionOutcomeModal({ title, image: pass23ShiftManagerPortrait(manager), character: (manager && manager.name) || 'Shift Manager', department: 'Shift Management Consequences', label: 'MGR', tone, body, shareDelta, button: 'Return to Managed Delivery' });
+        return true;
+      }
+
+      const pass23TriggerShiftManagerEventBase = triggerShiftManagerEvent;
+      triggerShiftManagerEvent = function(key = null) {
+        if (key && pass23ShiftManagerByKey(key)) return openPass23ShiftManagerEvent(key, true);
+        if (!key || key === 'random' || key === 'pass23') return openPass23ShiftManagerEvent(null, false);
+        return pass23TriggerShiftManagerEventBase(key);
+      };
+
+      const pass23DevActionBase = devAction;
+      devAction = function(action) {
+        if (action === 'shift-manager-event') { openPass23ShiftManagerEvent(null, true); return; }
+        if (action && action.startsWith('shift-manager-')) {
+          openPass23ShiftManagerEvent(action.replace('shift-manager-', ''), true);
+          return;
+        }
+        return pass23DevActionBase(action);
+      };
+
+      const pass23EnhanceDevToolsBase = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        pass23EnhanceDevToolsBase();
+        const body = $('modalBody');
+        if (!body) return;
+        const grid = body.querySelector('.devToolGrid');
+        if (!grid) return;
+        const cardByTitle = (title) => Array.from(body.querySelectorAll('.devToolCard')).find(card => ((card.querySelector('h3') || {}).textContent || '').trim() === title);
+        const ensureCard = (title, desc) => {
+          let card = cardByTitle(title);
+          if (!card) {
+            grid.insertAdjacentHTML('beforeend', `<section class="devToolCard"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p><div class="devToolBtns"></div></section>`);
+            card = cardByTitle(title);
+          }
+          return card;
+        };
+        const appendButton = (title, desc, action, label) => {
+          const card = ensureCard(title, desc);
+          const btns = card && card.querySelector('.devToolBtns');
+          if (!btns || btns.querySelector(`[data-dev-action="${action}"]`)) return;
+          btns.insertAdjacentHTML('beforeend', `<button data-dev-action="${escapeHtml(action)}">${escapeHtml(label)}</button>`);
+        };
+        const desc = 'Shift Manager decision events: plan, handover, target pressure, blame continuity and meeting discipline.';
+        appendButton('Shift Manager Events', desc, 'shift-manager-event', 'Random Shift Manager');
+        appendButton('Shift Manager Events', desc, 'shift-manager-shiftPlanOptimisation', 'Shift Plan');
+        appendButton('Shift Manager Events', desc, 'shift-manager-handoverIntegrity', 'Handover Review');
+        appendButton('Shift Manager Events', desc, 'shift-manager-dailyTargetCascade', 'Target Cascade');
+        appendButton('Shift Manager Events', desc, 'shift-manager-blameContinuity', 'Blame Plan');
+        appendButton('Shift Manager Events', desc, 'shift-manager-meetingDiscipline', 'Meeting Discipline');
+
+        body.querySelectorAll('.devToolBtns').forEach(group => {
+          const seen = new Set();
+          Array.from(group.querySelectorAll('[data-dev-action]')).forEach(btn => {
+            const action = btn.getAttribute('data-dev-action');
+            if (seen.has(action)) btn.remove();
+            else seen.add(action);
+          });
+        });
+      };
+
+      document.addEventListener('click', function(e) {
+        const shiftBtn = e.target.closest('[data-pass23-shift-manager-choice]');
+        if (shiftBtn) {
+          e.preventDefault();
+          resolvePass23ShiftManagerEvent(shiftBtn.dataset.pass23ShiftManagerEvent, shiftBtn.dataset.pass23ShiftManagerChoice);
+          return;
+        }
+      }, true);
+
+      pass23NormaliseGroundTarget(state.annualTargets);
+
 
 
       ensureDrillingRestrictionState();
