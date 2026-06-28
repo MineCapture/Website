@@ -23027,10 +23027,20 @@
       enhanceDevToolsForNewSystems = function() {
         pass19EnhanceDevToolsBase();
         const body = $('modalBody');
-        if (!body || body.querySelector('[data-pass19-dev-tools]')) return;
-        body.insertAdjacentHTML('beforeend', `<div data-pass19-dev-tools>
-          <section class="devToolCard"><h3>Pass 19 Decision / Restriction Events</h3><p>Manual triggers for the new union, employee-relations and Survey reconciliation modal flows.</p><div class="devToolBtns"><button data-dev-action="union-pay-demand">Union Pay Demand</button><button data-dev-action="employee-dispute">Employee Dispute</button><button data-dev-action="survey-reconciliation">Survey Reconciliation</button></div></section>
-        </div>`);
+        if (!body) return;
+
+        const cards = Array.from(body.querySelectorAll('.devToolCard'));
+        const cardByTitle = (title) => cards.find(card => ((card.querySelector('h3') || {}).textContent || '').trim() === title);
+        const decisionBtns = cardByTitle('Decision Modals')?.querySelector('.devToolBtns');
+        const informativeBtns = cardByTitle('Informative Modals')?.querySelector('.devToolBtns');
+
+        if (decisionBtns && !decisionBtns.querySelector('[data-dev-action="union-pay-demand"]')) {
+          decisionBtns.insertAdjacentHTML('beforeend', '<button data-dev-action="union-pay-demand">Union Pay Demand</button><button data-dev-action="employee-dispute">Employee Dispute</button>');
+        }
+
+        if (informativeBtns && !informativeBtns.querySelector('[data-dev-action="survey-reconciliation"]')) {
+          informativeBtns.insertAdjacentHTML('beforeend', '<button data-dev-action="survey-reconciliation">Survey Reconciliation</button>');
+        }
       };
 
       document.addEventListener('click', function(e) {
