@@ -5085,6 +5085,200 @@
       }
     }
 
+
+
+    /* Playtest pass 5: onboarding flow, unified safety modal and mobile control polish. */
+    .managerConfirmStrip {
+      margin-top: 12px;
+      border: 1px solid rgba(251,191,36,0.26);
+      border-radius: 14px;
+      background: rgba(15,23,42,0.52);
+      padding: 11px;
+    }
+
+    .managerConfirmStrip p {
+      margin: 0 0 10px;
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .safetyUnifiedPanel .modalCharacterPanel {
+      border-color: rgba(250,204,21,0.50);
+      background: linear-gradient(180deg, rgba(120,53,15,0.32), rgba(15,23,42,0.92));
+    }
+
+    .safetyUnifiedPanel .safetyStanddownImpact {
+      margin: 12px 0;
+    }
+
+    .safetyUnifiedHoldPanel {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) minmax(220px, 1fr);
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 12px;
+      border: 1px solid rgba(250,204,21,0.38);
+      border-radius: 13px;
+      background: rgba(0,0,0,0.18);
+      padding: 10px;
+    }
+
+    .safetyUnifiedTimer {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 11px;
+      background: rgba(15,23,42,0.72);
+      padding: 9px;
+    }
+
+    .safetyUnifiedTimer span {
+      color: #fef3c7;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .safetyUnifiedTimer strong {
+      color: #facc15;
+      font-size: 30px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .safetyUnifiedPanel .safetyHoldMessage {
+      margin-top: 8px;
+    }
+
+    @media screen and (max-width: 920px), screen and (max-device-width: 920px), screen and (orientation: portrait) and (max-height: 1200px) {
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote {
+        flex: 0 0 154px !important;
+        width: 154px !important;
+        max-width: 154px !important;
+      }
+
+      html.phoneLayout .remotePlate,
+      body.phoneLayout .remotePlate {
+        grid-template-columns: minmax(0, 1fr) 76px !important;
+        gap: 3px !important;
+        padding: 3px !important;
+      }
+
+      html.phoneLayout .remoteDisplay,
+      body.phoneLayout .remoteDisplay {
+        padding: 4px 4px !important;
+      }
+
+      html.phoneLayout .remoteDisplayLabel,
+      body.phoneLayout .remoteDisplayLabel {
+        font-size: 6.5px !important;
+      }
+
+      html.phoneLayout .remoteDisplayValue,
+      body.phoneLayout .remoteDisplayValue {
+        font-size: 11px !important;
+      }
+
+      html.phoneLayout .toolbarMachineControls,
+      body.phoneLayout .toolbarMachineControls {
+        grid-template-columns: repeat(3, 23px) !important;
+        grid-template-rows: repeat(3, 18px) !important;
+        gap: 3px !important;
+      }
+
+      html.phoneLayout .machinePadBtn,
+      body.phoneLayout .machinePadBtn {
+        width: 23px !important;
+        height: 18px !important;
+        min-height: 18px !important;
+        border-radius: 6px !important;
+        font-size: 10px !important;
+      }
+
+      html.phoneLayout .machinePadStop,
+      body.phoneLayout .machinePadStop {
+        font-size: 6.5px !important;
+        letter-spacing: 0 !important;
+      }
+
+      html.phoneLayout .mobileEventQueue,
+      body.phoneLayout .mobileEventQueue {
+        left: auto !important;
+        right: 6px !important;
+        bottom: 5px !important;
+        width: min(258px, calc(100vw - 164px)) !important;
+        max-width: min(258px, calc(100vw - 164px)) !important;
+        height: 42px !important;
+        justify-content: flex-start !important;
+        padding: 3px 5px !important;
+        gap: 5px !important;
+        background: linear-gradient(180deg, rgba(15,23,42,0.82), rgba(15,23,42,0.64)) !important;
+      }
+
+      html.phoneLayout .mobileEventIcon,
+      body.phoneLayout .mobileEventIcon {
+        width: 39px !important;
+        height: 35px !important;
+        min-height: 35px !important;
+        grid-template-rows: 19px 11px !important;
+      }
+
+      .modalCharacterPanel {
+        grid-template-columns: 1fr !important;
+        gap: 9px !important;
+      }
+
+      .modalCharacterImageWrap {
+        height: auto !important;
+        min-height: 94px !important;
+        max-height: 148px !important;
+      }
+
+      .modalCharacterImg {
+        object-fit: contain !important;
+        object-position: center center !important;
+        max-height: 148px !important;
+      }
+
+      .safetyUnifiedHoldPanel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media screen and (max-width: 390px) {
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote {
+        flex-basis: 146px !important;
+        width: 146px !important;
+        max-width: 146px !important;
+      }
+
+      html.phoneLayout .remotePlate,
+      body.phoneLayout .remotePlate {
+        grid-template-columns: minmax(0, 1fr) 72px !important;
+      }
+
+      html.phoneLayout .toolbarMachineControls,
+      body.phoneLayout .toolbarMachineControls {
+        grid-template-columns: repeat(3, 22px) !important;
+        grid-template-rows: repeat(3, 17px) !important;
+      }
+
+      html.phoneLayout .machinePadBtn,
+      body.phoneLayout .machinePadBtn {
+        width: 22px !important;
+        height: 17px !important;
+        min-height: 17px !important;
+      }
+
+      html.phoneLayout .mobileEventQueue,
+      body.phoneLayout .mobileEventQueue {
+        width: min(226px, calc(100vw - 154px)) !important;
+        max-width: min(226px, calc(100vw - 154px)) !important;
+        bottom: 4px !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -18557,6 +18751,589 @@
       state.deferredQueueEvents = state.deferredQueueEvents || [];
       updateMachineLastSafeCells();
 
+
+
+
+      /* June 28 playtest pass 5: onboarding, safety modal, mobile polish, dependencies. */
+
+      // Move pillar layouts so the first ground-support lesson appears from displayed grid row 2.
+      isPillarCell = function(r, c) {
+        if (r >= MINE_ROWS - 1) return false;
+        if (c === START_COL) return false;
+        if (c <= 0 || c >= MINE_COLS - 1) return false;
+        const displayedRow = MINE_ROWS - r;
+        if (displayedRow < 2) return false;
+        if (displayedRow % 2 !== 0) return false;
+        const rowBand = Math.floor((displayedRow - 2) / 2);
+        return ((c + rowBand * 2) % 4 === 2);
+      };
+
+      const baseFixedKpiPackageForPass5 = fixedKpiPackageForCurrentPhase;
+      fixedKpiPackageForCurrentPhase = function(year = state.year, depthIndex = state.depthIndex) {
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        if (depth === 0 && y >= 3) {
+          const listed = y >= 4;
+          const t = {
+            phaseKey: 'depth-advancement',
+            phaseTitle: y === 3 ? 'Year 3 — Depth Advancement Programme' : 'Overdue -1100 Advancement Programme',
+            phaseTheme: 'The -1000 Level was the tutorial. The organisation has now promised deeper mining and expects operational reality to catch up.',
+            kpiKeys: ['advance1100', 'productionDelivery', 'surplus'],
+            tonnes: 16000 + Math.max(0, y - 3) * 1000,
+            grade: 14.0,
+            discoveredRows: 0,
+            surplusTarget: 0,
+            lomTargetTonnes: 0,
+            technicalHires: 0,
+            pillarSupports: 0,
+            maxPillarFailures: 99,
+            beltExtensions: 0,
+            secondMinerTonnes: 0,
+            safetyMin: 0,
+            ventilationActions: 0,
+            sharePriceTarget: 0
+          };
+          if (listed) {
+            ensureSharePriceState();
+            t.kpiKeys = [...t.kpiKeys, 'sharePrice'];
+            t.sharePriceTarget = state.sharePriceTarget || Math.round((state.yearStartSharePrice || 100) + 4 + Math.max(0, y - 4));
+          }
+          return t;
+        }
+        return baseFixedKpiPackageForPass5(year, depthIndex);
+      };
+
+      const baseMetricLabelForPass5 = metricLabelForKey;
+      metricLabelForKey = function(key) {
+        if (key === 'advance1100') return 'Advance to -1100 Level';
+        return baseMetricLabelForPass5(key);
+      };
+
+      const baseFormatMetricTargetValueForPass5 = formatMetricTargetValue;
+      formatMetricTargetValue = function(key, target = activeAnnualTargets()) {
+        if (key === 'advance1100') return 'Complete shaft deepening and reach the -1100 Level';
+        return baseFormatMetricTargetValueForPass5(key, target);
+      };
+
+      const baseFocusedMetricCardForPass5 = focusedMetricCard;
+      focusedMetricCard = function(key, target = activeAnnualTargets()) {
+        if (key === 'advance1100') {
+          const ready = canApproveShaftDeepening && canApproveShaftDeepening();
+          const reached = (Number(state.depthIndex) || 0) >= 1;
+          const status = reached ? 'onTrack' : ready ? 'atRisk' : 'failing';
+          const progress = reached ? 100 : ready ? 70 : Math.min(62, Math.max(0, ((state.exploration && state.exploration.discoveredRowsThisYear) || 0) * 24));
+          return {
+            key,
+            title: metricLabelForKey(key),
+            status,
+            html: kpiCardHtml('Advance to -1100 Level', reached ? 'Reached -1100 Level' : ready ? 'Shaft deepening justified' : 'Not yet justified', progress, status, 'Year 3 is the depth-advancement lesson. Remaining on -1000 is now a strategic failure, not a playstyle.')
+          };
+        }
+        return baseFocusedMetricCardForPass5(key, target);
+      };
+
+      const baseFixedKpiStrictPassedForPass5 = fixedKpiStrictPassed;
+      fixedKpiStrictPassed = function(key, target = activeAnnualTargets()) {
+        if (key === 'advance1100') return (Number(state.depthIndex) || 0) >= 1;
+        return baseFixedKpiStrictPassedForPass5(key, target);
+      };
+
+      const baseYearStartBriefingHtmlForPass5 = yearStartBriefingHtml;
+      yearStartBriefingHtml = function(year) {
+        const depth = Number(state.depthIndex) || 0;
+        if (depth === 0 && Number(year) >= 3) {
+          return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Advance to -1100</h2><p>The trial and early production phase has been declared successful enough to stop being treated as the whole mine.</p><p><strong>Current strategic objective:</strong> complete enough drilling and approve shaft deepening to reach the <strong>-1100 Level</strong>.</p><p>Remaining at -1000 is now interpreted as a failure to align operational reality with investor materials.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
+        }
+        return baseYearStartBriefingHtmlForPass5(year);
+      };
+
+      const baseFinanceContinueLabelForPass5 = financeContinueLabel;
+      financeContinueLabel = function(year) {
+        const depth = Number(state.depthIndex) || 0;
+        if (depth === 0 && Number(year) >= 3) return 'Review Shaft Deepening Plan';
+        return baseFinanceContinueLabelForPass5(year);
+      };
+
+      const baseLevelArrivalDetailsForPass5 = levelArrivalDetails;
+      levelArrivalDetails = function(depthIndex = state.depthIndex || 0) {
+        const details = baseLevelArrivalDetailsForPass5(depthIndex);
+        if ((Number(depthIndex) || 0) === 1) {
+          details.next = 'miningEngineering';
+          details.next2 = '';
+          details.body = `<p>Shaft deepening has reached the <strong>${currentLevelName()}</strong>.</p><p>Blocks on this level contain more tonnes, more accountability, and the first formal admission that mine design might require mine planning.</p><p>Ground-support risk now begins once Production disturbs a row containing critical pillars. The Rock Doctor will explain this using the tone of somebody who has read the original business case.</p>`;
+        }
+        return details;
+      };
+
+      const baseOpenRoleUnlockIntroForPass5 = openRoleUnlockIntro;
+      openRoleUnlockIntro = function(key, customTitle = null, nextKey = null) {
+        if (key === 'miningEngineering') nextKey = null;
+        return baseOpenRoleUnlockIntroForPass5(key, customTitle, nextKey);
+      };
+
+      // Starting recruitment now requires an explicit Next after Shift Manager selection.
+      managerCard = function(m) {
+        const selected = state.manager && state.manager.id === m.id;
+        return `<div class="choiceCard ${selected ? 'selected' : ''}">
+          <div class="portraitPanel">
+            ${portraitHtml(m)}
+            <div class="portraitDetails">
+              <h3>${escapeHtml(m.name)}</h3>
+              <p><strong>${escapeHtml(m.title)}</strong></p>
+              <p>${escapeHtml(m.description)}</p>
+              <div class="choiceMeta">${(m.effects || []).map(e => `<span class="tag">${escapeHtml(e)}</span>`).join('')}</div>
+              <button class="primary" data-manager-choice="${escapeHtml(m.id)}">${selected ? 'Selected' : 'Select'}</button>
+            </div>
+          </div>
+        </div>`;
+      };
+
+      openManagerSetup = function() {
+        setModalClosable(false);
+        $('modalWindow').className = 'window';
+        $('modalTitle').textContent = 'Select Shift Manager';
+        const selectedText = state.manager
+          ? `<p><strong>Selected:</strong> ${escapeHtml(state.manager.name)}. Press Next to confirm, or select another candidate.</p>`
+          : `<p>Select a Shift Manager, then press Next. This prevents a single accidental click becoming part of the management structure.</p>`;
+        $('modalBody').innerHTML = `
+          <div class="setupIntro">
+            <p><strong>S.H.A.F.T. Assessment Requirement:</strong> choose the person who will take the blame for SLT decision making.</p>
+          </div>
+          <div class="choiceGrid">${managerOptions.map(managerCard).join('')}</div>
+          <div class="managerConfirmStrip">
+            ${selectedText}
+            <div class="btnRow"><button class="primary" data-manager-next ${state.manager ? '' : 'disabled'}>Next: Choose Supervisor</button></div>
+          </div>`;
+        $('modalOverlay').classList.add('show');
+      };
+
+      chooseManager = function(id) {
+        const manager = managerOptions.find(m => m.id === id);
+        if (!manager) return;
+        state.manager = { ...manager };
+        openManagerSetup();
+      };
+
+      document.body.addEventListener('click', (e) => {
+        const managerNext = e.target.closest('[data-manager-next]');
+        if (!managerNext) return;
+        if (!state.manager) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openCrewSetup('supervisor');
+      }, true);
+
+      function pass5SafetyImpactCards(impacts) {
+        return (impacts && impacts.length)
+          ? impacts.map(safetyImpactHtml).join('')
+          : '<span class="neutral"><strong>0</strong>No measurable improvement, recorded as success</span>';
+      }
+
+      updateSafetyStanddownHold = function() {
+        if (!state.safetyStanddownActive) return;
+        const overlay = $('modalOverlay');
+        if (!overlay || !overlay.classList.contains('show')) return;
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        const timer = $('safetyStanddownTimer');
+        const status = $('safetyStanddownStatus');
+        const btn = document.querySelector('[data-safety-dismiss]');
+        if (timer) timer.textContent = formatSafetyTime(remaining);
+        if (status) status.textContent = remaining > 0 ? 'Standdown in progress...' : 'Hold point satisfied.';
+        if (btn) {
+          btn.classList.toggle('locked', remaining > 0);
+          btn.setAttribute('aria-disabled', remaining > 0 ? 'true' : 'false');
+        }
+        if (remaining <= 0 && state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+      };
+
+      showSafetyHoldPointMessage = function() {
+        const msg = $('safetyHoldMessage');
+        if (!msg) return;
+        msg.textContent = 'Management have mandated this as a Safety HOLD POINT. You cannot return to work until the Safety Department feel they have been listened to and suitably important.';
+        msg.classList.add('show');
+        clearTimeout(state.safetyHoldMessageTimeout);
+        state.safetyHoldMessageTimeout = setTimeout(() => msg.classList.remove('show'), 4200);
+        playGameSound('safety');
+      };
+
+      hideSafetyStanddown = function() {
+        const oldOverlay = $('safetyStanddownOverlay');
+        if (oldOverlay) oldOverlay.classList.remove('show');
+        const overlay = $('modalOverlay');
+        if (overlay) overlay.classList.remove('show');
+        if (state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+        clearTimeout(state.safetyHoldMessageTimeout);
+        state.safetyHoldUntil = 0;
+        state.safetyStanddownActive = false;
+        if (state.safetyPausedBeforeStanddown === false && !state.levelComplete) {
+          state.paused = false;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+        } else if ($('pauseBtn')) {
+          $('pauseBtn').textContent = state.paused ? 'Resume' : 'Pause';
+        }
+        updateMobileEventQueue(true);
+      };
+
+      showSafetyStanddown = function(event, impacts, positive) {
+        const oldOverlay = $('safetyStanddownOverlay');
+        if (oldOverlay) oldOverlay.classList.remove('show');
+        state.safetyStanddownActive = true;
+        state.safetyPausedBeforeStanddown = state.paused;
+        state.safetyHoldUntil = Date.now() + 10000;
+        state.lastSafetyStanddownEvent = { event, impacts, positive };
+        if (state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining) {
+          stopAutoMining('Safety standdown. The miner has stopped because a clipboard has entered the area.', 'Safety Department');
+        }
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        setModalClosable(false);
+        const impactHtml = pass5SafetyImpactCards(impacts);
+        const body = `<div class="safetyUnifiedPanel">
+          ${modalCharacterHtml('assets/characters/portraits/safety_advisor.png', 'Safety Advisor', event.category || 'Safety Department', 'The Safety Advisor requires your immediate, undivided attention.', 'SAFE')}
+          <div class="letter"><h2>Safety Standdown Alert</h2><p>${escapeHtml(event.text || 'A safety professional has entered the area with a clipboard.')}</p></div>
+          <div class="safetyStanddownImpact" id="safetyStanddownImpact">${impactHtml}</div>
+          <div class="safetyInstructionPanel">ALL ACTIVITY IS STANDBY UNTIL THE SAFETY ADVISOR IS SATISFIED.<br>Please listen carefully. It may save your career.</div>
+          <div class="safetyUnifiedHoldPanel">
+            <div class="safetyUnifiedTimer"><span id="safetyStanddownStatus">Standdown in progress...</span><strong id="safetyStanddownTimer">00:10</strong></div>
+            <button class="safetyStanddownClose locked" data-safety-dismiss aria-disabled="true">Return to Operational Uncertainty</button>
+          </div>
+          <div class="safetyHoldMessage" id="safetyHoldMessage"></div>
+        </div>`;
+        showPreparedModal('Safety Standdown Alert', body, { closable: false, windowClass: 'window medium', images: ['assets/characters/portraits/safety_advisor.png'] });
+        clearInterval(state.safetyHoldInterval);
+        updateSafetyStanddownHold();
+        state.safetyHoldInterval = setInterval(updateSafetyStanddownHold, 250);
+        updateMobileEventQueue(true);
+      };
+
+      const baseOpenMobileEventQueueItemForPass5Safety = openMobileEventQueueItem;
+      openMobileEventQueueItem = function(key) {
+        if (key === 'safety' && state.safetyStanddownActive) {
+          const saved = state.lastSafetyStanddownEvent || {};
+          showSafetyStanddown(saved.event || { text: 'A safety standdown is still active.', category: 'Safety Department' }, saved.impacts || [], saved.positive || false);
+          return;
+        }
+        return baseOpenMobileEventQueueItemForPass5Safety(key);
+      };
+
+      suspendExplorationDrilling = function() {
+        ensureDrillingRestrictionState();
+        state.exploration.drillingSuspended = true;
+        state.exploration.drillingSuspensionIssued = true;
+        state.exploration.drillingResumedIssued = false;
+        state.exploration.drillingResumeDay = state.day + 45;
+        adjustTrait('morale', -1);
+        openOperationalEventModal({
+          title: 'Exploration Drilling Suspended',
+          image: 'assets/characters/mr-b-counter.png',
+          character: 'Mr B. Counter',
+          department: 'Department of Financial Prevention',
+          label: '£',
+          tone: 'warning',
+          body: `<p>The Superior Leadership Team have identified a significant expenditure line in the financial reports titled <strong>“exploration drilling”</strong>.</p><p>As savvy business leaders specialising in mining, they have determined that a mining company should be mining, not drilling.</p><p><strong>All drilling is suspended until further notice.</strong></p><p>The geologist lets out a familiar sigh. The drilling department are en-route to the pub as their contract pays them stand-down in the event of outage.</p><p><strong>Impact:</strong> exploration programmes are paused. Drillers still draw wages. -1 Morale.</p>`,
+          button: 'Suspend the Evidence'
+        });
+      };
+
+      resumeExplorationDrilling = function() {
+        ensureDrillingRestrictionState();
+        state.exploration.drillingSuspended = false;
+        state.exploration.drillingResumedIssued = true;
+        adjustTrait('skill', 1);
+        openOperationalEventModal({
+          title: 'Exploration Drilling Resumed',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Primary Colours and Reserve Inventory',
+          label: 'GEO',
+          tone: 'info',
+          body: `<p>The Superior Leadership Team demand to know why the Ore Reserve Inventory has gone down.</p><p>The geologist tries to explain using simplistic diagrams in basic primary colours, but little is being understood.</p><p><strong>Exploration Drilling can now be resumed.</strong></p><p><strong>Impact:</strong> drilling programmes restart. +1 Skill from having explained the same concept again.</p>`,
+          button: 'Resume the Holes'
+        });
+      };
+
+      maybeDrillingRestrictionEvent = function() {
+        ensureDrillingRestrictionState();
+        if (!state.running || state.paused || isModalOpen()) return;
+        if ((Number(state.year) || 1) < 3) return;
+        if ((Number(state.depthIndex) || 0) !== 0) return;
+        if (countDiscoveredRows() <= INITIAL_UNLOCKED_ROWS) return;
+        const doy = dayOfYear();
+        if (!state.exploration.drillingSuspensionIssued && doy >= 42) { suspendExplorationDrilling(); return; }
+        if (state.exploration.drillingSuspended && !state.exploration.drillingResumedIssued && state.day >= (state.exploration.drillingResumeDay || 0)) resumeExplorationDrilling();
+      };
+
+      const baseStartExplorationProgramForPass5 = startExplorationProgram;
+      startExplorationProgram = function() {
+        ensureDrillingRestrictionState();
+        if (state.exploration.drillingSuspended) {
+          openMiniWindow('Exploration Drilling Suspended', '<p>Finance has suspended exploration drilling after identifying it as a significant expenditure line.</p><p>The drillers are paid stand-down. The geologist is sighing in a professionally controlled manner.</p>', true);
+          return;
+        }
+        return baseStartExplorationProgramForPass5();
+      };
+
+      function explorationFloatingDiscovery(row) {
+        if (!board || row === null || row < 0) return;
+        const summary = exploredRowSummary(row);
+        const y = board.y + (row + 0.5) * board.cell;
+        const x = board.x + board.w * 0.5;
+        const kt = Math.round((summary.tonnes || 0) / 1000);
+        spawnFloatingText(x, y - board.cell * 0.15, [`+${kt}Kt @ ${summary.grade.toFixed(1)}%`, 'Goldilocks'], '#fde68a');
+      }
+
+      completeExplorationProgram = function() {
+        const row = state.exploration.row;
+        const geo = geologistOnCrew();
+        if (row === null || row < 0) return;
+        const blocks = (state.blocks[MINE_ID] || []).filter(b => b.r === row);
+        for (const block of blocks) {
+          if (block.status === 'void') continue;
+          const estimate = estimateGradeForBlock(block.actualGrade, geo);
+          block.status = 'solid';
+          block.estimatedGrade = estimate.estimatedGrade;
+          block.grade = estimate.estimatedGrade;
+          block.gradeConfidence = estimate.confidence;
+          block.isPillar = isPillarCell(block.r, block.c);
+          const depth = Math.max(0, Number(state.depthIndex) || 0);
+          const idx = block.r * MINE_COLS + block.c + 8843 + depth * 1379;
+          block.gasPocket = depth >= 3 && !block.isPillar && seeded(idx + 71) > 0.925;
+          block.gasReleased = false;
+          block.waterPocket = depth >= 3 && !block.isPillar && seeded(idx + 83) > 0.955;
+          block.waterReleased = false;
+          if (block.isPillar) block.pillarState = 'stable';
+        }
+        state.exploration.active = false;
+        state.exploration.progress = 0;
+        state.exploration.lastCompletedRow = row;
+        state.exploration.rowReveal = { row, t: 6 };
+        state.exploration.discoveredRowsThisYear = (state.exploration.discoveredRowsThisYear || 0) + 1;
+        state.exploration.pausedForStaff = false;
+        explorationFloatingDiscovery(row);
+        showProductionComment('Exploration row discovered. Reserve inventory has increased; the result is shown directly on the drilled row rather than as another meeting.', 'Exploration', 5.5);
+        if (hasReachedLevelTransition() || nextExplorationRow() === null) openDeclineProposal();
+      };
+
+      function pass5ResearchOptions() {
+        return [
+          { key: 'productivity', title: 'Conduct Productivity Research', trait: 'productivity', cost: 14500, days: 165, min: 8, max: 15, desc: 'A half-year study into why the mine does not move tonnes as quickly as the graph said it would.', failTrait: 'safety', failDelta: -2 },
+          { key: 'skill', title: 'Conduct Skill Research', trait: 'skill', cost: 15000, days: 170, min: 8, max: 15, desc: 'A long-form attempt to convert operator knowledge, diagrams and awkward feedback into repeatable competence.', failTrait: 'morale', failDelta: -2 },
+          { key: 'morale', title: 'Conduct Morale Research', trait: 'morale', cost: 11800, days: 135, min: 7, max: 13, desc: 'A strategic engagement review to establish whether people prefer tea, pay, dignity or fewer strategic engagement reviews.', failTrait: 'productivity', failDelta: -2 },
+          { key: 'safety', title: 'Conduct Safety Research', trait: 'safety', cost: 15800, days: 175, min: 8, max: 15, desc: 'A deep review of controls, near misses and the uncomfortable gap between procedure and behaviour.', failTrait: 'productivity', failDelta: -3 }
+        ];
+      }
+
+      researchOptionsForTraits = pass5ResearchOptions;
+      engineeringResearchOptions = function() { return pass5ResearchOptions(); };
+
+      completeEngineeringResearch = function() {
+        const active = state.engineeringResearch;
+        const eng = miningEngineerOnCrew();
+        if (!active) return;
+        if (!eng) {
+          state.engineeringResearchPausedForStaff = true;
+          return;
+        }
+        const skill = clamp(Number(eng.skill) || 3, 1, 5);
+        const successChance = clamp(0.32 + skill * 0.10, 0.42, 0.84);
+        const backfireChance = clamp(0.18 - skill * 0.022, 0.05, 0.16);
+        const roll = Math.random();
+        let title = 'Research Completed';
+        let tone = 'info';
+        let body = '';
+        if (roll < successChance) {
+          const magnitude = Math.round(active.min + Math.random() * (active.max - active.min) + Math.max(0, skill - 3));
+          adjustTrait(active.trait, magnitude);
+          if (sharePriceMetricActive()) adjustSharePrice(Math.max(2, Math.round(magnitude / 2)), 'Useful research: ' + active.title);
+          title = 'Research Successful';
+          tone = 'good';
+          body = `<p><strong>${escapeHtml(active.title)}</strong> has produced a useful operational recommendation.</p><p><strong>Outcome:</strong> +${magnitude} ${traitLabel(active.trait)}.</p><p>The recommendation is significant enough to affect the operation, and therefore alarming enough to require implementation.</p>`;
+        } else if (roll > 1 - backfireChance) {
+          const partial = Math.max(2, Math.round((active.min || 8) * 0.45));
+          adjustTrait(active.trait, partial);
+          adjustTrait(active.failTrait, active.failDelta);
+          if (sharePriceMetricActive()) adjustSharePrice(-1, 'Research side-effects: ' + active.title);
+          title = 'Research Completed, With Consequences';
+          tone = 'warning';
+          body = `<p><strong>${escapeHtml(active.title)}</strong> has produced a valid finding and an operational side-effect.</p><p><strong>Outcome:</strong> +${partial} ${traitLabel(active.trait)}, ${active.failDelta} ${traitLabel(active.failTrait)}.</p><p>The Mining Engineer confirms the methodology was sound. This has not improved the meeting.</p>`;
+        } else {
+          const partial = Math.max(3, Math.round((active.min || 8) * 0.55));
+          adjustTrait(active.trait, partial);
+          title = 'Research Partially Useful';
+          tone = 'info';
+          body = `<p><strong>${escapeHtml(active.title)}</strong> has produced a cautious but usable recommendation.</p><p><strong>Outcome:</strong> +${partial} ${traitLabel(active.trait)}.</p><p>The appendix is longer than the conclusion, which confirms technical rigour.</p>`;
+        }
+        state.engineeringResearch = null;
+        state.engineeringResearchPausedForStaff = false;
+        openOperationalEventModal({ title, image: 'assets/characters/mining-engineer.png', character: 'Mining Engineer', department: 'Applied Recommendations', label: 'R&D', tone, body, button: 'File the Research' });
+      };
+
+      function miningReadinessIssue() {
+        if (!state.manager) return { title: 'Mining Blocked: No Shift Manager', body: '<p>Mining cannot proceed without a Shift Manager. There must be a named person available to translate SLT decisions into something Production can be blamed for misunderstanding.</p>' };
+        if (!hasSupervisorHired()) return { title: 'Mining Blocked: No Supervisor Available', body: supervisorBlockHtml() };
+        if (staffGroup('miner').length < 1) return { title: 'Mining Blocked: No Miner Available', body: '<p>Mining cannot proceed without at least one Miner. The continuous miner remains technically present, but nobody authorised to operate it is currently on the crew.</p>' };
+        return null;
+      }
+
+      function stopMobileMiningPlant(message, category = 'S.H.A.F.T.') {
+        let stopped = false;
+        [state.machine1, state.machine2].forEach(m => {
+          if (m && (m.status === 'mining' || m.status === 'tramming' || m.autoMining)) {
+            if (m.status === 'mining') {
+              const target = m.target ? blockAt(m.target.q, m.target.r, m.target.c) : null;
+              if (target && target.status === 'mining') target.status = target.wasRubble ? 'rubble' : 'solid';
+            }
+            m.status = 'idle';
+            m.autoMining = false;
+            m.target = null;
+            m.progress = 0;
+            stopped = true;
+          }
+        });
+        if (stopped) showProductionComment(message, category, 7);
+        return stopped;
+      }
+
+      const baseStartAutoMiningForPass5Dependencies = startAutoMining;
+      startAutoMining = function() {
+        const issue = miningReadinessIssue();
+        if (issue) {
+          openMiniWindow(issue.title, issue.body, true);
+          showProductionComment(issue.title.replace('Mining Blocked: ', '') + '. Production cannot continue until the role dependency is restored.', 'S.H.A.F.T.', 6);
+          return;
+        }
+        return baseStartAutoMiningForPass5Dependencies();
+      };
+
+      function enforceOperationalRoleDependencies(reason = 'Staff dependency changed') {
+        const miningIssue = miningReadinessIssue();
+        if (miningIssue) stopMobileMiningPlant('Mining has stopped because a required operating role is no longer available. HR calls this workforce agility.', 'S.H.A.F.T.');
+        if (state.exploration && state.exploration.active) {
+          const ready = !!(state.assets && state.assets.drillOwned && geologistOnCrew() && drillersOnCrew().length >= 2);
+          if (!ready && !state.exploration.pausedForStaff) {
+            state.exploration.pausedForStaff = true;
+            showProductionComment('Exploration drilling has stopped because the required Geologist/Driller coverage is no longer available.', 'Exploration', 6);
+          }
+        }
+        if (state.engineeringResearch && !miningEngineerOnCrew() && !state.engineeringResearchPausedForStaff) {
+          state.engineeringResearchPausedForStaff = true;
+          showProductionComment('Research has stopped because the Mining Engineer is no longer available to turn cost into confidence.', 'Mining Engineering', 6);
+        }
+        if (state.bolter && state.bolter.status === 'bolting' && !rockDoctorOnCrew()) {
+          stopBolter('Bolting stopped because the Rock Doctor is no longer available to sign the roof back into existence.');
+        }
+      }
+
+      const baseUpdateExplorationForPass5Dependencies = updateExploration;
+      updateExploration = function(dt) {
+        if (state.exploration && state.exploration.active) {
+          const ready = !!(state.assets && state.assets.drillOwned && geologistOnCrew() && drillersOnCrew().length >= 2);
+          if (!ready) {
+            if (!state.exploration.pausedForStaff) {
+              state.exploration.pausedForStaff = true;
+              showProductionComment('Exploration drilling has paused. It requires a drill, one Geologist and two Drillers.', 'Exploration', 6);
+            }
+            return;
+          }
+          if (state.exploration.pausedForStaff) {
+            state.exploration.pausedForStaff = false;
+            showProductionComment('Exploration drilling coverage restored. The programme can continue turning cash into coloured certainty.', 'Exploration', 5);
+          }
+        }
+        return baseUpdateExplorationForPass5Dependencies(dt);
+      };
+
+      const baseUpdateEngineeringResearchForPass5Dependencies = updateEngineeringResearch;
+      updateEngineeringResearch = function(dt) {
+        if (state.engineeringResearch && !miningEngineerOnCrew()) {
+          if (!state.engineeringResearchPausedForStaff) {
+            state.engineeringResearchPausedForStaff = true;
+            showProductionComment('Research has paused because the Mining Engineer is missing.', 'Mining Engineering', 5.5);
+          }
+          return;
+        }
+        if (state.engineeringResearch && state.engineeringResearchPausedForStaff && miningEngineerOnCrew()) {
+          state.engineeringResearchPausedForStaff = false;
+          showProductionComment('Mining Engineer coverage restored. Research has resumed.', 'Mining Engineering', 5);
+        }
+        return baseUpdateEngineeringResearchForPass5Dependencies(dt);
+      };
+
+      const baseFireStaffForPass5Dependencies = fireStaff;
+      fireStaff = function(id) {
+        const before = state.staff.find(s => s.id === id);
+        baseFireStaffForPass5Dependencies(id);
+        if (before) enforceOperationalRoleDependencies('fired:' + before.role);
+      };
+
+      const baseResignStaffForPass5Dependencies = resignStaff;
+      resignStaff = function(staff, reason) {
+        const role = staff && staff.role;
+        baseResignStaffForPass5Dependencies(staff, reason);
+        if (role) enforceOperationalRoleDependencies('resigned:' + role);
+      };
+
+      const baseHireForPass5Onboarding = hire;
+      hire = function(id) {
+        const candidate = state.candidates.find(c => c.id === id);
+        const role = candidate && candidate.role;
+        baseHireForPass5Onboarding(id);
+        if (role === 'miningEngineer' && featureUnlocked('technicalTeam') && !state.pass5ResearchIntroShown) {
+          state.pass5ResearchIntroShown = true;
+          state.awaitingGroundControlIntroAfterResearch = true;
+          setTimeout(() => {
+            openResearchWindow();
+            const body = $('modalBody');
+            if (body && !body.querySelector('[data-pass5-ground-intro]')) {
+              body.insertAdjacentHTML('beforeend', '<div class="btnRow"><button class="primary" data-pass5-ground-intro>Continue to Rock Doctor Department</button></div>');
+            }
+          }, 0);
+          return;
+        }
+        if (role) enforceOperationalRoleDependencies('hired:' + role);
+      };
+
+      document.body.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-pass5-ground-intro]');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        state.awaitingGroundControlIntroAfterResearch = false;
+        openRoleUnlockIntro('groundControl');
+      }, true);
+
+      const baseOpenResearchWindowForPass5 = openResearchWindow;
+      openResearchWindow = function() {
+        baseOpenResearchWindowForPass5();
+        if (state.awaitingGroundControlIntroAfterResearch) {
+          const body = $('modalBody');
+          if (body && !body.querySelector('[data-pass5-ground-intro]')) {
+            body.insertAdjacentHTML('beforeend', '<div class="btnRow"><button class="primary" data-pass5-ground-intro>Continue to Rock Doctor Department</button></div>');
+          }
+        }
+      };
+
+      const baseDevActionForPass5 = devAction;
+      devAction = function(action) {
+        if (action === 'force-year3-depth-kpi') { state.year = 3; state.depthIndex = 0; state.mineLevel = -1000; state.annualTargets = targetsForYear(3); openWindow('targets'); return; }
+        return baseDevActionForPass5(action);
+      };
+
+      const baseEnhanceDevToolsForPass5 = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForPass5();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-pass5-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-pass5-dev-tools>
+          <section class="devToolCard"><h3>Pass 5 Onboarding / Dependencies</h3><p>Test Year 3 depth KPI and staff dependency blocking.</p><div class="devToolBtns"><button data-dev-action="force-year3-depth-kpi">Year 3 Depth KPI</button></div></section>
+        </div>`);
+      };
 
       ensureDrillingRestrictionState();
 
