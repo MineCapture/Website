@@ -5279,6 +5279,66 @@
       }
     }
 
+
+    /* Playtest pass 6: modal-result flow, mobile/dashboard polish and ground-control onboarding. */
+    .kpiTrackerGrid, .financeSummaryGrid, .sltReviewBox {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .kpiTrackerCard, .financeSummaryCard, .sltReviewBox .reviewPanel {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      word-break: normal;
+    }
+
+    .kpiStatusLine {
+      min-width: 0;
+      align-items: flex-start;
+    }
+
+    .kpiStatusLine strong {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .kpiStatusBadge {
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .shiftDashboard .kpiTrackerGrid {
+      grid-template-columns: 1fr;
+    }
+
+    .safetyStanddownClose.locked {
+      pointer-events: auto;
+    }
+
+    @media screen and (max-width: 760px) {
+      .modalCharacterPanel {
+        grid-template-columns: 1fr !important;
+      }
+
+      .modalCharacterImageWrap {
+        height: 104px !important;
+        max-height: 28vh !important;
+      }
+
+      .modalCharacterImg {
+        object-fit: contain !important;
+        object-position: center !important;
+      }
+
+      .window, .window.medium {
+        max-width: calc(100vw - 18px);
+      }
+
+      .kpiTrackerGrid, .financeSummaryGrid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -8920,7 +8980,7 @@
           label: 'HOPE',
           tone: 'warning',
           body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p><p>HOPE would like to thank you for supporting its continuous improvement journey.</p>`,
-          button: 'Acknowledge the Strategy'
+          button: 'Accept the Strategy of HOPE'
         });
         showProductionComment(label + ' has been returned to service in its previous condition, which HOPE describes as a successful upgrade.', 'Vendor Support', 7);
         return true;
@@ -14362,7 +14422,7 @@
         if (action === 'meeting-event') { state.meetingEventDoneThisYear = false; applyPointlessMeetingEvent(randomItem(meetingEvents())); return; }
         if (action === 'external-affairs') { forceExternalAffairsEvent(); return; }
         if (action === 'grade-constraint') { state.gradeConstraintEventDoneThisYear = false; applyGradeConstraintEvent(randomItem(gradeConstraintEvents())); return; }
-        if (action === 'hope-support') { state.hopeSupportEventDoneThisYear = false; state.year = Math.max(2, state.year); const key = state.assets && state.assets.secondMinerOwned && Math.random() < 0.5 ? 'miner2' : 'miner1'; const miner = minerStateForKey(key); const label = key === 'miner2' ? '2ndHOPE' : '1stHOPE'; if (miner && (miner.status === 'mining' || miner.status === 'tramming')) runWithMinerContext(miner, () => stopAutoMining(label + ' has stopped for a HOPE software support intervention.', 'Vendor Support')); if (miner) miner.condition = Math.max(0, (miner.condition || 80) - 8); const cost = scaledCost(2400 + (state.assets && state.assets.secondMinerOwned ? 900 : 0)); spend(cost, 'HOPE software support'); openOperationalEventModal({ title: 'HOPE: It’s Our Strategy', image: 'assets/characters/hope-support-engineer.png', character: 'HOPE Support Engineers', department: 'Vendor Strategy and Rollback Services', label: 'HOPE', tone: 'warning', body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p>`, button: 'Acknowledge the Strategy' }); return; }
+        if (action === 'hope-support') { state.hopeSupportEventDoneThisYear = false; state.year = Math.max(2, state.year); const key = state.assets && state.assets.secondMinerOwned && Math.random() < 0.5 ? 'miner2' : 'miner1'; const miner = minerStateForKey(key); const label = key === 'miner2' ? '2ndHOPE' : '1stHOPE'; if (miner && (miner.status === 'mining' || miner.status === 'tramming')) runWithMinerContext(miner, () => stopAutoMining(label + ' has stopped for a HOPE software support intervention.', 'Vendor Support')); if (miner) miner.condition = Math.max(0, (miner.condition || 80) - 8); const cost = scaledCost(2400 + (state.assets && state.assets.secondMinerOwned ? 900 : 0)); spend(cost, 'HOPE software support'); openOperationalEventModal({ title: 'HOPE: It’s Our Strategy', image: 'assets/characters/hope-support-engineer.png', character: 'HOPE Support Engineers', department: 'Vendor Strategy and Rollback Services', label: 'HOPE', tone: 'warning', body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p>`, button: 'Accept the Strategy of HOPE' }); return; }
         if (action === 'heat-event') { forceHeatVentilationEvent(); return; }
         if (action === 'power-outage') { state.powerOutageDoneThisYear = false; triggerPowerOutageEvent(true); return; }
         if (action === 'crew-accident') { state.crewAccidentDoneThisYear = false; triggerCrewAccidentEvent(true); return; }
@@ -19286,13 +19346,9 @@
         baseHireForPass5Onboarding(id);
         if (role === 'miningEngineer' && featureUnlocked('technicalTeam') && !state.pass5ResearchIntroShown) {
           state.pass5ResearchIntroShown = true;
-          state.awaitingGroundControlIntroAfterResearch = true;
+          state.awaitingGroundControlIntroAfterResearch = false;
           setTimeout(() => {
             openResearchWindow();
-            const body = $('modalBody');
-            if (body && !body.querySelector('[data-pass5-ground-intro]')) {
-              body.insertAdjacentHTML('beforeend', '<div class="btnRow"><button class="primary" data-pass5-ground-intro>Continue to Rock Doctor Department</button></div>');
-            }
           }, 0);
           return;
         }
@@ -19310,13 +19366,8 @@
 
       const baseOpenResearchWindowForPass5 = openResearchWindow;
       openResearchWindow = function() {
+        state.awaitingGroundControlIntroAfterResearch = false;
         baseOpenResearchWindowForPass5();
-        if (state.awaitingGroundControlIntroAfterResearch) {
-          const body = $('modalBody');
-          if (body && !body.querySelector('[data-pass5-ground-intro]')) {
-            body.insertAdjacentHTML('beforeend', '<div class="btnRow"><button class="primary" data-pass5-ground-intro>Continue to Rock Doctor Department</button></div>');
-          }
-        }
       };
 
       const baseDevActionForPass5 = devAction;
@@ -19333,6 +19384,305 @@
         body.insertAdjacentHTML('beforeend', `<div data-pass5-dev-tools>
           <section class="devToolCard"><h3>Pass 5 Onboarding / Dependencies</h3><p>Test Year 3 depth KPI and staff dependency blocking.</p><div class="devToolBtns"><button data-dev-action="force-year3-depth-kpi">Year 3 Depth KPI</button></div></section>
         </div>`);
+      };
+
+
+      /* Playtest pass 6: decision outcomes, balance, ground-control onboarding and safety hold fixes. */
+      function pass6ImmediateOutcomeModal(ev) {
+        if (!ev) return;
+        setModalClosable(true);
+        const overlay = $('modalOverlay');
+        const win = $('modalWindow');
+        if (!overlay || !win) return;
+        win.className = ev.windowClass || 'window medium';
+        $('modalTitle').textContent = ev.title || 'Decision Outcome';
+        const eventImage = ev.image ? modalCharacterHtml(ev.image, ev.character || ev.title || 'Decision Outcome', ev.department || 'Operational Consequence', ev.imageText || 'A decision has produced a consequence.', ev.label || 'OUT') : '';
+        $('modalBody').innerHTML = eventImage + (ev.body || '<p>Outcome details unavailable.</p>') + `<div class="btnRow"><button class="primary" data-close>${escapeHtml(ev.button || 'Accept Consequence')}</button></div>`;
+        overlay.classList.add('show');
+      }
+
+      openDecisionOutcomeModal = function(ev) {
+        // Decision modals should resolve immediately in-place. Do not close and create a second event bubble.
+        pass6ImmediateOutcomeModal(ev);
+      };
+
+      const baseOpenOperationalEventModalForPass6 = openOperationalEventModal;
+      openOperationalEventModal = function(ev) {
+        if (ev && ev.forceImmediateOutcome) {
+          pass6ImmediateOutcomeModal(ev);
+          return;
+        }
+        return baseOpenOperationalEventModalForPass6(ev);
+      };
+
+      const baseExternalAffairsEventListForPass6 = externalAffairsEventList;
+      externalAffairsEventList = function() {
+        const list = baseExternalAffairsEventListForPass6();
+        list.push({
+          kind: 'screeningTrees',
+          title: 'External Affairs Proposal',
+          image: 'assets/characters/community-relations.png',
+          character: 'External Affairs',
+          department: 'Community Visibility Reduction',
+          body: '<p>External Affairs have developed a plan to improve community relations.</p><p>They propose planting trees around the edge of the mine site to prevent external parties from becoming aware of the mine’s existence.</p><p>The plan has been described as nature-based stakeholder invisibility.</p>',
+          choices: [
+            ['trees', 'Agree and plant trees', 'Moderate spend. Improves reputation slowly by hiding the mine behind photosynthesis.'],
+            ['wall', 'Suggest a more immediate solution like a wall or curtain', 'Higher spend. Faster concealment. Suspiciously literal.'],
+            ['yellow', 'Paint all mine buildings yellow instead', 'Cheap, highly visible, and therefore strategically confusing.'],
+            ['sport', 'Offer bribe disguised as community investment to local kids sport clubs', 'Expensive. Excellent optics until anyone reads the invoice.']
+          ]
+        });
+        return list;
+      };
+
+      const baseResolveExternalAffairsChoiceForPass6 = resolveExternalAffairsChoice;
+      resolveExternalAffairsChoice = function(encoded) {
+        const [kind, choice] = String(encoded || '').split(':');
+        if (kind !== 'screeningTrees') return baseResolveExternalAffairsChoiceForPass6(encoded);
+        let title = 'Community Relations Outcome';
+        let body = '';
+        let tone = 'info';
+        if (choice === 'trees') {
+          const cost = scaledCost(2200);
+          spend(2200, 'Community tree screen');
+          adjustTrait('morale', 1);
+          if (sharePriceMetricActive()) adjustSharePrice(1, 'External Affairs planted a visibility screen');
+          tone = 'good';
+          body = `<p>Trees have been planted around the mine boundary. External Affairs has confirmed that, once mature, they will almost certainly obscure the site from anyone not using eyes, maps, drones, roads or local knowledge.</p><p><strong>Impact:</strong> ${money(cost)} spend, +1 Morale, small reputation benefit.</p>`;
+        } else if (choice === 'wall') {
+          const cost = scaledCost(4200);
+          spend(4200, 'Community relations wall and curtain study');
+          adjustTrait('productivity', -1);
+          if (sharePriceMetricActive()) adjustSharePrice(Math.random() < 0.55 ? 2 : -2, 'External Affairs installed a visual reassurance barrier');
+          tone = 'warning';
+          body = `<p>A more immediate barrier has been specified. It is being described externally as a community reassurance screen and internally as a wall, because that is what it is.</p><p><strong>Impact:</strong> ${money(cost)} spend, -1 Productivity. Reputation impact depends on whether anyone asks why the reassurance needed to be opaque.</p>`;
+        } else if (choice === 'yellow') {
+          const cost = scaledCost(850);
+          spend(850, 'Yellow building paint');
+          adjustTrait('morale', 1);
+          if (sharePriceMetricActive()) adjustSharePrice(-1, 'Mine buildings painted highly visible yellow');
+          tone = 'warning';
+          body = `<p>The mine buildings have been painted yellow. The site is now less industrial-looking only to people who believe warning signs are a camouflage pattern.</p><p><strong>Impact:</strong> ${money(cost)} spend, +1 Morale, minor reputation confusion.</p>`;
+        } else {
+          const cost = scaledCost(5200);
+          spend(5200, 'Community sport investment');
+          adjustTrait('morale', 2);
+          if (sharePriceMetricActive()) adjustSharePrice(3, 'Community sport investment announcement');
+          state.externalAffairsScandalRisk = (state.externalAffairsScandalRisk || 0) + 1;
+          tone = 'good';
+          body = `<p>Local youth sport has received a generous community investment with a sponsorship banner large enough to cover several difficult questions.</p><p><strong>Impact:</strong> ${money(cost)} spend, +2 Morale, short-term reputation benefit. External Affairs has requested nobody use the word bribe in writing.</p>`;
+        }
+        openDecisionOutcomeModal({ title, image: 'assets/characters/community-relations.png', character: 'External Affairs', department: 'Community Interface', label: 'EXT', tone, body, button: 'Update Stakeholder Narrative' });
+      };
+
+      const baseForceExternalAffairsEventForPass6 = forceExternalAffairsEvent;
+      forceExternalAffairsEvent = function(kind = null) {
+        if (kind === 'screeningTrees') {
+          const ev = externalAffairsEventList().find(x => x.kind === 'screeningTrees');
+          state.externalAffairsDoneThisYear = true;
+          openExternalAffairsChoiceModal(ev);
+          return true;
+        }
+        return baseForceExternalAffairsEventForPass6(kind);
+      };
+
+      // Lower block tonnage while preserving mining duration. A very efficient Year 1 should now land near 15kt, not far above it.
+      const PASS6_BLOCK_TONNES_FACTOR = 0.34;
+      const baseInitBlocksForPass6 = initBlocks;
+      initBlocks = function() {
+        baseInitBlocksForPass6();
+        const blocks = state.blocks && state.blocks[MINE_ID] ? state.blocks[MINE_ID] : [];
+        for (const b of blocks) {
+          if (!b || b.isPillar) continue;
+          const sourceTonnes = Number(b.pass6OriginalTonnes || b.tonnes || 0);
+          if (!b.pass6OriginalTonnes) b.pass6OriginalTonnes = sourceTonnes;
+          b.tonnes = Math.max(120, Math.round(sourceTonnes * PASS6_BLOCK_TONNES_FACTOR));
+        }
+      };
+
+      const baseFixedKpiPackageForPass6 = fixedKpiPackageForCurrentPhase;
+      fixedKpiPackageForCurrentPhase = function(year = state.year, depthIndex = state.depthIndex) {
+        const t = baseFixedKpiPackageForPass6(year, depthIndex);
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        if (depth === 0 && y === 2) {
+          t.tonnes = 14000;
+          t.grade = 14.0;
+        } else if (depth === 0 && y >= 3) {
+          t.tonnes = 12000 + Math.max(0, y - 3) * 1000;
+          t.grade = 14.0;
+        } else if (depth === 1) {
+          t.tonnes = 18000 + Math.max(0, y - 4) * 1200;
+          t.grade = 14.1;
+        } else if (depth === 2) {
+          t.tonnes = 26000 + Math.max(0, y - 5) * 1800;
+          t.secondMinerTonnes = 7000 + Math.max(0, y - 5) * 900;
+        } else if (depth === 3) {
+          t.tonnes = 30000 + Math.max(0, y - 6) * 2200;
+        } else if (depth >= 4) {
+          t.tonnes = 34000 + Math.max(0, y - 7) * 2600;
+        }
+        return t;
+      };
+
+      // Ground support now unlocks only after Production actually disturbs a critical pillar row on -1100.
+      const baseFeatureUnlockedForPass6 = featureUnlocked;
+      featureUnlocked = function(name) {
+        if (name === 'groundSupport') return (Number(state.depthIndex) || 0) >= 1 && !!state.groundControlUnlocked;
+        return baseFeatureUnlockedForPass6(name);
+      };
+
+      const baseRoleHireUnlockedForPass6 = roleHireUnlocked;
+      roleHireUnlocked = function(role) {
+        if (role === 'rockDoctor') return featureUnlocked('groundSupport');
+        return baseRoleHireUnlockedForPass6(role);
+      };
+
+      const baseRoleUnlockTextForPass6 = roleUnlockText;
+      roleUnlockText = function(role) {
+        if (role === 'rockDoctor') return 'Unlocks after the ground starts making noises on -1100';
+        return baseRoleUnlockTextForPass6(role);
+      };
+
+      const baseRoleIntroContentForPass6 = roleIntroContent;
+      roleIntroContent = function(key) {
+        if (key === 'groundControl') {
+          return {
+            title: 'Ground Control Unlock',
+            image: 'assets/characters/rock-doctor.png',
+            character: 'Rock Doctor',
+            department: 'Ground Control and Roof Retention',
+            initials: 'ROCK',
+            body: `<div class="letter"><h2>Ground Control Unlock</h2>
+              <p>The Mining team report that the ground is making a strange noise in row 2.</p>
+              <p>The Mining Engineer has described this as <strong>not ideal</strong>, which is Engineering language for something that will shortly become Production's problem.</p>
+              <p>The Superior Leadership Team has authorised a Rock Doctor to determine whether the roof should remain above the floor.</p>
+              <p>The Rock Doctor will inspect pillars, object to Production's interpretation of gravity, and insist that the bolter exists for a reason.</p>
+            </div>`,
+            button: 'Proceed to Hire Rock Doctor'
+          };
+        }
+        return baseRoleIntroContentForPass6(key);
+      };
+
+      function pass6RowContainsCriticalPillar(row) {
+        const blocks = state.blocks && state.blocks[MINE_ID] ? state.blocks[MINE_ID] : [];
+        return blocks.some(b => b && b.r === row && b.isPillar && b.status !== 'locked' && b.pillarState !== 'failed');
+      }
+
+      function pass6TriggerGroundControlIfNeeded(row) {
+        if ((Number(state.depthIndex) || 0) < 1) return false;
+        if (state.groundControlUnlocked || state.groundControlIntroTriggered) return false;
+        if (!pass6RowContainsCriticalPillar(row)) return false;
+        state.groundControlUnlocked = true;
+        state.groundControlIntroTriggered = true;
+        state.roleIntroShown = state.roleIntroShown || {};
+        setTimeout(() => openRoleUnlockIntro('groundControl', 'Ground Control Unlock'), 0);
+        showProductionComment('The ground has made a noise in a pillar row. Mining Engineering has escalated this into a new department.', 'Ground Control', 7);
+        return true;
+      }
+
+      const baseCompleteMiningBlockForPass6 = completeMiningBlock;
+      completeMiningBlock = function(target, pos) {
+        const row = target && typeof target.r === 'number' ? target.r : null;
+        const result = baseCompleteMiningBlockForPass6(target, pos);
+        if (row !== null) pass6TriggerGroundControlIfNeeded(row);
+        return result;
+      };
+
+      const baseLevelArrivalDetailsForPass6 = levelArrivalDetails;
+      levelArrivalDetails = function(depthIndex = state.depthIndex || 0) {
+        const details = baseLevelArrivalDetailsForPass6(depthIndex);
+        if ((Number(depthIndex) || 0) === 1) {
+          details.next = 'miningEngineering';
+          details.next2 = '';
+          details.body = `<p>Shaft deepening has reached the <strong>${currentLevelName()}</strong>.</p><p>The -1000 Level tutorial is over. Mining Engineering is now available because deeper mining apparently benefits from planning before movement.</p><p>Ground Control will become available once Production first disturbs a row containing critical pillars and the ground begins contributing feedback.</p>`;
+        }
+        return details;
+      };
+
+      const baseStartGameForPass6 = startGame;
+      startGame = function() {
+        const result = baseStartGameForPass6();
+        const btn = $('startBtn');
+        if (btn && state.running) {
+          btn.textContent = 'Shift Running';
+          btn.title = 'Status only. Use Pause/Resume to stop the operating clock.';
+        }
+        return result;
+      };
+
+      const baseUpdateHudForPass6StartStatus = updateHud;
+      updateHud = function() {
+        baseUpdateHudForPass6StartStatus();
+        const btn = $('startBtn');
+        if (btn && state.running) {
+          btn.textContent = 'Shift Running';
+          btn.title = 'Status only. Use Pause/Resume to stop the operating clock.';
+        }
+      };
+
+      // Guard all close routes while a safety standdown is inside the shared modal shell.
+      document.body.addEventListener('click', (e) => {
+        if (!state.safetyStanddownActive) return;
+        const closeAttempt = e.target.closest('[data-close], #modalCloseBtn, [data-safety-dismiss]');
+        if (!closeAttempt) return;
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        if (remaining > 0) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          showSafetyHoldPointMessage();
+          updateSafetyStanddownHold();
+          return;
+        }
+        if (e.target.closest('[data-safety-dismiss], #modalCloseBtn, [data-close]')) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          hideSafetyStanddown();
+        }
+      }, true);
+
+      const baseUpdateSafetyStanddownHoldForPass6 = updateSafetyStanddownHold;
+      updateSafetyStanddownHold = function() {
+        baseUpdateSafetyStanddownHoldForPass6();
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        const closeBtn = $('modalCloseBtn');
+        if (closeBtn && state.safetyStanddownActive) closeBtn.style.display = 'none';
+        const btn = document.querySelector('[data-safety-dismiss]');
+        if (btn) btn.textContent = remaining > 0 ? 'Safety Hold Point Active' : 'Return to Operational Uncertainty';
+      };
+
+      const baseFailPillarForPass6 = failPillar;
+      failPillar = function(block) {
+        if (!block || block.pillarState === 'failed') return baseFailPillarForPass6(block);
+        const beforeQueueLen = (state.queueEvents || []).length;
+        baseFailPillarForPass6(block);
+        const ev = (state.queueEvents || []).slice(beforeQueueLen).find(x => x.kind === 'pillarFailure');
+        if (ev) {
+          const grid = escapeHtml((block && block.failedGridRef) || gridRef(block));
+          ev.body = `<p>A pillar at <strong>Grid ${grid}</strong> has failed after Production disturbed the row and then allowed the issue to mature into a formal ground-control opportunity.</p>
+            <p>The Rock Doctor has sterilised nearby ground pending a full review of whether the mine is still where the model said it was. Several blocks have been removed from the production plan and reclassified as <strong>future technical opportunity</strong>.</p>
+            <p>Fortunately, the crew managed to keep mobile plant clear of the worst of the movement, avoiding the additional development opportunity of rescuing a machine from its own production area.</p>
+            <p><strong>Penalty:</strong> Safety, Morale and Productivity have all taken a hit, and Finance has opened a new cost code called ground-control learning.</p>
+            <p>Sterilised ground cannot be mined. The reserve remains visible, which Finance has described as helpful for presentations and unhelpful for cash.</p>`;
+        }
+      };
+
+      const baseEnhanceDevToolsForPass6 = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForPass6();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-pass6-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-pass6-dev-tools>
+          <section class="devToolCard"><h3>Pass 6 Events</h3><p>Test the new decision-result flow and staged ground-control unlock.</p><div class="devToolBtns"><button data-dev-action="external-trees">External Affairs Trees</button><button data-dev-action="unlock-ground-control">Unlock Ground Control</button></div></section>
+        </div>`);
+      };
+
+      const baseDevActionForPass6 = devAction;
+      devAction = function(action) {
+        if (action === 'external-trees') { forceExternalAffairsEvent('screeningTrees'); return; }
+        if (action === 'unlock-ground-control') { state.groundControlUnlocked = true; state.groundControlIntroTriggered = true; openRoleUnlockIntro('groundControl', 'Dev: Ground Control Unlock'); return; }
+        return baseDevActionForPass6(action);
       };
 
       ensureDrillingRestrictionState();
