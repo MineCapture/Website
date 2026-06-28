@@ -5557,6 +5557,296 @@
       }
     }
 
+  
+
+    /* Playtest pass 11: KPI review readability, always-visible floating remotes, Year 2 exploration cap and safety hold progress bar. */
+    :root {
+      --system-bar-h: 56px;
+      --remote-dock-h: 118px;
+      --remote-dock-gap: 8px;
+    }
+
+    #game {
+      grid-template-rows: minmax(0, 1fr) var(--system-bar-h) !important;
+    }
+
+    #bottomBar {
+      height: var(--system-bar-h) !important;
+      min-height: var(--system-bar-h) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      padding: 6px max(10px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right)) !important;
+      grid-template-columns: none !important;
+      overflow: visible !important;
+    }
+
+    #bottomBar .bottomBarSpacer {
+      display: none !important;
+    }
+
+    #bottomBar .compactToolbarButtons,
+    #bottomBar .toolbarButtons {
+      max-width: min(560px, calc(100vw - 18px)) !important;
+      width: auto !important;
+      justify-content: center !important;
+      flex-wrap: nowrap !important;
+      gap: 7px !important;
+    }
+
+    #bottomBar .toolBtn {
+      min-height: 38px !important;
+      height: 38px !important;
+      padding: 7px 10px !important;
+      font-size: 12px !important;
+      white-space: nowrap !important;
+    }
+
+    .remoteDeck {
+      position: fixed !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: calc(var(--system-bar-h) + env(safe-area-inset-bottom) + var(--remote-dock-gap)) !important;
+      transform: translateX(-50%) !important;
+      width: min(820px, calc(100vw - 18px)) !important;
+      min-height: var(--remote-dock-h) !important;
+      display: flex !important;
+      align-items: flex-end !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      padding: 6px 8px !important;
+      border-radius: 18px !important;
+      background: linear-gradient(180deg, rgba(15,23,42,0.18), rgba(15,23,42,0.08)) !important;
+      z-index: 16 !important;
+      pointer-events: auto !important;
+    }
+
+    .remoteDeck .toolbarMachineRemote {
+      flex: 1 1 300px !important;
+      width: auto !important;
+      max-width: 390px !important;
+      min-width: min(300px, calc(50vw - 24px)) !important;
+      grid-template-columns: 13px minmax(0, 1fr) 13px !important;
+    }
+
+    .remoteDeck .remoteShell {
+      padding: 5px 7px 6px !important;
+    }
+
+    .remoteDeck .remotePlate {
+      grid-template-columns: 34px minmax(0, 1fr) !important;
+      min-height: 72px !important;
+      align-items: center !important;
+    }
+
+    .remoteDeck .toolbarMachineControls {
+      grid-template-columns: repeat(3, minmax(36px, 1fr)) !important;
+      grid-template-rows: repeat(3, 28px) !important;
+      gap: 6px !important;
+    }
+
+    .remoteDeck .machinePadBtn {
+      height: 28px !important;
+      min-height: 28px !important;
+      font-size: 18px !important;
+      border-radius: 9px !important;
+    }
+
+    .remoteDeck .machinePadStop {
+      font-size: 9px !important;
+    }
+
+    .remoteDeck .remoteShell::after {
+      margin-top: 4px !important;
+      font-size: 10px !important;
+    }
+
+    .remoteDeck .bolterRemote.locked {
+      opacity: 0.68;
+    }
+
+    .mobileEventQueue {
+      bottom: calc(var(--remote-dock-h) + 20px) !important;
+      z-index: 17 !important;
+    }
+
+    .letter .revisionValueEmphasis,
+    .sltReviewBox .revisionValueEmphasis,
+    .targetSummaryList strong.targetValueEmphasis {
+      color: #111827 !important;
+      font-weight: 950 !important;
+      text-shadow: none !important;
+    }
+
+    .yearEndKpiOutcomeGrid {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 14px;
+    }
+
+    .yearEndKpiOutcomeRow {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 11px;
+      background: rgba(255,255,255,0.50);
+      border: 1px solid rgba(17,24,39,0.16);
+      color: #111827;
+    }
+
+    .yearEndKpiOutcomeRow .kpiOutcomeDot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.20);
+    }
+
+    .yearEndKpiOutcomeRow.pass .kpiOutcomeDot { background: #16a34a; }
+    .yearEndKpiOutcomeRow.fail .kpiOutcomeDot { background: #dc2626; }
+    .yearEndKpiOutcomeRow strong { display: block; color: #111827; font-size: 13px; }
+    .yearEndKpiOutcomeRow span { display: block; color: #374151; font-size: 12px; line-height: 1.25; }
+    .yearEndKpiOutcomeRow .kpiOutcomeTag {
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: rgba(17,24,39,0.08);
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .safetyUnifiedTimer strong#safetyStanddownTimer,
+    .safetyTimerPanel strong#safetyStanddownTimer {
+      display: none !important;
+    }
+
+    .safetyHoldProgress {
+      width: 100%;
+      min-width: 180px;
+      height: 18px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(15,23,42,0.72);
+      border: 1px solid rgba(250,204,21,0.55);
+      box-shadow: inset 0 1px rgba(255,255,255,0.10);
+      margin-top: 8px;
+    }
+
+    .safetyHoldProgressFill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f59e0b, #facc15);
+      transition: width 160ms linear;
+    }
+
+    .safetyUnifiedTimer .safetyHoldProgress,
+    .safetyTimerPanel .safetyHoldProgress {
+      max-width: 320px;
+    }
+
+    @media screen and (max-width: 760px), screen and (orientation: portrait) {
+      :root {
+        --system-bar-h: 52px;
+        --remote-dock-h: 130px;
+      }
+
+      .remoteDeck {
+        width: calc(100vw - 10px) !important;
+        gap: 5px !important;
+        padding: 4px 5px !important;
+      }
+
+      .remoteDeck .toolbarMachineRemote {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        grid-template-columns: 7px minmax(0, 1fr) 7px !important;
+      }
+
+      .remoteDeck .remoteHandle {
+        height: 52px !important;
+      }
+
+      .remoteDeck .remoteTopRow {
+        gap: 3px !important;
+      }
+
+      .remoteDeck .remoteBrand {
+        font-size: 10px !important;
+      }
+
+      .remoteDeck .remoteMachineToggle {
+        min-height: 22px !important;
+        height: 22px !important;
+        padding: 3px 5px !important;
+        font-size: 7px !important;
+      }
+
+      .remoteDeck .remoteStatusPill {
+        min-width: 42px !important;
+        padding: 2px 4px !important;
+        font-size: 7px !important;
+      }
+
+      .remoteDeck .remoteLeftCluster {
+        display: none !important;
+      }
+
+      .remoteDeck .remotePlate {
+        grid-template-columns: minmax(0, 1fr) !important;
+        min-height: 78px !important;
+        padding: 5px !important;
+      }
+
+      .remoteDeck .toolbarMachineControls {
+        grid-template-rows: repeat(3, 30px) !important;
+        gap: 6px !important;
+      }
+
+      .remoteDeck .machinePadBtn {
+        height: 30px !important;
+        min-height: 30px !important;
+        font-size: 19px !important;
+      }
+
+      .remoteDeck .machinePadStop {
+        font-size: 8px !important;
+      }
+
+      #bottomBar .toolBtn {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+      }
+
+      html.phoneLayout .mobileEventQueue,
+      body.phoneLayout .mobileEventQueue,
+      .mobileEventQueue {
+        left: 6px !important;
+        right: 6px !important;
+        width: auto !important;
+        max-width: none !important;
+        bottom: calc(var(--remote-dock-h) + 12px) !important;
+        transform: none !important;
+      }
+    }
+
+    @media screen and (max-width: 390px) {
+      .remoteDeck .remoteBrand { display: none !important; }
+      .remoteDeck .remoteMachineToggle { font-size: 6.5px !important; }
+      .remoteDeck .remoteStatusPill { min-width: 36px !important; font-size: 6.5px !important; }
+      .remoteDeck .toolbarMachineControls { grid-template-rows: repeat(3, 28px) !important; gap: 5px !important; }
+      .remoteDeck .machinePadBtn { height: 28px !important; min-height: 28px !important; }
+      #bottomBar .compactToolbarButtons { gap: 4px !important; }
+      #bottomBar .toolBtn { padding-inline: 6px !important; font-size: 10px !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -17277,7 +17567,172 @@
       }
 
       function drillingSuspensionNoticeHtml() {
-        ensureDrillingRestrictionState();
+  
+
+      // Pass 11: year-end actual-v-target review, Year 2 exploration cap, floating remote layout support and safety progress-bar hold.
+      function pass11KpiActualText(key, target = activeAnnualTargets()) {
+        const t = target || {};
+        if (key === 'bulkSample' || key === 'productionDelivery') {
+          return `${Math.round(annualTonnes()).toLocaleString()} / ${Math.round(t.tonnes || TARGET_TONNES).toLocaleString()}t mined · ${annualGrade().toFixed(2)} / ${Number(t.grade || TARGET_GRADE).toFixed(2)}% grade`;
+        }
+        if (key === 'exploration') return `${state.exploration.discoveredRowsThisYear || 0} / ${Math.round(t.discoveredRows || 0)} rows unlocked`;
+        if (key === 'surplus') return `${money(state.cash)} / ${money(t.surplusTarget || 0)} minimum Operating Surplus`;
+        if (key === 'lom') {
+          const lom = lifeOfMineMetrics();
+          return `${Math.round(lom.tonnes).toLocaleString()} / ${Math.round(t.lomTargetTonnes || 0).toLocaleString()}t Ore Reserve Inventory`;
+        }
+        if (key === 'technical') return `${technicalTeamCoverage()} / ${Math.round(t.technicalHires || 0)} technical roles filled`;
+        if (key === 'ground') return `${state.pillarSupportsThisYear || 0} / ${Math.round(t.pillarSupports || 0)} pillars supported · ${annualPillarFailures()} / ${typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99 ? t.maxPillarFailures : 0} failures`;
+        if (key === 'fleet') return `${Math.round(secondMinerAnnualTonnes()).toLocaleString()} / ${Math.round(t.secondMinerTonnes || 0).toLocaleString()}t mined by 2ndHOPE`;
+        if (key === 'belt') return `${state.beltExtensionsThisYear || 0} / ${Math.round(t.beltExtensions || 0)} belt advancements`;
+        if (key === 'safety') return `${Math.round(traitValue('safety'))} / ${Math.round(t.safetyMin || 0)} Safety Floor`;
+        if (key === 'ventilation') return `${state.assets && state.assets.fanOwned ? 'Fan installed' : 'No fan'} · ${ventilationEngineerOnCrew() ? 'Ventilation Engineer hired' : 'No Ventilation Engineer'}`;
+        if (key === 'sharePrice') return `${formatSharePrice(state.sharePrice)} / ${formatSharePrice(t.sharePriceTarget || state.sharePriceTarget)} target`;
+        return formatMetricTargetValue(key, t);
+      }
+
+      function pass11FixedKpiReviewRowsHtml() {
+        const target = activeAnnualTargets();
+        return focusKpiKeysForYear(state.year).map(key => {
+          const passed = fixedKpiStrictPassed(key, target);
+          const title = metricLabelForKey(key);
+          const actual = pass11KpiActualText(key, target);
+          const targetText = formatMetricTargetValue(key, target);
+          return `<div class="yearEndKpiOutcomeRow ${passed ? 'pass' : 'fail'}"><div class="kpiOutcomeDot"></div><div><strong>${escapeHtml(title)}</strong><span><strong>${escapeHtml(actual)}</strong></span><span>Target: ${escapeHtml(targetText)}</span></div><div class="kpiOutcomeTag">${passed ? 'Met' : 'Missed'}</div></div>`;
+        }).join('');
+      }
+
+      const pass11OpenAnnualPerformanceReviewBase = openAnnualPerformanceReview;
+      openAnnualPerformanceReview = function(rating, fired) {
+        pass11OpenAnnualPerformanceReviewBase(rating, fired);
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-pass11-yearend-kpis]')) return;
+        const panel = `<div data-pass11-yearend-kpis><h3>KPI Outcome</h3><div class="yearEndKpiOutcomeGrid">${pass11FixedKpiReviewRowsHtml()}</div></div>`;
+        const ratingPanel = body.querySelector('.annualRatingPanel');
+        if (ratingPanel) ratingPanel.insertAdjacentHTML('afterend', panel);
+        else {
+          const letter = body.querySelector('.letter');
+          if (letter) letter.insertAdjacentHTML('beforeend', panel);
+        }
+      };
+
+      function pass11YearTwoExplorationCapActive() {
+        return (Number(state.year) || 1) === 2 && (Number(state.depthIndex) || 0) === 0;
+      }
+
+      function pass11MaxYearTwoGridRow() { return 8; }
+
+      function pass11NextRowExceedsYearTwoCap() {
+        const row = nextExplorationRow();
+        return row !== null && gridRowNumber(row) > pass11MaxYearTwoGridRow();
+      }
+
+      const pass11CanApproveShaftDeepeningBase = canApproveShaftDeepening;
+      canApproveShaftDeepening = function() {
+        if (pass11YearTwoExplorationCapActive()) return false;
+        return pass11CanApproveShaftDeepeningBase();
+      };
+
+      const pass11StartExplorationProgramBase = startExplorationProgram;
+      startExplorationProgram = function() {
+        if (pass11YearTwoExplorationCapActive() && pass11NextRowExceedsYearTwoCap()) {
+          openMiniWindow('Year 2 Exploration Limit', '<p>Year 2 reserve confirmation is limited to <strong>Grid Row 8</strong>. The Superior Leadership Team has reserved deeper justification for next year, when the same evidence can support a larger announcement.</p><p>Continue mining and complete the current operating year. Shaft deepening remains a Year 3 strategic objective.</p>', true);
+          return;
+        }
+        return pass11StartExplorationProgramBase();
+      };
+
+      const pass11OpenShaftDeepeningProposalBase = openShaftDeepeningProposal;
+      openShaftDeepeningProposal = function() {
+        if (pass11YearTwoExplorationCapActive()) {
+          openMiniWindow('Shaft Deepening Deferred', '<p>The -1100 Level cannot be unlocked in Year 2. The current year is for reserve confirmation only; the strategic decision to go deeper has been scheduled for Year 3 so it can be described as disciplined capital allocation.</p>', true);
+          return;
+        }
+        return pass11OpenShaftDeepeningProposalBase();
+      };
+
+      function pass11SetSafetyProgress(remaining) {
+        const total = 10000;
+        const rem = Math.max(0, Number(remaining) || 0);
+        const pctComplete = clamp(((total - rem) / total) * 100, 0, 100);
+        document.querySelectorAll('#safetyHoldProgressFill, .safetyHoldProgressFill').forEach(el => {
+          el.style.width = pctComplete.toFixed(1) + '%';
+        });
+        document.querySelectorAll('#safetyStanddownTimer').forEach(el => {
+          el.textContent = '';
+          el.setAttribute('aria-hidden', 'true');
+        });
+        document.querySelectorAll('#safetyStanddownStatus').forEach(el => {
+          el.textContent = rem > 0 ? 'Safety Hold Point Active' : 'Standdown complete.';
+        });
+        document.querySelectorAll('[data-safety-dismiss]').forEach(btn => {
+          btn.classList.toggle('locked', rem > 0);
+          btn.setAttribute('aria-disabled', rem > 0 ? 'true' : 'false');
+          btn.textContent = rem > 0 ? 'Safety Hold Point Active' : 'Return to Operational Uncertainty';
+        });
+      }
+
+      updateSafetyStanddownHold = function() {
+        if (!state.safetyStanddownActive) return;
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        pass11SetSafetyProgress(remaining);
+        const closeBtn = $('modalCloseBtn');
+        if (closeBtn) closeBtn.style.display = state.safetyStanddownActive && remaining > 0 ? 'none' : '';
+        if (remaining <= 0 && state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+      };
+
+      function pass11StartSafetyProgress() {
+        if (state.safetyHoldInterval) clearInterval(state.safetyHoldInterval);
+        updateSafetyStanddownHold();
+        state.safetyHoldInterval = setInterval(updateSafetyStanddownHold, 120);
+        [40, 120, 260, 500, 1000, 2000, 4000, 6500, 9000, 10050].forEach(ms => setTimeout(updateSafetyStanddownHold, ms));
+      }
+
+      showSafetyStanddown = function(event, impacts, positive) {
+        event = event || {};
+        const oldOverlay = $('safetyStanddownOverlay');
+        if (oldOverlay) oldOverlay.classList.remove('show');
+        state.safetyStanddownActive = true;
+        state.safetyPausedBeforeStanddown = state.paused;
+        state.safetyHoldUntil = Date.now() + 10000;
+        state.lastSafetyStanddownEvent = { event, impacts, positive };
+        if (state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining) {
+          stopAutoMining('Safety standdown. The miner has stopped because a clipboard has entered the area.', 'Safety Department');
+        }
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        setModalClosable(false);
+        const impactHtml = typeof pass5SafetyImpactCards === 'function' ? pass5SafetyImpactCards(impacts) : ((impacts || []).map(safetyImpactHtml).join('') || '<span class="neutral"><strong>0</strong>No measurable improvement, recorded as success</span>');
+        const body = `<div class="safetyUnifiedPanel">
+          ${modalCharacterHtml('assets/characters/portraits/safety_advisor.png', 'Safety Advisor', event.category || 'Safety Department', 'The Safety Advisor requires your immediate, undivided attention.', 'SAFE')}
+          <div class="letter"><h2>Safety Standdown Alert</h2><p>${escapeHtml(event.text || 'A safety professional has entered the area with a clipboard.')}</p></div>
+          <div class="safetyStanddownImpact" id="safetyStanddownImpact">${impactHtml}</div>
+          <div class="safetyInstructionPanel">ALL ACTIVITY IS STANDBY UNTIL THE SAFETY ADVISOR IS SATISFIED.<br>Please listen carefully. It may save your career.</div>
+          <div class="safetyUnifiedHoldPanel">
+            <div class="safetyUnifiedTimer"><span id="safetyStanddownStatus">Safety Hold Point Active</span><div class="safetyHoldProgress" role="progressbar" aria-label="Safety hold progress"><div class="safetyHoldProgressFill" id="safetyHoldProgressFill"></div></div></div>
+            <button class="safetyStanddownClose locked" data-safety-dismiss aria-disabled="true">Safety Hold Point Active</button>
+          </div>
+          <div class="safetyHoldMessage" id="safetyHoldMessage"></div>
+        </div>`;
+        const overlay = $('modalOverlay');
+        const win = $('modalWindow');
+        if (overlay && win) {
+          win.className = 'window medium';
+          $('modalTitle').textContent = 'Safety Standdown Alert';
+          $('modalBody').innerHTML = body;
+          overlay.classList.add('show');
+          const closeBtn = $('modalCloseBtn');
+          if (closeBtn) closeBtn.style.display = 'none';
+        }
+        pass11StartSafetyProgress();
+        updateMobileEventQueue(true);
+      };
+
+
+      ensureDrillingRestrictionState();
         if (!state.exploration.drillingSuspended) return '';
         return `<div class="drillingSuspensionNotice"><strong>Exploration drilling suspended by SLT.</strong><br>Drillers remain paid during outage. Geology remains disappointed. Programmes in progress are paused until the resumption notice arrives.</div>`;
       }
@@ -20819,6 +21274,53 @@
         return baseHideSafetyStanddownForPass9();
       };
 
+
+
+      // Pass 10: Safety Standdown countdown display fix.
+      // Earlier fixes updated the first duplicated #safetyStanddownTimer in the DOM, which belongs to the old hidden overlay.
+      // This updates every standdown timer/status/button instance so the visible shared-modal timer actually counts down.
+      function pass10SafetyNodes(selector) {
+        return Array.from(document.querySelectorAll(selector));
+      }
+
+      function pass10SetSafetyTimerText(remaining) {
+        const timeText = formatSafetyTime(remaining);
+        pass10SafetyNodes('#safetyStanddownTimer').forEach(el => { el.textContent = timeText; });
+        pass10SafetyNodes('#safetyStanddownStatus').forEach(el => {
+          el.textContent = remaining > 0 ? 'Standdown in progress...' : 'Hold point satisfied.';
+        });
+        pass10SafetyNodes('[data-safety-dismiss]').forEach(btn => {
+          btn.classList.toggle('locked', remaining > 0);
+          btn.setAttribute('aria-disabled', remaining > 0 ? 'true' : 'false');
+          btn.textContent = remaining > 0 ? 'Safety Hold Point Active' : 'Return to Operational Uncertainty';
+        });
+      }
+
+      updateSafetyStanddownHold = function() {
+        if (!state.safetyStanddownActive) return;
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        pass10SetSafetyTimerText(remaining);
+        const closeBtn = $('modalCloseBtn');
+        if (closeBtn) closeBtn.style.display = state.safetyStanddownActive && remaining > 0 ? 'none' : '';
+        if (remaining <= 0 && state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+      };
+
+      function pass10StartSafetyCountdown() {
+        if (state.safetyHoldInterval) clearInterval(state.safetyHoldInterval);
+        updateSafetyStanddownHold();
+        state.safetyHoldInterval = setInterval(updateSafetyStanddownHold, 200);
+        [50, 150, 300, 600, 1000, 1500, 2500, 5000, 9000, 10050].forEach(ms => setTimeout(updateSafetyStanddownHold, ms));
+      }
+
+      const baseShowSafetyStanddownForPass10 = showSafetyStanddown;
+      showSafetyStanddown = function(event, impacts, positive) {
+        const result = baseShowSafetyStanddownForPass10(event, impacts, positive);
+        pass10StartSafetyCountdown();
+        return result;
+      };
 
 
       ensureDrillingRestrictionState();
