@@ -18121,6 +18121,443 @@
       state.annualTargets = sanitiseFixedPhaseTargets(state.annualTargets || targetsForYear(state.year), state.year);
 
 
+      /* June 28 playtest pass 4: row-activated pillar risk, machine recovery fail-safes and paced event pressure. */
+
+      function pillarRowIsDisturbed(row) {
+        return (state.blocks[MINE_ID] || []).some(b => b && b.r === row && !b.isPillar && (
+          b.status === 'void' ||
+          b.status === 'rubble' ||
+          b.status === 'damaged' ||
+          Number(b.progress) > 0 ||
+          b.wasRubble === true
+        ));
+      }
+
+      function activatePillarsInDisturbedRow(row) {
+        if (!featureUnlocked('groundSupport')) return;
+        for (const p of (state.blocks[MINE_ID] || [])) {
+          if (p && p.isPillar && p.r === row && p.pillarState !== 'failed' && p.pillarState !== 'supported') {
+            p.pillarRowActivated = true;
+            if (!p.pillarState) p.pillarState = 'stable';
+          }
+        }
+      }
+
+      const baseCompleteMiningBlockForRowActivatedPillars = completeMiningBlock;
+      completeMiningBlock = function(target, pos) {
+        const row = target ? target.r : null;
+        const result = baseCompleteMiningBlockForRowActivatedPillars(target, pos);
+        if (row !== null && row !== undefined) activatePillarsInDisturbedRow(row);
+        updateMachineLastSafeCells();
+        return result;
+      };
+
+      const basePillarDeteriorationSettingsForRowActivation = pillarDeteriorationSettings;
+      pillarDeteriorationSettings = function() {
+        const base = basePillarDeteriorationSettingsForRowActivation ? basePillarDeteriorationSettingsForRowActivation() : {};
+        const depth = Math.max(1, Number(state.depthIndex) || 1);
+        const risk = pillarRiskMultiplier ? pillarRiskMultiplier() : depthRiskFactor();
+        return {
+          ...base,
+          rowRate: (0.22 + depth * 0.055) * risk,
+          exposedRate: (0.58 + depth * 0.13) * risk,
+          failChance: clamp(0.010 + depth * 0.0035, 0.010, 0.040)
+        };
+      };
+
+      maybeWarnPillarDeterioration = function(block, prior, nextState) {
+        if (!block || prior === nextState) return;
+        if (nextState === 'cracking' && block.lastWarningStage !== 'cracking') {
+          block.lastWarningStage = 'cracking';
+          pushQueueEvent({
+            kind: 'pillarWarning',
+            tone: 'warning', icon: 'GND', label: 'GND', image: 'assets/characters/rock-doctor.png', character: 'Rock Doctor', department: 'Ground Control', title: 'Pillar Distress Detected',
+            body: `<p>Rock Doctor has identified early signs of pillar distress at <strong>Grid ${gridRef(block)}</strong>.</p><p>The pillar is in a row that Production has now disturbed. Adjacent mining will accelerate deterioration, but the support obligation has already entered the mine plan.</p><p><strong>Action:</strong> mine access to the pillar and support it with the bolter before the surrounding reserve becomes a theoretical asset.</p>`
+          });
+        }
+        if (nextState === 'critical' && block.lastWarningStage !== 'critical') {
+          block.lastWarningStage = 'critical';
+          pushQueueEvent({
+            kind: 'pillarCritical',
+            priority: 'critical',
+            tone: 'danger', icon: 'GND', label: 'GND', image: 'assets/characters/rock-doctor.png', character: 'Rock Doctor', department: 'Ground Control', title: 'Critical Pillar Failure Risk',
+            body: `<p>A pillar at <strong>Grid ${gridRef(block)}</strong> is now showing signs of non-alignment with the Life of Mine plan.</p><p><strong>Action:</strong> create access and install support. Ignoring the issue may result in sterilised ground and lost reserve.</p>`
+          });
+        }
+      };
+
+      updateExposedPillarsOneDay = function() {
+        if (!featureUnlocked('groundSupport')) return;
+        const blocks = state.blocks[MINE_ID] || [];
+        const cfg = pillarDeteriorationSettings();
+        for (const b of blocks) {
+          if (!b.isPillar || b.status === 'void' || b.support || b.pillarState === 'supported' || b.pillarState === 'failed') continue;
+          if (!b.pillarRowActivated && pillarRowIsDisturbed(b.r)) b.pillarRowActivated = true;
+          if (!b.pillarRowActivated) continue;
+          const neighbours = [[1,0],[-1,0],[0,1],[0,-1]].map(([dr, dc]) => blockAt(MINE_ID, b.r + dr, b.c + dc)).filter(Boolean);
+          const exposed = neighbours.filter(n => n.status === 'void' || n.status === 'rubble').length;
+          const prior = b.pillarState || 'stable';
+          b.exposureAge = (b.exposureAge || 0) + (cfg.rowRate || 0.20) + exposed * (cfg.exposedRate || cfg.rate || 0.50);
+          let nextState = 'stable';
+          if (b.exposureAge > cfg.critical) nextState = 'critical';
+          else if (b.exposureAge > cfg.fractured) nextState = 'fractured';
+          else if (b.exposureAge > cfg.spalling) nextState = 'spalling';
+          else if (b.exposureAge > cfg.cracking) nextState = 'cracking';
+          b.pillarState = nextState;
+          maybeWarnPillarDeterioration(b, prior, nextState);
+          if (b.exposureAge > cfg.fail && b.pillarState === 'critical' && Math.random() < cfg.failChance) failPillar(b);
+        }
+      };
+
+      function machineRefsForRecovery() {
+        return [
+          { key: '1stHOPE', type: 'miner', machine: state.machine1 },
+          { key: '2ndHOPE', type: 'miner', machine: state.assets && state.assets.secondMinerOwned ? state.machine2 : null },
+          { key: 'Bolter', type: 'bolter', machine: state.assets && state.assets.bolterOwned ? state.bolter : null }
+        ].filter(x => !!x.machine);
+      }
+
+      function machineOrTargetOccupiesBlock(block) {
+        if (!block) return false;
+        return machineRefsForRecovery().some(({ machine }) => {
+          if (machine.r === block.r && machine.c === block.c) return true;
+          if (machine.target && machine.target.r === block.r && machine.target.c === block.c && ['mining', 'tramming', 'bolting'].includes(machine.status)) return true;
+          return false;
+        });
+      }
+
+      function isTraversableSafeCell(cell) {
+        if (!cell) return false;
+        if (cell.isAccess || cell.status === 'access') return true;
+        return cell.status === 'void' && !cell.sterilised && !isActiveBeltCell(cell);
+      }
+
+      function updateMachineLastSafeCells() {
+        for (const { machine } of machineRefsForRecovery()) {
+          const cell = cellObjectForPosition(machine.r, machine.c);
+          const hasUsefulAction = (machine === state.bolter) ? bolterHasValidAction(machine) : minerHasValidAction(machine);
+          if (isTraversableSafeCell(cell) && (cell.isAccess || hasUsefulAction)) machine.lastSafeCell = { q: MINE_ID, r: machine.r, c: machine.c };
+          if (!machine.lastSafeCell) machine.lastSafeCell = { q: MINE_ID, r: START_ROW, c: START_COL };
+        }
+      }
+
+      function nearestRecoveryCell(machine) {
+        const start = machine && machine.lastSafeCell ? machine.lastSafeCell : { r: START_ROW, c: START_COL };
+        const seen = new Set();
+        const queue = [{ r: start.r, c: start.c }];
+        while (queue.length) {
+          const cur = queue.shift();
+          const key = cur.r + ':' + cur.c;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const cell = cellObjectForPosition(cur.r, cur.c);
+          if (isTraversableSafeCell(cell)) return { q: MINE_ID, r: cur.r, c: cur.c };
+          for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const nr = cur.r + dr;
+            const nc = cur.c + dc;
+            if (nc >= 0 && nc < MINE_COLS && nr >= 0 && nr <= ACCESS_ROW && !seen.has(nr + ':' + nc)) queue.push({ r: nr, c: nc });
+          }
+        }
+        return { q: MINE_ID, r: START_ROW, c: START_COL };
+      }
+
+      function minerHasValidAction(machine) {
+        if (!machine) return false;
+        for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const n = blockAt(MINE_ID, machine.r + dr, machine.c + dc);
+          if (!n) continue;
+          if (n.status === 'void' && !isActiveBeltCell(n)) return true;
+          if (n.status === 'rubble') return true;
+          if (n.status === 'solid' && !n.isPillar && !n.sterilised) return true;
+        }
+        return false;
+      }
+
+      function bolterHasValidAction(machine) {
+        if (!machine) return false;
+        for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const n = blockAt(MINE_ID, machine.r + dr, machine.c + dc);
+          if (!n) continue;
+          if (n.status === 'void' && !isActiveBeltCell(n)) return true;
+          if (n.isPillar && n.status === 'solid' && !n.support && n.pillarState !== 'failed') return true;
+        }
+        return false;
+      }
+
+      function recoverMachineToSafeCell(entry, reasonGrid) {
+        if (!entry || !entry.machine) return false;
+        const machine = entry.machine;
+        const destination = nearestRecoveryCell(machine);
+        machine.q = destination.q;
+        machine.r = destination.r;
+        machine.c = destination.c;
+        machine.status = 'idle';
+        machine.target = null;
+        machine.progress = 0;
+        if (machine.autoMining !== undefined) machine.autoMining = false;
+        machine.lastSafeCell = { ...destination };
+        const cost = entry.type === 'bolter' ? 4200 : 6500;
+        spend(scaledCost(cost), entry.key + ' emergency recovery');
+        pushQueueEvent({
+          kind: 'machineRecovery',
+          priority: 'critical',
+          tone: 'warning', icon: '↯', label: 'REC', image: 'assets/characters/mine-services.png', character: 'Mine Services', department: 'Emergency Recovery', title: entry.key + ' Recovered From Ground-Control Exclusion',
+          body: `<p>${entry.key} was at risk of becoming isolated by the ground-control exclusion around <strong>Grid ${escapeHtml(reasonGrid || 'unknown')}</strong>.</p><p>Mine Services has recovered the machine to the last safe operating cell by means of overtime, denial, and a fitter with a winch.</p><p><strong>Impact:</strong> ${money(scaledCost(cost))} recovery cost and all current machine activity cancelled. This is a penalty, not a soft-lock.</p>`
+        });
+        return true;
+      }
+
+      function recoverTrappedMachinesAfterGroundFailure(reasonGrid) {
+        for (const entry of machineRefsForRecovery()) {
+          const cell = cellObjectForPosition(entry.machine.r, entry.machine.c);
+          const unsafeHere = cell && (cell.status === 'damaged' || cell.sterilised || cell.status === 'locked');
+          const hasAction = entry.type === 'bolter' ? bolterHasValidAction(entry.machine) : minerHasValidAction(entry.machine);
+          if (unsafeHere || !hasAction) recoverMachineToSafeCell(entry, reasonGrid);
+        }
+      }
+
+      setBlockToSterilisedGround = function(block) {
+        if (!block || block.status === 'locked') return 'none';
+        if (machineOrTargetOccupiesBlock(block)) {
+          block.restrictedAccess = true;
+          block.restrictedReason = 'Ground-control exclusion modified to avoid trapping mobile plant.';
+          if (block.status === 'damaged') block.status = 'void';
+          return 'restricted';
+        }
+        if (block.status === 'void' || block.status === 'rubble') { setBlockToRubble(block, false); return 'rubble'; }
+        if (block.isPillar) {
+          block.support = false;
+          block.pillarState = block.pillarState === 'critical' ? 'critical' : 'fractured';
+          block.exposureAge = Math.max(block.exposureAge || 0, 170);
+          block.sterilised = false;
+          return 'pillar';
+        }
+        block.status = 'damaged';
+        block.sterilised = true;
+        block.progress = 0;
+        block.tonnes = 0;
+        block.actualGrade = 0;
+        block.estimatedGrade = 0;
+        block.grade = 0;
+        block.gradeConfidence = 1;
+        block.gasPocket = false;
+        block.waterPocket = false;
+        return 'sterilised';
+      };
+
+      failPillar = function(block) {
+        if (!block || block.pillarState === 'failed') return;
+        const failedGrid = gridRef(block);
+        block.pillarState = 'failed';
+        block.failedFromLatentRisk = !adjacentBlocks(block).some(n => n.status === 'void' || n.status === 'rubble');
+        setBlockToRubble(block, true);
+        block.pillarState = 'failed';
+        block.failedGridRef = failedGrid;
+
+        let rubbleCreated = 1;
+        let sterilisedGround = 0;
+        let stressedPillars = 0;
+        let restrictedAccess = 0;
+        const affected = adjacentBlocks(block).filter(n => n && n.status !== 'locked');
+        for (const n of affected) {
+          const result = setBlockToSterilisedGround(n);
+          if (result === 'rubble') rubbleCreated++;
+          else if (result === 'sterilised') sterilisedGround++;
+          else if (result === 'pillar') stressedPillars++;
+          else if (result === 'restricted') restrictedAccess++;
+        }
+        const affectedRefs = affected.length ? affected.map(b => 'Grid ' + gridRef(b)).join(', ') : 'no adjacent blocks';
+        state.pillarFailures = (state.pillarFailures || 0) + 1;
+        state.sterilisedBlocksThisYear = (state.sterilisedBlocksThisYear || 0) + sterilisedGround;
+        adjustTrait('safety', -16);
+        adjustTrait('morale', -10);
+        adjustTrait('productivity', -6);
+        spend(scaledCost(14000), 'Ground-control sterilisation');
+        pushQueueEvent({
+          kind: 'pillarFailure', priority: 'critical', tone: 'danger', icon: '⛏', label: 'GND', image: 'assets/characters/rock-doctor.png', character: 'Rock Doctor', department: 'Ground Control', title: 'Pillar Failure — Ground Sterilised',
+          body: `<p>A pillar at <strong>Grid ${failedGrid}</strong> has failed after Production disturbed its row and then allowed the issue to mature into an organisational learning opportunity.</p><p>The Rock Doctor has sterilised nearby ground: <strong>${escapeHtml(affectedRefs)}</strong>.</p><p><strong>Immediate impact:</strong> ${rubbleCreated} rubble block${rubbleCreated === 1 ? '' : 's'}, ${sterilisedGround} unmined block${sterilisedGround === 1 ? '' : 's'} sterilised, ${stressedPillars} adjacent pillar${stressedPillars === 1 ? '' : 's'} stressed${restrictedAccess ? `, and ${restrictedAccess} occupied or targeted cell${restrictedAccess === 1 ? '' : 's'} left as restricted access to avoid trapping mobile plant` : ''}.</p><p>Sterilised blocks cannot be mined. Ignoring failing pillars now removes reserve rather than merely postponing inconvenience.</p><p><strong>Penalty:</strong> -16 Safety, -10 Morale, -6 Productivity, ${money(scaledCost(14000))} investigation and recovery cost.</p>`
+        });
+        recoverTrappedMachinesAfterGroundFailure(failedGrid);
+      };
+
+      function eventPacingProfile() {
+        const y = Math.max(1, Number(state.year) || 1);
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
+        if (y <= 1 && depth === 0) return { modalCooldownDays: 34, normalQueueCap: 2, totalQueueCap: 4, hrBubbleCooldownDays: 36, departureCooldownDays: 125 };
+        if (depth === 0 && y <= 2) return { modalCooldownDays: 28, normalQueueCap: 3, totalQueueCap: 5, hrBubbleCooldownDays: 30, departureCooldownDays: 105 };
+        if (depth <= 1) return { modalCooldownDays: 24, normalQueueCap: 3, totalQueueCap: 5, hrBubbleCooldownDays: 26, departureCooldownDays: 95 };
+        if (depth <= 2) return { modalCooldownDays: 21, normalQueueCap: 4, totalQueueCap: 6, hrBubbleCooldownDays: 22, departureCooldownDays: 82 };
+        return { modalCooldownDays: 18, normalQueueCap: 4, totalQueueCap: 6, hrBubbleCooldownDays: 20, departureCooldownDays: 74 };
+      }
+
+      function isCriticalEvent(ev = {}) {
+        const text = String((ev.kind || '') + ' ' + (ev.title || '')).toLowerCase();
+        return ev.priority === 'critical' || ev.tone === 'danger' || text.includes('safety') || text.includes('pillar failure') || text.includes('critical pillar') || text.includes('recovered') || text.includes('standdown') || text.includes('annual') || text.includes('mid-year');
+      }
+
+      function normalQueueCount() {
+        return (state.queueEvents || []).filter(ev => !isCriticalEvent(ev)).length;
+      }
+
+      function totalQueueCount() {
+        return (state.queueEvents || []).length;
+      }
+
+      function hrIssueCount() {
+        return state.staff.filter(s => s.bubble).length + (state.queueEvents || []).filter(ev => ev.kind === 'staffDeparture' || ev.tone === 'hr').length;
+      }
+
+      const basePushQueueEventForPacing = pushQueueEvent;
+      pushQueueEvent = function(ev = {}) {
+        state.deferredQueueEvents = state.deferredQueueEvents || [];
+        const profile = eventPacingProfile();
+        const critical = isCriticalEvent(ev);
+        if (!critical && (normalQueueCount() >= profile.normalQueueCap || totalQueueCount() >= profile.totalQueueCap)) {
+          if (state.deferredQueueEvents.length < 10) state.deferredQueueEvents.push({ ...ev, deferredAtDay: state.day });
+          return null;
+        }
+        if (!critical) state.lastNormalQueuePushDay = state.day;
+        return basePushQueueEventForPacing(ev);
+      };
+
+      function processDeferredQueueEvents() {
+        if (!state.running || state.paused || isModalOpen()) return;
+        state.deferredQueueEvents = state.deferredQueueEvents || [];
+        if (!state.deferredQueueEvents.length) return;
+        if (state.lastDeferredEventProcessDay === state.day) return;
+        const profile = eventPacingProfile();
+        if (normalQueueCount() >= profile.normalQueueCap || totalQueueCount() >= profile.totalQueueCap) return;
+        if (state.day - (state.lastNormalQueuePushDay || -999) < Math.max(8, Math.round(profile.modalCooldownDays * 0.45))) return;
+        const ev = state.deferredQueueEvents.shift();
+        state.lastDeferredEventProcessDay = state.day;
+        pushQueueEvent(ev);
+      }
+
+      const baseOpenOperationalEventModalForPacing = openOperationalEventModal;
+      openOperationalEventModal = function(ev) {
+        if (!ev) return;
+        const profile = eventPacingProfile();
+        const critical = isCriticalEvent(ev);
+        const recentlyOpened = state.day - (state.lastIntrusiveModalDay || -999) < profile.modalCooldownDays;
+        if (!critical && (recentlyOpened || normalQueueCount() >= profile.normalQueueCap)) {
+          pushQueueEvent({
+            kind: ev.kind || 'operationalDecision',
+            tone: ev.tone || 'warning',
+            icon: ev.icon || ev.label || 'EVT',
+            label: ev.label || 'EVT',
+            image: ev.image,
+            character: ev.character,
+            department: ev.department,
+            imageText: ev.imageText,
+            title: ev.title,
+            body: ev.body,
+            button: ev.button
+          });
+          return;
+        }
+        if (!critical) state.lastIntrusiveModalDay = state.day;
+        return baseOpenOperationalEventModalForPacing(ev);
+      };
+
+      const baseMaybeGenerateStaffBubbleForPacing = maybeGenerateStaffBubble;
+      maybeGenerateStaffBubble = function() {
+        if (!state.running || state.paused || isModalOpen()) return;
+        const profile = eventPacingProfile();
+        if (state.day < (state.nextHrBubbleDay || 0)) return;
+        if (hrIssueCount() >= profile.normalQueueCap + 1) return;
+        const before = state.staff.filter(s => s.bubble).length;
+        const result = baseMaybeGenerateStaffBubbleForPacing();
+        const after = state.staff.filter(s => s.bubble).length;
+        if (after > before) state.nextHrBubbleDay = state.day + profile.hrBubbleCooldownDays;
+        return result;
+      };
+
+      const baseMaybeGenerateStaffDepartureForPacing = maybeGenerateStaffDeparture;
+      maybeGenerateStaffDeparture = function() {
+        if (!state.running || state.paused || isModalOpen()) return;
+        const profile = eventPacingProfile();
+        if (state.day < (state.nextStaffDepartureDay || 0)) return;
+        if (hrIssueCount() >= profile.normalQueueCap + 1) return;
+        const before = state.staff.length;
+        const result = baseMaybeGenerateStaffDepartureForPacing();
+        if (state.staff.length < before) state.nextStaffDepartureDay = state.day + profile.departureCooldownDays;
+        return result;
+      };
+
+      const baseMobileEventQueueItemsForGroupedHr = mobileEventQueueItems;
+      mobileEventQueueItems = function() {
+        const baseItems = baseMobileEventQueueItemsForGroupedHr().filter(item => !String(item.key || '').startsWith('staff:'));
+        const staffIssues = state.staff.filter(s => s.bubble);
+        if (staffIssues.length === 1) {
+          const s = staffIssues[0];
+          baseItems.push({ key: 'staff:' + s.id, tone: 'hr', label: staffInitials(s.name), icon: s.bubble.icon || '💬', title: s.name + ' has a staff engagement event' });
+        } else if (staffIssues.length > 1) {
+          baseItems.push({ key: 'hr-group', tone: 'hr', label: 'HR ' + staffIssues.length, icon: 'HR', title: staffIssues.length + ' staff engagement events awaiting review' });
+        }
+        return baseItems;
+      };
+
+      const baseOpenMobileEventQueueItemForGroupedHr = openMobileEventQueueItem;
+      openMobileEventQueueItem = function(key) {
+        if (key === 'hr-group') {
+          if (state.manualPaused) { showProductionComment('Game paused. HR issues remain visible but cannot be resolved until time resumes.', 'Pause', 3.8); return; }
+          openWindow('hr');
+          return;
+        }
+        return baseOpenMobileEventQueueItemForGroupedHr(key);
+      };
+
+      const baseUpdateForEventPacingAndRecovery = update;
+      update = function(dt) {
+        const result = baseUpdateForEventPacingAndRecovery(dt);
+        updateMachineLastSafeCells();
+        processDeferredQueueEvents();
+        return result;
+      };
+
+      const baseShowBlockInfoForRestrictedAccess = showBlockInfo;
+      showBlockInfo = function(block) {
+        if (block && block.restrictedAccess) {
+          showProductionComment('Restricted access ground. The Rock Doctor modified the exclusion zone to avoid trapping mobile plant. It can be crossed where already open, but it is not mineable reserve.', 'Ground Control', 7);
+          return;
+        }
+        return baseShowBlockInfoForRestrictedAccess(block);
+      };
+
+      const baseDevActionForPass4 = devAction;
+      devAction = function(action) {
+        if (action === 'row-activate-pillars') {
+          if ((state.depthIndex || 0) < 1) { state.depthIndex = 1; state.mineLevel = -1100; }
+          const p = (state.blocks[MINE_ID] || []).find(b => b.isPillar && b.pillarState !== 'failed');
+          if (p) { activatePillarsInDisturbedRow(p.r); showProductionComment('Dev: pillar row activated. The row has now entered the ground-control risk register.', 'Dev Tools', 4); }
+          return;
+        }
+        if (action === 'release-deferred-events') {
+          state.deferredQueueEvents = state.deferredQueueEvents || [];
+          while (state.deferredQueueEvents.length && normalQueueCount() < eventPacingProfile().normalQueueCap) {
+            const ev = state.deferredQueueEvents.shift();
+            basePushQueueEventForPacing(ev);
+          }
+          updateMobileEventQueue(true);
+          return;
+        }
+        return baseDevActionForPass4(action);
+      };
+
+      const baseEnhanceDevToolsForPass4 = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForPass4();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-pass4-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-pass4-dev-tools>
+          <section class="devToolCard"><h3>Pass 4 Tuning</h3><p>Test row-activated pillar risk and event pacing/deferred event behaviour.</p><div class="devToolBtns"><button data-dev-action="row-activate-pillars">Activate Pillar Row</button><button data-dev-action="release-deferred-events">Release Deferred Events</button></div></section>
+        </div>`);
+      };
+
+      state.deferredQueueEvents = state.deferredQueueEvents || [];
+      updateMachineLastSafeCells();
+
+
       ensureDrillingRestrictionState();
 
       applyAnnualTargetUnlockGuards();
