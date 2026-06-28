@@ -19685,6 +19685,316 @@
         return baseDevActionForPass6(action);
       };
 
+      /* Playtest pass 7: late-year reconciliation, scaled event impacts, low-tonnage explanation, and Year 1 balance. */
+      const PASS7_BLOCK_TONNES_FACTOR = 0.43;
+
+      function pass7OperatingYearScale() {
+        return Math.max(1, (Number(state.year) || 1) + (Number(state.depthIndex) || 0) * 0.45);
+      }
+
+      function pass7AnnualProductionBasis() {
+        const t = activeAnnualTargets ? activeAnnualTargets() : state.annualTargets;
+        return Math.max(
+          TARGET_TONNES,
+          Number(t && t.tonnes) || 0,
+          annualTonnes ? annualTonnes() : 0
+        );
+      }
+
+      function pass7Magnitude(min = 0.85, max = 1.25) {
+        return min + Math.random() * (max - min);
+      }
+
+      function pass7ScaledTonneDelta(pct, minAbs = 250) {
+        const basis = pass7AnnualProductionBasis();
+        const y = Math.max(1, Number(state.year) || 1);
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
+        const meaningfulMin = Math.round(Math.max(minAbs, y >= 3 || depth >= 1 ? 500 : 250));
+        let delta = Math.round(basis * Number(pct || 0) * pass7Magnitude(0.86, 1.22));
+        if (delta && Math.abs(delta) < meaningfulMin) delta = Math.sign(delta) * meaningfulMin;
+        return delta;
+      }
+
+      function pass7TraitDelta(base) {
+        const raw = Number(base) || 0;
+        if (!raw) return 0;
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
+        const y = Math.max(1, Number(state.year) || 1);
+        const factor = (y >= 5 || depth >= 3) ? 1.35 : (y >= 3 || depth >= 1) ? 1.18 : 1.0;
+        const value = Math.max(1, Math.round(Math.abs(raw) * factor * pass7Magnitude(0.85, 1.20)));
+        return raw < 0 ? -value : value;
+      }
+
+      // Balance correction: pass6 reduced block tonnes too far. Keep mining duration unchanged and lift tonnes part-way back.
+      const baseInitBlocksForPass7 = initBlocks;
+      initBlocks = function() {
+        baseInitBlocksForPass7();
+        const blocks = state.blocks && state.blocks[MINE_ID] ? state.blocks[MINE_ID] : [];
+        for (const b of blocks) {
+          if (!b || b.isPillar) continue;
+          const sourceTonnes = Number(b.pass6OriginalTonnes || b.pass7OriginalTonnes || b.tonnes || 0);
+          if (!b.pass6OriginalTonnes) b.pass6OriginalTonnes = sourceTonnes;
+          if (!b.pass7OriginalTonnes) b.pass7OriginalTonnes = sourceTonnes;
+          b.tonnes = Math.max(140, Math.round(sourceTonnes * PASS7_BLOCK_TONNES_FACTOR));
+        }
+      };
+
+      // Later-year shaft / skip reconciliation: it now lands late enough to affect the year-end tension.
+      maybeSkipFactorEvent = function() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.skipFactorDoneThisYear) return false;
+        const doy = dayOfYear();
+        if (doy < 250 || doy > YEAR_LENGTH_DAYS - 15) return false;
+        if (state.year <= 1 && Math.random() > 0.04) return false;
+        const chance = clamp(0.135 + Math.min(0.07, Math.max(0, state.year - 2) * 0.012), 0.10, 0.22);
+        if (Math.random() > chance) return false;
+        const list = skipFactorEvents();
+        return applySkipFactorEvent(list[Math.floor(Math.random() * list.length)]);
+      };
+
+      // Meeting impacts now scale from the annual production target, not the tonnes already mined.
+      applyPointlessMeetingEvent = function(event) {
+        if (!event) return false;
+        state.meetingEventDoneThisYear = true;
+        state.meetingEvents = (state.meetingEvents || 0) + 1;
+        const impacts = [];
+
+        if (event.pct) {
+          const delta = pass7ScaledTonneDelta(event.pct, 250);
+          if (delta) {
+            const currentGrade = annualGrade() || grade() || TARGET_GRADE;
+            state.tonnes = Math.max(state.yearStartTonnes || 0, state.tonnes + delta);
+            state.k2oTonnes = Math.max(state.yearStartK2oTonnes || 0, state.k2oTonnes + delta * currentGrade);
+            impacts.push(`${delta > 0 ? '+' : ''}${Math.round(delta).toLocaleString()}t reported mined tonnes`);
+          }
+        }
+
+        if (event.cost) {
+          const baseCost = Math.round((Number(event.cost) || 0) * pass7Magnitude(0.90, 1.35) * (0.88 + pass7OperatingYearScale() * 0.12));
+          spend(baseCost, 'Meeting consequence');
+          impacts.push('-' + money(scaledCost(baseCost)));
+        }
+
+        for (const [trait, baseDelta] of Object.entries(event.traits || {})) {
+          const delta = pass7TraitDelta(baseDelta);
+          adjustTrait(trait, delta);
+          impacts.push((delta > 0 ? '+' : '') + delta + ' ' + traitLabel(trait));
+        }
+
+        const impactText = impacts.length ? impacts.join(' · ') : (event.impact || 'No measurable benefit identified.');
+        openOperationalEventModal({
+          title: 'Meeting Invitation',
+          image: 'assets/characters/meeting-that-could-have-been-email.png',
+          character: 'Corporate Alignment Forum',
+          department: 'Meeting Generation Office',
+          label: 'MTG',
+          tone: event.tone || 'warning',
+          body: `<p>${escapeHtml(event.text)}</p><p><strong>Impact:</strong> ${escapeHtml(impactText)}.</p><p>The meeting minutes will be circulated once nobody remembers what was agreed.</p>`,
+          button: 'Return Slightly Less Informed'
+        });
+        showProductionComment('You attended a meeting that could have been an email. Production continued in earnest, which is not always the same as correctly.', 'Management', 7);
+        return true;
+      };
+
+      // HSE choices now roll both outcome and magnitude; choices modify odds, not a fixed result package.
+      resolveHseInspectionChoice = function(choice) {
+        const ev = state.pendingHseInspection;
+        if (!ev || ev.resolved) return;
+        ev.resolved = true;
+        document.querySelectorAll('[data-hse-inspection-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+
+        const baseFine = Math.round((9000 + state.year * 1500 + (state.depthIndex || 0) * 4200) * operatingScaleFactor());
+        const passChance = hseInspectionPassChance(choice);
+        const passed = Math.random() < passChance;
+        const severityRoll = pass7Magnitude(0.72, 1.42);
+        let fineMult = 1;
+        let title = passed ? 'HSE Inspection — Passed' : 'HSE Inspection — Failed';
+        let tone = passed ? 'good' : 'warning';
+        let body = '';
+        const impacts = [];
+
+        if (choice === 'cleanup') {
+          const cleanupBase = Math.round(2400 * pass7Magnitude(0.9, 1.45));
+          spend(cleanupBase, 'Pre-inspection clean up');
+          const prodDelta = pass7TraitDelta(-2);
+          adjustTrait('productivity', prodDelta);
+          impacts.push('-' + money(scaledCost(cleanupBase)), `${prodDelta} Productivity`);
+          body += `<p>A clean-up crew has been deployed to convert visible non-compliance into tidier non-compliance. The amount of tidiness achieved is being treated as commercially sensitive.</p>`;
+          fineMult *= 0.72;
+        }
+
+        if (choice === 'it') {
+          const moraleDelta = pass7TraitDelta(-4);
+          const safetyDelta = pass7TraitDelta(-2);
+          adjustTrait('morale', moraleDelta);
+          adjustTrait('safety', safetyDelta);
+          impacts.push(`${moraleDelta} Morale`, `${safetyDelta} Safety`);
+          body += `<p>IT has been ordered to identify the anonymous email sender. The workforce has interpreted this as a lesson about reporting concerns through unofficial channels.</p>`;
+          fineMult *= 1.18;
+        }
+
+        if (choice === 'inactive') {
+          body += `<p>The inspection party has been shown a quiet section of the mine containing limited activity and therefore limited evidence.</p>`;
+          fineMult *= 1.28;
+        }
+
+        if (choice === 'trust') {
+          body += `<p>You trusted the team to explain the work as performed, the procedures as written, and the difference as a developmental gap.</p>`;
+        }
+
+        if (passed) {
+          const safetyDelta = pass7TraitDelta(choice === 'trust' ? 2 : 1);
+          adjustTrait('safety', safetyDelta);
+          impacts.push(`+${Math.abs(safetyDelta)} Safety`);
+          if (choice === 'trust') {
+            const moraleDelta = pass7TraitDelta(1);
+            adjustTrait('morale', moraleDelta);
+            impacts.push(`+${Math.abs(moraleDelta)} Morale`);
+          }
+          body += `<p><strong>Outcome:</strong> The HSE was unable to identify any material infractions, this time. The word <em>this</em> is doing significant work.</p>`;
+        } else {
+          const fine = Math.max(1200, Math.round(baseFine * fineMult * severityRoll));
+          state.cash -= fine;
+          state.expenditure += fine;
+          state.lifetimeExpenditure = (state.lifetimeExpenditure || 0) + fine;
+          state.hseFines = (state.hseFines || 0) + fine;
+          const safetyDelta = pass7TraitDelta(-6);
+          const moraleDelta = pass7TraitDelta(-4);
+          adjustTrait('safety', safetyDelta);
+          adjustTrait('morale', moraleDelta);
+          impacts.push(money(-fine) + ' fine', `${safetyDelta} Safety`, `${moraleDelta} Morale`);
+          if (choice === 'inactive') {
+            body += `<p><strong>Outcome:</strong> The inspector found the operating panel by following the sound of panic. The attempt to show an inactive area has been recorded as interpretive site selection.</p>`;
+          } else if (choice === 'it') {
+            body += `<p><strong>Outcome:</strong> The HSE has asked why management response to a safety concern began with user tracing rather than hazard control.</p>`;
+          } else {
+            body += `<p><strong>Outcome:</strong> Several areas appear to rely on optimism rather than procedure. The inspector has described this as common but not comforting.</p>`;
+          }
+        }
+
+        body += `<p><strong>Impact:</strong> ${escapeHtml(impacts.join(' · '))}.</p><p><strong>Chance note:</strong> This option had a ${Math.round(passChance * 100)}% chance of passing; the magnitude of the outcome was then reconciled separately by regulatory reality.</p>`;
+        state.pendingHseInspection = null;
+        openDecisionOutcomeModal({
+          title,
+          image: 'assets/characters/hse-inspector.png',
+          character: 'Health and Safety Executive',
+          department: 'Unexpected Procedure Reality Check',
+          label: 'HSE',
+          tone,
+          body,
+          button: passed ? 'File the Report Before They Change Their Mind' : 'Accept Statutory Learning Opportunity'
+        });
+        showProductionComment(passed ? 'HSE found no infractions, this time. Paperwork has briefly aligned with reality.' : 'HSE has issued a fine. Safety has asked whether this can be coded to Production.', 'Safety', 8);
+      };
+
+      // Explain lower-tonnage rows in-world via a one-time miner HR complaint per depth.
+      choiceImpactMeta.explainVariability = { tone: 'positive', text: '+2 Skill, -1 Morale, geological variability explained' };
+      choiceImpactMeta.blameWeigher = { tone: 'negative', text: '+1 Morale, -1 Skill, blame redirected to the belt weigher' };
+      choiceImpactMeta.tonnesMindset = { tone: 'negative', text: '+1 Productivity, -3 Morale, motivational damage likely' };
+      choiceImpactMeta.askGeologyColours = { tone: 'positive', text: '+2 Skill, small cost, primary colours deployed' };
+
+      staffBubbleTemplates.push({
+        type: 'lowTonnageComplaint',
+        icon: 't',
+        roles: ['miner'],
+        title: 'Same Work, Fewer Tonnes',
+        quote: '“That block felt heavier on the plan.”',
+        text: '{name} reports that the crew mined a full block and somehow produced fewer tonnes than expected. They would like to know whether the rock is lighter, the model is wrong, or the belt weigher has joined Finance.',
+        buttons: [
+          { label: 'Explain geological variability', style: 'good', choice: 'explainVariability' },
+          { label: 'Blame the belt weigher', style: 'warn', choice: 'blameWeigher' },
+          { label: 'Tell them tonnes are a mindset', style: 'warn', choice: 'tonnesMindset' },
+          { label: 'Ask Geology to draw it in primary colours', style: 'good', choice: 'askGeologyColours' }
+        ]
+      });
+
+      const baseEventChoiceForPass7 = eventChoice;
+      eventChoice = function(staffId, choice) {
+        if (['explainVariability', 'blameWeigher', 'tonnesMindset', 'askGeologyColours'].includes(choice)) {
+          const s = state.staff.find(x => x.id === staffId);
+          if (!s) return;
+          if (choice === 'explainVariability') { adjustTrait('skill', 2); adjustTrait('morale', -1); s.skill = Math.min(5, (s.skill || 3) + 1); }
+          if (choice === 'blameWeigher') { adjustTrait('morale', 1); adjustTrait('skill', -1); }
+          if (choice === 'tonnesMindset') { adjustTrait('productivity', 1); adjustTrait('morale', -3); if (s.morale) s.morale = Math.max(1, s.morale - 1); }
+          if (choice === 'askGeologyColours') { spend(350, 'Primary-colour geological explanation'); adjustTrait('skill', 2); }
+          state.hrEventsResolved = (state.hrEventsResolved || 0) + 1;
+          s.bubble = null;
+          setModalClosable(true);
+          $('modalOverlay').classList.remove('show');
+          updatePanelCrewTiles(true);
+          showProductionComment('The crew now understand that equal effort does not always produce equal tonnes. This is technically correct and operationally unpopular.', 'Production', 6);
+          return;
+        }
+        return baseEventChoiceForPass7(staffId, choice);
+      };
+
+      function pass7AverageDiscoveredBlockTonnes() {
+        const blocks = (state.blocks[MINE_ID] || []).filter(b => b && !b.isPillar && b.status !== 'locked' && Number(b.tonnes) > 0);
+        if (!blocks.length) return 0;
+        return blocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0) / blocks.length;
+      }
+
+      function pass7TriggerLowTonnageComplaintIfNeeded(block) {
+        if (!block || block.wasRubble || !state.staff || !state.staff.length) return;
+        const depth = Number(state.depthIndex) || 0;
+        state.lowTonnageComplaintDepths = state.lowTonnageComplaintDepths || {};
+        if (state.lowTonnageComplaintDepths[depth]) return;
+        const avg = pass7AverageDiscoveredBlockTonnes();
+        const tonnes = Number(block.tonnes) || 0;
+        if (!avg || tonnes >= avg * 0.72 || avg - tonnes < 180) return;
+        const miner = state.staff.find(s => s.role === 'miner' && !s.bubble) || state.staff.find(s => s.role === 'miner');
+        state.lowTonnageComplaintDepths[depth] = true;
+        if (miner) {
+          miner.bubble = { type: 'lowTonnageComplaint', icon: 't' };
+          state.hrCooldown = Math.max(state.hrCooldown || 0, 8);
+          playGameSound('hr');
+        } else {
+          pushQueueEvent({
+            tone: 'hr', icon: 't', label: 'HR', image: 'assets/characters/portraits/miner_average.png', character: 'Mining Crew', department: 'Production Reality Feedback', title: 'Same Work, Fewer Tonnes',
+            body: `<p>The crew report that the latest block produced fewer tonnes than expected despite requiring the same amount of mining. Production has asked whether the rock is lighter, the model is wrong, or the belt weigher has joined Finance.</p><p><strong>Learning:</strong> Different rows and blocks can carry different tonnes. Mining time is not a guaranteed proxy for reported production.</p>`
+          });
+        }
+      }
+
+      const baseCompleteMiningBlockForPass7 = completeMiningBlock;
+      completeMiningBlock = function(target, pos) {
+        const before = target ? { tonnes: Number(target.tonnes) || 0, wasRubble: target.status === 'rubble' || target.wasRubble === true } : null;
+        const result = baseCompleteMiningBlockForPass7(target, pos);
+        if (before && !before.wasRubble) pass7TriggerLowTonnageComplaintIfNeeded({ ...target, tonnes: before.tonnes, wasRubble: false });
+        return result;
+      };
+
+      const baseEnhanceDevToolsForPass7 = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForPass7();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-pass7-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-pass7-dev-tools>
+          <section class="devToolCard"><h3>Pass 7 Tuning</h3><p>Test late reconciliation, scaled HSE outcomes, and low-tonnage crew feedback.</p><div class="devToolBtns"><button data-dev-action="late-skip-factor">Late Skip Reconciliation</button><button data-dev-action="low-tonnes-complaint">Low-Tonnage Complaint</button></div></section>
+        </div>`);
+      };
+
+      const baseDevActionForPass7 = devAction;
+      devAction = function(action) {
+        if (action === 'late-skip-factor') {
+          state.skipFactorDoneThisYear = false;
+          if (annualTonnes() < 3000) { state.tonnes += 3000; state.k2oTonnes += 3000 * (annualGrade() || TARGET_GRADE); }
+          applySkipFactorEvent(randomItem(skipFactorEvents()));
+          return;
+        }
+        if (action === 'low-tonnes-complaint') {
+          state.lowTonnageComplaintDepths = state.lowTonnageComplaintDepths || {};
+          delete state.lowTonnageComplaintDepths[Number(state.depthIndex) || 0];
+          const blocks = (state.blocks[MINE_ID] || []).filter(b => b && !b.isPillar && b.status !== 'locked' && Number(b.tonnes) > 0).sort((a, b) => (a.tonnes || 0) - (b.tonnes || 0));
+          pass7TriggerLowTonnageComplaintIfNeeded(blocks[0]);
+          updateMobileEventQueue(true);
+          updatePanelCrewTiles(true);
+          return;
+        }
+        return baseDevActionForPass7(action);
+      };
+
+
       ensureDrillingRestrictionState();
 
       applyAnnualTargetUnlockGuards();
