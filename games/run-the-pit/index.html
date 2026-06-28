@@ -5401,7 +5401,163 @@
       }
       .researchHeroPlaceholder { height: 86px; }
     }
-</style>
+
+
+    /* Playtest pass 9: research trait context, compact HOPE remotes, HR badge routing, external-affairs images and safety countdown fix */
+    .researchHeroTile.hasResearchAsset {
+      grid-template-columns: minmax(170px, 260px) 1fr;
+    }
+
+    .researchHeroImageFrame {
+      position: relative;
+      min-height: 118px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.34);
+      background: radial-gradient(circle at 30% 20%, rgba(56,189,248,0.24), rgba(15,23,42,0.94) 62%);
+      display: grid;
+      place-items: center;
+    }
+
+    .researchHeroImageFrame img {
+      width: 100%;
+      height: 100%;
+      min-height: 118px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .researchHeroImageFrame .researchHeroPlaceholder {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .researchTraitBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.68);
+      border: 1px solid rgba(148,163,184,0.28);
+      color: #e0f2fe;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      vertical-align: middle;
+    }
+
+    .toolbarMachineRemote .remoteDisplay {
+      display: none !important;
+    }
+
+    .toolbarMachineRemote .remoteShell::after {
+      display: block;
+      margin-top: 3px;
+      text-align: center;
+      color: rgba(120,53,15,0.78);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .minerRemote .remoteShell::after { content: "HOPE: it mines"; }
+    .bolterRemote .remoteShell::after { content: "HOPE: it bolts"; }
+
+    .toolbarMachineRemote .remotePlate {
+      grid-template-columns: 34px minmax(0, 1fr) !important;
+      gap: 6px !important;
+      align-items: center;
+      padding: 5px !important;
+    }
+
+    .toolbarMachineRemote .toolbarMachineControls {
+      justify-self: stretch;
+      width: 100%;
+      grid-template-columns: repeat(3, minmax(30px, 1fr)) !important;
+      grid-template-rows: repeat(3, 23px) !important;
+      gap: 5px !important;
+    }
+
+    .toolbarMachineRemote .machinePadBtn {
+      width: 100% !important;
+      height: 23px !important;
+      min-height: 23px !important;
+      border-radius: 8px !important;
+      font-size: 15px !important;
+    }
+
+    .toolbarMachineRemote .machinePadStop {
+      font-size: 8px !important;
+    }
+
+    .toolbarMachineRemote .remoteLeftCluster {
+      grid-template-rows: 14px 1fr;
+      gap: 4px;
+    }
+
+    html.phoneLayout .toolbarMachineRemote .toolbarMachineControls,
+    body.phoneLayout .toolbarMachineRemote .toolbarMachineControls {
+      grid-template-rows: repeat(3, 26px) !important;
+      gap: 6px !important;
+    }
+
+    html.phoneLayout .toolbarMachineRemote .machinePadBtn,
+    body.phoneLayout .toolbarMachineRemote .machinePadBtn {
+      height: 26px !important;
+      min-height: 26px !important;
+      font-size: 17px !important;
+    }
+
+    html.phoneLayout .toolbarMachineRemote .machinePadStop,
+    body.phoneLayout .toolbarMachineRemote .machinePadStop {
+      font-size: 8px !important;
+    }
+
+    .mobileEventIcon {
+      position: relative;
+    }
+
+    .mobileEventBadge {
+      position: absolute;
+      right: -5px;
+      top: -6px;
+      min-width: 17px;
+      height: 17px;
+      padding: 0 4px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ef4444;
+      color: #fff7ed;
+      border: 1px solid rgba(255,255,255,0.55);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.34);
+    }
+
+    @media (max-width: 720px) {
+      .researchHeroTile.hasResearchAsset {
+        grid-template-columns: 1fr;
+      }
+      .researchHeroImageFrame,
+      .researchHeroImageFrame img {
+        min-height: 96px;
+      }
+    }
+
+  </style>
 </head>
 <body>
   <audio id="bgMusic" src="assets/audio/theme.mp3" loop preload="auto" playsinline></audio>
@@ -19103,6 +19259,7 @@
       };
 
       showSafetyStanddown = function(event, impacts, positive) {
+        event = event || {};
         const oldOverlay = $('safetyStanddownOverlay');
         if (oldOverlay) oldOverlay.classList.remove('show');
         state.safetyStanddownActive = true;
@@ -20422,6 +20579,244 @@
           const rowMult = pass8RowTonnesMultiplier(b.r);
           b.tonnes = Math.max(180, Math.round(sourceTonnes * PASS8_BASE_BLOCK_TONNES_FACTOR * rowMult));
         }
+      };
+
+
+      /* Playtest pass 9: research trait context, compact HOPE remotes, HR badge routing, external-affairs images and safety countdown fix. */
+
+      const PASS9_RESEARCH_ASSET = 'assets/images/research_programme.png';
+      function pass9TraitCurrentBadge(opt) {
+        const label = traitLabel(opt && opt.trait ? opt.trait : 'productivity');
+        const value = Math.round(traitValue(opt && opt.trait ? opt.trait : 'productivity'));
+        return `<span class="researchTraitBadge">Current ${escapeHtml(label)}: ${value}</span>`;
+      }
+
+      pass8ResearchHeroHtml = function() {
+        return `<div class="researchHeroTile hasResearchAsset">
+          <div class="researchHeroImageFrame">
+            <img src="${escapeHtml(PASS9_RESEARCH_ASSET)}" alt="Mining Engineering Research Programme" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+            <div class="researchHeroPlaceholder">MINING ENGINEERING<br>RESEARCH<br>ASSET PENDING</div>
+          </div>
+          <div><h3>Mining Engineering Research Programme</h3>
+          <p>Research converts time, cash and engineering confidence into trait improvement. One project can run at a time; all other studies are deferred until the current recommendation has become expensive enough to be meaningful.</p></div>
+        </div>`;
+      };
+
+      openResearchWindow = function() {
+        setModalClosable(true);
+        $('modalWindow').className = 'window';
+        $('modalTitle').textContent = 'Research Programme';
+        const eng = miningEngineerOnCrew();
+        const active = state.engineeringResearch;
+        let body = pass8ResearchHeroHtml();
+        body += `<p>Research can improve Productivity, Skill, Morale or Safety after a long study, a hidden success roll, and a magnitude roll on completion.</p>`;
+        body += researchStatusSummaryHtml();
+        if (featureUnlocked('technicalTeam') && eng) {
+          const rows = researchOptionsForTraits().map(opt => {
+            const isActive = !!active && active.key === opt.key;
+            const disabled = !!active && !isActive;
+            const pctDone = isActive ? clamp((active.progress || 0) / Math.max(1, active.days || opt.days) * 100, 0, 100) : 0;
+            const header = `<strong>${escapeHtml(opt.title)}${pass9TraitCurrentBadge(opt)}</strong>`;
+            const status = isActive
+              ? `<div class="researchProgressBar"><span style="width:${pctDone.toFixed(0)}%"></span></div><span>Active study · ${pctDone.toFixed(0)}% complete · about ${Math.max(0, Math.ceil((active.days - (active.progress || 0)))).toLocaleString()} days remaining · Potential result +${opt.min} to +${opt.max} ${traitLabel(opt.trait)}.</span>`
+              : disabled
+                ? `<span>Unavailable until the current research project is completed. Current ${escapeHtml(traitLabel(opt.trait))}: ${Math.round(traitValue(opt.trait))}.</span>`
+                : `<span>${escapeHtml(opt.desc)} Cost ${money(scaledCost(opt.cost))}. Duration ${opt.days} days. Potential result +${opt.min} to +${opt.max} ${traitLabel(opt.trait)}.</span>`;
+            return `<div class="row researchOptionCard ${isActive ? 'activeResearch' : ''} ${disabled ? 'disabledResearch' : ''}"><div class="avatarDot" style="background:${isActive ? '#22c55e' : '#38bdf8'}"></div><div>${header}${status}</div><button data-start-engineering-research="${opt.key}" ${active ? 'disabled' : ''}>${isActive ? 'Active' : 'Start'}</button></div>`;
+          }).join('');
+          body += `<div class="rows">${rows}</div>`;
+        }
+        body += `<div class="btnRow"><button data-window="staff">Staff</button><button data-window="assets">Assets</button><button data-close>Close</button></div>`;
+        $('modalBody').innerHTML = body;
+        $('modalOverlay').classList.add('show');
+      };
+
+      function pass9ExternalAffairsImage(kind) {
+        const k = String(kind || '').toLowerCase();
+        if (k === 'community') return 'assets/images/external_affairs_subsidence.png';
+        if (k === 'protest') return 'assets/images/external_affairs_greenwar.png';
+        if (k === 'screeningtrees') return 'assets/images/external_affairs_community.png';
+        if (k === 'governmentpositive' || k === 'governmentnegative') return 'assets/characters/government-legislation.png';
+        return 'assets/characters/external-affairs.png';
+      }
+
+      const baseExternalAffairsEventListForPass9 = externalAffairsEventList;
+      externalAffairsEventList = function() {
+        return baseExternalAffairsEventListForPass9().map(ev => ({ ...ev, image: pass9ExternalAffairsImage(ev.kind) || ev.image }));
+      };
+
+      const baseOpenExternalAffairsChoiceModalForPass9 = openExternalAffairsChoiceModal;
+      openExternalAffairsChoiceModal = function(ev) {
+        if (ev) ev = { ...ev, image: pass9ExternalAffairsImage(ev.kind) || ev.image || 'assets/characters/external-affairs.png' };
+        return baseOpenExternalAffairsChoiceModalForPass9(ev);
+      };
+
+      const baseResolveExternalAffairsChoiceForPass9 = resolveExternalAffairsChoice;
+      resolveExternalAffairsChoice = function(encoded) {
+        const [kind] = String(encoded || '').split(':');
+        state.pass9ExternalOutcomeImage = pass9ExternalAffairsImage(kind);
+        try {
+          return baseResolveExternalAffairsChoiceForPass9(encoded);
+        } finally {
+          state.pass9ExternalOutcomeImage = null;
+        }
+      };
+
+      const baseOpenDecisionOutcomeModalForPass9 = openDecisionOutcomeModal;
+      openDecisionOutcomeModal = function(ev) {
+        if (ev && ev.label === 'EXT' && state.pass9ExternalOutcomeImage) {
+          ev = { ...ev, image: state.pass9ExternalOutcomeImage };
+        }
+        return baseOpenDecisionOutcomeModalForPass9(ev);
+      };
+
+      function pass9StaffIssues() {
+        return (state.staff || []).filter(s => s && s.bubble);
+      }
+
+      function pass9OpenFirstStaffIssue() {
+        const first = pass9StaffIssues()[0];
+        if (first) {
+          openStaffEvent(first.id);
+          return true;
+        }
+        updateMobileEventQueue(true);
+        showProductionComment('No unresolved HR issues remain. Human Resources will be notified that this condition is temporary.', 'HR', 4);
+        return false;
+      }
+
+      mobileEventQueueItems = function() {
+        const items = [];
+
+        if (state.safetyStanddownActive) {
+          items.push({ key: 'safety', tone: 'danger', label: 'SAFE', icon: '🦺', title: 'Safety standdown active' });
+        }
+
+        for (const [key, miner, label] of [['miner1', state.machine1, '1stHOPE'], ['miner2', state.assets && state.assets.secondMinerOwned ? state.machine2 : null, '2ndHOPE']]) {
+          if (miner && miner.status === 'broken') items.push({ key, tone: 'danger', label, icon: '🔧', title: label + ' broken' });
+        }
+
+        if (state.conveyor && state.conveyor.status === 'stopped') {
+          const info = conveyorFaultInfo(state.conveyor.fault);
+          items.push({ key: 'belt', tone: 'warning', label: 'BELT', icon: state.conveyor.fault === 'trip' ? '⚡' : state.conveyor.fault === 'buried' ? '⛏' : '⚠', title: info.label || 'Conveyor stopped' });
+        }
+
+        (state.queueEvents || []).forEach(ev => {
+          items.push({ key: 'queue:' + ev.id, tone: ev.tone || 'warning', label: ev.label || 'EVT', icon: ev.icon || '!', title: ev.title || 'Queued event' });
+        });
+
+        const staffIssues = pass9StaffIssues();
+        if (staffIssues.length === 1) {
+          const s = staffIssues[0];
+          items.push({ key: 'staff:' + s.id, tone: 'hr', label: 'HR', badge: 1, icon: s.bubble.icon || '💬', title: s.name + ' has a staff engagement event' });
+        } else if (staffIssues.length > 1) {
+          items.push({ key: 'hr-group', tone: 'hr', label: 'HR', badge: staffIssues.length, icon: 'HR', title: staffIssues.length + ' staff engagement events awaiting review' });
+        }
+        return items;
+      };
+
+      mobileEventQueueSignature = function(items) {
+        return items.map(i => [i.key, i.tone, i.label, i.icon, i.title, i.badge || ''].join('|')).join('~');
+      };
+
+      mobileEventQueueItemHtml = function(item) {
+        const badge = item.badge ? `<span class="mobileEventBadge">${escapeHtml(String(item.badge))}</span>` : '';
+        return `<button class="mobileEventIcon ${item.tone}" data-mobile-event="${escapeHtml(item.key)}" title="${escapeHtml(item.title)}">
+          <span class="mobileEventIconGlyph">${escapeHtml(item.icon)}</span>
+          <span class="mobileEventIconLabel">${escapeHtml(item.label)}</span>${badge}
+        </button>`;
+      };
+
+      const baseOpenMobileEventQueueItemForPass9 = openMobileEventQueueItem;
+      openMobileEventQueueItem = function(key) {
+        if (key === 'hr-group') {
+          if (state.manualPaused) { showProductionComment('Game paused. HR issues remain visible but cannot be resolved until time resumes.', 'Pause', 3.8); return; }
+          pass9OpenFirstStaffIssue();
+          return;
+        }
+        if (String(key || '').startsWith('staff:')) {
+          if (state.manualPaused) { showProductionComment('Game paused. HR issues remain visible but cannot be resolved until time resumes.', 'Pause', 3.8); return; }
+          const id = String(key).slice(6);
+          if ((state.staff || []).some(s => s && s.id === id && s.bubble)) openStaffEvent(id);
+          else pass9OpenFirstStaffIssue();
+          return;
+        }
+        return baseOpenMobileEventQueueItemForPass9(key);
+      };
+
+      updateSafetyStanddownHold = function() {
+        if (!state.safetyStanddownActive) return;
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        const timer = document.getElementById('safetyStanddownTimer');
+        const status = document.getElementById('safetyStanddownStatus');
+        const btn = document.querySelector('[data-safety-dismiss]');
+        if (timer) timer.textContent = formatSafetyTime(remaining);
+        if (status) status.textContent = remaining > 0 ? 'Standdown in progress...' : 'Hold point satisfied.';
+        if (btn) {
+          btn.classList.toggle('locked', remaining > 0);
+          btn.setAttribute('aria-disabled', remaining > 0 ? 'true' : 'false');
+          btn.textContent = remaining > 0 ? 'Safety Hold Point Active' : 'Return to Operational Uncertainty';
+        }
+        const closeBtn = $('modalCloseBtn');
+        if (closeBtn) closeBtn.style.display = state.safetyStanddownActive && remaining > 0 ? 'none' : '';
+        if (remaining <= 0 && state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+      };
+
+      function pass9StartSafetyCountdown() {
+        if (state.safetyHoldInterval) clearInterval(state.safetyHoldInterval);
+        updateSafetyStanddownHold();
+        state.safetyHoldInterval = setInterval(updateSafetyStanddownHold, 200);
+        [50, 150, 300, 600, 1000, 1500, 2500, 5000, 9000, 10050].forEach(ms => setTimeout(updateSafetyStanddownHold, ms));
+      }
+
+      showSafetyStanddown = function(event, impacts, positive) {
+        event = event || {};
+        const oldOverlay = $('safetyStanddownOverlay');
+        if (oldOverlay) oldOverlay.classList.remove('show');
+        state.safetyStanddownActive = true;
+        state.safetyPausedBeforeStanddown = state.paused;
+        state.safetyHoldUntil = Date.now() + 10000;
+        state.lastSafetyStanddownEvent = { event, impacts, positive };
+        if (state.machine.status === 'mining' || state.machine.status === 'tramming' || state.machine.autoMining) {
+          stopAutoMining('Safety standdown. The miner has stopped because a clipboard has entered the area.', 'Safety Department');
+        }
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        setModalClosable(false);
+        const impactHtml = pass5SafetyImpactCards(impacts);
+        const body = `<div class="safetyUnifiedPanel">
+          ${modalCharacterHtml('assets/characters/portraits/safety_advisor.png', 'Safety Advisor', event.category || 'Safety Department', 'The Safety Advisor requires your immediate, undivided attention.', 'SAFE')}
+          <div class="letter"><h2>Safety Standdown Alert</h2><p>${escapeHtml(event.text || 'A safety professional has entered the area with a clipboard.')}</p></div>
+          <div class="safetyStanddownImpact" id="safetyStanddownImpact">${impactHtml}</div>
+          <div class="safetyInstructionPanel">ALL ACTIVITY IS STANDBY UNTIL THE SAFETY ADVISOR IS SATISFIED.<br>Please listen carefully. It may save your career.</div>
+          <div class="safetyUnifiedHoldPanel">
+            <div class="safetyUnifiedTimer"><span id="safetyStanddownStatus">Standdown in progress...</span><strong id="safetyStanddownTimer">00:10</strong></div>
+            <button class="safetyStanddownClose locked" data-safety-dismiss aria-disabled="true">Safety Hold Point Active</button>
+          </div>
+          <div class="safetyHoldMessage" id="safetyHoldMessage"></div>
+        </div>`;
+        const overlay = $('modalOverlay');
+        const win = $('modalWindow');
+        if (overlay && win) {
+          win.className = 'window medium';
+          $('modalTitle').textContent = 'Safety Standdown Alert';
+          $('modalBody').innerHTML = body;
+          overlay.classList.add('show');
+          const closeBtn = $('modalCloseBtn');
+          if (closeBtn) closeBtn.style.display = 'none';
+        }
+        pass9StartSafetyCountdown();
+        updateMobileEventQueue(true);
+      };
+
+      const baseHideSafetyStanddownForPass9 = hideSafetyStanddown;
+      hideSafetyStanddown = function() {
+        const closeBtn = $('modalCloseBtn');
+        if (closeBtn) closeBtn.style.display = '';
+        return baseHideSafetyStanddownForPass9();
       };
 
 
