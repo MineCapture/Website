@@ -24635,8 +24635,37 @@
         return (state.blocks[MINE_ID] || []).filter(b => b && Number(b.r) === Number(row) && !b.isPillar && b.status === 'solid' && Number(b.tonnes) > 0 && !b.faulted);
       }
 
+      function pass22FaultsUnlocked() {
+        try {
+          if (typeof pass16FaultsUnlocked === 'function') return pass16FaultsUnlocked();
+        } catch (err) {}
+        return !!(featureUnlocked('exploration') || (Number(state.year) || 1) >= 2);
+      }
+
+      function pass22FaultDiscoveryEvent(row, faultedBlocks) {
+        try {
+          if (typeof pass16FaultDiscoveryEvent === 'function') {
+            pass16FaultDiscoveryEvent(row, faultedBlocks);
+            return;
+          }
+        } catch (err) {}
+        const refs = (faultedBlocks || []).map(b => gridRef(b)).join(', ') || 'a structurally optimistic location';
+        const firstForGame = !state.pass22FallbackFaultDiscoveryShown;
+        state.pass22FallbackFaultDiscoveryShown = true;
+        pushQueueEvent({
+          tone: 'info',
+          icon: '⛏',
+          label: 'GEO',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Structural Interpretation',
+          title: firstForGame ? 'Geological Fault Identified' : 'Additional Faulted Ground Identified',
+          body: `<p>Geology has identified faulted ground in <strong>Grid Row ${gridRowNumber(row)}</strong>: ${escapeHtml(refs)}.</p><p>Mining in faulted ground is approximately <strong>20% easier</strong>, because geological time has pre-fractured the rock and, according to the current interpretation, created no inconvenient ground-control obligations.</p><p>${firstForGame ? 'The Superior Leadership Team cannot understand that a fault is not a synonym for error and has scheduled a workshop to determine who to blame.' : 'Production has requested that all future structural weaknesses be described as productivity features.'}</p>`
+        });
+      }
+
       function pass22ApplyFaultsToRow(row, force = false) {
-        if (!pass16FaultsUnlocked || !pass16FaultsUnlocked() || row === null || row === undefined || row < 0) return [];
+        if (!pass22FaultsUnlocked() || row === null || row === undefined || row < 0) return [];
         state.pass22FaultRowsChecked = state.pass22FaultRowsChecked || {};
         const key = pass22FaultKey(row);
         if (state.pass22FaultRowsChecked[key] && !force) return [];
@@ -24684,7 +24713,7 @@
           const alreadyFaulted = (state.blocks[MINE_ID] || []).some(b => Number(b.r) === Number(rowBefore) && b.faulted);
           if (!alreadyFaulted) {
             const faulted = pass22ApplyFaultsToRow(rowBefore, false);
-            if (faulted.length && typeof pass16FaultDiscoveryEvent === 'function') pass16FaultDiscoveryEvent(rowBefore, faulted);
+            if (faulted.length) pass22FaultDiscoveryEvent(rowBefore, faulted);
             if (faulted.length && board) {
               const y = board.y + (Number(rowBefore) + 0.5) * board.cell;
               spawnFloatingText(board.x + board.w * 0.52, y, ['FAULTED GROUND', 'mines faster'], '#fef3c7');
@@ -24695,9 +24724,15 @@
       };
 
       // Reinforce fault visibility after later draw overrides. Faulted cells keep grade colour, but now receive a heavier crack and label marker.
-      const pass22DrawFaultOverlayBase = typeof pass16DrawFaultOverlay === 'function' ? pass16DrawFaultOverlay : null;
-      pass16DrawFaultOverlay = function(block, r) {
-        if (pass22DrawFaultOverlayBase) pass22DrawFaultOverlayBase(block, r);
+      let pass22DrawFaultOverlayBase = null;
+      try {
+        if (typeof pass16DrawFaultOverlay === 'function') pass22DrawFaultOverlayBase = pass16DrawFaultOverlay;
+      } catch (err) {}
+
+      function pass22DrawFaultOverlay(block, r) {
+        if (pass22DrawFaultOverlayBase) {
+          try { pass22DrawFaultOverlayBase(block, r); } catch (err) {}
+        }
         if (!block || !block.faulted || ['locked', 'void', 'rubble', 'damaged'].includes(block.status) || block.isPillar) return;
         ctx.save();
         const dip = block.faultDip === -1 ? -1 : 1;
@@ -24708,6 +24743,7 @@
         ctx.strokeStyle = 'rgba(2,6,23,0.96)';
         ctx.lineWidth = Math.max(3.2, r.w * 0.105);
         ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(r.x + r.w * 0.50, r.y + r.h * 0.50);
@@ -24727,6 +24763,19 @@
         ctx.textBaseline = 'middle';
         ctx.fillText('F', r.x + r.w * 0.18, r.y + r.h * 0.20);
         ctx.restore();
+      }
+
+      try { pass16DrawFaultOverlay = pass22DrawFaultOverlay; } catch (err) {}
+      const pass24DrawBlocksFaultOverlayBase = drawBlocks;
+      drawBlocks = function() {
+        const result = pass24DrawBlocksFaultOverlayBase();
+        const blocks = state.blocks[MINE_ID] || [];
+        for (const block of blocks) {
+          if (!block || !block.faulted) continue;
+          const r = cellRect(block.q, block.r, block.c);
+          pass22DrawFaultOverlay(block, r);
+        }
+        return result;
       };
 
       // Make the Dev action use the same strengthened final fault routine.
@@ -24738,7 +24787,7 @@
           if (candidateRow === undefined) { showProductionComment('Dev: no unfaulted solid row is available to fault.', 'Dev Tools', 4); return; }
           const faulted = pass22ApplyFaultsToRow(candidateRow, true);
           if (faulted.length) {
-            if (typeof pass16FaultDiscoveryEvent === 'function') pass16FaultDiscoveryEvent(candidateRow, faulted);
+            pass22FaultDiscoveryEvent(candidateRow, faulted);
             showProductionComment('Dev: faulted ground forced on Grid Row ' + gridRowNumber(candidateRow) + '.', 'Dev Tools', 4);
           } else showProductionComment('Dev: no faultable blocks found on that row.', 'Dev Tools', 4);
           return;
