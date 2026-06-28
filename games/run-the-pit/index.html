@@ -4779,6 +4779,132 @@
     }
 
 
+
+    /* User-requested June 28 playtest pass: compact toolbar/menu, focused KPIs, research and share-price clarity. */
+    .compactToolbarButtons {
+      gap: 9px;
+    }
+
+    .compactToolbarButtons .toolBtn {
+      min-width: 76px;
+    }
+
+    .menuGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .menuButtonCard {
+      min-height: 78px;
+      display: grid;
+      align-content: center;
+      justify-items: start;
+      gap: 4px;
+      text-align: left;
+      border-radius: 13px;
+    }
+
+    .menuButtonCard strong {
+      font-size: 13px;
+      color: #fef3c7;
+    }
+
+    .menuButtonCard span {
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.25;
+    }
+
+    .slimFinanceStrip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .slimFinanceStrip .financeSummaryCard {
+      min-height: 64px;
+    }
+
+    .researchOutcomeDice {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: rgba(56,189,248,0.18);
+      border: 1px solid rgba(56,189,248,0.38);
+      color: #bae6fd;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .shareDriverList {
+      display: grid;
+      gap: 6px;
+      margin-top: 9px;
+      color: #cbd5e1;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .shareDriverList div {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      padding: 7px 8px;
+      background: rgba(0,0,0,0.15);
+    }
+
+    .shareMoveList {
+      display: grid;
+      gap: 5px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .shareMoveList div {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border-radius: 9px;
+      padding: 6px 7px;
+      background: rgba(255,255,255,0.06);
+      color: #dbeafe;
+    }
+
+    .shareMoveList strong.positive { color: #bbf7d0; }
+    .shareMoveList strong.negative { color: #fecaca; }
+
+    .drillingSuspensionNotice {
+      border: 2px solid rgba(248,113,113,0.70);
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(127,29,29,0.42), rgba(15,23,42,0.42));
+      color: #fee2e2;
+      padding: 10px 12px;
+      margin: 10px 0 12px;
+      font-size: 12px;
+      line-height: 1.38;
+    }
+
+    .drillingSuspensionNotice strong {
+      color: #fecaca;
+    }
+
+    @media screen and (max-width: 920px), screen and (max-device-width: 920px), screen and (orientation: portrait) and (max-height: 1200px) {
+      html.phoneLayout .compactToolbarButtons .toolBtn,
+      body.phoneLayout .compactToolbarButtons .toolBtn {
+        min-width: 48px !important;
+      }
+
+      html.phoneLayout #researchBtn,
+      body.phoneLayout #researchBtn {
+        min-width: 58px !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -4906,18 +5032,12 @@
         <div class="remoteHandle remoteHandleRight" aria-hidden="true"></div>
       </div>
 
-      <div class="toolbarButtons">
+      <div class="toolbarButtons compactToolbarButtons">
         <button class="toolBtn primary" id="startBtn" disabled>Start</button>
-        <button class="toolBtn" data-window="targets">Targets</button>
-        <button class="toolBtn" data-window="exploration">Explore</button>
-        <button class="toolBtn" data-window="hr">HR</button>
-        <button class="toolBtn" data-window="staff">Staff</button>
-        <button class="toolBtn" data-window="assets">Assets</button>
-        <button class="toolBtn" data-window="finance">Finance</button>
-        <button class="toolBtn" data-window="reports">Reports</button>
+        <button class="toolBtn" id="researchBtn" data-window="research">Research</button>
+        <button class="toolBtn primary" id="menuBtn" data-window="menu">Menu</button>
         <button class="toolBtn" id="pauseBtn">Pause</button>
         <button class="toolBtn" id="musicBtn">Music: Off</button>
-        <button class="toolBtn" data-window="dev">Dev</button>
       </div>
     </footer>
 
@@ -16223,6 +16343,524 @@
           <section class="devToolCard"><h3>KPI Unlock Guards</h3><p>Test that SLT targets only score metrics and mechanics unlocked by the current year and depth.</p><div class="devToolBtns"><button data-dev-action="kpi-guards-refresh">Reapply KPI Guards</button><button data-dev-action="kpi-guards-show">Show Active KPI Package</button></div></section>
         </div>`);
       };
+
+
+      /* June 28 playtest improvement pass: focused annual KPIs, cleaner year transition, explicit research mechanic, drilling restriction, share-price drivers, modal preloading, and compact menu. */
+
+      function preloadModalImages(paths, timeoutMs = 650) {
+        const unique = Array.from(new Set((paths || []).filter(Boolean)));
+        if (!unique.length) return Promise.resolve();
+        const jobs = unique.map(src => new Promise(resolve => {
+          const img = new Image();
+          const finish = () => resolve(src);
+          img.onload = finish;
+          img.onerror = finish;
+          img.src = src;
+        }));
+        return Promise.race([
+          Promise.all(jobs),
+          new Promise(resolve => setTimeout(resolve, timeoutMs))
+        ]);
+      }
+
+      function showPreparedModal(title, bodyHtml, options = {}) {
+        const overlay = $('modalOverlay');
+        const win = $('modalWindow');
+        if (!overlay || !win) return;
+        setModalClosable(options.closable !== false);
+        win.className = options.windowClass || 'window medium';
+        $('modalTitle').textContent = title || 'Operational Event';
+        const show = () => {
+          $('modalBody').innerHTML = bodyHtml || '<p>Details unavailable.</p>';
+          overlay.classList.add('show');
+        };
+        const images = options.images || [];
+        if (images.length) preloadModalImages(images).then(show);
+        else show();
+      }
+
+      const baseOpenOperationalEventModalForPreload = openOperationalEventModal;
+      openOperationalEventModal = function(ev) {
+        if (!ev) return;
+        if (isModalOpen()) {
+          pushQueueEvent({
+            tone: ev.tone || 'warning',
+            icon: ev.icon || ev.label || 'EVT',
+            label: ev.label || 'EVT',
+            image: ev.image,
+            character: ev.character,
+            department: ev.department,
+            imageText: ev.imageText,
+            title: ev.title,
+            body: ev.body,
+            button: ev.button
+          });
+          return;
+        }
+        const eventImage = ev.image ? modalCharacterHtml(ev.image, ev.character || ev.title || 'Operational Event', ev.department || 'Operational Update', ev.imageText || 'A department has arrived with findings and implications.', ev.label || 'EVT') : '';
+        const body = eventImage + (ev.body || '<p>Event details unavailable.</p>') + `<div class="btnRow"><button class="primary" data-close>${escapeHtml(ev.button || 'Accept Operational Reality')}</button></div>`;
+        showPreparedModal(ev.title || 'Operational Event', body, { windowClass: 'window medium', images: ev.image ? [ev.image] : [] });
+      };
+
+      const baseOpenQueuedEventForPreload = openQueuedEvent;
+      openQueuedEvent = function(id) {
+        const idx = state.queueEvents.findIndex(ev => ev.id === id);
+        if (idx < 0) return;
+        const ev = state.queueEvents.splice(idx, 1)[0];
+        const eventImage = ev.image ? modalCharacterHtml(ev.image, ev.character || ev.title || 'Event', ev.department || ev.label || 'Operational Update', ev.imageText || 'A department has produced a visual explanation for why this is now your problem.', ev.label || 'EVT') : '';
+        const body = eventImage + (ev.body || '<p>Event details unavailable.</p>') + '<div class="btnRow"><button class="primary" data-close>Close</button></div>';
+        showPreparedModal(ev.title || 'Queued Event', body, { windowClass: 'window medium', images: ev.image ? [ev.image] : [] });
+        updateMobileEventQueue(true);
+      };
+
+      preloadModalImages([
+        'assets/characters/portraits/production_manager.png',
+        'assets/characters/portraits/safety_advisor.png',
+        'assets/characters/slt-silhouette.png',
+        'assets/characters/geology-rock-lickers.png',
+        'assets/characters/mining-engineer.png',
+        'assets/characters/operating-culture-monitor.png',
+        'assets/characters/mr-b-counter.png'
+      ], 1);
+
+      function focusKpiKeysForYear(year = state.year) {
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
+        if (depth >= 4) return ['sharePrice', 'safety', 'ventilation'];
+        if (depth >= 3) return ['sharePrice', 'safety', 'tonnes'];
+        if (depth >= 2) return ['sharePrice', 'belt', 'tonnes'];
+        if (depth >= 1) return ['surplus', 'ground', 'tonnes'];
+        if (y <= 1) return ['tonnes', 'grade', 'surplus'];
+        if (y === 2) return ['tonnes', 'exploration', 'grade'];
+        if (y === 3) return ['surplus', 'lom', 'safety'];
+        return ['sharePrice', 'tonnes', 'safety'];
+      }
+
+      function metricLabelForKey(key) {
+        const labels = {
+          tonnes: 'Mined Tonnes', grade: 'Goldilocks Grade', surplus: 'Operating Surplus',
+          exploration: 'Exploration Rows', lom: 'LOM Reserve', technical: 'Technical Team',
+          safety: 'Safety Floor', sharePrice: 'Share Price', belt: 'Belt Advancement',
+          ground: 'Ground Control', ventilation: 'Ventilation Readiness'
+        };
+        return labels[key] || key;
+      }
+
+      function focusedMetricCard(key, target = activeAnnualTargets()) {
+        ensureSharePriceState();
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const finance = currentFinanceStatus();
+        const lom = lifeOfMineMetrics();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        if (key === 'tonnes') return { key, title: metricLabelForKey(key), status: progressKpiStatus(yrTonnes, target.tonnes || 0), html: kpiCardHtml('Mined Tonnes', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t`, pct(yrTonnes, target.tonnes), progressKpiStatus(yrTonnes, target.tonnes || 0), `Expected by now: ${Math.round((target.tonnes || 0) * finance.elapsed).toLocaleString()}t`) };
+        if (key === 'grade') return { key, title: metricLabelForKey(key), status: gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes), html: kpiCardHtml('Goldilocks Grade', `${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%`, target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100, gradeKpiStatus(yrGrade, target.grade || 0, yrTonnes), 'Reconciled only after the block is mined') };
+        if (key === 'surplus') return { key, title: metricLabelForKey(key), status: budgetKpiStatus(), html: kpiCardHtml('Operating Surplus', `${money(state.cash)} current`, state.cash >= 0 ? 100 : 0, budgetKpiStatus(), 'Revenue minus spend. Underspend is not punished; deficit is.') };
+        if (key === 'exploration') return { key, title: metricLabelForKey(key), status: progressKpiStatus(exp, target.discoveredRows || 0), html: kpiCardHtml('Exploration Rows', `${exp} / ${target.discoveredRows || 0} rows`, pct(exp, target.discoveredRows || 1), progressKpiStatus(exp, target.discoveredRows || 0), state.exploration.drillingSuspended ? 'Suspended by SLT until they rediscover reserves need drilling' : `Expected by now: ${((target.discoveredRows || 0) * finance.elapsed).toFixed(1)} rows`) };
+        if (key === 'lom') return { key, title: metricLabelForKey(key), status: lom.tonnes >= Math.max(1, (target.tonnes || TARGET_TONNES) * 1.15) ? 'onTrack' : lom.tonnes >= Math.max(1, (target.tonnes || TARGET_TONNES) * 0.85) ? 'atRisk' : 'failing', html: kpiCardHtml('LOM Reserve', `${Math.round(lom.tonnes).toLocaleString()}t @ ${lom.grade.toFixed(2)}%`, Math.min(120, lom.tonnes / Math.max(1, (target.tonnes || TARGET_TONNES) * 1.15) * 100), lom.tonnes >= Math.max(1, (target.tonnes || TARGET_TONNES) * 1.15) ? 'onTrack' : lom.tonnes >= Math.max(1, (target.tonnes || TARGET_TONNES) * 0.85) ? 'atRisk' : 'failing', 'Explored reserve confidence. Improve it through drilling.') };
+        if (key === 'technical') return { key, title: metricLabelForKey(key), status: progressKpiStatus(technicalTeamCoverage(), target.technicalHires || 2), html: kpiCardHtml('Technical Team', `${technicalTeamCoverage()} / ${target.technicalHires || 2}`, pct(technicalTeamCoverage(), target.technicalHires || 2), progressKpiStatus(technicalTeamCoverage(), target.technicalHires || 2), 'Mining Engineer and Rock Doctor coverage') };
+        if (key === 'safety') return { key, title: metricLabelForKey(key), status: directKpiStatus(traitValue('safety'), target.safetyMin || 45, 8), html: kpiCardHtml('Safety Floor', `${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 45)}`, clamp((traitValue('safety') / Math.max(1, target.safetyMin || 45)) * 100, 0, 120), directKpiStatus(traitValue('safety'), target.safetyMin || 45, 8), 'Safety must survive year end; incidents and shortcuts reduce confidence') };
+        if (key === 'sharePrice') return { key, title: metricLabelForKey(key), status: sharePriceKpiStatus(), html: kpiCardHtml('Share Price', `${formatSharePrice()} / ${formatSharePrice(state.sharePriceTarget)}`, pct(state.sharePrice, state.sharePriceTarget || 1), sharePriceKpiStatus(), 'Moved by KPIs, safety, finance, reserve confidence, technical reviews and research') };
+        if (key === 'belt') return { key, title: metricLabelForKey(key), status: progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions || 1), html: kpiCardHtml('Belt Advancement', `${state.beltExtensionsThisYear || 0} / ${target.beltExtensions || 1}`, pct(state.beltExtensionsThisYear || 0, target.beltExtensions || 1), progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions || 1), 'Advance belt through mined-out centreline ground') };
+        if (key === 'ground') {
+          const failed = typeof target.maxPillarFailures === 'number' && target.maxPillarFailures < 99 && annualPillarFailures() > target.maxPillarFailures;
+          const supportStatus = progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports || 1);
+          const status = failed ? 'failing' : supportStatus;
+          return { key, title: metricLabelForKey(key), status, html: kpiCardHtml('Ground Control', `${state.pillarSupportsThisYear || 0} supports · ${annualPillarFailures()} failures`, failed ? 0 : pct(state.pillarSupportsThisYear || 0, target.pillarSupports || 1), status, 'Support pillars and avoid preventable bursts') };
+        }
+        if (key === 'ventilation') {
+          const ok = !!(state.assets && state.assets.fanOwned) && !!ventilationEngineerOnCrew();
+          const partial = !!(state.assets && state.assets.fanOwned) || !!ventilationEngineerOnCrew();
+          return { key, title: metricLabelForKey(key), status: ok ? 'onTrack' : partial ? 'atRisk' : 'failing', html: kpiCardHtml('Ventilation Readiness', `${state.assets && state.assets.fanOwned ? 'Fan' : 'No fan'} · ${ventilationEngineerOnCrew() ? 'Engineer' : 'No engineer'}`, ok ? 100 : partial ? 55 : 0, ok ? 'onTrack' : partial ? 'atRisk' : 'failing', 'Deep-mine heat requires both equipment and someone qualified to point at it') };
+        }
+        return { key, title: metricLabelForKey(key), status: 'onTrack', html: '' };
+      }
+
+      function focusedKpiRows() {
+        const target = activeAnnualTargets();
+        return focusKpiKeysForYear(state.year).slice(0, 3).map(key => focusedMetricCard(key, target));
+      }
+
+      progressiveKpiRows = function() { return focusedKpiRows().map(({ key, title, status }) => ({ key, title, status })); };
+      annualKpiStatusList = function() { return focusedKpiRows().map(({ key, title, status }) => ({ key, title, status })); };
+      annualTargetPassed = function() { return annualKpiStatusList().every(x => x.status === 'onTrack'); };
+
+      targetSummaryHtml = function(target = activeAnnualTargets()) {
+        const names = focusKpiKeysForYear(state.year).slice(0, 3).map(metricLabelForKey);
+        return `<ul>${names.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>`;
+      };
+
+      annualKpiTrackerHtml = function() {
+        ensureSharePriceState();
+        const finance = currentFinanceStatus();
+        const rows = focusedKpiRows();
+        const overallStatus = aggregateKpiStatus(rows);
+        const summaryBits = [`Year ${state.year}`, `Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}`, `${Math.round(finance.elapsed * 100)}% elapsed`];
+        if (sharePriceMetricActive()) summaryBits.push(`Share ${formatSharePrice()}`);
+        return `<div class="financeSummaryGrid">
+          <div class="financeSummaryCard ${statusCssClass(overallStatus)}"><strong>Annual Position</strong>${summaryBits.join(' · ')}</div>
+          <div class="financeSummaryCard"><strong>SLT Focus Metrics</strong>${rows.map(x => escapeHtml(x.title)).join(' · ')}</div>
+        </div><div class="kpiTrackerGrid">${rows.map(x => x.html).join('')}</div>`;
+      };
+
+      function financeBriefingStripHtml() {
+        const notice = state.lastFinanceNotice || applyAnnualFinanceReset(state.year);
+        return `<div class="slimFinanceStrip">
+          <div class="financeSummaryCard"><strong>Opening Balance</strong>${money(state.openingBudget || 0)}</div>
+          <div class="financeSummaryCard"><strong>Revenue Target</strong>${money(state.revenueTarget || 0)}</div>
+          <div class="financeSummaryCard"><strong>Spend Guidance</strong>${money(state.spendLimit || 0)}</div>
+        </div><p><strong>Finance Allocation:</strong> ${escapeHtml(notice.note || 'Finance has confirmed the gap between ambition and funding is a leadership opportunity.')}</p>`;
+      }
+
+      yearStartCharacterHtml = function(year) {
+        const depth = Number(state.depthIndex) || 0;
+        if (depth === 0 && year === 2) return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Reserve Confidence Through Retrospective Evidence', 'The brochure now requires exploration, but the SLT remains confident this was always part of the mining plan.', 'SLT');
+        if (depth === 0) return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Growth Through Deeper Accountability', 'The -1000 Level must now justify the next level of ambition, capital, and personal exposure.', 'SLT');
+        if (depth === 1) return modalCharacterHtml('assets/characters/rock-doctor.png', 'Rock Doctor', 'Legally Interested in the Roof', 'Pillars are not spare ore. They are roof support with a poor attitude toward quarterly targets.', 'RD');
+        if (depth === 2) return modalCharacterHtml('assets/characters/mining-engineer-belt-study.png', 'Mining Engineering Department', 'Fleet and Belt Scale-Up', 'Two miners improve output and multiply the number of ways the belt can be too far away.', 'ENG');
+        if (depth === 3) return modalCharacterHtml('assets/characters/ventilation-warning.png', 'Mine Environment', 'Gas and Water', 'The deeper level has developed atmosphere and moisture, both of which now belong to Production.', 'ENV');
+        if (depth >= 4) return modalCharacterHtml('assets/characters/ventilation-engineer.png', 'Ventilation Engineering', 'Air Movement Assurance', 'The mine fan is small, oscillating, and technically present.', 'VENT');
+        return modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Escalation Based on Demonstrated Capability', 'Annual targets continue to scale by year because the slide deck says so.', 'SLT');
+      };
+
+      function focusedYearStartBriefingHtml(year) {
+        const depth = Number(state.depthIndex) || 0;
+        if (depth === 0 && year === 2) {
+          return `<div class="letter"><h2>Year 2 Operating Brief — Reserve Confirmation</h2><p>The bulk sample has been successful enough to become part of the plan. The board now requires reserve confidence to support the tonnes already discussed externally.</p><p><strong>New requirement:</strong> buy the HOPE exploration drill, hire one Geologist and two Drillers, and complete drilling programmes to unlock additional rows.</p><p>The geologist has been asked to confirm what the brochure implied. The geologist has asked whether anyone read the brochure before it was printed.</p><p class="sig">Superior Leadership Team<br>Evidence After Announcement Unit</p></div>`;
+        }
+        if (depth === 0) return `<div class="letter"><h2>Operating Year ${year} KPI Notice — Reach the -1100 Level</h2><p>The annual KPI curve continues to increase because the forecast already assumes the operation has advanced deeper.</p><p><strong>Current strategic objective:</strong> fully explore enough of the -1000 Level, maintain a positive Operating Surplus, and approve shaft deepening to reach the <strong>-1100 Level</strong>.</p><p class="sig">Superior Leadership Team<br>Growth Through Deeper Accountability</p></div>`;
+        return yearStartBriefingHtml(year);
+      }
+
+      openYearStartBriefing = function(year) {
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        const body = yearStartCharacterHtml(year) + annualMoraleNoticeHtml() + focusedYearStartBriefingHtml(year) + financeBriefingStripHtml() + '<div class="btnRow"><button class="primary" data-finance-continue>Continue Operating Year</button></div>';
+        showPreparedModal('Annual Operating Brief', body, { closable: false, windowClass: 'window medium', images: ['assets/characters/slt-silhouette.png'] });
+      };
+
+      openAnnualFinanceNotice = function(year) {
+        const notice = state.lastFinanceNotice || applyAnnualFinanceReset(year);
+        const body = `${modalCharacterHtml('assets/characters/mr-b-counter.png', 'Mr B. Counter', 'Department of Financial Prevention', 'Finance has confirmed the numbers are realistic because they are now in the system.', 'B')}
+          <div class="letter"><h2>Finance Allocation</h2><p>The annual allocation has been issued. Details remain available in the Finance window; this notice now only records the parts you need before work resumes.</p>${financeBriefingStripHtml()}<p>${escapeHtml(notice.note || '')}</p></div>
+          <div class="btnRow"><button class="primary" data-finance-continue>${financeContinueLabel(year)}</button></div>`;
+        showPreparedModal('Finance Allocation', body, { closable: false, windowClass: 'window medium', images: ['assets/characters/mr-b-counter.png'] });
+      };
+
+      function sharePriceDriversHtml() {
+        if (!sharePriceMetricActive()) return '';
+        const events = (state.sharePriceEvents || []).slice(-5).reverse();
+        const eventRows = events.length
+          ? events.map(ev => `<div><span>Day ${Math.round(ev.day || 0)} · ${escapeHtml(ev.reason || 'Market sentiment')}</span><strong class="${ev.delta >= 0 ? 'positive' : 'negative'}">${ev.delta >= 0 ? '+' : ''}${Number(ev.delta || 0).toFixed(1)}p</strong></div>`).join('')
+          : '<div><span>No recorded movement yet. The market is waiting for you to make this worse.</span><strong>0.0p</strong></div>';
+        return `<section class="crewRoleSection" data-share-price-summary>
+          <div class="crewRoleHeader"><h3>Share Price Drivers</h3><span>${formatSharePrice()} / target ${formatSharePrice(state.sharePriceTarget)}</span></div>
+          <p>The share price is not just random noise. It responds to visible management outcomes.</p>
+          <div class="shareDriverList">
+            <div><strong>Positive pressure:</strong> annual KPI success, positive Operating Surplus, successful technical reviews, reserve confidence, useful research, and stable safety performance.</div>
+            <div><strong>Negative pressure:</strong> failed KPIs, major incidents, HSE findings, technical scandals, reserve depletion, stoppages, and decisions that make investors read the appendix.</div>
+          </div>
+          <div class="shareMoveList">${eventRows}</div>
+        </section>`;
+      }
+
+      enhanceWindowWithSharePrice = function(type) {
+        if (!sharePriceMetricActive()) return;
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-share-price-summary]')) return;
+        body.insertAdjacentHTML('afterbegin', sharePriceDriversHtml());
+      };
+
+      function ensureDrillingRestrictionState() {
+        state.exploration = state.exploration || {};
+        if (typeof state.exploration.drillingSuspended !== 'boolean') state.exploration.drillingSuspended = false;
+        if (typeof state.exploration.drillingSuspensionIssued !== 'boolean') state.exploration.drillingSuspensionIssued = false;
+        if (typeof state.exploration.drillingResumedIssued !== 'boolean') state.exploration.drillingResumedIssued = false;
+      }
+
+      function drillingSuspensionNoticeHtml() {
+        ensureDrillingRestrictionState();
+        if (!state.exploration.drillingSuspended) return '';
+        return `<div class="drillingSuspensionNotice"><strong>Exploration drilling suspended by SLT.</strong><br>Drillers remain paid during outage. Geology remains disappointed. Programmes in progress are paused until the resumption notice arrives.</div>`;
+      }
+
+      function suspendExplorationDrilling() {
+        ensureDrillingRestrictionState();
+        state.exploration.drillingSuspended = true;
+        state.exploration.drillingSuspensionIssued = true;
+        state.exploration.drillingResumedIssued = false;
+        state.exploration.drillingResumeDay = state.day + 38;
+        adjustTrait('morale', -1);
+        openOperationalEventModal({
+          title: 'Exploration Drilling Suspended',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Reserve Confidence Interruption',
+          label: 'GEO',
+          tone: 'warning',
+          body: `<p>The Superior Leadership Team have realised that the investor brochure mentions <strong>“exploration drilling”</strong>.</p><p>As savvy business leaders specialising in mining, they have determined that a mining company should be mining, not drilling.</p><p><strong>All drilling is suspended until further notice.</strong></p><p>The geologist lets out a familiar sigh. The drilling department are en-route to the pub as their contract pays them stand-down in the event of outage.</p><p><strong>Impact:</strong> exploration programmes are paused. Drillers still draw wages. -1 Morale.</p>`,
+          button: 'Suspend the Evidence'
+        });
+      }
+
+      function resumeExplorationDrilling() {
+        ensureDrillingRestrictionState();
+        state.exploration.drillingSuspended = false;
+        state.exploration.drillingResumedIssued = true;
+        adjustTrait('skill', 1);
+        openOperationalEventModal({
+          title: 'Exploration Drilling Resumed',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Primary Colours and Reserve Inventory',
+          label: 'GEO',
+          tone: 'info',
+          body: `<p>The Superior Leadership Team demand to know why the Ore Reserve Inventory has gone down.</p><p>The geologist tries to explain using simplistic diagrams in basic primary colours, but little is being understood.</p><p><strong>Exploration Drilling can now be resumed.</strong></p><p><strong>Impact:</strong> drilling programmes restart. +1 Skill from having explained the same concept again.</p>`,
+          button: 'Resume the Holes'
+        });
+      }
+
+      function maybeDrillingRestrictionEvent() {
+        ensureDrillingRestrictionState();
+        if (!state.running || state.paused || isModalOpen()) return;
+        if ((Number(state.year) || 1) !== 2 || (Number(state.depthIndex) || 0) !== 0) return;
+        const doy = dayOfYear();
+        if (!state.exploration.drillingSuspensionIssued && doy >= 18) { suspendExplorationDrilling(); return; }
+        if (state.exploration.drillingSuspended && !state.exploration.drillingResumedIssued && state.day >= (state.exploration.drillingResumeDay || 0)) resumeExplorationDrilling();
+      }
+
+      const baseStartExplorationForSuspension = startExplorationProgram;
+      startExplorationProgram = function() {
+        ensureDrillingRestrictionState();
+        if (state.exploration.drillingSuspended) {
+          openMiniWindow('Exploration Drilling Suspended', '<p>The SLT has temporarily suspended exploration drilling after discovering the brochure mentions exploration drilling.</p><p>The drillers are paid stand-down. The geologist is sighing in a professionally controlled manner.</p>', true);
+          return;
+        }
+        return baseStartExplorationForSuspension();
+      };
+
+      const baseUpdateExplorationForSuspension = updateExploration;
+      updateExploration = function(dt) {
+        ensureDrillingRestrictionState();
+        if (state.exploration.drillingSuspended) return;
+        return baseUpdateExplorationForSuspension(dt);
+      };
+
+      function researchOptionsForTraits() {
+        return [
+          { key: 'productivity', title: 'Conduct Productivity Research', trait: 'productivity', cost: 8200, days: 42, min: 2, max: 8, desc: 'Study how to move more tonnes without formally admitting the previous plan was slow.', failTrait: 'safety', failDelta: -1 },
+          { key: 'skill', title: 'Conduct Skill Research', trait: 'skill', cost: 8800, days: 48, min: 2, max: 8, desc: 'Convert operator practice, engineering diagrams, and selective listening into measurable competence.', failTrait: 'morale', failDelta: -2 },
+          { key: 'morale', title: 'Conduct Morale Research', trait: 'morale', cost: 6400, days: 34, min: 2, max: 7, desc: 'Investigate whether the workforce is motivated by engagement, tea, pay, or not being researched.', failTrait: 'productivity', failDelta: -1 },
+          { key: 'safety', title: 'Conduct Safety Research', trait: 'safety', cost: 9200, days: 54, min: 2, max: 8, desc: 'Review near misses, procedures, controls, and why the shortcut keeps becoming the standard method.', failTrait: 'productivity', failDelta: -2 }
+        ];
+      }
+
+      engineeringResearchOptions = function() { return researchOptionsForTraits(); };
+
+      function researchStatusSummaryHtml() {
+        const active = state.engineeringResearch;
+        const eng = miningEngineerOnCrew();
+        if (!featureUnlocked('technicalTeam')) return '<p>Research unlocks with the Mining Engineer on the -1100 Level.</p>';
+        if (!eng) return '<p>Research requires a Mining Engineer. S.H.A.F.T. cannot currently provide decimal-place optimism.</p><div class="btnRow"><button class="primary" data-window="hr">Hire Mining Engineer</button></div>';
+        if (active) {
+          const pctDone = clamp((active.progress || 0) / Math.max(1, active.days) * 100, 0, 100);
+          return `<p><strong>${escapeHtml(active.title)}</strong></p><p>${escapeHtml(active.desc || '')}</p><div class="researchProgressBar"><span style="width:${pctDone.toFixed(0)}%"></span></div><p><strong>Progress:</strong> ${pctDone.toFixed(0)}% · Engineer skill ${eng.skill || 3}/5.</p>`;
+        }
+        return '<p>No active research project. One study can run at a time.</p>';
+      }
+
+      engineeringResearchPanelHtml = function() {
+        if (!featureUnlocked('technicalTeam')) return '';
+        const eng = miningEngineerOnCrew();
+        const active = state.engineeringResearch;
+        const tag = active ? escapeHtml(active.title) : eng ? 'Available' : 'Requires Mining Engineer';
+        return `<section class="crewRoleSection researchCard"><div class="crewRoleHeader"><h3>Research</h3><span>${tag}</span></div>${researchStatusSummaryHtml()}<div class="btnRow"><button class="primary" data-window="research">Open Research</button></div></section>`;
+      };
+
+      function openResearchWindow() {
+        if (state.manualPaused) { showProductionComment('Game paused. Research approvals are locked because time is stopped.', 'Pause', 3.5); return; }
+        setModalClosable(true);
+        $('modalWindow').className = 'window';
+        $('modalTitle').textContent = 'Research Programme';
+        const eng = miningEngineerOnCrew();
+        let body = `<p>Research turns money, time and Mining Engineer confidence into possible trait improvement. It can improve Productivity, Skill, Morale or Safety, with a success roll and variable magnitude on completion.</p>`;
+        body += researchStatusSummaryHtml();
+        if (featureUnlocked('technicalTeam') && eng && !state.engineeringResearch) {
+          const rows = researchOptionsForTraits().map(opt => {
+            const skill = clamp(Number(eng.skill) || 3, 1, 5);
+            const chance = Math.round(clamp(0.34 + skill * 0.09, 0.40, 0.82) * 100);
+            return `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>${escapeHtml(opt.title)}</strong><span>${escapeHtml(opt.desc)} Cost ${money(scaledCost(opt.cost))}. Duration ${opt.days} days. Potential result +${opt.min} to +${opt.max} ${traitLabel(opt.trait)}.</span></div><span class="researchOutcomeDice">${chance}%</span><button data-start-engineering-research="${opt.key}">Start</button></div>`;
+          }).join('');
+          body += `<div class="rows">${rows}</div>`;
+        }
+        body += `<div class="btnRow"><button data-window="staff">Staff</button><button data-window="assets">Assets</button><button data-close>Close</button></div>`;
+        $('modalBody').innerHTML = body;
+        $('modalOverlay').classList.add('show');
+      }
+
+      startEngineeringResearch = function(key) {
+        if (!featureUnlocked('technicalTeam')) { openMiniWindow('Research Not Authorised', '<p>Research unlocks when a Mining Engineer joins the technical team on the -1100 Level.</p>', true); return false; }
+        const eng = miningEngineerOnCrew();
+        if (!eng) { openMiniWindow('Mining Engineer Missing', '<p>Research requires a Mining Engineer, because someone must convert the obvious into a graph.</p>', true); return false; }
+        if (state.engineeringResearch) { openMiniWindow('Research Already In Progress', '<p>The Mining Engineer is already converting budget into possible improvement.</p>', true); return false; }
+        const opt = researchOptionsForTraits().find(x => x.key === key) || randomItem(researchOptionsForTraits());
+        spend(opt.cost, 'Research programme');
+        state.engineeringResearch = { ...opt, progress: 0, startedDay: state.day };
+        openOperationalEventModal({
+          title: 'Research Project Started',
+          image: 'assets/characters/mining-engineer.png',
+          character: 'Mining Engineer',
+          department: 'Applied Research and Justified Spend',
+          label: 'R&D',
+          tone: 'info',
+          body: `<p>The Mining Engineer has started <strong>${escapeHtml(opt.title)}</strong>.</p><p>${escapeHtml(opt.desc)}</p><p><strong>Cost:</strong> ${money(scaledCost(opt.cost))}. <strong>Duration:</strong> ${opt.days} days. <strong>Possible outcome:</strong> +${opt.min} to +${opt.max} ${traitLabel(opt.trait)}, if reality cooperates.</p>`,
+          button: 'Authorise Research'
+        });
+        return true;
+      };
+
+      completeEngineeringResearch = function() {
+        const active = state.engineeringResearch;
+        const eng = miningEngineerOnCrew();
+        if (!active || !eng) { state.engineeringResearch = null; return; }
+        const skill = clamp(Number(eng.skill) || 3, 1, 5);
+        const successChance = clamp(0.34 + skill * 0.09, 0.40, 0.82);
+        const backfireChance = clamp(0.18 - skill * 0.02, 0.06, 0.16);
+        const roll = Math.random();
+        let title = 'Research Completed';
+        let tone = 'info';
+        let body = '';
+        if (roll < successChance) {
+          const magnitude = Math.round(active.min + Math.random() * (active.max - active.min) + Math.max(0, skill - 3) * 0.5);
+          adjustTrait(active.trait, magnitude);
+          if (sharePriceMetricActive()) adjustSharePrice(Math.max(1, Math.round(magnitude / 2)), 'Useful research: ' + active.title);
+          title = 'Research Successful';
+          tone = 'good';
+          body = `<p><strong>${escapeHtml(active.title)}</strong> has produced a useful operational recommendation.</p><p><strong>Outcome:</strong> +${magnitude} ${traitLabel(active.trait)}.</p><p>The finding has been implemented immediately, before it can become a steering-group workstream.</p>`;
+        } else if (roll > 1 - backfireChance) {
+          adjustTrait(active.failTrait, active.failDelta);
+          if (sharePriceMetricActive()) adjustSharePrice(-1, 'Research confusion: ' + active.title);
+          title = 'Research Completed, Harmfully';
+          tone = 'warning';
+          body = `<p><strong>${escapeHtml(active.title)}</strong> has produced a technically complete report with an operationally awkward conclusion.</p><p><strong>Outcome:</strong> ${active.failDelta} ${traitLabel(active.failTrait)}.</p><p>The Mining Engineer confirms the methodology was sound, which has not improved the result.</p>`;
+        } else {
+          title = 'Research Inconclusive';
+          tone = 'info';
+          body = `<p><strong>${escapeHtml(active.title)}</strong> has confirmed that existing practice is broadly adequate, which is less useful than everyone hoped.</p><p><strong>Outcome:</strong> no measurable trait change. The appendix is very confident.</p>`;
+        }
+        state.engineeringResearch = null;
+        openOperationalEventModal({ title, image: 'assets/characters/mining-engineer.png', character: 'Mining Engineer', department: 'Applied Recommendations', label: 'R&D', tone, body, button: 'File the Research' });
+      };
+
+      updateEngineeringResearch = function(dt) {
+        const eng = miningEngineerOnCrew();
+        if (!featureUnlocked('technicalTeam') || !eng || !state.running || state.paused) return;
+        if (state.engineeringResearch) {
+          state.engineeringResearch.progress = (state.engineeringResearch.progress || 0) + dt * DAYS_PER_REAL_SECOND;
+          if (state.engineeringResearch.progress >= state.engineeringResearch.days) completeEngineeringResearch();
+        }
+      };
+
+      applyTraitDriftEvent = function(key = null) {
+        const ev = key ? traitDriftEvents.find(x => x.key === key) : randomItem(traitDriftEvents);
+        if (!ev) return;
+        for (const [trait, delta] of Object.entries(ev.effects || {})) adjustTrait(trait, delta);
+        if (ev.cost) spend(ev.cost, ev.title);
+        const effectsText = Object.entries(ev.effects || {}).map(([trait, delta]) => `${delta >= 0 ? '+' : ''}${delta} ${traitLabel(trait)}`).join(', ');
+        openOperationalEventModal({
+          title: ev.title,
+          image: 'assets/characters/operating-culture-monitor.png',
+          character: 'Operating Culture Monitor',
+          department: 'Behavioural KPI Drift',
+          label: 'KPI',
+          tone: ev.tone || 'info',
+          body: `<p>${escapeHtml(ev.body)}</p><p><strong>Impact:</strong> ${escapeHtml(effectsText || 'No measurable impact')}${ev.cost ? ', ' + money(scaledCost(ev.cost)) + ' cost' : ''}.</p>`,
+          button: 'Accept Cultural Learning'
+        });
+      };
+
+      function openGameMenu() {
+        setModalClosable(true);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Management Menu';
+        $('modalBody').innerHTML = `<p>Urgent events appear in the alert queue. Use this menu for planned management windows.</p>
+          <div class="menuGrid">
+            <button class="menuButtonCard" data-window="targets"><strong>Targets</strong><span>Current 3-metric SLT KPI package.</span></button>
+            <button class="menuButtonCard" data-window="exploration"><strong>Explore</strong><span>Drilling, reserves and future rows.</span></button>
+            <button class="menuButtonCard" data-window="research"><strong>Research</strong><span>Invest in trait-improving studies.</span></button>
+            <button class="menuButtonCard" data-window="hr"><strong>HR</strong><span>Recruitment and S.H.A.F.T. interventions.</span></button>
+            <button class="menuButtonCard" data-window="staff"><strong>Staff</strong><span>Roster, hierarchy and headcount.</span></button>
+            <button class="menuButtonCard" data-window="assets"><strong>Assets</strong><span>Machines, belt, bolter and reliability.</span></button>
+            <button class="menuButtonCard" data-window="finance"><strong>Finance</strong><span>Revenue, spend and operating surplus.</span></button>
+            <button class="menuButtonCard" data-window="reports"><strong>Reports</strong><span>Training record and performance summary.</span></button>
+            <button class="menuButtonCard" data-window="dev"><strong>Dev Tools</strong><span>Testing controls for events and systems.</span></button>
+          </div>`;
+        $('modalOverlay').classList.add('show');
+      }
+
+      const baseOpenWindowForMenuAndResearch = openWindow;
+      openWindow = function(type, forceReportComplete = false, customTitle = null) {
+        if (type === 'menu') { openGameMenu(); return; }
+        if (type === 'research') { openResearchWindow(); return; }
+        baseOpenWindowForMenuAndResearch(type, forceReportComplete, customTitle);
+        if (type === 'exploration') {
+          const body = $('modalBody');
+          if (body && state.exploration && state.exploration.drillingSuspended) {
+            if (!body.querySelector('.drillingSuspensionNotice')) body.insertAdjacentHTML('afterbegin', drillingSuspensionNoticeHtml());
+            body.querySelectorAll('[data-start-exploration]').forEach(btn => { btn.disabled = true; btn.textContent = 'Drilling Suspended by SLT'; });
+          }
+        }
+      };
+
+      openAnnualPerformanceReview = function(rating, fired) {
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Annual Performance Review';
+        const rows = annualKpiStatusList();
+        const ratingText = rating === 'successful' ? 'Successful' : 'Needs Improvement';
+        const pipText = fired
+          ? `<div class="pipNotice"><strong>PIP outcome:</strong> The Performance Improvement Plan has successfully identified a performance improvement opportunity outside the organisation.</div>`
+          : rating === 'needsImprovement'
+            ? `<div class="pipNotice"><strong>Performance Improvement Plan:</strong> You have been placed on a supportive process designed to help you understand that next year’s failure will be treated differently.</div>`
+            : `<div class="pipNotice"><strong>PIP status:</strong> Cleared. Previous underperformance has been temporarily reinterpreted as development.</div>`;
+        const metricRows = rows.map(r => `<div class="row"><div class="avatarDot" style="background:${r.status === 'onTrack' ? '#22c55e' : r.status === 'atRisk' ? '#f59e0b' : '#ef4444'}"></div><div><strong>${escapeHtml(r.title)}</strong><span>${r.status === 'onTrack' ? 'On track' : r.status === 'atRisk' ? 'At risk' : 'Failing'}</span></div><span class="tag">${r.status === 'onTrack' ? '✓' : r.status === 'atRisk' ? '!' : '✕'}</span></div>`).join('');
+        const pleadButton = rating === 'needsImprovement' ? `<button class="warn" data-plead-case>${fired ? 'Plead for Reconsideration' : 'Plead Your Case'}</button>` : '';
+        const buttonHtml = fired
+          ? `<button class="primary" data-accept-reassignment>Accept Reassignment</button>${pleadButton}`
+          : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>${pleadButton}`;
+        const successRecognitionHtml = rating === 'successful' ? annualSuccessRecognitionHtml(state.year) : '';
+        const body = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Annual Moderation Panel', 'Only three focus metrics were used this year, which makes the conclusion harder to dispute and easier to laminate.', 'SLT')}
+          <div class="letter"><h2>Annual Performance Review — Year ${state.year}</h2><p>Dear Mine Manager,</p><p>The <strong>Superior Leadership Team</strong> has completed your annual review against the three SLT Focus Metrics issued at the start of the operating year.</p>${annualReviewRatingHtml(rating === 'successful' ? 'successful' : 'needs')}<p><strong>Rating:</strong> ${ratingText}</p><div class="rows">${metricRows}</div>${pipText}${successRecognitionHtml}<p>${rating === 'successful' ? 'Your success confirms the targets were realistic and that next year should therefore be harder.' : fired ? 'Unfortunately, two consecutive Needs Improvement ratings mean the organisation must now support your development from a safer distance.' : 'The SLT remains confident that next year will demonstrate improvement, particularly now that the consequences have been explained.'}</p><p class="sig">Superior Leadership Team<br>ManySalts Mine<br>Delivering Value Through Other People</p></div><div class="btnRow">${buttonHtml}</div>`;
+        showPreparedModal('Annual Performance Review', body, { closable: false, windowClass: 'window medium', images: ['assets/characters/slt-silhouette.png'] });
+      };
+
+      const baseUpdateForPlaytestPass = update;
+      update = function(dt) {
+        baseUpdateForPlaytestPass(dt);
+        if (state.running && !state.paused && !isModalOpen()) maybeDrillingRestrictionEvent();
+      };
+
+      const baseDevActionForPlaytestPass = devAction;
+      devAction = function(action) {
+        if (action === 'research-productivity') { state.year = Math.max(state.year || 1, 3); if ((state.depthIndex || 0) < 1) { state.depthIndex = 1; state.mineLevel = -1100; } if (!miningEngineerOnCrew()) { const eng = technicalCrewPool.find(c => c.role === 'miningEngineer'); if (eng) state.staff.push({ ...eng, id: eng.id + '_dev_' + Date.now(), bubble: null }); } startEngineeringResearch('productivity'); return; }
+        if (action === 'research-complete') { if (state.engineeringResearch) { state.engineeringResearch.progress = state.engineeringResearch.days; completeEngineeringResearch(); } else openMiniWindow('No Research Active', '<p>Start a research project first.</p>', true); return; }
+        if (action === 'drilling-suspend') { suspendExplorationDrilling(); return; }
+        if (action === 'drilling-resume') { resumeExplorationDrilling(); return; }
+        return baseDevActionForPlaytestPass(action);
+      };
+
+      const baseEnhanceDevToolsForPlaytestPass = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForPlaytestPass();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-playtest-pass-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-playtest-pass-dev-tools>
+          <section class="devToolCard"><h3>Research / Drilling Restrictions</h3><p>Test the new research mechanic and Year 2 exploration suspension events.</p><div class="devToolBtns"><button data-dev-action="research-productivity">Start Productivity Research</button><button data-dev-action="research-complete">Complete Active Research</button><button data-dev-action="drilling-suspend">Suspend Drilling</button><button data-dev-action="drilling-resume">Resume Drilling</button></div></section>
+        </div>`);
+      };
+
+      ensureDrillingRestrictionState();
 
       applyAnnualTargetUnlockGuards();
 
