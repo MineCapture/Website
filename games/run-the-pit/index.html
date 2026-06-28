@@ -4905,6 +4905,186 @@
       }
     }
 
+
+    /* Playtest correction pass: dual HOPE remotes and paused-menu navigation. */
+    .remoteDeck {
+      grid-column: 2;
+      justify-self: center;
+      align-self: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    #bottomBar .remoteDeck .toolbarMachineRemote {
+      grid-column: auto;
+      justify-self: auto;
+      transform: translateY(-2px);
+    }
+
+    .remoteStaticToggle {
+      min-height: 20px;
+      height: 22px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.75);
+      color: #dbeafe;
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid rgba(191,219,254,0.42);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    .toolbarMachineRemote.bolterRemote .remoteShell {
+      background: linear-gradient(180deg, #0ea5e9, #0369a1);
+    }
+
+    .toolbarMachineRemote.bolterRemote .remoteBrand {
+      color: rgba(7,89,133,0.62);
+    }
+
+    .toolbarMachineRemote.bolterRemote .remoteDisplayValue {
+      color: #cffafe;
+    }
+
+    .toolbarMachineRemote.locked {
+      opacity: 0.58;
+      filter: grayscale(0.20);
+    }
+
+    .toolbarMachineRemote.locked .machinePadBtn:not(.machinePadSpacer) {
+      opacity: 0.62;
+    }
+
+    .toolbarMachineRemote.bolterRemote .machinePadBtn.active {
+      border-color: rgba(186,230,253,0.95);
+      background: linear-gradient(180deg, #38bdf8, #0369a1);
+      color: #f0f9ff;
+      box-shadow: inset 0 1px rgba(255,255,255,0.18), 0 0 0 2px rgba(56,189,248,0.18);
+    }
+
+    .toolbarMachineRemote.bolterRemote .machinePadStop.readyToBolt {
+      background: linear-gradient(180deg, #22c55e, #15803d);
+      color: #052e16;
+      border-color: rgba(187,247,208,0.70);
+    }
+
+    .beltDecisionGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .beltDecisionGrid .eventChoiceBtn {
+      min-width: 0;
+      width: 100%;
+    }
+
+    @media (max-width: 1120px) {
+      .remoteDeck {
+        grid-column: 1 / span 2;
+        grid-row: 1;
+        justify-self: start;
+        justify-content: flex-start;
+        overflow-x: auto;
+        max-width: 100%;
+        padding-bottom: 2px;
+      }
+
+      #bottomBar .toolbarButtons {
+        grid-column: 1 / span 2;
+        grid-row: 2;
+      }
+    }
+
+    @media screen and (max-width: 920px), screen and (max-device-width: 920px), screen and (orientation: portrait) and (max-height: 1200px) {
+      html.phoneLayout #game,
+      body.phoneLayout #game {
+        grid-template-rows: minmax(0, 1fr) 132px !important;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar {
+        height: 132px !important;
+        min-height: 132px !important;
+        max-height: 132px !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 82px 38px !important;
+        align-content: center !important;
+      }
+
+      html.phoneLayout .remoteDeck,
+      body.phoneLayout .remoteDeck {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        max-width: calc(100vw - 12px) !important;
+        display: flex !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        gap: 5px !important;
+        transform: none !important;
+        padding-bottom: 2px !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote {
+        flex: 0 0 148px !important;
+        width: 148px !important;
+        max-width: 148px !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        transform: none !important;
+      }
+
+      html.phoneLayout #bottomBar .toolbarButtons,
+      body.phoneLayout #bottomBar .toolbarButtons {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+      }
+
+      html.phoneLayout .mobileEventQueue,
+      body.phoneLayout .mobileEventQueue {
+        bottom: 136px !important;
+      }
+    }
+
+    @media screen and (max-width: 390px) {
+      html.phoneLayout #game,
+      body.phoneLayout #game {
+        grid-template-rows: minmax(0, 1fr) 126px !important;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar {
+        height: 126px !important;
+        min-height: 126px !important;
+        max-height: 126px !important;
+        grid-template-rows: 78px 36px !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote {
+        flex-basis: 136px !important;
+        width: 136px !important;
+        max-width: 136px !important;
+      }
+
+      html.phoneLayout .mobileEventQueue,
+      body.phoneLayout .mobileEventQueue {
+        bottom: 130px !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -4991,50 +5171,92 @@
     <footer id="bottomBar">
       <div class="bottomBarSpacer" aria-hidden="true"></div>
 
-      <div class="toolbarMachineRemote" aria-label="Continuous miner remote control">
-        <div class="remoteHandle remoteHandleLeft" aria-hidden="true"></div>
-        <div class="remoteShell">
-          <div class="remoteTopRow">
-            <div class="remoteBrand">HOPE</div>
-            <button class="remoteMachineToggle" id="activeMachineToggle" type="button" title="Switch active machine">MINER</button>
-            <div class="remoteStatusPill" id="machineRemoteStatus">IDLE</div>
-          </div>
+      <div class="remoteDeck" aria-label="HOPE machine remote controls">
+        <div class="toolbarMachineRemote minerRemote" id="minerRemote" aria-label="Continuous miner remote control">
+          <div class="remoteHandle remoteHandleLeft" aria-hidden="true"></div>
+          <div class="remoteShell">
+            <div class="remoteTopRow">
+              <div class="remoteBrand">HOPE</div>
+              <button class="remoteMachineToggle" id="activeMachineToggle" type="button" title="Switch active miner">1stHOPE</button>
+              <div class="remoteStatusPill" id="minerRemoteStatus">IDLE</div>
+            </div>
 
-          <div class="remotePlate">
-            <div class="remoteLeftCluster" aria-hidden="true">
-              <div class="remoteMiniToggle"></div>
-              <div class="remoteMiniToggle"></div>
-              <div class="remoteJoystickDecor">
-                <div class="remoteJoystickStem"></div>
-                <div class="remoteJoystickKnob"></div>
+            <div class="remotePlate">
+              <div class="remoteLeftCluster" aria-hidden="true">
+                <div class="remoteMiniToggle"></div>
+                <div class="remoteMiniToggle"></div>
+                <div class="remoteJoystickDecor">
+                  <div class="remoteJoystickStem"></div>
+                  <div class="remoteJoystickKnob"></div>
+                </div>
+              </div>
+
+              <div class="remoteDisplay">
+                <div class="remoteDisplayLabel" id="minerRemoteLabel">Continuous Miner</div>
+                <div class="remoteDisplayValue" id="minerRemoteDir">UP</div>
+                <div class="remoteDisplaySub">HOPE: it mines</div>
+              </div>
+
+              <div class="toolbarMachineControls" aria-label="Continuous miner directional controls">
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
+                <button class="machinePadBtn" data-miner-dir="up" title="Mine / tram up">↑</button>
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
+                <button class="machinePadBtn" data-miner-dir="left" title="Mine / tram left">←</button>
+                <button class="machinePadBtn machinePadStop" data-miner-stop title="Stop mining">STOP</button>
+                <button class="machinePadBtn" data-miner-dir="right" title="Mine / tram right">→</button>
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
+                <button class="machinePadBtn" data-miner-dir="down" title="Mine / tram down">↓</button>
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
               </div>
             </div>
+          </div>
+          <div class="remoteHandle remoteHandleRight" aria-hidden="true"></div>
+        </div>
 
-            <div class="remoteDisplay">
-              <div class="remoteDisplayLabel">Continuous Miner</div>
-              <div class="remoteDisplayValue" id="machineRemoteDir">UP</div>
-              <div class="remoteDisplaySub">Directional Control</div>
+        <div class="toolbarMachineRemote bolterRemote locked" id="bolterRemote" aria-label="Bolter remote control">
+          <div class="remoteHandle remoteHandleLeft" aria-hidden="true"></div>
+          <div class="remoteShell">
+            <div class="remoteTopRow">
+              <div class="remoteBrand">HOPE</div>
+              <div class="remoteMachineToggle remoteStaticToggle">BOLTER</div>
+              <div class="remoteStatusPill" id="bolterRemoteStatus">LOCKED</div>
             </div>
 
-            <div class="toolbarMachineControls" aria-label="Continuous miner directional controls">
-              <button class="machinePadBtn machinePadSpacer" disabled></button>
-              <button class="machinePadBtn" data-machine-dir="up" title="Mine / tram up">↑</button>
-              <button class="machinePadBtn machinePadSpacer" disabled></button>
-              <button class="machinePadBtn" data-machine-dir="left" title="Mine / tram left">←</button>
-              <button class="machinePadBtn machinePadStop" data-machine-stop title="Stop mining">STOP</button>
-              <button class="machinePadBtn" data-machine-dir="right" title="Mine / tram right">→</button>
-              <button class="machinePadBtn machinePadSpacer" disabled></button>
-              <button class="machinePadBtn" data-machine-dir="down" title="Mine / tram down">↓</button>
-              <button class="machinePadBtn machinePadSpacer" disabled></button>
+            <div class="remotePlate">
+              <div class="remoteLeftCluster" aria-hidden="true">
+                <div class="remoteMiniToggle"></div>
+                <div class="remoteMiniToggle"></div>
+                <div class="remoteJoystickDecor">
+                  <div class="remoteJoystickStem"></div>
+                  <div class="remoteJoystickKnob"></div>
+                </div>
+              </div>
+
+              <div class="remoteDisplay">
+                <div class="remoteDisplayLabel">Bolter</div>
+                <div class="remoteDisplayValue" id="bolterRemoteDir">UP</div>
+                <div class="remoteDisplaySub">HOPE: it bolts</div>
+              </div>
+
+              <div class="toolbarMachineControls" aria-label="Bolter directional controls">
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
+                <button class="machinePadBtn" data-bolter-dir="up" title="Tram bolter up">↑</button>
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
+                <button class="machinePadBtn" data-bolter-dir="left" title="Tram bolter left">←</button>
+                <button class="machinePadBtn machinePadStop" data-bolter-stop title="Stop bolter or bolt facing pillar">STOP</button>
+                <button class="machinePadBtn" data-bolter-dir="right" title="Tram bolter right">→</button>
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
+                <button class="machinePadBtn" data-bolter-dir="down" title="Tram bolter down">↓</button>
+                <button class="machinePadBtn machinePadSpacer" disabled></button>
+              </div>
             </div>
           </div>
+          <div class="remoteHandle remoteHandleRight" aria-hidden="true"></div>
         </div>
-        <div class="remoteHandle remoteHandleRight" aria-hidden="true"></div>
       </div>
 
       <div class="toolbarButtons compactToolbarButtons">
         <button class="toolBtn primary" id="startBtn" disabled>Start</button>
-        <button class="toolBtn" id="researchBtn" data-window="research">Research</button>
         <button class="toolBtn primary" id="menuBtn" data-window="menu">Menu</button>
         <button class="toolBtn" id="pauseBtn">Pause</button>
         <button class="toolBtn" id="musicBtn">Music: Off</button>
@@ -5436,6 +5658,8 @@
     }
 
     function retryMusicAfterUserGesture() {
+      // Manual pause is a gameplay pause, not an invitation for the next menu click to restart the soundtrack.
+      if (window.rtpManualPauseActive) return;
       if (musicWanted && bgMusic && bgMusic.paused) {
         startMusic();
       }
@@ -14160,7 +14384,7 @@
       }
 
       function openWindow(type, forceReportComplete = false, customTitle = null) {
-        if (state.manualPaused && type !== 'dev') { showProductionComment('Game paused. Windows are locked because management cannot improve a situation while time is stopped.', 'Pause', 3.5); return; }
+        // Manual pause freezes gameplay and event resolution, but management windows remain navigable.
         if (type === 'hr' && maybeOpenRoleIntroBeforeHr(customTitle)) return;
         setModalClosable(true);
         let title = customTitle || '';
@@ -15375,6 +15599,7 @@
         $('pauseBtn').addEventListener('click', () => {
           state.manualPaused = !state.manualPaused;
           state.paused = state.manualPaused;
+          window.rtpManualPauseActive = !!state.manualPaused;
           $('pauseBtn').textContent = state.manualPaused ? 'Resume' : 'Pause';
           if (state.manualPaused) pauseMusicForManualPause(); else resumeMusicAfterManualPause();
         });
@@ -15410,10 +15635,11 @@
         }
 
         document.body.addEventListener('click', (e) => {
-          if (state.manualPaused && !e.target.closest('#pauseBtn') && !e.target.closest('#musicBtn') && !e.target.closest('[data-restart-game]')) {
+          const pauseBlockedSelector = '[data-mobile-event], [data-staff-event], [data-event-choice], [data-machine-dir], [data-machine-start], [data-machine-stop], [data-miner-dir], [data-miner-stop], [data-bolter-dir], [data-bolter-stop], [data-start-exploration], [data-start-engineering-research], [data-conveyor-fix], [data-belt-extend], [data-support-pillar], [data-safety-dismiss], [data-belt-complaint-choice]';
+          if (state.manualPaused && e.target.closest(pauseBlockedSelector)) {
             e.preventDefault();
             e.stopPropagation();
-            showProductionComment('Game paused. Decisions, repairs, HR outcomes, and other regrettable actions are suspended.', 'Pause', 3.5);
+            showProductionComment('Game paused. Gameplay actions and queued events are suspended, but management windows remain available.', 'Pause', 3.5);
             return;
           }
           const hiringTrainingBtn = e.target.closest('[data-hiring-training-continue]');
@@ -16678,7 +16904,6 @@
       };
 
       function openResearchWindow() {
-        if (state.manualPaused) { showProductionComment('Game paused. Research approvals are locked because time is stopped.', 'Pause', 3.5); return; }
         setModalClosable(true);
         $('modalWindow').className = 'window';
         $('modalTitle').textContent = 'Research Programme';
@@ -16859,6 +17084,447 @@
           <section class="devToolCard"><h3>Research / Drilling Restrictions</h3><p>Test the new research mechanic and Year 2 exploration suspension events.</p><div class="devToolBtns"><button data-dev-action="research-productivity">Start Productivity Research</button><button data-dev-action="research-complete">Complete Active Research</button><button data-dev-action="drilling-suspend">Suspend Drilling</button><button data-dev-action="drilling-resume">Resume Drilling</button></div></section>
         </div>`);
       };
+
+
+      /* June 28 correction pass 2: pause semantics, Year 1 objective, KPI value labels, dual remotes, and belt complaint decisions. */
+
+      function setManualPauseFlagForCurrentState() {
+        window.rtpManualPauseActive = !!state.manualPaused;
+        const btn = $('pauseBtn');
+        if (btn) btn.textContent = state.manualPaused ? 'Resume' : 'Pause';
+      }
+
+      function activeYearOneObjective() {
+        return (Number(state.year) || 1) <= 1 && (Number(state.depthIndex) || 0) === 0;
+      }
+
+      const baseTargetsForCorrectionPass = targetsForYear;
+      targetsForYear = function(year) {
+        const t = baseTargetsForCorrectionPass(year);
+        if (Math.max(1, Number(year) || 1) <= 1) {
+          t.tonnes = TARGET_TONNES;
+          t.grade = TARGET_GRADE;
+          t.discoveredRows = 0;
+          t.safetyMin = 0;
+          t.technicalHires = 0;
+          t.beltExtensions = 0;
+          t.pillarSupports = 0;
+          t.maxPillarFailures = 99;
+        }
+        return t;
+      };
+
+      const baseActiveAnnualTargetsForCorrectionPass = typeof activeAnnualTargets === 'function' ? activeAnnualTargets : null;
+      activeAnnualTargets = function() {
+        const current = state.annualTargets || targetsForYear(state.year);
+        const t = sanitiseAnnualTargetsForUnlocks(current, state.year);
+        if (activeYearOneObjective()) {
+          t.tonnes = TARGET_TONNES;
+          t.grade = TARGET_GRADE;
+          t.discoveredRows = 0;
+          t.safetyMin = 0;
+          t.technicalHires = 0;
+          t.beltExtensions = 0;
+          t.pillarSupports = 0;
+          t.maxPillarFailures = 99;
+        }
+        return t;
+      };
+
+      applyAnnualTargetUnlockGuards = function() {
+        state.annualTargets = activeAnnualTargets();
+        return state.annualTargets;
+      };
+
+      function formatMetricTargetValue(key, target = activeAnnualTargets()) {
+        const t = target || {};
+        if (key === 'tonnes') return `${Math.round(t.tonnes || TARGET_TONNES).toLocaleString()}t Mined Tonnes`;
+        if (key === 'grade') return `${Number(t.grade || TARGET_GRADE).toFixed(1)}% Goldilocks Grade`;
+        if (key === 'bulkSample') return `${Math.round(t.tonnes || TARGET_TONNES).toLocaleString()}t at ${Number(t.grade || TARGET_GRADE).toFixed(1)}% Goldilocks Grade`;
+        if (key === 'surplus') return `Positive Operating Surplus`;
+        if (key === 'exploration') return `${Math.round(t.discoveredRows || 0)} Exploration Rows`;
+        if (key === 'lom') return `LOM Reserve ≥ ${Math.round((t.tonnes || TARGET_TONNES) * 1.15).toLocaleString()}t`;
+        if (key === 'technical') return `${Math.round(t.technicalHires || 2)} Technical Team roles`;
+        if (key === 'safety') return `Safety Floor ${Math.round(t.safetyMin || 45)}+`;
+        if (key === 'sharePrice') return `Share Price ${formatSharePrice(state.sharePriceTarget)}`;
+        if (key === 'belt') return `${Math.round(t.beltExtensions || 1)} Belt Advancement action`;
+        if (key === 'ground') return `${Math.round(t.pillarSupports || 1)} Pillar Supports · max ${typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99 ? t.maxPillarFailures : 1} failures`;
+        if (key === 'ventilation') return `Ventilation Engineer + Mine Fan`;
+        return metricLabelForKey(key);
+      }
+
+      function targetSummaryWithValuesHtml(target = activeAnnualTargets()) {
+        const keys = activeYearOneObjective() ? ['bulkSample'] : focusKpiKeysForYear(state.year).slice(0, 3);
+        return `<ul>${keys.map(key => `<li>${escapeHtml(formatMetricTargetValue(key, target))}</li>`).join('')}</ul>`;
+      }
+
+      targetSummaryHtml = function(target = activeAnnualTargets()) {
+        return targetSummaryWithValuesHtml(target);
+      };
+
+      focusKpiKeysForYear = function(year = state.year) {
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
+        if (depth >= 4) return ['sharePrice', 'safety', 'ventilation'];
+        if (depth >= 3) return ['sharePrice', 'safety', 'tonnes'];
+        if (depth >= 2) return ['sharePrice', 'belt', 'tonnes'];
+        if (depth >= 1) return ['surplus', 'ground', 'tonnes'];
+        if (y <= 1) return ['bulkSample'];
+        if (y === 2) return ['tonnes', 'exploration', 'grade'];
+        if (y === 3) return ['surplus', 'lom', 'safety'];
+        return ['sharePrice', 'tonnes', 'safety'];
+      };
+
+      const baseMetricLabelForCorrectionPass = metricLabelForKey;
+      metricLabelForKey = function(key) {
+        if (key === 'bulkSample') return 'Bulk Sample Objective';
+        return baseMetricLabelForCorrectionPass(key);
+      };
+
+      const baseFocusedMetricCardForCorrectionPass = focusedMetricCard;
+      focusedMetricCard = function(key, target = activeAnnualTargets()) {
+        if (key === 'bulkSample') {
+          const yrTonnes = annualTonnes();
+          const yrGrade = annualGrade();
+          const finance = currentFinanceStatus();
+          const tonnesStatus = progressKpiStatus(yrTonnes, target.tonnes || TARGET_TONNES);
+          const gradeStatus = gradeKpiStatus(yrGrade, target.grade || TARGET_GRADE, yrTonnes);
+          const status = tonnesStatus === 'failing' || gradeStatus === 'failing' ? 'failing' : tonnesStatus === 'atRisk' || gradeStatus === 'atRisk' ? 'atRisk' : 'onTrack';
+          const pctValue = Math.min(pct(yrTonnes, target.tonnes || TARGET_TONNES), target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100);
+          return {
+            key,
+            title: 'Bulk Sample Objective',
+            status,
+            html: kpiCardHtml('Bulk Sample Objective', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || TARGET_TONNES).toLocaleString()}t · ${yrGrade.toFixed(2)} / ${(target.grade || TARGET_GRADE).toFixed(2)}%`, pctValue, status, `Single Year 1 objective: mine ${Math.round(target.tonnes || TARGET_TONNES).toLocaleString()}t at minimum ${(target.grade || TARGET_GRADE).toFixed(1)}% Goldilocks Grade. Expected tonnes by now: ${Math.round((target.tonnes || TARGET_TONNES) * finance.elapsed).toLocaleString()}t`)
+          };
+        }
+        return baseFocusedMetricCardForCorrectionPass(key, target);
+      };
+
+      focusedKpiRows = function() {
+        const target = activeAnnualTargets();
+        return focusKpiKeysForYear(state.year).slice(0, 3).map(key => focusedMetricCard(key, target));
+      };
+
+      progressiveKpiRows = function() { return focusedKpiRows().map(({ key, title, status }) => ({ key, title, status })); };
+      annualKpiStatusList = function() { return focusedKpiRows().map(({ key, title, status }) => ({ key, title, status })); };
+      annualTargetPassed = function() { return annualKpiStatusList().every(x => x.status === 'onTrack'); };
+
+      annualKpiTrackerHtml = function() {
+        ensureSharePriceState();
+        const finance = currentFinanceStatus();
+        const rows = focusedKpiRows();
+        const overallStatus = aggregateKpiStatus(rows);
+        const summaryBits = [`Year ${state.year}`, `Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}`, `${Math.round(finance.elapsed * 100)}% elapsed`];
+        if (sharePriceMetricActive()) summaryBits.push(`Share ${formatSharePrice()}`);
+        const label = activeYearOneObjective() ? 'Year 1 Objective' : 'SLT Focus Metrics';
+        const valueLine = rows.map(x => escapeHtml(formatMetricTargetValue(x.key, activeAnnualTargets()))).join(' · ');
+        return `<div class="financeSummaryGrid">
+          <div class="financeSummaryCard ${statusCssClass(overallStatus)}"><strong>Annual Position</strong>${summaryBits.join(' · ')}</div>
+          <div class="financeSummaryCard"><strong>${label}</strong>${valueLine}</div>
+        </div><div class="kpiTrackerGrid">${rows.map(x => x.html).join('')}</div>`;
+      };
+
+      const baseTriggerMidYearReviewForCorrectionPass = triggerMidYearReview;
+      triggerMidYearReview = function() {
+        applyAnnualTargetUnlockGuards();
+        if (activeYearOneObjective()) {
+          showProductionComment('Mid-year alignment review skipped. Year 1 remains the original bulk sample: 10,000t at 14.0% Goldilocks Grade.', 'SLT', 5.5);
+          return;
+        }
+        const t = state.annualTargets;
+        const original = { ...t };
+        let reason = '';
+        if (annualTonnes() > (t.tonnes || TARGET_TONNES) * 0.55) {
+          t.tonnes = Math.round((t.tonnes || TARGET_TONNES) * 1.18);
+          t.grade = Math.max(t.grade || TARGET_GRADE, TARGET_GRADE + 0.25);
+          reason = 'Production is ahead of plan, so the original plan has been reclassified as insufficiently ambitious.';
+        } else if (featureUnlocked('exploration')) {
+          t.discoveredRows = Math.max(t.discoveredRows || 0, 1);
+          reason = 'Sales and Marketing have announced a product stream requiring improved confidence in future supply. This could not have been anticipated, except by anyone aware R&D began three years ago.';
+        } else {
+          t.tonnes = Math.round((t.tonnes || TARGET_TONNES) * 1.08);
+          reason = 'The operating year has generated enough confidence for the SLT to request more from the same plan.';
+        }
+        state.annualTargets = sanitiseAnnualTargetsForUnlocks(t, state.year);
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Mid-Year Alignment Review';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Strategic Adjustment Without Accountability', 'The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.', 'SLT')}<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p><div class="sltReviewBox"><div class="reviewPanel"><h3>Original KPIs</h3>${targetSummaryWithValuesHtml(original)}</div><div class="reviewPanel"><h3>Revised KPIs</h3>${targetSummaryWithValuesHtml(state.annualTargets)}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div><div class="btnRow"><button class="primary" data-close-formal-review>Accept Revised Reality</button></div>`;
+        $('modalOverlay').classList.add('show');
+      };
+
+      const baseOpenWindowForPauseNavigation = openWindow;
+      openWindow = function(type, forceReportComplete = false, customTitle = null) {
+        if (type === 'menu') { openGameMenu(); return; }
+        if (type === 'research') { openResearchWindow(); return; }
+        return baseOpenWindowForPauseNavigation(type, forceReportComplete, customTitle);
+      };
+
+      const baseOpenStaffEventForPauseNavigation = openStaffEvent;
+      openStaffEvent = function(staffId) {
+        if (state.manualPaused) {
+          showProductionComment('Game paused. HR bubbles remain visible but cannot be resolved until time resumes.', 'Pause', 3.8);
+          return;
+        }
+        return baseOpenStaffEventForPauseNavigation(staffId);
+      };
+
+      const baseOpenQueuedEventForPauseNavigation = openQueuedEvent;
+      openQueuedEvent = function(id) {
+        if (state.manualPaused) {
+          showProductionComment('Game paused. Queued operational events cannot be opened until time resumes.', 'Pause', 3.8);
+          return;
+        }
+        return baseOpenQueuedEventForPauseNavigation(id);
+      };
+
+      const baseOpenMobileEventQueueItemForPauseNavigation = openMobileEventQueueItem;
+      openMobileEventQueueItem = function(key) {
+        if (state.manualPaused) {
+          showProductionComment('Game paused. Alerts are held in the queue until operations resume.', 'Pause', 3.8);
+          return;
+        }
+        return baseOpenMobileEventQueueItemForPauseNavigation(key);
+      };
+
+      function switchMinerRemoteMachine() {
+        if (!(state.assets && state.assets.secondMinerOwned)) {
+          state.activeMachine = 'miner1';
+          showProductionComment('Only 1stHOPE is currently owned. 2ndHOPE remains a future explanation for belt congestion.', 'Fleet Control', 4.2);
+          updateMachinePadHud();
+          return;
+        }
+        state.activeMachine = state.activeMachine === 'miner2' ? 'miner1' : 'miner2';
+        showProductionComment('Miner remote assigned to ' + activeMinerLabel() + '.', 'Fleet Control', 3.5);
+        updateMachinePadHud();
+      }
+
+      function minerRemoteKey() {
+        return state.activeMachine === 'miner2' && state.assets && state.assets.secondMinerOwned ? 'miner2' : 'miner1';
+      }
+
+      function driveMinerRemote(dir) {
+        state.activeMachine = minerRemoteKey();
+        driveMachineDirection(dir);
+        updateMachinePadHud();
+      }
+
+      function stopMinerRemote() {
+        const key = minerRemoteKey();
+        state.activeMachine = key;
+        runWithMinerContext(minerStateForKey(key), () => stopAutoMining());
+        updateMachinePadHud();
+      }
+
+      function driveBolterRemote(dir) {
+        state.activeMachine = 'bolter';
+        driveMachineDirection(dir);
+        updateMachinePadHud();
+      }
+
+      function stopBolterRemote() {
+        state.activeMachine = 'bolter';
+        if (isBolterSupportable() && state.bolter.status !== 'bolting') startBolting();
+        else stopBolter();
+        updateMachinePadHud();
+      }
+
+      const baseUpdateMachinePadHudForDualRemotes = updateMachinePadHud;
+      updateMachinePadHud = function() {
+        const minerKey = minerRemoteKey();
+        const miner = minerStateForKey(minerKey) || state.machine;
+        document.querySelectorAll('[data-miner-dir]').forEach(btn => btn.classList.toggle('active', btn.dataset.minerDir === (miner.dir || 'up')));
+        document.querySelectorAll('[data-bolter-dir]').forEach(btn => btn.classList.toggle('active', btn.dataset.bolterDir === (state.bolter.dir || 'up')));
+
+        const minerDir = $('minerRemoteDir') || $('machineRemoteDir');
+        const minerStatus = $('minerRemoteStatus') || $('machineRemoteStatus');
+        const minerToggle = $('activeMachineToggle');
+        const minerLabel = $('minerRemoteLabel');
+        const minerStop = document.querySelector('[data-miner-stop]');
+        if (minerDir) minerDir.textContent = directionLabel(miner.dir || 'up').toUpperCase();
+        if (minerToggle) {
+          minerToggle.textContent = miner.label || (minerKey === 'miner2' ? '2ndHOPE' : '1stHOPE');
+          minerToggle.disabled = !(state.assets && state.assets.secondMinerOwned);
+          minerToggle.title = state.assets && state.assets.secondMinerOwned ? 'Switch active continuous miner' : '2ndHOPE not owned yet';
+        }
+        if (minerLabel) minerLabel.textContent = (miner.label || activeMinerLabel()) + ' Miner';
+        if (minerStop) { minerStop.textContent = 'STOP'; minerStop.title = 'Stop selected continuous miner'; }
+        if (minerStatus) {
+          let status = 'IDLE';
+          if (!isConveyorAvailable()) status = state.conveyor.status === 'maintenance' ? 'BELT FIX' : 'BELT STOP';
+          else if (miner.status === 'mining') status = 'MINING';
+          else if (miner.status === 'tramming') status = 'TRAM';
+          else if (miner.status === 'maintenance') status = 'REPAIR';
+          else if (miner.status === 'broken') status = 'BROKEN';
+          if (state.manualPaused) status = 'PAUSED';
+          minerStatus.textContent = status;
+        }
+
+        const bolterRemote = $('bolterRemote');
+        const bolterDir = $('bolterRemoteDir');
+        const bolterStatus = $('bolterRemoteStatus');
+        const bolterStop = document.querySelector('[data-bolter-stop]');
+        const owned = !!(state.assets && state.assets.bolterOwned);
+        if (bolterRemote) bolterRemote.classList.toggle('locked', !owned);
+        if (bolterDir) bolterDir.textContent = directionLabel(state.bolter.dir || 'up').toUpperCase();
+        if (bolterStop) {
+          const ready = owned && state.bolter.status !== 'bolting' && isBolterSupportable();
+          bolterStop.textContent = ready ? 'BOLT' : 'STOP';
+          bolterStop.title = ready ? 'Install support on the facing pillar' : 'Stop bolter';
+          bolterStop.classList.toggle('readyToBolt', ready);
+          bolterStop.classList.toggle('active', ready);
+        }
+        if (bolterStatus) {
+          let status = 'LOCKED';
+          if (owned) {
+            if (state.bolter.status === 'bolting') status = 'BOLTING';
+            else if (state.bolter.status === 'tramming') status = 'TRAM';
+            else if (isBolterSupportable()) status = 'READY';
+            else status = 'IDLE';
+          }
+          if (state.manualPaused) status = 'PAUSED';
+          bolterStatus.textContent = status;
+        }
+      };
+
+      document.addEventListener('click', function(e) {
+        const minerToggle = e.target.closest('#activeMachineToggle');
+        if (minerToggle) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (state.manualPaused) { showProductionComment('Game paused. Fleet switching can wait until time resumes.', 'Pause', 3); return; }
+          switchMinerRemoteMachine();
+          return;
+        }
+        const minerDirBtn = e.target.closest('[data-miner-dir]');
+        if (minerDirBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          driveMinerRemote(minerDirBtn.dataset.minerDir);
+          return;
+        }
+        const minerStopBtn = e.target.closest('[data-miner-stop]');
+        if (minerStopBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (state.manualPaused) { showProductionComment('Game paused. The miner is already as stopped as management can make it.', 'Pause', 3); return; }
+          stopMinerRemote();
+          return;
+        }
+        const bolterDirBtn = e.target.closest('[data-bolter-dir]');
+        if (bolterDirBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          driveBolterRemote(bolterDirBtn.dataset.bolterDir);
+          return;
+        }
+        const bolterStopBtn = e.target.closest('[data-bolter-stop]');
+        if (bolterStopBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (state.manualPaused) { showProductionComment('Game paused. The bolter will not install support in stopped time.', 'Pause', 3); return; }
+          stopBolterRemote();
+          return;
+        }
+        const beltChoiceBtn = e.target.closest('[data-belt-complaint-choice]');
+        if (beltChoiceBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (state.manualPaused) { showProductionComment('Game paused. Belt complaints remain unresolved until operations resume.', 'Pause', 3); return; }
+          resolveBeltComplaintChoice(beltChoiceBtn.dataset.beltComplaintChoice);
+          return;
+        }
+      }, true);
+
+      function beltComplaintDecisionBody() {
+        return `<p>The crew have once again observed that if the belt ran when required, production targets would be easier to achieve.</p><p>This insight has been escalated to management for strategic consideration.</p><div class="beltDecisionGrid">
+          <button class="eventChoiceBtn positive" data-belt-complaint-choice="infrastructure"><strong>Offer to follow up at the next infrastructure meeting</strong><span>+2 Morale, -1 Productivity. Concern enters the meeting ecosystem.</span></button>
+          <button class="eventChoiceBtn negative" data-belt-complaint-choice="control"><strong>Remind them to only focus on things they can control</strong><span>-2 Morale, -1 Safety, +1 Productivity. Resilience is issued downward.</span></button>
+          <button class="eventChoiceBtn" data-belt-complaint-choice="pretend"><strong>Pretend to Listen</strong><span>50% chance -1 Morale. Nodding is deployed.</span></button>
+          <button class="eventChoiceBtn negative" data-belt-complaint-choice="fix-yourself"><strong>Tell them they could always fix it themselves</strong><span>+1 Productivity, -3 Morale, possible Skill gain or belt fault.</span></button>
+        </div>`;
+      }
+
+      function resolveBeltComplaintChoice(choice) {
+        if (choice === 'infrastructure') {
+          adjustTrait('morale', 2);
+          adjustTrait('productivity', -1);
+          showProductionComment('The crew appreciate that their concern has entered the meeting ecosystem.', 'Mine Services', 5);
+        } else if (choice === 'control') {
+          adjustTrait('morale', -2);
+          adjustTrait('safety', -1);
+          adjustTrait('productivity', 1);
+          showProductionComment('The team receives a practical lesson in resilience and learned helplessness.', 'S.H.A.F.T.', 5);
+        } else if (choice === 'pretend') {
+          if (Math.random() < 0.5) { adjustTrait('morale', -1); showProductionComment('Nodding was detected as nodding. Morale has adjusted accordingly.', 'Mine Services', 5); }
+          else showProductionComment('Nodding is deployed successfully. No measurable outcome has occurred.', 'Mine Services', 5);
+        } else if (choice === 'fix-yourself') {
+          adjustTrait('productivity', 1);
+          adjustTrait('morale', -3);
+          const hasTrade = !!(crewByRole('fitter') || crewByRole('electrician'));
+          if (hasTrade) {
+            adjustTrait('skill', 1);
+            state.conveyor.condition = Math.max(0, Math.min(100, (state.conveyor.condition || 80) + 3));
+            showProductionComment('Empowerment has been issued with just enough competence nearby to avoid immediate disaster.', 'Mine Services', 5);
+          } else {
+            showProductionComment('Empowerment has been issued without resources. The belt has interpreted this as a fault condition.', 'Mine Services', 5);
+            triggerConveyorFault('mechanical');
+          }
+        }
+        $('modalOverlay').classList.remove('show');
+        updateHud();
+      }
+
+      maybeQueueBeltDistanceConcern = function(force = false) {
+        if (!featureUnlocked('beltAdvancement')) return;
+        if (!state.conveyor || state.conveyor.status !== 'running') return;
+        if (!surveyorOnCrew()) return;
+        const extension = beltExtensionStatus();
+        if (!extension.canExtend) return;
+        const active = machinePreviewOrigin(state.machine) || blockAt(MINE_ID, state.machine.r, state.machine.c);
+        const distance = beltServiceDistance(active);
+        if (!force && distance < 4.0) return;
+        const cooldown = (Number(state.depthIndex) || 0) === 0 ? YEAR_LENGTH_DAYS : 130;
+        if (!force && state.day - (state.lastBeltDistanceConcernDay || -999) < cooldown) return;
+        const unresolved = state.queueEvents.some(ev => ev && (ev.kind === 'beltComplaint' || ev.kind === 'beltDistance'));
+        if (unresolved) return;
+        state.lastBeltDistanceConcernDay = state.day;
+        pushQueueEvent({
+          kind: 'beltComplaint',
+          tone: 'warning',
+          icon: '↻',
+          label: 'BELT',
+          title: 'Belt Availability Complaint',
+          body: beltComplaintDecisionBody()
+        });
+      };
+
+      addBeltMoanBubble = function() {
+        maybeQueueBeltDistanceConcern(true);
+      };
+
+      const baseDevActionForCorrectionPass = devAction;
+      devAction = function(action) {
+        if (action === 'belt-moan' || action === 'belt-complaint') { maybeQueueBeltDistanceConcern(true); return; }
+        return baseDevActionForCorrectionPass(action);
+      };
+
+      const baseEnhanceDevToolsForCorrectionPass = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForCorrectionPass();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-correction-pass-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-correction-pass-dev-tools>
+          <section class="devToolCard"><h3>Playtest Correction Pass</h3><p>Test the pause-safe menu flow, dual remotes, and belt complaint decision event.</p><div class="devToolBtns"><button data-dev-action="belt-complaint">Belt Complaint Decision</button></div></section>
+        </div>`);
+      };
+
+      setManualPauseFlagForCurrentState();
+
 
       ensureDrillingRestrictionState();
 
