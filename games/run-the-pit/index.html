@@ -5643,6 +5643,52 @@
 
 /* Pass14: pass12/pass13 remote-dock layout CSS removed to restore pass10 bounded bottom toolbar formatting. */
 
+
+
+    /* Pass 16: conservative phone remote fit fix. Keep pass10 toolbar structure; only stop arrow clipping. */
+    @media screen and (max-width: 920px), screen and (max-device-width: 920px), screen and (orientation: portrait) and (max-height: 1200px) {
+      html.phoneLayout #game,
+      body.phoneLayout #game {
+        grid-template-rows: minmax(0, 1fr) 98px !important;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar {
+        height: 98px !important;
+        min-height: 98px !important;
+        max-height: 98px !important;
+        padding-bottom: calc(7px + env(safe-area-inset-bottom)) !important;
+      }
+
+      html.phoneLayout .machinePadBtn,
+      body.phoneLayout .machinePadBtn {
+        display: grid !important;
+        place-items: center !important;
+        line-height: 0.88 !important;
+        overflow: visible !important;
+      }
+
+      html.phoneLayout .toolbarMachineControls,
+      body.phoneLayout .toolbarMachineControls {
+        align-self: center !important;
+        transform: translateY(-1px) !important;
+      }
+    }
+
+    @media screen and (max-width: 390px) {
+      html.phoneLayout #game,
+      body.phoneLayout #game {
+        grid-template-rows: minmax(0, 1fr) 94px !important;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar {
+        height: 94px !important;
+        min-height: 94px !important;
+        max-height: 94px !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -17526,6 +17572,467 @@
         pass11StartSafetyProgress();
         updateMobileEventQueue(true);
       };
+
+
+
+
+      /* Pass 16: faulted ground, pillar visual/text cleanup, preventive ground KPI, BORC asset, and consistent low-tonnage event. */
+      const PASS16_BORC_ASSET = 'assets/characters/borc.png';
+      const PASS16_PILLAR_SUPPORTED_ASSET = 'assets/images/pillar_supported.png';
+
+      function pass16GroundFailureLimit(target = activeAnnualTargets()) {
+        const raw = Number(target && target.maxPillarFailures);
+        if (Number.isFinite(raw) && raw >= 0 && raw < 99) return Math.max(0, Math.round(raw));
+        return 1;
+      }
+
+      function pass16FaultsUnlocked() {
+        return !!(featureUnlocked('exploration') || (Number(state.year) || 1) >= 2);
+      }
+
+      function pass16FaultableBlock(block) {
+        return !!(block && !block.isPillar && block.status === 'solid' && Number(block.tonnes) > 0);
+      }
+
+      function pass16ApplyFaultsToRow(row, force = false) {
+        if (!pass16FaultsUnlocked() || row === null || row < 0) return [];
+        const depth = Number(state.depthIndex) || 0;
+        const key = depth + ':' + row;
+        state.faultedRows = state.faultedRows || {};
+        if (state.faultedRows[key] && !force) return [];
+        const candidates = (state.blocks[MINE_ID] || []).filter(b => b.r === row && pass16FaultableBlock(b));
+        if (!candidates.length) return [];
+        const rowSeed = seeded(row * 97 + depth * 1301 + 4801 + (Number(state.year) || 1) * 19);
+        const chance = 0.32;
+        if (!force && rowSeed > chance) {
+          state.faultedRows[key] = 'clear';
+          return [];
+        }
+        const ordered = candidates
+          .map(b => ({ b, s: seeded(b.r * 211 + b.c * 419 + depth * 73 + 16001) }))
+          .sort((a, b) => b.s - a.s)
+          .map(x => x.b);
+        const count = Math.min(ordered.length, force ? 2 : 1 + Math.floor(seeded(row * 53 + depth * 607 + 91) * 3));
+        const selected = ordered.slice(0, count);
+        selected.forEach((b, i) => {
+          b.faulted = true;
+          b.faultDip = seeded(b.r * 137 + b.c * 43 + i * 11) > 0.5 ? 1 : -1;
+          b.faultSeed = seeded(b.r * 673 + b.c * 17 + 22);
+        });
+        state.faultedRows[key] = selected.map(b => gridRef(b)).join(', ');
+        return selected;
+      }
+
+      function pass16FaultDiscoveryEvent(row, faultedBlocks) {
+        if (!faultedBlocks || !faultedBlocks.length) return;
+        const firstForGame = !state.faultIntroShown;
+        state.faultIntroShown = true;
+        const refs = faultedBlocks.map(b => 'Grid ' + gridRef(b)).join(', ');
+        pushQueueEvent({
+          kind: 'faultedGround',
+          tone: 'info',
+          icon: '╱',
+          label: 'GEO',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Structural Interpretation',
+          title: firstForGame ? 'Geological Fault Identified' : 'Additional Faulted Ground Identified',
+          body: `<p>Geology has identified faulted ground in <strong>Grid Row ${gridRowNumber(row)}</strong>: ${escapeHtml(refs)}.</p><p>Mining in faulted ground is approximately <strong>20% easier</strong>, because geological time has pre-fractured the rock and, according to the current interpretation, created no inconvenient ground-control obligations.</p><p>${firstForGame ? 'The Superior Leadership Team cannot understand that a fault is not a synonym for error and has scheduled a workshop to determine who to blame.' : 'Production has requested that all future structural weaknesses be described as productivity features.'}</p>`
+        });
+      }
+
+      const pass16CompleteExplorationProgramBase = completeExplorationProgram;
+      completeExplorationProgram = function() {
+        const rowBefore = state.exploration ? state.exploration.row : null;
+        const result = pass16CompleteExplorationProgramBase();
+        if (rowBefore !== null && rowBefore >= 0) {
+          const faulted = pass16ApplyFaultsToRow(rowBefore, false);
+          if (faulted.length) pass16FaultDiscoveryEvent(rowBefore, faulted);
+        }
+        return result;
+      };
+
+      function pass16DrawFaultOverlay(block, r) {
+        if (!block || !block.faulted || block.status === 'locked' || block.status === 'void' || block.status === 'rubble' || block.status === 'damaged' || block.isPillar) return;
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const dip = block.faultDip === -1 ? -1 : 1;
+        const x1 = dip > 0 ? r.x + r.w * 0.12 : r.x + r.w * 0.88;
+        const x2 = dip > 0 ? r.x + r.w * 0.88 : r.x + r.w * 0.12;
+        const y1 = r.y + r.h * 0.88;
+        const y2 = r.y + r.h * 0.12;
+        ctx.strokeStyle = 'rgba(15,23,42,0.92)';
+        ctx.lineWidth = Math.max(2.4, r.w * 0.075);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(r.x + r.w * 0.42, r.y + r.h * 0.52);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(254,243,199,0.72)';
+        ctx.lineWidth = Math.max(1.2, r.w * 0.028);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(r.x + r.w * 0.42, r.y + r.h * 0.52);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(15,23,42,0.82)';
+        ctx.lineWidth = Math.max(1.1, r.w * 0.03);
+        for (const [px, py, sx] of [[0.36, 0.60, -1], [0.52, 0.42, 1], [0.62, 0.30, -1]]) {
+          ctx.beginPath();
+          const cx = r.x + r.w * px;
+          const cy = r.y + r.h * py;
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + sx * r.w * 0.16, cy - r.h * 0.10);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(15,23,42,0.88)';
+        ctx.font = '900 ' + Math.max(7, r.w * 0.17) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('F', r.x + r.w * 0.18, r.y + r.h * 0.20);
+        ctx.restore();
+      }
+
+      function pass16PillarVisualMeta(block) {
+        const stateName = block && block.support ? 'supported' : (block && block.pillarState) || 'stable';
+        const map = {
+          stable:    { fill: '#57534e', border: '#d6d3d1', crack: 'rgba(255,255,255,0.20)', label: 'P' },
+          supported: { fill: '#334155', border: '#93c5fd', crack: 'rgba(191,219,254,0.36)', label: 'B' },
+          cracking:  { fill: '#5b5148', border: '#fde68a', crack: '#fef3c7', label: 'P' },
+          spalling:  { fill: '#5a4435', border: '#fbbf24', crack: '#fde68a', label: 'P' },
+          fractured: { fill: '#4a3328', border: '#fb923c', crack: '#fed7aa', label: 'P' },
+          critical:  { fill: '#3f1f1f', border: '#ef4444', crack: '#fecaca', label: '!' }
+        };
+        return map[stateName] || map.stable;
+      }
+
+      function pass16DrawPillarOverlay(block, r) {
+        if (!block || !block.isPillar || ['locked', 'void', 'rubble', 'damaged'].includes(block.status)) return;
+        const meta = pass16PillarVisualMeta(block);
+        ctx.save();
+        if (block.pillarState === 'critical') {
+          ctx.translate(Math.sin(anim * 24 + block.r) * r.w * 0.035, Math.cos(anim * 21 + block.c) * r.h * 0.028);
+        }
+        ctx.fillStyle = meta.fill;
+        ctx.fillRect(r.x + 0.6, r.y + 0.6, r.w - 1.2, r.h - 1.2);
+        ctx.fillStyle = 'rgba(0,0,0,0.20)';
+        for (let hx = -r.h; hx < r.w + r.h; hx += Math.max(5, r.w * 0.22)) {
+          ctx.beginPath();
+          ctx.moveTo(r.x + hx, r.y + r.h * 0.96);
+          ctx.lineTo(r.x + hx + r.h * 0.82, r.y + r.h * 0.08);
+          ctx.lineTo(r.x + hx + r.h * 0.94, r.y + r.h * 0.08);
+          ctx.lineTo(r.x + hx + r.h * 0.12, r.y + r.h * 0.96);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.strokeStyle = meta.border;
+        ctx.lineWidth = Math.max(2.2, r.w * 0.08);
+        ctx.strokeRect(r.x + r.w * 0.10, r.y + r.h * 0.10, r.w * 0.80, r.h * 0.80);
+        if (block.pillarState === 'cracking' || block.pillarState === 'spalling' || block.pillarState === 'fractured' || block.pillarState === 'critical') {
+          ctx.strokeStyle = meta.crack;
+          ctx.lineWidth = Math.max(1.5, r.w * 0.045);
+          ctx.beginPath();
+          ctx.moveTo(r.x + r.w * 0.25, r.y + r.h * 0.18);
+          ctx.lineTo(r.x + r.w * 0.44, r.y + r.h * 0.39);
+          ctx.lineTo(r.x + r.w * 0.36, r.y + r.h * 0.55);
+          ctx.lineTo(r.x + r.w * 0.58, r.y + r.h * 0.82);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(r.x + r.w * 0.76, r.y + r.h * 0.24);
+          ctx.lineTo(r.x + r.w * 0.58, r.y + r.h * 0.48);
+          ctx.lineTo(r.x + r.w * 0.70, r.y + r.h * 0.66);
+          ctx.stroke();
+        }
+        if (block.support) {
+          ctx.fillStyle = 'rgba(147,197,253,0.96)';
+          ctx.fillRect(r.x + r.w * 0.20, r.y + r.h * 0.45, r.w * 0.60, Math.max(2, r.h * 0.09));
+          ctx.fillRect(r.x + r.w * 0.45, r.y + r.h * 0.20, Math.max(2, r.w * 0.09), r.h * 0.60);
+        }
+        if (block.pillarState === 'critical') {
+          ctx.save();
+          ctx.globalAlpha = 0.42 + Math.sin(anim * 12) * 0.16;
+          ctx.strokeStyle = '#fee2e2';
+          ctx.lineWidth = Math.max(2, r.w * 0.06);
+          ctx.strokeRect(r.x + r.w * 0.04, r.y + r.h * 0.04, r.w * 0.92, r.h * 0.92);
+          ctx.restore();
+        }
+        ctx.fillStyle = block.pillarState === 'critical' ? '#fee2e2' : '#f8fafc';
+        ctx.font = '900 ' + Math.max(9, r.w * 0.32) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(meta.label, r.x + r.w / 2, r.y + r.h / 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.38)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+        ctx.restore();
+      }
+
+      function pass16DrawStructuralOverlays() {
+        if (!board) return;
+        const blocks = state.blocks[MINE_ID] || [];
+        for (const block of blocks) {
+          const r = cellRect(block.q, block.r, block.c);
+          if (block.isPillar) pass16DrawPillarOverlay(block, r);
+          else if (block.faulted) pass16DrawFaultOverlay(block, r);
+        }
+      }
+
+      const pass16DrawBlocksBase = drawBlocks;
+      drawBlocks = function() {
+        const result = pass16DrawBlocksBase();
+        pass16DrawStructuralOverlays();
+        return result;
+      };
+
+      const pass16MineUpdateBase = mineUpdate;
+      mineUpdate = function(dt) {
+        const targetBefore = state.machine && state.machine.target ? blockAt(state.machine.target.q, state.machine.target.r, state.machine.target.c) : null;
+        const beforeProgress = targetBefore ? Number(targetBefore.progress) || 0 : 0;
+        const faulted = !!(targetBefore && targetBefore.faulted && targetBefore.status === 'mining');
+        const result = pass16MineUpdateBase(dt);
+        if (faulted && targetBefore && targetBefore.status === 'mining') {
+          const delta = Math.max(0, (Number(targetBefore.progress) || 0) - beforeProgress);
+          if (delta > 0) {
+            targetBefore.progress += delta * 0.25;
+            state.machine.progress = targetBefore.progress;
+            if (!targetBefore.faultMiningNoteShown && Math.random() < 0.18) {
+              targetBefore.faultMiningNoteShown = true;
+              showProductionComment('Faulted ground is mining faster than expected. Geology has clarified that this is a structure, not someone admitting blame.', 'Geology', 4.5);
+            }
+            if (targetBefore.progress >= 100) {
+              const rr = cellRect(targetBefore.q, targetBefore.r, targetBefore.c);
+              completeMiningBlock(targetBefore, { x: rr.x + rr.w / 2, y: rr.y + rr.h / 2 });
+            }
+          }
+        }
+        return result;
+      };
+
+      function pass16DiscoveredRowsWithAverageTonnes() {
+        const rows = new Map();
+        for (const b of state.blocks[MINE_ID] || []) {
+          if (!b || b.isPillar || b.status === 'locked' || b.status === 'rubble' || b.status === 'damaged' || Number(b.tonnes) <= 0) continue;
+          const rec = rows.get(b.r) || { row: b.r, tonnes: 0, count: 0 };
+          rec.tonnes += Number(b.tonnes) || 0;
+          rec.count += 1;
+          rows.set(b.r, rec);
+        }
+        return Array.from(rows.values()).filter(r => r.count > 0).map(r => ({ ...r, avg: r.tonnes / r.count }));
+      }
+
+      function pass16LowestTonnageRow() {
+        const rows = pass16DiscoveredRowsWithAverageTonnes();
+        if (!rows.length) return null;
+        rows.sort((a, b) => a.avg - b.avg || b.row - a.row);
+        return rows[0];
+      }
+
+      function pass16TriggerLowestTonnageComplaintIfNeeded(blockSnapshot) {
+        if (!blockSnapshot || blockSnapshot.wasRubble || blockSnapshot.isPillar) return;
+        const depth = Number(state.depthIndex) || 0;
+        state.lowTonnageComplaintDepths = state.lowTonnageComplaintDepths || {};
+        if (state.lowTonnageComplaintDepths[depth]) return;
+        const lowest = pass16LowestTonnageRow();
+        if (!lowest || Number(blockSnapshot.r) !== Number(lowest.row)) return;
+        const miner = (state.staff || []).find(s => s.role === 'miner' && !s.bubble) || (state.staff || []).find(s => s.role === 'miner');
+        state.lowTonnageComplaintDepths[depth] = true;
+        if (miner) {
+          miner.bubble = { type: 'lowTonnageComplaint', icon: 't' };
+          state.hrCooldown = Math.max(state.hrCooldown || 0, 8);
+          playGameSound('hr');
+          updatePanelCrewTiles(true);
+          updateMobileEventQueue(true);
+        } else {
+          pushQueueEvent({
+            tone: 'hr', icon: 't', label: 'HR', image: 'assets/characters/portraits/miner_average.png', character: 'Mining Crew', department: 'Production Reality Feedback', title: 'Same Work, Fewer Tonnes',
+            body: `<p>The crew report that Grid Row ${gridRowNumber(lowest.row)} appears to produce fewer tonnes for the same work. Production has asked whether the rock is lighter, the model is wrong, or the belt weigher has joined Finance.</p><p><strong>Learning:</strong> Different rows carry different tonnes. Mining effort is not a guaranteed proxy for reported production.</p>`
+          });
+        }
+      }
+
+      const pass16CompleteMiningBlockBase = completeMiningBlock;
+      completeMiningBlock = function(target, pos) {
+        const snapshot = target ? { r: target.r, c: target.c, tonnes: Number(target.tonnes) || 0, wasRubble: target.status === 'rubble' || target.wasRubble === true, isPillar: !!target.isPillar } : null;
+        const result = pass16CompleteMiningBlockBase(target, pos);
+        pass16TriggerLowestTonnageComplaintIfNeeded(snapshot);
+        return result;
+      };
+
+      showPillarConditionReport = function(block) {
+        if (!block) return;
+        const rawState = block.support ? 'supported' : (block.pillarState || 'stable');
+        const stateText = block.status === 'rubble' || rawState === 'failed'
+          ? 'failed and now exists mainly as evidence'
+          : rawState === 'supported'
+            ? 'supported'
+            : rawState === 'critical'
+              ? 'critical and requiring urgent support'
+              : rawState === 'fractured'
+                ? 'fractured'
+                : rawState === 'spalling'
+                  ? 'spalling'
+                  : rawState === 'cracking'
+                    ? 'showing early cracks'
+                    : 'stable';
+        const supportText = block.status === 'rubble' || rawState === 'failed'
+          ? 'No longer applicable'
+          : rawState === 'supported'
+            ? 'Installed'
+            : rawState === 'critical'
+              ? 'Urgent'
+              : rawState === 'fractured' || rawState === 'spalling' || rawState === 'cracking'
+                ? 'Recommended'
+                : 'Monitor';
+        const advice = block.status === 'rubble' || rawState === 'failed'
+          ? 'This pillar is no longer performing the role implied by its name. The affected ground has been reclassified as unavailable pending investigation, lessons learned, and a revised PowerPoint colour scheme.'
+          : rawState === 'supported'
+            ? 'This pillar has been supported. Production should note that preventing a collapse is not a bonus achievement; it is the minimum acceptable condition.'
+            : rawState === 'critical'
+              ? 'Ground Control advise support before further disturbance. Production has requested that the advice be expressed as a target, so it feels more achievable.'
+              : rawState === 'fractured' || rawState === 'spalling' || rawState === 'cracking'
+                ? 'The pillar is showing visible distress. Production has asked whether the cracks are operationally significant or merely a negative visualisation of delivery pressure.'
+                : 'This is a structural pillar. It has been left behind to perform the traditional mining function of stopping the roof becoming the floor. Production has confirmed it is not part of the current tonnes plan.';
+        showProductionComment(`Pillar at Grid ${gridRef(block)}: ${stateText}. Type: Structural Pillar. Support: ${supportText}. Production Value: Not mineable. ${advice}`, 'Ground Control', 8.5);
+      };
+
+      const pass16PushQueueEventBase = pushQueueEvent;
+      pushQueueEvent = function(ev) {
+        if (ev && ev.title === 'Pillar Supported') {
+          ev = {
+            image: PASS16_PILLAR_SUPPORTED_ASSET,
+            character: 'Pillar Support Installed',
+            department: 'Ground Control',
+            label: 'GND',
+            imageText: 'Pillar Support Asset Pending',
+            ...ev
+          };
+          ev.image = PASS16_PILLAR_SUPPORTED_ASSET;
+          ev.character = ev.character || 'Pillar Support Installed';
+          ev.department = ev.department || 'Ground Control';
+          ev.imageText = ev.imageText || 'Pillar Support Asset Pending';
+        }
+        return pass16PushQueueEventBase(ev);
+      };
+
+      const pass16OpenDecisionOutcomeModalBase = openDecisionOutcomeModal;
+      openDecisionOutcomeModal = function(ev) {
+        if (ev && ((ev.label === 'BORC') || /External Technical Review/i.test(ev.title || '') || /BORC/i.test(ev.character || ''))) {
+          ev = {
+            ...ev,
+            image: PASS16_BORC_ASSET,
+            character: ev.character || 'BORC Review Team',
+            department: 'Brilliant Ore Reserve Committee',
+            label: 'BORC',
+            imageText: 'BORC — Brilliant Ore Reserve Committee. Asset pending.'
+          };
+        }
+        return pass16OpenDecisionOutcomeModalBase(ev);
+      };
+
+      const pass16TriggerExternalTechnicalReviewEventBase = triggerExternalTechnicalReviewEvent;
+      triggerExternalTechnicalReviewEvent = function(force = false) {
+        const result = pass16TriggerExternalTechnicalReviewEventBase(force);
+        if (result && $('modalTitle') && $('modalTitle').textContent === 'External Technical Review') {
+          const img = $('modalBody') && $('modalBody').querySelector('.modalCharacterImg');
+          const fallback = $('modalBody') && $('modalBody').querySelector('.modalCharacterFallback');
+          if (img) {
+            img.src = PASS16_BORC_ASSET;
+            img.alt = 'BORC Review Team';
+          }
+          if (fallback) fallback.textContent = 'BORC';
+          const dept = $('modalBody') && $('modalBody').querySelector('.modalCharacterDept');
+          if (dept) dept.textContent = 'Brilliant Ore Reserve Committee';
+        }
+        return result;
+      };
+
+      const pass16SanitiseFixedPhaseTargetsBase = sanitiseFixedPhaseTargets;
+      sanitiseFixedPhaseTargets = function(raw = {}, year = state.year) {
+        const t = pass16SanitiseFixedPhaseTargetsBase(raw, year);
+        if (Array.isArray(t.kpiKeys) && t.kpiKeys.includes('ground')) {
+          t.pillarSupports = 0;
+          t.maxPillarFailures = Math.min(1, typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99 ? Math.max(0, t.maxPillarFailures) : 1);
+        }
+        return t;
+      };
+
+      const pass16MetricLabelForKeyBase = metricLabelForKey;
+      metricLabelForKey = function(key) {
+        if (key === 'ground') return 'Ground Stability';
+        return pass16MetricLabelForKeyBase(key);
+      };
+
+      const pass16FormatMetricTargetValueBase = formatMetricTargetValue;
+      formatMetricTargetValue = function(key, target = activeAnnualTargets()) {
+        if (key === 'ground') return `No more than ${pass16GroundFailureLimit(target)} pillar failure${pass16GroundFailureLimit(target) === 1 ? '' : 's'}`;
+        return pass16FormatMetricTargetValueBase(key, target);
+      };
+
+      const pass16FocusedMetricCardBase = focusedMetricCard;
+      focusedMetricCard = function(key, target = activeAnnualTargets()) {
+        if (key === 'ground') {
+          const limit = pass16GroundFailureLimit(target);
+          const failures = annualPillarFailures();
+          const status = failures <= limit ? 'onTrack' : 'failing';
+          return { key, title: 'Ground Stability', status, html: kpiCardHtml('Ground Stability', `${failures} / ${limit} pillar failure${limit === 1 ? '' : 's'}`, failures <= limit ? 100 : 0, status, 'Prevent pillar failures. Support is a risk-control tool, not the KPI.') };
+        }
+        return pass16FocusedMetricCardBase(key, target);
+      };
+
+      const pass16FixedKpiStrictPassedBase = fixedKpiStrictPassed;
+      fixedKpiStrictPassed = function(key, target = activeAnnualTargets()) {
+        if (key === 'ground') return annualPillarFailures() <= pass16GroundFailureLimit(target);
+        return pass16FixedKpiStrictPassedBase(key, target);
+      };
+
+      const pass16Pass15KpiActualTextBase = pass15KpiActualText;
+      pass15KpiActualText = function(key, target = activeAnnualTargets()) {
+        if (key === 'ground') {
+          const limit = pass16GroundFailureLimit(target);
+          const failures = annualPillarFailures();
+          return `${failures} / ${limit} pillar failure${limit === 1 ? '' : 's'}`;
+        }
+        return pass16Pass15KpiActualTextBase(key, target);
+      };
+
+      const pass16MobileEventQueueItemsBase = mobileEventQueueItems;
+      mobileEventQueueItems = function() {
+        const items = pass16MobileEventQueueItemsBase();
+        for (const item of items) {
+          if (item && item.title && /Faulted Ground/i.test(item.title)) {
+            item.icon = '╱';
+            item.label = 'GEO';
+            item.tone = 'info';
+          }
+        }
+        return items;
+      };
+
+      const pass16DevActionBase = devAction;
+      devAction = function(action) {
+        if (action === 'force-fault-row') {
+          const row = nextExplorationRow() === null ? (state.exploration && state.exploration.lastCompletedRow) : nextExplorationRow() + 1;
+          const candidateRow = Math.max(0, Math.min(MINE_ROWS - 1, row || (state.exploration && state.exploration.lastCompletedRow) || LOCKED_ROWS));
+          const faulted = pass16ApplyFaultsToRow(candidateRow, true);
+          if (faulted.length) pass16FaultDiscoveryEvent(candidateRow, faulted);
+          else showProductionComment('Dev: no faultable blocks found on that row.', 'Dev Tools', 4);
+          return;
+        }
+        return pass16DevActionBase(action);
+      };
+
+      const pass16EnhanceDevToolsBase = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        pass16EnhanceDevToolsBase();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-pass16-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-pass16-dev-tools>
+          <section class="devToolCard"><h3>Pass 16 Geology / Ground</h3><p>Test faulted ground and pillar visual/text behaviour.</p><div class="devToolBtns"><button data-dev-action="force-fault-row">Force Faulted Row</button><button data-dev-action="low-tonnes-complaint">Low-Tonnage Complaint</button><button data-dev-action="pillar-deteriorate">Force Critical Pillar</button></div></section>
+        </div>`);
+      };
+
+      applyAnnualTargetUnlockGuards();
 
 
       ensureDrillingRestrictionState();
