@@ -18032,6 +18032,860 @@
         </div>`);
       };
 
+      /* June 28 playtest pass 17: asset-tab UX, share-price decoupling, belt complaint image, grade variance art, seismic pressure. */
+
+      (function injectPass17Styles() {
+        if (document.getElementById('pass17Styles')) return;
+        const style = document.createElement('style');
+        style.id = 'pass17Styles';
+        style.textContent = `
+          .assetsTabBar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+          .assetsTabBtn{border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.88);color:#e5eefc;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+          .assetsTabBtn.active{background:linear-gradient(180deg,#2563eb,#1d4ed8);border-color:rgba(147,197,253,.7);box-shadow:0 0 0 1px rgba(59,130,246,.25) inset}
+          .assetsTabPane{display:block}
+          .assetsHintCard,.assetsHighlightCard{background:rgba(30,41,59,.72);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:12px 14px;margin:0 0 14px}
+          .assetsHighlightCard{border-color:rgba(250,204,21,.6);box-shadow:0 0 0 2px rgba(250,204,21,.18) inset,0 0 18px rgba(250,204,21,.12)}
+          .assetsHighlightCard h3,.assetsHintCard h3{margin:0 0 6px}
+          .assetsActionPulse{animation:pass17Pulse 1.3s ease-in-out infinite alternate; box-shadow:0 0 0 2px rgba(250,204,21,.25), 0 0 18px rgba(250,204,21,.22)}
+          @keyframes pass17Pulse{from{transform:translateY(0)}to{transform:translateY(-1px)}}
+        `;
+        document.head.appendChild(style);
+      })();
+
+      function pass17EnsureMetaState() {
+        state.assets = state.assets || {};
+        if (typeof state.assetsModalSessionId !== 'number') state.assetsModalSessionId = 0;
+        if (typeof state.pass17CurrentWindowType !== 'string') state.pass17CurrentWindowType = '';
+        if (typeof state.pass17AssetsTab !== 'string') state.pass17AssetsTab = 'mining';
+        if (typeof state.pass17LastSeismicEventDay !== 'number') state.pass17LastSeismicEventDay = 0;
+        if (typeof state.pass17SeismicActiveUntil !== 'number') state.pass17SeismicActiveUntil = 0;
+      }
+      pass17EnsureMetaState();
+
+      function pass17BuildAssetsWindowHtml(activeTab = 'mining') {
+        const fitter = fitterOnCrew();
+        const electrician = crewByRole('electrician');
+        const surveyor = surveyorOnCrew();
+        const ventEng = ventilationEngineerOnCrew();
+        const rockDoctor = rockDoctorOnCrew();
+        const conditionTag = state.machine.status === 'broken'
+          ? 'Broken'
+          : state.machine.status === 'maintenance'
+            ? 'Under repair'
+            : state.machine.condition < 20
+              ? 'Critical'
+              : state.machine.condition < 45
+                ? 'Smoking'
+                : 'Operational';
+        const canCallFitter = fitter && state.machine.status !== 'mining' && state.machine.status !== 'tramming' && state.machine.status !== 'maintenance' && state.machine.condition < 100;
+        const conveyorInfo = conveyorFaultInfo();
+        const conveyorWorker = conveyorWorkerForFault();
+        const conveyorStatus = state.conveyor.status === 'running' ? 'Running' : state.conveyor.status === 'maintenance' ? 'Intervention in progress' : conveyorInfo.label;
+        const beltStatus = beltExtensionStatus();
+        const beltUnlocked = featureUnlocked('beltAdvancement');
+        const bolterUnlocked = featureUnlocked('groundSupport');
+        const ventUnlocked = featureUnlocked('ventilation');
+        const beltHead = beltHeadLabel();
+        const beltNext = beltStatus.row === null ? 'No further row' : 'Grid ' + gridRefFor(beltStatus.row, beltColumn());
+        const secondMinerHighlight = !!state.pass17PromptSecondMinerPurchase && !state.assets.secondMinerOwned;
+        const seismicActive = (state.pass17SeismicActiveUntil || 0) > state.day;
+        const seismicDays = Math.max(0, Math.ceil((state.pass17SeismicActiveUntil || 0) - state.day));
+        const hintCard = secondMinerHighlight ? `<div class="assetsHighlightCard"><h3>Scale-Up Recommendation</h3><p><strong>2ndHOPE is now available on the -1200 Level.</strong> Purchase the second continuous miner to unlock the new fleet scale-up loop and turn one belt complaint into several.</p><p>The button below has been highlighted for immediate organisational escalation.</p></div>` : '';
+        const seismicCard = seismicActive ? `<div class="assetsHintCard"><h3>Seismic Aftershocks Active</h3><p>Pillars are currently deteriorating <strong>20% faster</strong> for about <strong>${seismicDays} day${seismicDays === 1 ? '' : 's'}</strong>. Rock Doctor recommends support before the mine converts reserve into learning.</p></div>` : '';
+        const tabs = `<div class="assetsTabBar">
+          <button class="assetsTabBtn ${activeTab === 'mining' ? 'active' : ''}" data-assets-tab="mining">Mining Machines</button>
+          <button class="assetsTabBtn ${activeTab === 'ground' ? 'active' : ''}" data-assets-tab="ground">Ground Support</button>
+          <button class="assetsTabBtn ${activeTab === 'belt' ? 'active' : ''}" data-assets-tab="belt">Belt & Infrastructure</button>
+        </div>`;
+
+        const miningPane = `${hintCard}${seismicCard}<p><strong>1stHOPE Continuous Miner</strong></p>
+          <div class="rows">
+            <div class="row"><div class="avatarDot" style="background:${state.machine.status === 'broken' ? '#ef4444' : state.machine.status === 'maintenance' ? '#38bdf8' : '#facc15'}"></div><div><strong>Status</strong><span>${state.machine.status}</span></div><span class="tag">${Math.round(state.machine.progress)}%</span></div>
+            <div class="row"><div class="avatarDot" style="background:${state.machine.condition < 45 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.machine.condition.toFixed(1)}%</span></div><span class="tag">${conditionTag}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#111827"></div><div><strong>Assigned Fitter</strong><span>${fitter ? fitter.name + ' · Skill ' + fitter.skill + '/5' : 'No fitter assigned'}</span></div><span class="tag">${fitter ? 'Available' : 'Missing'}</span></div>
+            ${state.machine.status === 'maintenance' ? `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Repair Progress</strong><span>${Math.round(state.machine.repairProgress)}%</span></div><span class="tag">In progress</span></div>` : ''}
+            ${state.capexFreezeUntil > state.day ? `<div class="row"><div class="avatarDot" style="background:#ef4444"></div><div><strong>CAPEX Freeze</strong><span>Parent company has frozen normal spending until Day ${state.capexFreezeUntil}.</span></div><span class="tag">Emergency cost</span></div>` : ''}
+          </div>
+          <p>This asset has been described as old, loyal, and statistically unlikely to improve.</p>
+          <div class="btnRow"><button class="primary" data-call-fitter ${canCallFitter ? '' : 'disabled'}>${state.machine.status === 'broken' ? 'Call Fitter' : 'Call Fitter for Maintenance'} (${money(scaledCost(repairCost()))})</button></div>
+          <section class="crewRoleSection ${secondMinerHighlight ? 'assetsHighlightCard' : ''}">
+            <div class="crewRoleHeader"><h3>Fleet Expansion</h3><span>${secondMinerUnlocked() ? 'Available on -1200 Level' : 'Requires -1200 Level access'}</span></div>
+            <div class="rows">
+              <div class="row"><div class="avatarDot" style="background:${state.assets.secondMinerOwned ? '#22c55e' : '#64748b'}"></div><div><strong>Second Continuous Miner</strong><span>${state.assets.secondMinerOwned ? '2ndHOPE is active. More tonnes, more traffic, more reasons for a meeting.' : 'Adds production capacity from -1200, but increases fleet chaos and multiplies belt explanations.'}</span></div><span class="tag">${state.assets.secondMinerOwned ? 'Active' : money(scaledCost(SECOND_MINER_PURCHASE_COST))}</span></div>
+            </div>
+            <div class="btnRow"><button class="primary ${secondMinerHighlight ? 'assetsActionPulse' : ''}" data-buy-second-miner ${!state.assets.secondMinerOwned && secondMinerUnlocked() ? '' : 'disabled'}>Authorise 2ndHOPE · ${money(scaledCost(SECOND_MINER_PURCHASE_COST))}</button></div>
+          </section>
+          <section class="crewRoleSection">
+            <div class="crewRoleHeader"><h3>Ventilation</h3><span>${ventUnlocked ? 'Available on -1400 Level' : 'Requires -1400 Level access'}</span></div>
+            <div class="rows">
+              <div class="row"><div class="avatarDot" style="background:${state.assets.fanOwned ? '#22c55e' : '#64748b'}"></div><div><strong>Mine Fan</strong><span>${state.assets.fanOwned ? 'Installed near the winder. Oscillating heroically at surface.' : 'A CAPEX-approved desk fan representing the future of deep-mine ventilation.'}</span></div><span class="tag">${state.assets.fanOwned ? 'Owned' : ventUnlocked ? money(scaledCost(MINE_FAN_PURCHASE_COST)) : '-1400'}</span></div>
+              <div class="row"><div class="avatarDot" style="background:${ventEng ? '#22c55e' : '#ef4444'}"></div><div><strong>Ventilation Engineer</strong><span>${ventEng ? ventEng.name + ' · Skill ' + ventEng.skill + '/5' : 'Required once crew heat complaints become strategic.'}</span></div><span class="tag">${ventEng ? 'Assigned' : 'Missing'}</span></div>
+            </div>
+            <div class="btnRow"><button class="primary" data-buy-mine-fan ${!state.assets.fanOwned && ventUnlocked ? '' : 'disabled'}>Purchase Mine Fan · ${ventUnlocked ? money(scaledCost(MINE_FAN_PURCHASE_COST)) : '-1400'}</button></div>
+          </section>`;
+
+        const groundPane = `${seismicCard}<p><strong>Ground Support</strong></p>
+          <div class="rows">
+            <div class="row"><div class="avatarDot" style="background:${state.assets.bolterOwned ? '#22c55e' : '#ef4444'}"></div><div><strong>Bolter</strong><span>${state.assets.bolterOwned ? 'On the board. Switch the HOPE remote to BOLTER, face a pillar, then press BOLT.' : bolterUnlocked ? 'Not purchased. The Rock Doctor will keep reminding everyone.' : 'Unlocks on the -1100 Level when technical responsibility becomes unavoidable.'}</span></div><span class="tag">${state.assets.bolterOwned ? 'Owned' : bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : '-1100'}</span></div>
+            <div class="row"><div class="avatarDot" style="background:${rockDoctor ? '#22c55e' : '#ef4444'}"></div><div><strong>Rock Doctor</strong><span>${rockDoctor ? rockDoctor.name + ' · Skill ' + rockDoctor.skill + '/5' : 'Required for support decisions.'}</span></div><span class="tag">${rockDoctor ? 'Assigned' : 'Missing'}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#fbbf24"></div><div><strong>Worst Pillar</strong><span>${worstPillar() ? 'Grid ' + gridRef(worstPillar()) + ' · ' + worstPillar().pillarState : 'No unsupported exposed pillars identified.'}</span></div><span class="tag">${worstPillar() ? money(scaledCost(PILLAR_SUPPORT_COST)) : 'Stable'}</span></div>
+          </div>
+          <div class="btnRow">
+            <button class="primary" data-buy-bolter ${state.assets.bolterOwned || !bolterUnlocked ? 'disabled' : ''}>Buy Bolter · ${bolterUnlocked ? money(scaledCost(BOLTER_PURCHASE_COST)) : '-1100'}</button>
+            <button class="primary" data-support-pillar ${state.assets.bolterOwned && bolterUnlocked ? '' : 'disabled'}>Use Bolter Remote</button>
+          </div>
+          ${engineeringResearchPanelHtml()}`;
+
+        const beltPane = `${seismicCard}<p><strong>Belt & Infrastructure</strong></p>
+          <div class="rows">
+            <div class="row"><div class="avatarDot" style="background:${state.conveyor.status === 'running' ? '#22c55e' : state.conveyor.status === 'maintenance' ? '#38bdf8' : '#ef4444'}"></div><div><strong>Status</strong><span>${conveyorStatus}</span></div><span class="tag">${state.conveyor.status}</span></div>
+            <div class="row"><div class="avatarDot" style="background:${state.conveyor.condition < 55 ? '#ef4444' : '#22c55e'}"></div><div><strong>Condition</strong><span>${state.conveyor.condition.toFixed(1)}%</span></div><span class="tag">${state.conveyor.condition < 55 ? 'Fragile' : 'Usable'}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Belt Head</strong><span>${beltHead}. Next extension target: ${beltNext}. ${beltUnlocked ? beltStatus.reason : 'Belt advancement unlocks on the -1200 Level after scale-up discovers distance.'}</span></div><span class="tag">${beltUnlocked ? money(scaledCost(BELT_EXTENSION_COST)) : '-1200'}</span></div>
+            <div class="row"><div class="avatarDot" style="background:${surveyor ? '#22c55e' : '#ef4444'}"></div><div><strong>Surveyor</strong><span>${surveyor ? surveyor.name + ' · Skill ' + surveyor.skill + '/5' : 'Required for belt advancement from the -1200 Level.'}</span></div><span class="tag">${surveyor ? 'Assigned' : 'Missing'}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#475569"></div><div><strong>Required Response</strong><span>${state.conveyor.status === 'running' ? 'No immediate action required. This is suspicious.' : conveyorInfo.action + ' · Required: ' + roleName(conveyorInfo.role)}</span></div><span class="tag">${state.conveyor.status === 'running' ? 'Available' : money(scaledCost(conveyorInfo.cost))}</span></div>
+            ${powerOutageActive() ? `<div class="row"><div class="avatarDot" style="background:#111827"></div><div><strong>Lighting Outage</strong><span>Blocks and machines are hidden because the lighting circuit is selective about responsibility.</span></div><span class="tag">${money(scaledCost(900))}</span></div>` : ''}
+            ${state.conveyor.status === 'maintenance' ? `<div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Intervention Progress</strong><span>${Math.round(state.conveyor.progress)}%</span></div><span class="tag">${conveyorWorker ? conveyorWorker.name : 'Searching'}</span></div>` : ''}
+          </div>
+          <p>If the conveyor stops, the miner stops automatically. Production describes this as a dependency; Finance describes it as proof that one belt was too many.</p>
+          <div class="btnRow">
+            <button class="primary" data-conveyor-fix ${state.conveyor.status === 'stopped' && conveyorWorker ? '' : 'disabled'}>${state.conveyor.status === 'stopped' ? conveyorInfo.action + ' (' + money(scaledCost(conveyorInfo.cost)) + ')' : state.conveyor.status === 'maintenance' ? 'Intervention in Progress' : 'Conveyor Running'}</button>
+            <button class="primary" data-restore-lighting ${powerOutageActive() && electrician ? '' : 'disabled'}>Restore Lighting · ${money(scaledCost(900))}</button>
+            <button class="primary" data-belt-extend ${beltUnlocked && surveyor && beltStatus.canExtend ? '' : 'disabled'}>Extend Belt Line · ${money(scaledCost(BELT_EXTENSION_COST))}</button>
+          </div>
+          ${shaftDeepeningStatusHtml('assets')}`;
+
+        const selectedPane = activeTab === 'ground' ? groundPane : activeTab === 'belt' ? beltPane : miningPane;
+        return tabs + selectedPane;
+      }
+
+      const pass17OpenWindowBase = openWindow;
+      openWindow = function(type, forceReportComplete = false, customTitle = null) {
+        pass17EnsureMetaState();
+        state.pass17CurrentWindowType = type;
+        if (type !== 'assets') return pass17OpenWindowBase(type, forceReportComplete, customTitle);
+        const activeTab = state.pass17AssetsTab || 'mining';
+        if (!state.pass17AssetsRetab) state.assetsModalSessionId = (state.assetsModalSessionId || 0) + 1;
+        state.pass17AssetsRetab = false;
+        setModalClosable(true);
+        $('modalWindow').className = 'window';
+        $('modalTitle').textContent = customTitle || 'Asset Reliability';
+        $('modalBody').innerHTML = pass17BuildAssetsWindowHtml(activeTab) + '<div class="btnRow"><button class="primary" data-close>Close</button></div>';
+        $('modalOverlay').classList.add('show');
+      };
+
+      document.addEventListener('click', function(e) {
+        const tabBtn = e.target.closest('[data-assets-tab]');
+        if (tabBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          state.pass17AssetsTab = tabBtn.dataset.assetsTab || 'mining';
+          state.pass17AssetsRetab = true;
+          openWindow('assets');
+          return;
+        }
+        if (e.target.closest('[data-close], #modalCloseBtn, [data-close-formal-review], [data-close-decline]')) {
+          state.pass17CurrentWindowType = '';
+        }
+      }, true);
+
+      const pass17PlaceSecondMinerBase = placeSecondMinerAtStart;
+      placeSecondMinerAtStart = function() {
+        syncMinerAliases();
+        const preferredCol = Math.min(MINE_COLS - 1, 5);
+        const candidateRows = [START_ROW, START_ROW + 1, START_ROW - 1, START_ROW + 2, START_ROW - 2].filter(r => r >= 0 && r < MINE_ROWS);
+        const candidates = [];
+        for (const r of candidateRows) {
+          candidates.push({ r, c: preferredCol });
+          candidates.push({ r, c: Math.max(0, preferredCol - 1) });
+          candidates.push({ r, c: Math.min(MINE_COLS - 1, preferredCol + 1) });
+        }
+        const spot = candidates.find(pos => {
+          const b = blockAt(MINE_ID, pos.r, pos.c);
+          return b && (b.status === 'void' || b.status === 'cleared' || b.status === 'solid');
+        }) || { r: START_ROW, c: preferredCol };
+        const b = blockAt(MINE_ID, spot.r, spot.c);
+        if (b && b.status === 'solid' && !b.isPillar) {
+          b.status = 'void';
+          b.tonnes = 0;
+          b.grade = 0;
+          b.actualGrade = 0;
+          b.progress = 100;
+        }
+        state.machine2.q = MINE_ID;
+        state.machine2.r = spot.r;
+        state.machine2.c = spot.c;
+        state.machine2.status = 'idle';
+        state.machine2.autoMining = false;
+        state.machine2.dir = 'up';
+        state.machine2.target = null;
+        state.machine2.progress = 0;
+        state.machine2.facing = -Math.PI / 2;
+        state.machine2.lastSafeCell = { q: MINE_ID, r: spot.r, c: spot.c };
+      };
+
+      const pass17BuySecondMinerBase = buySecondMiner;
+      buySecondMiner = function() {
+        const result = pass17BuySecondMinerBase();
+        state.pass17PromptSecondMinerPurchase = false;
+        state.pass17AssetsTab = 'mining';
+        return result;
+      };
+
+      const pass17OpenLevelArrivalModalBase = openLevelArrivalModal;
+      openLevelArrivalModal = function() {
+        playLevelCompleteSound();
+        if ((Number(state.depthIndex) || 0) === 2 && (!(state.pass17LastSeismicEventDay > 0) || state.pass17LastSeismicEventDay < state.day)) {
+          state.pass17LastSeismicEventDay = state.day;
+        }
+        const result = pass17OpenLevelArrivalModalBase();
+        if ((Number(state.depthIndex) || 0) === 2) {
+          const btn = document.querySelector('[data-level-arrival-continue]');
+          if (btn) btn.dataset.pass17OpenAssets = 'secondMiner';
+        }
+        return result;
+      };
+
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-level-arrival-continue][data-pass17-open-assets="secondMiner"]');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        state.pass17PromptSecondMinerPurchase = true;
+        state.pass17AssetsTab = 'mining';
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        openWindow('assets');
+      }, true);
+
+      const pass17MetricUnlockedForYearBase = metricUnlockedForYear;
+      metricUnlockedForYear = function(metric, year = state.year) {
+        if (metric === 'sharePrice') return false;
+        return pass17MetricUnlockedForYearBase(metric, year);
+      };
+
+      const pass17FixedKpiPackageBase = fixedKpiPackageForCurrentPhase;
+      fixedKpiPackageForCurrentPhase = function(year = state.year, depthIndex = state.depthIndex) {
+        const t = { ...(pass17FixedKpiPackageBase(year, depthIndex) || {}) };
+        t.kpiKeys = (Array.isArray(t.kpiKeys) ? t.kpiKeys : []).filter(k => k !== 'sharePrice');
+        t.sharePriceTarget = 0;
+        if ((Number(depthIndex) || 0) === 1) {
+          t.phaseTitle = '-1100 Level — Ground Support Reality';
+          t.phaseTheme = 'Mining has gone deeper and somebody has finally asked whether the roof is meant to stay up.';
+          t.kpiKeys = ['productionDelivery', 'ground'];
+          t.pillarSupports = 0;
+          t.maxPillarFailures = 1;
+          t.technicalHires = 0;
+          t.surplusTarget = Math.max(0, Number(t.surplusTarget) || 0);
+        }
+        return t;
+      };
+
+      const pass17SanitiseFixedPhaseTargetsBase = sanitiseFixedPhaseTargets;
+      sanitiseFixedPhaseTargets = function(raw = {}, year = state.year) {
+        const t = { ...(pass17SanitiseFixedPhaseTargetsBase(raw, year) || {}) };
+        t.kpiKeys = (Array.isArray(t.kpiKeys) ? t.kpiKeys : []).filter(k => k !== 'sharePrice');
+        t.sharePriceTarget = 0;
+        if ((Number(state.depthIndex) || 0) === 1) {
+          t.maxPillarFailures = 1;
+          if (!featureUnlocked('groundSupport')) {
+            t.pillarSupports = 0;
+            t.maxPillarFailures = 99;
+          }
+        }
+        return t;
+      };
+
+      focusKpiKeysForYear = function(year = state.year) {
+        const t = state.annualTargets && Math.max(1, Number(year) || 1) === (Number(state.year) || 1)
+          ? activeAnnualTargets()
+          : targetsForYear(year);
+        const keys = Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : ['productionDelivery'];
+        return keys.filter(k => k !== 'sharePrice');
+      };
+
+      if (typeof renderSharePriceSummary === 'function') {
+        renderSharePriceSummary = function() {
+          const existing = document.querySelector('[data-share-price-summary]');
+          if (existing) existing.remove();
+          return null;
+        };
+      }
+
+      inferShareDeltaFromDecisionOutcome = function(ev) {
+        if (typeof ev?.shareDelta === 'number') return ev.shareDelta;
+        const text = String(((ev && ev.title) || '') + ' ' + ((ev && ev.body) || '')).toLowerCase();
+        if (/bribe|scandal|major fine|prosecution|failed|crash|escalated|cover up|cover-up|unsafe|worsens|model worsens|found the operating panel/.test(text)) return -6;
+        if (/fine|penalty|whistleblower|concern|inconclusive|neutral|broadly adequate/.test(text)) return -2;
+        if (/passed|validated|improved|success|strong external validation|minor issues|approved|upside|better than expected/.test(text)) return 3;
+        return 0;
+      };
+
+      const pass17DecisionOutcomeBase = openDecisionOutcomeModal;
+      openDecisionOutcomeModal = function(ev) {
+        ensureSharePriceState();
+        const delta = inferShareDeltaFromDecisionOutcome(ev || {});
+        if (delta) {
+          adjustSharePrice(delta, (ev && ev.title) || 'Decision outcome');
+          ev = { ...ev, body: (ev.body || '') + `<p><strong>Share Price:</strong> ${delta > 0 ? '+' : ''}${delta.toFixed(1)}p · now ${formatSharePrice()}.</p>` };
+        }
+        return pass17DecisionOutcomeBase(ev);
+      };
+
+      finalGameStats = function() {
+        const yearsServed = Math.max(1, Number(state.year) || 1);
+        const deepest = Number(state.mineLevel) || -1000;
+        const totalTonnes = Math.max(0, Number(state.tonnes) || 0);
+        const totalRevenue = Math.max(0, Number(state.lifetimeRevenue || state.revenue) || 0);
+        const totalSpend = Math.max(0, Number(state.lifetimeExpenditure || state.expenditure) || 0);
+        ensureSharePriceState();
+        return {
+          yearsServed,
+          deepestLevel: deepest,
+          totalTonnes,
+          totalRevenue,
+          totalSpend,
+          finalBudget: Number(state.cash) || 0,
+          averageGrade: grade() || 0,
+          safetyRecord: Math.round(traitValue('safety')),
+          pillarFailures: Number(state.pillarFailures) || 0,
+          hseFines: Number(state.hseFines) || 0,
+          hseInspections: Number(state.hseInspections) || 0,
+          skipFactorTotalTonnes: Number(state.skipFactorTotalTonnes) || 0,
+          hrResolved: Number(state.hrEventsResolved) || 0,
+          hrIgnored: Number(state.hrEventsIgnored) || 0,
+          finalSharePrice: Number(state.sharePrice) || 100,
+          netPosition: totalRevenue - totalSpend,
+          endedAt: new Date().toISOString()
+        };
+      };
+
+      renderFinalStatsScreen = function() {
+        const stats = finalGameStats();
+        const grid = $('finalStatsGrid');
+        if (grid) {
+          grid.innerHTML = [
+            finalStatCard('Years served', stats.yearsServed),
+            finalStatCard('Deepest level', stats.deepestLevel + ' Level'),
+            finalStatCard('Total mined tonnes', Math.round(stats.totalTonnes).toLocaleString() + 't'),
+            finalStatCard('Total revenue earned', money(stats.totalRevenue)),
+            finalStatCard('Final operating surplus', money(stats.finalBudget)),
+            finalStatCard('Final share price', formatSharePrice(stats.finalSharePrice)),
+            finalStatCard('Average Goldilocks Grade', stats.averageGrade.toFixed(2) + '%'),
+            finalStatCard('Safety record', stats.safetyRecord),
+            finalStatCard('Pillar failures', stats.pillarFailures),
+            finalStatCard('HSE fines', money(stats.hseFines)),
+            finalStatCard('Skip factor adjustment', (stats.skipFactorTotalTonnes > 0 ? '+' : '') + Math.round(stats.skipFactorTotalTonnes).toLocaleString() + 't')
+          ].join('');
+        }
+        renderLeaderboards();
+      };
+
+      submitScoreToLocalLeaderboard = function() {
+        const input = $('nicknameInput');
+        const nickname = String(input && input.value ? input.value : '').trim().slice(0, 24) || 'Anonymous Manager';
+        const stats = finalGameStats();
+        const board = loadLeaderboard();
+        const prev = board[nickname] || { nickname };
+        board[nickname] = {
+          nickname,
+          bestRevenue: Math.max(Number(prev.bestRevenue) || 0, stats.totalRevenue),
+          bestTonnes: Math.max(Number(prev.bestTonnes) || 0, stats.totalTonnes),
+          longestService: Math.max(Number(prev.longestService) || 0, stats.yearsServed),
+          deepestLevel: Math.min(Number(prev.deepestLevel) || stats.deepestLevel, stats.deepestLevel),
+          bestSafety: Math.max(Number(prev.bestSafety) || 0, stats.safetyRecord),
+          bestSharePrice: Math.max(Number(prev.bestSharePrice) || 0, stats.finalSharePrice),
+          worstSafety: Math.min(prev.worstSafety === undefined ? stats.safetyRecord : Number(prev.worstSafety), stats.safetyRecord),
+          mostMoneyLost: Math.max(Number(prev.mostMoneyLost) || 0, Math.max(0, -stats.netPosition, -stats.finalBudget)),
+          mostHseFines: Math.max(Number(prev.mostHseFines) || 0, stats.hseFines),
+          mostPillarFailures: Math.max(Number(prev.mostPillarFailures) || 0, stats.pillarFailures),
+          worstSharePrice: Math.min(prev.worstSharePrice === undefined ? stats.finalSharePrice : Number(prev.worstSharePrice), stats.finalSharePrice),
+          shortestTenure: Math.min(prev.shortestTenure === undefined ? stats.yearsServed : Number(prev.shortestTenure), stats.yearsServed),
+          updatedAt: stats.endedAt
+        };
+        saveLeaderboard(board);
+        if (input) input.value = nickname;
+        renderLeaderboards();
+        showProductionComment('Score submitted to selective memory. The market has also been informed, regrettably.', 'S.H.A.F.T.', 5);
+      };
+
+      renderLeaderboards = function() {
+        const entries = Object.values(loadLeaderboard());
+        const fame = $('hallOfFameList');
+        const shame = $('hallOfShameList');
+        if (fame) fame.innerHTML = leaderboardRows(entries, [
+          { label: 'Most Revenue Earned', key: 'bestRevenue', format: v => money(v) },
+          { label: 'Most Tonnes Mined', key: 'bestTonnes', format: v => Math.round(v).toLocaleString() + 't' },
+          { label: 'Longest Service', key: 'longestService', format: v => Math.round(v) + ' years' },
+          { label: 'Deepest Level Reached', key: 'deepestLevel', asc: true, format: v => Math.round(v) + ' Level' },
+          { label: 'Best Safety Record', key: 'bestSafety', format: v => Math.round(v) },
+          { label: 'Best Share Price', key: 'bestSharePrice', format: v => formatSharePrice(v) }
+        ]);
+        if (shame) shame.innerHTML = leaderboardRows(entries, [
+          { label: 'Worst Safety Record', key: 'worstSafety', asc: true, format: v => Math.round(v) },
+          { label: 'Most Money Lost', key: 'mostMoneyLost', format: v => money(v) },
+          { label: 'Most Pillars Failed', key: 'mostPillarFailures', format: v => Math.round(v) },
+          { label: 'Most HSE Fines', key: 'mostHseFines', format: v => money(v) },
+          { label: 'Shortest Tenure', key: 'shortestTenure', asc: true, format: v => Math.round(v) + ' years' },
+          { label: 'Worst Share Price', key: 'worstSharePrice', asc: true, format: v => formatSharePrice(v) }
+        ]);
+      };
+
+      reconcileMinedGrade = function(block) {
+        const estimated = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.actualGrade;
+        const geo = geologistOnCrew();
+        const skill = geo ? clamp(Number(geo.skill) || 3, 1, 5) : 2;
+        const surpriseChance = interpolate(skill, 1, 0.35, 5, 0.10);
+        const maxVariance = interpolate(skill, 1, 1.35, 5, 0.45);
+        let actual = estimated;
+        if (Math.random() < surpriseChance) {
+          const betterChance = interpolate(skill, 1, 0.35, 5, 0.60);
+          const sign = Math.random() < betterChance ? 1 : -1;
+          const variance = rand(0.15, maxVariance) * sign;
+          actual = Math.max(0, estimated + variance);
+          const favourable = actual >= estimated;
+          pushQueueEvent({
+            tone: favourable ? 'good' : 'warning',
+            icon: favourable ? '◆' : '!',
+            label: 'GRD',
+            image: favourable ? 'assets/images/grade_variance_better.png' : 'assets/images/grade_variance_worse.png',
+            character: favourable ? 'Geology Department' : 'Grade Control',
+            department: favourable ? 'Reconciliation Upside' : 'Reconciliation Variance',
+            imageText: favourable ? 'A happier-than-expected block grade has been discovered.' : 'A worse-than-expected block grade has been tactfully explained.',
+            title: favourable ? 'Grade reconciliation upside' : 'Grade reconciliation issue',
+            body: `<p><strong>Estimated grade:</strong> ${estimated.toFixed(2)}%</p><p><strong>Mined grade:</strong> ${actual.toFixed(2)}%</p><p>${favourable ? 'Geology has discovered that the deposit was better than expected. Sales has been advised this was standard grade control.' : 'Geology has clarified that the model was directionally correct, provided the direction is interpreted broadly.'}</p>`
+          });
+        } else {
+          actual = block.actualGrade;
+          if (Math.abs(actual - estimated) > 0.35 && Math.random() < 0.35) {
+            pushQueueEvent({
+              tone: actual >= estimated ? 'good' : 'warning',
+              icon: '◆',
+              label: 'GRD',
+              image: actual >= estimated ? 'assets/images/grade_variance_better.png' : 'assets/images/grade_variance_worse.png',
+              character: actual >= estimated ? 'Geology Department' : 'Grade Control',
+              department: 'Grade Estimate Review',
+              imageText: actual >= estimated ? 'Grade reconciliation landed better than forecast.' : 'Grade reconciliation landed below forecast.',
+              title: 'Grade estimate reconciled',
+              body: `<p>The mined grade reconciled within the current tolerance of corporate optimism.</p><p><strong>Estimated:</strong> ${estimated.toFixed(2)}% · <strong>Mined:</strong> ${actual.toFixed(2)}%</p>`
+            });
+          }
+        }
+        block.actualGrade = actual;
+        block.grade = actual;
+        block.reconciled = true;
+        return Math.max(0, actual * skillGradeFactor());
+      };
+
+      maybeQueueBeltDistanceConcern = function(force = false) {
+        if (!featureUnlocked('beltAdvancement')) return;
+        if (!state.conveyor || state.conveyor.status !== 'running') return;
+        if (!surveyorOnCrew()) return;
+        const extension = beltExtensionStatus();
+        if (!extension.canExtend) return;
+        const active = machinePreviewOrigin(state.machine) || blockAt(MINE_ID, state.machine.r, state.machine.c);
+        const distance = beltServiceDistance(active);
+        if (!force && distance < 4.0) return;
+        const cooldown = (Number(state.depthIndex) || 0) === 0 ? YEAR_LENGTH_DAYS : 130;
+        if (!force && state.day - (state.lastBeltDistanceConcernDay || -999) < cooldown) return;
+        const unresolved = state.queueEvents.some(ev => ev && (ev.kind === 'beltComplaint' || ev.kind === 'beltDistance'));
+        if (unresolved) return;
+        if (state.pass17CurrentWindowType === 'assets' && state.pass17BeltComplaintSessionId === state.assetsModalSessionId) return;
+        state.lastBeltDistanceConcernDay = state.day;
+        if (state.pass17CurrentWindowType === 'assets') state.pass17BeltComplaintSessionId = state.assetsModalSessionId;
+        pushQueueEvent({
+          kind: 'beltComplaint',
+          tone: 'warning',
+          icon: '↻',
+          label: 'BELT',
+          image: 'assets/images/belt_availability_complaint.png',
+          character: 'Mine Services',
+          department: 'Belt Availability',
+          imageText: 'The crew have produced a visual explanation of why the belt is once again too far away.',
+          title: 'Belt Availability Complaint',
+          body: beltComplaintDecisionBody()
+        });
+      };
+
+      triggerExternalTechnicalReviewEvent = function(force = false) {
+        if (!force && sharePriceMetricActive && typeof sharePriceMetricActive === 'function' && sharePriceMetricActive() && state.externalTechnicalReviewDoneThisYear) return false;
+        state.externalTechnicalReviewDoneThisYear = true;
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'External Technical Review';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/images/borc_review_committee.png', 'BORC Review Team', 'External Technical Assurance', 'The Brilliant Ore Reserve Committee has arrived with questions, lanyards, and a working knowledge of appendices.', 'BORC')}
+          <div class="letter"><h2>External Technical Review</h2><p>BORC have targeted your site for external technical review, to audit the Mine’s Competent Person.</p><p>This is surprising because you were not aware that the site had a Competent Person, or that BORC has ever done anything like this before.</p><p>The review team has requested access to the technical report, the geological model, the mining assumptions, and the person responsible for signing things they may not have read.</p></div>
+          <div class="btnRow">
+            <button class="eventChoiceBtn positive" data-borc-review-choice="transparent"><strong>Be Open and Transparent, We’ve Got Nothing to Hide</strong><span>A phrase traditionally spoken immediately before discovering something hidden.</span></button>
+            <button class="eventChoiceBtn" data-borc-review-choice="competence"><strong>Send Employees with Dangerous Levels of Competence Home for the Day</strong><span>Reduce the risk of someone answering accurately.</span></button>
+            <button class="eventChoiceBtn" data-borc-review-choice="report"><strong>Ask if Anyone on Site Has Ever Read the 350-page Technical Report</strong><span>Find the assumptions page before BORC does.</span></button>
+            <button class="eventChoiceBtn negative" data-borc-review-choice="bribe"><strong>Attempt Bribe</strong><span>High risk, negligible judgement, catastrophic downside.</span></button>
+          </div>`;
+        $('modalOverlay').classList.add('show');
+        return true;
+      };
+
+      const pass17PillarDeteriorationSettingsBase = pillarDeteriorationSettings;
+      pillarDeteriorationSettings = function() {
+        const cfg = { ...(pass17PillarDeteriorationSettingsBase() || {}) };
+        if ((state.pass17SeismicActiveUntil || 0) > state.day) {
+          cfg.rowRate = (cfg.rowRate || 0) * 1.20;
+          cfg.exposedRate = (cfg.exposedRate || cfg.rate || 0) * 1.20;
+        }
+        return cfg;
+      };
+
+      function pass17TriggerSeismicEvent() {
+        state.pass17LastSeismicEventDay = state.day;
+        state.pass17SeismicActiveUntil = state.day + 20;
+        pushQueueEvent({
+          kind: 'seismicEvent',
+          tone: 'warning',
+          icon: 'GND',
+          label: 'GND',
+          image: 'assets/characters/rock-doctor.png',
+          character: 'Rock Doctor',
+          department: 'Ground Control',
+          imageText: 'Ground control has detected an entirely reassuring amount of seismicity.',
+          title: 'Seismic Aftershocks',
+          body: `<p>Deeper workings have entered a minor seismic period. The current theory is that shaft sinking blasted a little too enthusiastically near the workings.</p><p><strong>Impact:</strong> for the next <strong>20 days</strong>, all active pillars deteriorate <strong>20% faster</strong>.</p>`
+        });
+      }
+
+      function pass17UpdateSeismicPressure() {
+        if ((Number(state.depthIndex) || 0) < 2) return;
+        if (!state.running || state.paused || isModalOpen()) return;
+        if (state.pass17LastSeismicCheckDay === state.day) return;
+        state.pass17LastSeismicCheckDay = state.day;
+        if ((state.pass17SeismicActiveUntil || 0) > state.day) return;
+        const last = Number(state.pass17LastSeismicEventDay) || 0;
+        if (state.day >= last + 50) pass17TriggerSeismicEvent();
+      }
+
+      const pass17UpdateBase = update;
+      update = function(dt) {
+        const result = pass17UpdateBase(dt);
+        pass17UpdateSeismicPressure();
+        return result;
+      };
+
+      pass17EnsureMetaState();
+      state.annualTargets = sanitiseFixedPhaseTargets(state.annualTargets || targetsForYear(state.year), state.year);
+
+
+      /* June 28 playtest pass 18: -1000 balance, level-arrival art, research close, faults, pillar no-grade visual, clearer repair requirements. */
+
+      function pass18OnStartingLevel() {
+        return (Number(state.depthIndex) || 0) === 0;
+      }
+
+      const pass18FixedKpiPackageBase = fixedKpiPackageForCurrentPhase;
+      fixedKpiPackageForCurrentPhase = function(year = state.year, depthIndex = state.depthIndex) {
+        const t = { ...(pass18FixedKpiPackageBase(year, depthIndex) || {}) };
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        if (depth === 0) {
+          t.kpiKeys = (Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : ['productionDelivery']).filter(k => k !== 'sharePrice');
+          if (y <= 1) {
+            t.phaseKey = 'trial';
+            t.phaseTitle = 'Year 1 — Trial Mining';
+            t.phaseTheme = 'This remains a strictly consequence-free bulk sample, according to the people not designing the mine.';
+            t.kpiKeys = ['bulkSample'];
+            t.tonnes = 10000;
+            t.grade = 14.0;
+            t.discoveredRows = 0;
+            t.surplusTarget = 0;
+            t.lomTargetTonnes = 0;
+          } else if (y === 2) {
+            t.phaseKey = 'reserve-confirmation';
+            t.phaseTitle = 'Year 2 — Reserve Confirmation';
+            t.phaseTheme = 'The first level is still onboarding. Exploration must justify what the SLT has already implied, but output targets remain survivable.';
+            t.kpiKeys = ['productionDelivery', 'exploration'];
+            t.tonnes = 11000;
+            t.grade = 14.0;
+            t.discoveredRows = Math.max(2, Number(t.discoveredRows) || 0);
+            t.surplusTarget = 0;
+            t.lomTargetTonnes = 0;
+          } else {
+            t.phaseKey = 'advance-to-1100';
+            t.phaseTitle = 'Year ' + y + ' — Advance from the -1000 Level';
+            t.phaseTheme = 'The first level now exists to teach progression rather than terminate the training record.';
+            t.kpiKeys = ['productionDelivery', 'advance1100'];
+            t.tonnes = 12000;
+            t.grade = 14.0;
+            t.discoveredRows = Math.max(2, Number(t.discoveredRows) || 0);
+            t.surplusTarget = 0;
+            t.lomTargetTonnes = 0;
+          }
+          t.pillarSupports = 0;
+          t.maxPillarFailures = 99;
+          t.sharePriceTarget = 0;
+        }
+        return t;
+      };
+
+      const pass18SanitiseFixedPhaseTargetsBase = sanitiseFixedPhaseTargets;
+      sanitiseFixedPhaseTargets = function(raw = {}, year = state.year) {
+        const t = { ...(pass18SanitiseFixedPhaseTargetsBase(raw, year) || {}) };
+        const y = Math.max(1, Number(year) || 1);
+        if (pass18OnStartingLevel()) {
+          t.kpiKeys = (Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : ['productionDelivery']).filter(k => k !== 'sharePrice');
+          if (y <= 1) {
+            t.kpiKeys = ['bulkSample'];
+            t.tonnes = 10000;
+            t.grade = 14.0;
+            t.discoveredRows = 0;
+          } else if (y === 2) {
+            t.kpiKeys = ['productionDelivery', 'exploration'];
+            t.tonnes = Math.min(Math.max(Number(t.tonnes) || 11000, 10500), 11000);
+            t.grade = Math.max(14.0, Number(t.grade) || 14.0);
+            t.discoveredRows = Math.max(2, Number(t.discoveredRows) || 0);
+          } else {
+            t.kpiKeys = ['productionDelivery', 'advance1100'];
+            t.tonnes = Math.min(Math.max(Number(t.tonnes) || 12000, 11000), 12000);
+            t.grade = Math.max(14.0, Number(t.grade) || 14.0);
+            t.discoveredRows = Math.max(2, Number(t.discoveredRows) || 0);
+          }
+          t.surplusTarget = 0;
+          t.lomTargetTonnes = 0;
+          t.pillarSupports = 0;
+          t.maxPillarFailures = 99;
+          t.sharePriceTarget = 0;
+        }
+        return t;
+      };
+
+      const pass18EscalateSingleKpiTargetBase = escalateSingleKpiTarget;
+      escalateSingleKpiTarget = function(key, target) {
+        const y = Math.max(1, Number(state.year) || 1);
+        if (pass18OnStartingLevel() && y === 2 && (key === 'bulkSample' || key === 'productionDelivery' || key === 'tonnes')) {
+          target.tonnes = Math.min(12000, Math.round((target.tonnes || 11000) * 1.05));
+          target.grade = Math.min(14.15, Math.max(14.0, Number(target.grade || 14.0) + 0.05));
+          return `Production Delivery increased to ${formatMetricTargetValue('productionDelivery', target)}. The Year 2 -1000 Level escalation cap has prevented the target becoming a tutorial-ending event.`;
+        }
+        const result = pass18EscalateSingleKpiTargetBase(key, target);
+        if (pass18OnStartingLevel() && y === 2) target.tonnes = Math.min(Number(target.tonnes) || 11000, 12000);
+        return result;
+      };
+
+      const pass18TriggerYearEndReviewBase = triggerYearEndReview;
+      triggerYearEndReview = function() {
+        const passed = annualTargetPassed();
+        if (pass18OnStartingLevel() && !passed) {
+          state.lastPerformanceRating = 'needsImprovement';
+          state.needsImprovementStreak = 0;
+          state.pipActive = false;
+          state.paused = true;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+          openAnnualPerformanceReview('needsImprovement', false);
+          setTimeout(() => {
+            const body = $('modalBody');
+            if (body && !body.querySelector('[data-pass18-starting-level-warning]')) {
+              const notice = document.createElement('div');
+              notice.className = 'pipNotice';
+              notice.setAttribute('data-pass18-starting-level-warning', 'true');
+              notice.innerHTML = '<strong>-1000 Level training protection:</strong> This result is recorded as developmental feedback only. The first level is for learning the operating loop; hard dismissal begins once deeper mining introduces consequences that can be blamed on the mine manager.';
+              const letter = body.querySelector('.letter');
+              if (letter) letter.appendChild(notice);
+            }
+          }, 0);
+          return;
+        }
+        return pass18TriggerYearEndReviewBase();
+      };
+
+      openLevelArrivalModal = function() {
+        playLevelCompleteSound();
+        if ((Number(state.depthIndex) || 0) === 2 && (!(state.pass17LastSeismicEventDay > 0) || state.pass17LastSeismicEventDay < state.day)) {
+          state.pass17LastSeismicEventDay = state.day;
+        }
+        const details = levelArrivalDetails();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = details.title;
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/images/new_level_reached.png', 'New Level Reached', 'Shaft Deepening Milestone', 'The mine has reached a new level. The consequences have been promoted accordingly.', 'LEVEL')}
+          <div class="letter"><h2>${escapeHtml(details.title)}</h2>${details.body}</div>
+          <div class="btnRow"><button class="primary" data-level-arrival-continue data-next-intro="${escapeHtml(details.next || '')}" data-next-intro-2="${escapeHtml(details.next2 || '')}">Continue Operational Escalation</button></div>`;
+        $('modalOverlay').classList.add('show');
+        if ((Number(state.depthIndex) || 0) === 2) {
+          const btn = document.querySelector('[data-level-arrival-continue]');
+          if (btn) btn.dataset.pass17OpenAssets = 'secondMiner';
+        }
+      };
+
+      startEngineeringResearch = function(key) {
+        if (!featureUnlocked('technicalTeam')) { openMiniWindow('Research Not Authorised', '<p>Research unlocks when a Mining Engineer joins the technical team on the -1100 Level.</p>', true); return false; }
+        const eng = miningEngineerOnCrew();
+        if (!eng) { openMiniWindow('Mining Engineer Missing', '<p>Research requires a Mining Engineer, because someone must convert the obvious into a graph.</p>', true); return false; }
+        if (state.engineeringResearch) { openMiniWindow('Research Already In Progress', '<p>The Mining Engineer is already converting budget into possible improvement.</p>', true); return false; }
+        const opt = researchOptionsForTraits().find(x => x.key === key) || randomItem(researchOptionsForTraits());
+        spend(opt.cost, 'Research programme');
+        state.engineeringResearch = { ...opt, progress: 0, startedDay: state.day };
+        const overlay = $('modalOverlay');
+        if (overlay) overlay.classList.remove('show');
+        showProductionComment('Research programme authorised. Mining Engineering will now convert budget into confidence.', 'Research', 5.5);
+        updateHud();
+        return true;
+      };
+
+      pass16ApplyFaultsToRow = function(row, force = false) {
+        if (!pass16FaultsUnlocked() || row === null || row < 0) return [];
+        const depth = Number(state.depthIndex) || 0;
+        const key = depth + ':' + row;
+        state.faultedRows = state.faultedRows || {};
+        if (state.faultedRows[key] && !force) return [];
+        const candidates = (state.blocks[MINE_ID] || []).filter(b => b.r === row && pass16FaultableBlock(b));
+        if (!candidates.length) return [];
+        const rowSeed = seeded(row * 97 + depth * 1301 + 4801 + (Number(state.year) || 1) * 19);
+        const chance = 0.50;
+        if (!force && rowSeed > chance) {
+          state.faultedRows[key] = 'clear';
+          return [];
+        }
+        const ordered = candidates
+          .map(b => ({ b, s: seeded(b.r * 211 + b.c * 419 + depth * 73 + 16001) }))
+          .sort((a, b) => b.s - a.s)
+          .map(x => x.b);
+        const countSeed = seeded(row * 53 + depth * 607 + 91);
+        const count = Math.min(ordered.length, force ? 2 : (countSeed > 0.86 ? 3 : countSeed > 0.38 ? 2 : 1));
+        const selected = ordered.slice(0, count);
+        selected.forEach((b, i) => {
+          b.faulted = true;
+          b.faultDip = seeded(b.r * 137 + b.c * 43 + i * 11) > 0.5 ? 1 : -1;
+          b.faultSeed = seeded(b.r * 673 + b.c * 17 + 22);
+        });
+        state.faultedRows[key] = selected.map(b => gridRef(b)).join(', ');
+        return selected;
+      };
+
+      pass16DrawPillarOverlay = function(block, r) {
+        if (!block || !block.isPillar || ['locked', 'void', 'rubble', 'damaged'].includes(block.status)) return;
+        const stateName = block.support ? 'supported' : (block.pillarState || 'stable');
+        const crackColour = stateName === 'critical' ? '#fecaca' : stateName === 'fractured' ? '#fed7aa' : stateName === 'spalling' ? '#fde68a' : stateName === 'cracking' ? '#fef3c7' : 'rgba(255,255,255,0.26)';
+        const borderColour = stateName === 'critical' ? '#ef4444' : stateName === 'fractured' ? '#fb923c' : stateName === 'spalling' ? '#fbbf24' : stateName === 'cracking' ? '#fde68a' : block.support ? '#bfdbfe' : '#f8fafc';
+        ctx.save();
+        if (stateName === 'critical') {
+          ctx.translate(Math.sin(anim * 24 + block.r) * r.w * 0.035, Math.cos(anim * 21 + block.c) * r.h * 0.028);
+        }
+        ctx.clearRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+        ctx.fillStyle = 'rgba(5,7,11,0.18)';
+        ctx.fillRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+        if (block.pillarRowActivated && stateName === 'stable') {
+          ctx.save();
+          ctx.globalAlpha = 0.30 + Math.sin(anim * 6 + block.r) * 0.08;
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = Math.max(1.5, r.w * 0.045);
+          ctx.strokeRect(r.x + r.w * 0.13, r.y + r.h * 0.13, r.w * 0.74, r.h * 0.74);
+          ctx.restore();
+        }
+        ctx.strokeStyle = borderColour;
+        ctx.lineWidth = Math.max(2.4, r.w * 0.085);
+        ctx.strokeRect(r.x + r.w * 0.10, r.y + r.h * 0.10, r.w * 0.80, r.h * 0.80);
+        if (stateName === 'cracking' || stateName === 'spalling' || stateName === 'fractured' || stateName === 'critical') {
+          ctx.strokeStyle = crackColour;
+          ctx.lineWidth = Math.max(1.5, r.w * 0.045);
+          ctx.beginPath();
+          ctx.moveTo(r.x + r.w * 0.24, r.y + r.h * 0.18);
+          ctx.lineTo(r.x + r.w * 0.43, r.y + r.h * 0.39);
+          ctx.lineTo(r.x + r.w * 0.36, r.y + r.h * 0.55);
+          ctx.lineTo(r.x + r.w * 0.58, r.y + r.h * 0.82);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(r.x + r.w * 0.76, r.y + r.h * 0.24);
+          ctx.lineTo(r.x + r.w * 0.58, r.y + r.h * 0.48);
+          ctx.lineTo(r.x + r.w * 0.70, r.y + r.h * 0.66);
+          ctx.stroke();
+        }
+        if (block.support) {
+          ctx.strokeStyle = '#93c5fd';
+          ctx.lineWidth = Math.max(2, r.w * 0.06);
+          ctx.beginPath();
+          ctx.moveTo(r.x + r.w * 0.22, r.y + r.h * 0.50);
+          ctx.lineTo(r.x + r.w * 0.78, r.y + r.h * 0.50);
+          ctx.moveTo(r.x + r.w * 0.50, r.y + r.h * 0.22);
+          ctx.lineTo(r.x + r.w * 0.50, r.y + r.h * 0.78);
+          ctx.stroke();
+        }
+        if (stateName === 'critical') {
+          ctx.save();
+          ctx.globalAlpha = 0.42 + Math.sin(anim * 12) * 0.16;
+          ctx.strokeStyle = '#fee2e2';
+          ctx.lineWidth = Math.max(2, r.w * 0.06);
+          ctx.strokeRect(r.x + r.w * 0.04, r.y + r.h * 0.04, r.w * 0.92, r.h * 0.92);
+          ctx.restore();
+        }
+        ctx.fillStyle = stateName === 'critical' ? '#fee2e2' : '#f8fafc';
+        ctx.font = '900 ' + Math.max(9, r.w * 0.34) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('P', r.x + r.w / 2, r.y + r.h / 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.38)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+        ctx.restore();
+      };
+
+      function pass18RoleMissingMessage(roleKey) {
+        const role = roleName(roleKey || 'fitter');
+        if (roleKey === 'surveyor') return 'Belt advancement requires a Surveyor. The belt cannot be advanced based on vibes, however strongly held.';
+        if (roleKey === 'electrician') return 'No Electrician is currently hired. Hire an Electrician before resetting electrical faults or restoring selective lighting.';
+        if (roleKey === 'miner') return 'No Miner is currently hired. Hire a Miner before asking the crew to dig out the belt with optimism.';
+        return `No ${role} is currently hired. Hire a ${role} from HR before attempting this repair.`;
+      }
+
+      function pass18PolishAssetsButtons() {
+        if (state.pass17CurrentWindowType !== 'assets') return;
+        const callFitter = document.querySelector('[data-call-fitter]');
+        if (callFitter && !fitterOnCrew() && (state.machine.status === 'broken' || state.machine.condition < 100)) {
+          callFitter.disabled = false;
+          callFitter.textContent = 'Must hire a Fitter';
+          callFitter.removeAttribute('data-call-fitter');
+          callFitter.setAttribute('data-repair-help', 'fitter');
+        }
+        const conveyorFix = document.querySelector('[data-conveyor-fix]');
+        if (conveyorFix && state.conveyor && state.conveyor.status === 'stopped' && !conveyorWorkerForFault()) {
+          const info = conveyorFaultInfo();
+          const role = info && info.role ? info.role : 'fitter';
+          conveyorFix.disabled = false;
+          conveyorFix.textContent = 'Must hire a ' + roleName(role);
+          conveyorFix.removeAttribute('data-conveyor-fix');
+          conveyorFix.setAttribute('data-repair-help', role);
+        }
+        const lighting = document.querySelector('[data-restore-lighting]');
+        if (lighting && powerOutageActive() && !crewByRole('electrician')) {
+          lighting.disabled = false;
+          lighting.textContent = 'Must hire an Electrician';
+          lighting.removeAttribute('data-restore-lighting');
+          lighting.setAttribute('data-repair-help', 'electrician');
+        }
+        const beltExtend = document.querySelector('[data-belt-extend]');
+        if (beltExtend && featureUnlocked('beltAdvancement') && !surveyorOnCrew()) {
+          beltExtend.disabled = false;
+          beltExtend.textContent = 'Must hire a Surveyor';
+          beltExtend.removeAttribute('data-belt-extend');
+          beltExtend.setAttribute('data-repair-help', 'surveyor');
+        }
+      }
+
+      const pass18OpenWindowBase = openWindow;
+      openWindow = function(type, forceReportComplete = false, customTitle = null) {
+        const result = pass18OpenWindowBase(type, forceReportComplete, customTitle);
+        if (type === 'assets') pass18PolishAssetsButtons();
+        return result;
+      };
+
+      document.addEventListener('click', function(e) {
+        const help = e.target.closest('[data-repair-help]');
+        if (!help) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const role = help.getAttribute('data-repair-help');
+        showProductionComment(pass18RoleMissingMessage(role), 'Asset Reliability', 5.5);
+        openMiniWindow('Missing Role Required', `<p>${escapeHtml(pass18RoleMissingMessage(role))}</p><div class="btnRow"><button data-window="hr">Open HR Recruitment</button><button data-close>Close</button></div>`, true);
+      }, true);
+
+      state.annualTargets = sanitiseFixedPhaseTargets(targetsForYear(state.year), state.year);
+
+
       applyAnnualTargetUnlockGuards();
 
 
