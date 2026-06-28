@@ -21119,6 +21119,177 @@
       };
 
 
+
+      // Pass 15: corrective final overrides for fixes that pass14 accidentally allowed later JS to overwrite.
+      // Keep the pass10 toolbar/remote layout, but reapply year-end actual-v-target rows and the Year 2 row-8 exploration cap at the final override point.
+      function pass15KpiActualText(key, target = activeAnnualTargets()) {
+        const t = target || {};
+        const tonnesTarget = Math.round(t.tonnes || TARGET_TONNES);
+        const gradeTarget = Number(t.grade || TARGET_GRADE);
+        if (key === 'bulkSample' || key === 'productionDelivery') {
+          return `${Math.round(annualTonnes()).toLocaleString()} / ${tonnesTarget.toLocaleString()}t mined · ${annualGrade().toFixed(2)} / ${gradeTarget.toFixed(2)}% grade`;
+        }
+        if (key === 'tonnes') return `${Math.round(annualTonnes()).toLocaleString()} / ${tonnesTarget.toLocaleString()}t mined`;
+        if (key === 'grade') return `${annualGrade().toFixed(2)} / ${gradeTarget.toFixed(2)}% minimum grade`;
+        if (key === 'exploration') return `${state.exploration.discoveredRowsThisYear || 0} / ${Math.round(t.discoveredRows || 0)} rows unlocked`;
+        if (key === 'surplus') return `${money(state.cash)} / ${money(t.surplusTarget || 0)} minimum Operating Surplus`;
+        if (key === 'lom') {
+          const lom = lifeOfMineMetrics();
+          return `${Math.round(lom.tonnes).toLocaleString()} / ${Math.round(t.lomTargetTonnes || 0).toLocaleString()}t Ore Reserve Inventory`;
+        }
+        if (key === 'technical') return `${technicalTeamCoverage()} / ${Math.round(t.technicalHires || 0)} technical roles filled`;
+        if (key === 'ground') return `${state.pillarSupportsThisYear || 0} / ${Math.round(t.pillarSupports || 0)} pillars supported · ${annualPillarFailures()} / ${typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99 ? t.maxPillarFailures : 0} failures`;
+        if (key === 'fleet') return `${Math.round(secondMinerAnnualTonnes()).toLocaleString()} / ${Math.round(t.secondMinerTonnes || 0).toLocaleString()}t mined by 2ndHOPE`;
+        if (key === 'belt') return `${state.beltExtensionsThisYear || 0} / ${Math.round(t.beltExtensions || 0)} belt advancements`;
+        if (key === 'safety') return `${Math.round(traitValue('safety'))} / ${Math.round(t.safetyMin || 0)} Safety Floor`;
+        if (key === 'ventilation') return `${ventilationKpiReady() ? 'Ready' : 'Not ready'} / Ventilation Engineer + Mine Fan installed`;
+        if (key === 'sharePrice') return `${formatSharePrice(state.sharePrice)} / ${formatSharePrice(t.sharePriceTarget || state.sharePriceTarget)} target`;
+        if (key === 'advance1100') return `${(Number(state.depthIndex) || 0) >= 1 ? 'Reached -1100 Level' : 'Still on -1000 Level'} / Reach -1100 Level`;
+        return formatMetricTargetValue(key, t);
+      }
+
+      const pass15FixedKpiStrictPassedBase = fixedKpiStrictPassed;
+      fixedKpiStrictPassed = function(key, target = activeAnnualTargets()) {
+        const t = target || {};
+        if (key === 'tonnes') return annualTonnes() >= (t.tonnes || TARGET_TONNES);
+        if (key === 'grade') return annualGrade() >= (t.grade || TARGET_GRADE);
+        if (key === 'bulkSample' || key === 'productionDelivery') return annualTonnes() >= (t.tonnes || TARGET_TONNES) && annualGrade() >= (t.grade || TARGET_GRADE);
+        if (key === 'exploration') return (state.exploration.discoveredRowsThisYear || 0) >= (t.discoveredRows || 0);
+        if (key === 'surplus') return state.cash >= (t.surplusTarget || 0);
+        if (key === 'lom') return lifeOfMineMetrics().tonnes >= (t.lomTargetTonnes || 0);
+        if (key === 'technical') return technicalTeamCoverage() >= (t.technicalHires || 0);
+        if (key === 'ground') return (state.pillarSupportsThisYear || 0) >= (t.pillarSupports || 0) && annualPillarFailures() <= (typeof t.maxPillarFailures === 'number' ? t.maxPillarFailures : 99);
+        if (key === 'fleet') return !!(state.assets && state.assets.secondMinerOwned) && secondMinerAnnualTonnes() >= (t.secondMinerTonnes || 0);
+        if (key === 'belt') return (state.beltExtensionsThisYear || 0) >= (t.beltExtensions || 0);
+        if (key === 'safety') return traitValue('safety') >= (t.safetyMin || 0);
+        if (key === 'ventilation') return ventilationKpiReady();
+        if (key === 'sharePrice') return (state.sharePrice || 0) >= (t.sharePriceTarget || state.sharePriceTarget || 0);
+        if (key === 'advance1100') return (Number(state.depthIndex) || 0) >= 1;
+        return pass15FixedKpiStrictPassedBase(key, t);
+      };
+
+      function pass15YearEndKpiKeys(target = activeAnnualTargets()) {
+        const t = target || {};
+        if (Array.isArray(t.kpiKeys) && t.kpiKeys.length) return t.kpiKeys;
+        return focusKpiKeysForYear(state.year);
+      }
+
+      function pass15YearEndKpiRowsHtml(target = activeAnnualTargets()) {
+        return pass15YearEndKpiKeys(target).map(key => {
+          const passed = fixedKpiStrictPassed(key, target);
+          const title = metricLabelForKey(key);
+          const actual = pass15KpiActualText(key, target);
+          const targetText = formatMetricTargetValue(key, target);
+          return `<div class="yearEndKpiOutcomeRow ${passed ? 'pass' : 'fail'}"><div class="kpiOutcomeDot"></div><div><strong>${escapeHtml(title)}</strong><span><strong>${escapeHtml(actual)}</strong></span><span>Target: ${escapeHtml(targetText)}</span></div><div class="kpiOutcomeTag">${passed ? 'Met' : 'Missed'}</div></div>`;
+        }).join('');
+      }
+
+      annualKpiStatusList = function() {
+        const target = activeAnnualTargets();
+        return pass15YearEndKpiKeys(target).map(key => {
+          const card = focusedMetricCard(key, target);
+          let status = card && card.status ? card.status : (fixedKpiStrictPassed(key, target) ? 'onTrack' : 'failing');
+          if (dayOfYear() >= YEAR_LENGTH_DAYS || state.yearReviewDue) status = fixedKpiStrictPassed(key, target) ? 'onTrack' : 'failing';
+          return { key, title: metricLabelForKey(key), status };
+        });
+      };
+
+      annualTargetPassed = function() {
+        const target = activeAnnualTargets();
+        return pass15YearEndKpiKeys(target).every(key => fixedKpiStrictPassed(key, target));
+      };
+
+      openAnnualPerformanceReview = function(rating, fired) {
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        const target = activeAnnualTargets();
+        const ratingText = rating === 'successful' ? 'Successful' : 'Needs Improvement';
+        const pipText = fired
+          ? `<div class="pipNotice"><strong>PIP outcome:</strong> The Performance Improvement Plan has successfully identified a performance improvement opportunity outside the organisation.</div>`
+          : rating === 'needsImprovement'
+            ? `<div class="pipNotice"><strong>Performance Improvement Plan:</strong> You have been placed on a supportive process designed to help you understand that next year’s failure will be treated differently.</div>`
+            : `<div class="pipNotice"><strong>PIP status:</strong> Cleared. Previous underperformance has been temporarily reinterpreted as development.</div>`;
+        const pleadButton = rating === 'needsImprovement' ? `<button class="warn" data-plead-case>${fired ? 'Plead for Reconsideration' : 'Plead Your Case'}</button>` : '';
+        const buttonHtml = fired
+          ? `<button class="primary" data-accept-reassignment>Accept Reassignment</button>${pleadButton}`
+          : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>${pleadButton}`;
+        const successRecognitionHtml = rating === 'successful' ? annualSuccessRecognitionHtml(state.year) : '';
+        const rowsHtml = pass15YearEndKpiRowsHtml(target);
+        const body = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Annual Moderation Panel', 'The KPI package was fixed for the phase, which means failure can be attributed to execution with greater confidence.', 'SLT')}
+          <div class="letter"><h2>Annual Performance Review — Year ${state.year}</h2><p>Dear Mine Manager,</p><p>The <strong>Superior Leadership Team</strong> has completed your annual review against the fixed KPI package for <strong>${escapeHtml(target.phaseTitle || 'the current operating phase')}</strong>.</p>${annualReviewRatingHtml(rating === 'successful' ? 'successful' : 'needs')}<p><strong>Rating:</strong> ${ratingText}</p><div data-pass15-yearend-kpis><h3>KPI Outcome</h3><div class="yearEndKpiOutcomeGrid">${rowsHtml}</div></div>${pipText}${successRecognitionHtml}<p>${rating === 'successful' ? 'Your success confirms the targets were realistic and therefore suitable for upward revision next time.' : fired ? 'Unfortunately, two consecutive Needs Improvement ratings mean the organisation must now support your development from a safer distance.' : 'The SLT remains confident that next year will demonstrate improvement, particularly now that the consequences have been explained.'}</p><p class="sig">Superior Leadership Team<br>ManySalts Mine<br>Delivering Value Through Other People</p></div><div class="btnRow">${buttonHtml}</div>`;
+        showPreparedModal('Annual Performance Review', body, { closable: false, windowClass: 'window medium', images: ['assets/characters/slt-silhouette.png'] });
+      };
+
+      function pass15YearTwoExplorationCapActive() {
+        return (Number(state.year) || 1) === 2 && (Number(state.depthIndex) || 0) === 0;
+      }
+
+      function pass15YearTwoCapGridRow() { return 8; }
+
+      function pass15NextExplorationWouldExceedYearTwoCap() {
+        const row = nextExplorationRow();
+        return row === null || gridRowNumber(row) > pass15YearTwoCapGridRow();
+      }
+
+      function pass15ShowYearTwoExplorationLimit() {
+        state.shaftDeepeningAvailable = false;
+        state.shaftDeepeningOfferShown = false;
+        openMiniWindow('Year 2 Exploration Limit', '<p>Year 2 reserve confirmation is limited to <strong>Grid Row 8</strong>. The Superior Leadership Team has reserved deeper justification for next year, when the same evidence can support a larger announcement.</p><p>Continue mining and complete the current operating year. Shaft deepening remains a Year 3 strategic objective.</p>', true);
+      }
+
+      const pass15CanApproveShaftDeepeningBase = canApproveShaftDeepening;
+      canApproveShaftDeepening = function() {
+        if (pass15YearTwoExplorationCapActive()) return false;
+        return pass15CanApproveShaftDeepeningBase();
+      };
+
+      const pass15OpenShaftDeepeningProposalBase = openShaftDeepeningProposal;
+      openShaftDeepeningProposal = function() {
+        if (pass15YearTwoExplorationCapActive()) {
+          state.shaftDeepeningAvailable = false;
+          state.shaftDeepeningOfferShown = false;
+          openMiniWindow('Shaft Deepening Deferred', '<p>The -1100 Level cannot be unlocked in Year 2. The current year is for reserve confirmation only; the strategic decision to go deeper has been scheduled for Year 3 so it can be described as disciplined capital allocation.</p>', true);
+          return;
+        }
+        return pass15OpenShaftDeepeningProposalBase();
+      };
+
+      const pass15MarkShaftDeepeningAvailableBase = markShaftDeepeningAvailable;
+      markShaftDeepeningAvailable = function(showModal = true) {
+        if (pass15YearTwoExplorationCapActive()) {
+          state.shaftDeepeningAvailable = false;
+          state.shaftDeepeningOfferShown = false;
+          if (showModal) pass15ShowYearTwoExplorationLimit();
+          return;
+        }
+        return pass15MarkShaftDeepeningAvailableBase(showModal);
+      };
+
+      const pass15StartExplorationProgramBase = startExplorationProgram;
+      startExplorationProgram = function() {
+        if (pass15YearTwoExplorationCapActive()) {
+          if (hasReachedLevelTransition() || pass15NextExplorationWouldExceedYearTwoCap()) {
+            pass15ShowYearTwoExplorationLimit();
+            return;
+          }
+        }
+        return pass15StartExplorationProgramBase();
+      };
+
+      const pass15CompleteExplorationProgramBase = completeExplorationProgram;
+      completeExplorationProgram = function() {
+        const rowBefore = state.exploration ? state.exploration.row : null;
+        const result = pass15CompleteExplorationProgramBase();
+        if (pass15YearTwoExplorationCapActive()) {
+          state.shaftDeepeningAvailable = false;
+          state.shaftDeepeningOfferShown = false;
+          if (rowBefore !== null && rowBefore >= 0 && gridRowNumber(rowBefore) >= pass15YearTwoCapGridRow()) {
+            showProductionComment('Year 2 exploration cap reached at Grid Row 8. Further depth justification has been deferred to next year.', 'Exploration', 5.5);
+          }
+        }
+        return result;
+      };
+
       ensureDrillingRestrictionState();
 
       applyAnnualTargetUnlockGuards();
