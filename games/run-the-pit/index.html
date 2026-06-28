@@ -18889,6 +18889,548 @@
       applyAnnualTargetUnlockGuards();
 
 
+      /* Pass 21: selected new decision, informative and HR bubble events, plus permanent Dev Tools grouping cleanup. */
+      const PASS21_ASSETS = {
+        externalLocal: 'assets/images/external_affairs_subsidence.png',
+        sltVisit: 'assets/images/slt_site_visit.png',
+        payroll: 'assets/characters/mr-b-counter.png',
+        modelConflict: 'assets/characters/geology-rock-lickers.png'
+      };
+
+      function pass21CanRunAnnualEvent(key, minYear = 1) {
+        if ((Number(state.year) || 1) < minYear) return false;
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        const fullKey = 'pass21_' + key + '_year';
+        return state[fullKey] !== state.year;
+      }
+
+      function pass21MarkAnnualEvent(key) {
+        state['pass21_' + key + '_year'] = state.year;
+        state['pass21_' + key + '_day'] = state.day;
+      }
+
+      function pass21ShareDelta(amount, reason) {
+        ensureSharePriceState();
+        if (typeof adjustSharePrice === 'function') adjustSharePrice(amount, reason);
+      }
+
+      function openPass21ExternalLocalComplaintEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('externalLocalComplaint', 2)) return false;
+        pass21MarkAnnualEvent('externalLocalComplaint');
+        const body = `${modalCharacterHtml(PASS21_ASSETS.externalLocal, 'External Affairs', 'Community Complaint Handling', 'A local concern has been converted into a stakeholder interface opportunity.', 'EXT')}
+          <p>A local resident has reported a vibration.</p>
+          <p>External Affairs says this could be caused by mining, traffic, weather, historic workings, or an insufficiently patriotic attitude toward industry.</p>
+          <p><strong>Management response required.</strong></p>
+          <div class="beltDecisionGrid">
+            <button class="eventChoiceBtn positive" data-pass21-ext-local-choice="investigate"><strong>Investigate Properly</strong><span>Costs money, improves credibility, and may reveal something inconvenient.</span></button>
+            <button class="eventChoiceBtn" data-pass21-ext-local-choice="letter"><strong>Send a Reassuring Letter</strong><span>Low cost. High confidence. Limited relationship with facts.</span></button>
+            <button class="eventChoiceBtn positive" data-pass21-ext-local-choice="raffle"><strong>Sponsor the Village Raffle</strong><span>Spend cash to convert concern into community interface visibility.</span></button>
+            <button class="eventChoiceBtn negative" data-pass21-ext-local-choice="historic"><strong>Blame Historic Workings</strong><span>Cheap, traditional, and available even when the workings are not historic.</span></button>
+          </div>`;
+        showPreparedModal('External Affairs: Local Complaint', body, { closable: false, windowClass: 'window medium', images: [PASS21_ASSETS.externalLocal] });
+        return true;
+      }
+
+      function resolvePass21ExternalLocalComplaint(choice) {
+        let title = 'Local Complaint Response';
+        let tone = 'info';
+        let body = '';
+        let shareDelta = 0;
+        if (choice === 'investigate') {
+          const cost = scaledCost(2600);
+          spend(cost, 'Local vibration investigation');
+          adjustTrait('safety', 1); adjustTrait('skill', 1); adjustTrait('productivity', -1);
+          tone = 'good'; shareDelta = -1;
+          body = `<p>The complaint has been investigated properly. This has created facts, which External Affairs describes as useful but difficult to control.</p><p><strong>Impact:</strong> ${money(cost)} investigation cost, +1 Safety, +1 Skill, -1 Productivity, minor short-term market discomfort.</p>`;
+        } else if (choice === 'letter') {
+          const cost = scaledCost(450);
+          spend(cost, 'Reassuring letter');
+          state.pass21CommunityConcernRisk = (state.pass21CommunityConcernRisk || 0) + 1;
+          tone = 'info'; shareDelta = 1;
+          body = `<p>A reassuring letter has been sent. It contains three uses of the word robust and no measurements.</p><p><strong>Impact:</strong> ${money(cost)} letter cost, +1p share-price optics, higher chance the issue returns with attachments.</p>`;
+        } else if (choice === 'raffle') {
+          const cost = scaledCost(2200);
+          spend(cost, 'Village raffle sponsorship');
+          adjustTrait('morale', 1);
+          tone = 'good'; shareDelta = 2;
+          body = `<p>The village raffle has received sponsorship. The complaint has not been resolved, but it is now standing next to a banner with your logo on it.</p><p><strong>Impact:</strong> ${money(cost)} community spend, +1 Morale, +2p share-price optics.</p>`;
+        } else {
+          state.pass21CommunityConcernRisk = (state.pass21CommunityConcernRisk || 0) + 2;
+          adjustTrait('safety', -1); adjustTrait('morale', -1);
+          tone = 'warning'; shareDelta = 1;
+          body = `<p>The vibration has been attributed to historic workings. Production appreciates the flexibility of history as a root cause.</p><p><strong>Impact:</strong> +1p short-term share-price optics, -1 Safety, -1 Morale, increased future community escalation risk.</p>`;
+        }
+        openDecisionOutcomeModal({ title, image: PASS21_ASSETS.externalLocal, character: 'External Affairs', department: 'Community Interface', label: 'EXT', tone, body, shareDelta, button: 'Update Stakeholder Narrative' });
+      }
+
+      function pass21VisitStateSummary() {
+        const t = Math.round(annualTonnes());
+        const g = annualGrade();
+        const safety = traitValue('safety');
+        const morale = traitValue('morale');
+        return `Current operating story: ${t.toLocaleString()}t mined, ${g ? g.toFixed(2) : '0.00'}% Goldilocks Grade, Safety ${Math.round(safety)}, Morale ${Math.round(morale)}.`;
+      }
+
+      function openPass21SltSiteVisitEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('sltSiteVisit', 2)) return false;
+        pass21MarkAnnualEvent('sltSiteVisit');
+        const body = `${modalCharacterHtml(PASS21_ASSETS.sltVisit, 'Superior Leadership Team', 'Strategic Visibility Visit', 'Senior leaders are visiting the pit to observe progress without becoming responsible for conditions.', 'SLT')}
+          <p>SLT are visiting the pit and would like to see progress, confidence, and no evidence that either requires money.</p>
+          <p>${escapeHtml(pass21VisitStateSummary())}</p>
+          <p><strong>How should the visit be managed?</strong></p>
+          <div class="beltDecisionGrid">
+            <button class="eventChoiceBtn" data-pass21-slt-visit-choice="real"><strong>Show Them the Real Operation</strong><span>Honest, risky, and not usually how visits are done.</span></button>
+            <button class="eventChoiceBtn positive" data-pass21-slt-visit-choice="controlled"><strong>Prepare a Controlled Route</strong><span>Spend time and cash to keep leaders near laminated confidence.</span></button>
+            <button class="eventChoiceBtn" data-pass21-slt-visit-choice="belt"><strong>Park Them Near the Best-Looking Belt</strong><span>Low cost. Depends heavily on whether the belt behaves.</span></button>
+            <button class="eventChoiceBtn negative" data-pass21-slt-visit-choice="ppeHope"><strong>Give Them PPE and Hope</strong><span>Maximum authenticity. Minimum containment.</span></button>
+          </div>`;
+        showPreparedModal('SLT Site Visit', body, { closable: false, windowClass: 'window medium', images: [PASS21_ASSETS.sltVisit] });
+        return true;
+      }
+
+      function resolvePass21SltSiteVisit(choice) {
+        let title = 'SLT Site Visit Outcome';
+        let tone = 'info';
+        let body = '';
+        let shareDelta = 0;
+        const safeOperation = traitValue('safety') >= 65 && traitValue('morale') >= 55 && !powerOutageActive();
+        if (choice === 'real') {
+          if (safeOperation || Math.random() < 0.42) {
+            adjustTrait('morale', 2); adjustTrait('skill', 1);
+            shareDelta = 3; tone = 'good';
+            body = `<p>SLT saw the real operation and briefly mistook operational competence for the natural outcome of strategy.</p><p><strong>Impact:</strong> +2 Morale, +1 Skill, +3p share-price confidence.</p>`;
+          } else {
+            adjustTrait('morale', -2); adjustTrait('productivity', -2);
+            spend(scaledCost(1800), 'Emergency visit management');
+            shareDelta = -4; tone = 'warning';
+            body = `<p>SLT saw the real operation. Several leaders asked why the dashboard had not prepared them emotionally.</p><p><strong>Impact:</strong> -2 Morale, -2 Productivity, emergency visit-management cost, -4p share-price confidence.</p>`;
+          }
+        } else if (choice === 'controlled') {
+          const cost = scaledCost(2400);
+          spend(cost, 'Controlled SLT visit route');
+          adjustTrait('productivity', -1);
+          shareDelta = 2; tone = 'good';
+          body = `<p>A controlled route has been prepared. SLT viewed the cleanest version of reality and confirmed the strategy is working.</p><p><strong>Impact:</strong> ${money(cost)} preparation cost, -1 Productivity, +2p share-price confidence.</p>`;
+        } else if (choice === 'belt') {
+          const beltGood = state.conveyor && state.conveyor.status === 'running' && !state.conveyor.fault && Math.random() < 0.72;
+          if (beltGood) {
+            shareDelta = 2; tone = 'good'; adjustTrait('productivity', 1);
+            body = `<p>The belt ran for the entire visit. SLT has concluded haulage availability is solved permanently.</p><p><strong>Impact:</strong> +1 Productivity, +2p share-price confidence. The belt is under no obligation to repeat this behaviour.</p>`;
+          } else {
+            shareDelta = -3; tone = 'warning'; adjustTrait('morale', -2);
+            body = `<p>The belt made an unusual noise while SLT were standing near it. Mine Services described this as unfortunate timing and statistically normal behaviour.</p><p><strong>Impact:</strong> -2 Morale, -3p share-price confidence.</p>`;
+          }
+        } else {
+          if (Math.random() < 0.35) {
+            shareDelta = 5; tone = 'good'; adjustTrait('morale', 3);
+            body = `<p>SLT enjoyed the authentic underground experience and have returned to surface describing themselves as operationally connected.</p><p><strong>Impact:</strong> +3 Morale, +5p share-price confidence. Several leaders have requested framed photographs.</p>`;
+          } else {
+            shareDelta = -6; tone = 'danger'; adjustTrait('safety', -2); adjustTrait('morale', -3); spend(scaledCost(2200), 'SLT visit recovery');
+            body = `<p>Giving SLT PPE and hope produced too much reality. One leader asked whether the mine always contained mining.</p><p><strong>Impact:</strong> -2 Safety, -3 Morale, visit recovery cost, -6p share-price confidence.</p>`;
+          }
+        }
+        openDecisionOutcomeModal({ title, image: PASS21_ASSETS.sltVisit, character: 'Superior Leadership Team', department: 'Strategic Visit Consequences', label: 'SLT', tone, body, shareDelta, button: 'Return to Work Before They Suggest Something' });
+      }
+
+      function openPass21PayrollFreezeEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('payrollFreeze', 1)) return false;
+        if (!force && pass21ActiveStaff && pass21ActiveStaff().length < 4) return false;
+        pass21MarkAnnualEvent('payrollFreeze');
+        const cost = scaledCost(900 + Math.max(0, (state.staff || []).length - 3) * 110);
+        spend(cost, 'Payroll exception handling');
+        adjustTrait('morale', -2);
+        state.hrCooldown = Math.max(state.hrCooldown || 0, 5);
+        openOperationalEventModal({
+          title: 'Payroll System Freeze',
+          image: PASS21_ASSETS.payroll,
+          character: 'Payroll and Finance',
+          department: 'Salary Continuity Prevention',
+          label: 'PAY',
+          tone: 'warning',
+          body: `<p>Payroll has frozen because two employees have the same surname, similar initials, or an attitude the system has interpreted as duplication.</p><p>The issue has been classified as fraud, family, or both, pending a spreadsheet from HR that will almost certainly make it worse.</p><p><strong>Impact:</strong> ${money(cost)} exception-handling cost, -2 Morale. HR event pressure has increased because nothing motivates engagement like pay uncertainty.</p>`,
+          button: 'Accept Payroll Reality'
+        });
+        return true;
+      }
+
+      function pass21ApplyModelConflictToBlocks() {
+        const candidates = (state.blocks[MINE_ID] || []).filter(b => b && b.status === 'solid' && !b.isPillar && !b.sterilised && Number(b.tonnes) > 0 && !b.reconciled);
+        const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+        const count = Math.min(4, Math.max(1, Math.floor(shuffled.length * 0.12)));
+        for (const b of shuffled.slice(0, count)) {
+          const current = typeof b.estimatedGrade === 'number' ? b.estimatedGrade : b.grade;
+          const delta = (Math.random() < 0.5 ? -1 : 1) * rand(0.25, 0.85);
+          b.estimatedGrade = clamp(current + delta, 6.5, 18.5);
+          b.gradeConfidence = Math.max(0.25, (Number(b.gradeConfidence) || 0.7) - 0.18);
+          b.modelVersionConflict = true;
+        }
+        return count;
+      }
+
+      function openPass21ModelVersionConflictEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('modelVersionConflict', 2)) return false;
+        pass21MarkAnnualEvent('modelVersionConflict');
+        const changed = pass21ApplyModelConflictToBlocks();
+        adjustTrait('skill', -2);
+        state.pass21ModelVersionConflictUntil = state.day + 45;
+        openOperationalEventModal({
+          title: 'Technical Model Version Conflict',
+          image: PASS21_ASSETS.modelConflict,
+          character: 'Geology Department',
+          department: 'Model Governance and Filename Strategy',
+          label: 'GEO',
+          tone: 'warning',
+          body: `<p>Two versions of the geological model are currently active.</p><p>Geology says the correct one is the one with yesterday's date but today's filename. Mining Engineering says the other one is in the schedule. Survey says both are in the wrong folder.</p><p><strong>Impact:</strong> ${changed} interpreted block${changed === 1 ? '' : 's'} now have reduced model confidence, -2 Skill. Future grade reconciliation may be less emotionally supportive.</p>`,
+          button: 'Accept Version-Controlled Uncertainty'
+        });
+        return true;
+      }
+
+      const pass21AllStaffRoles = ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor', 'ventilationEngineer'];
+
+      const pass21HrTemplates = [
+        {
+          type: 'notMyJob', icon: '↔', roles: pass21AllStaffRoles, title: 'Role Boundary Clarification', quote: '“That is not my job.”',
+          text: '{name} has clarified that the task is not in their job description, despite being the reason they were hired.',
+          buttons: [
+            { label: 'Respect Boundaries', choice: 'respectBoundaries' },
+            { label: 'Update the Job Description', choice: 'updateJobDescription' },
+            { label: 'Ask Them to Be Flexible', choice: 'askFlexibility' },
+            { label: 'Promote Them Away From It', choice: 'promoteAway' }
+          ]
+        },
+        {
+          type: 'certificateExpired', icon: '📄', roles: pass21AllStaffRoles, title: 'Training Certificate Expired', quote: '“Am I still allowed?”',
+          text: '{name}\'s training certificate has expired. They remain fully competent, but now only informally.',
+          buttons: [
+            { label: 'Send to Training', choice: 'sendTrainingCert' },
+            { label: 'Let Them Work Under Supervision', choice: 'workUnderSupervision' },
+            { label: 'Ask HR to Extend the Date', choice: 'extendTrainingDate' },
+            { label: 'Pretend It Is in Another System', choice: 'pretendOtherSystem' }
+          ]
+        },
+        {
+          type: 'toolOwnership', icon: '🔩', roles: pass21AllStaffRoles, title: 'Tool Ownership Dispute', quote: '“Someone has borrowed my tools.”',
+          text: '{name} says their tools have been borrowed by another department, which is workplace language for stolen slowly.',
+          buttons: [
+            { label: 'Buy Replacements', choice: 'buyReplacementTools' },
+            { label: 'Investigate Properly', choice: 'investigateTools' },
+            { label: 'Tell Them to Share', choice: 'shareTools' },
+            { label: 'Label Everything Aggressively', choice: 'labelToolsAggressively' }
+          ]
+        },
+        {
+          type: 'teaEscalation', icon: '☕', roles: pass21AllStaffRoles, title: 'Tea Break Escalation', quote: '“The break system has collapsed.”',
+          text: '{name} reports that tea-break discipline has collapsed into an unregulated beverage environment.',
+          buttons: [
+            { label: 'Enforce Break Times', choice: 'enforceTeaBreaks' },
+            { label: 'Install a Rota', choice: 'teaRota' },
+            { label: 'Ignore It', choice: 'ignoreTeaEscalation' },
+            { label: 'Form a Beverage Governance Group', choice: 'beverageGovernance' }
+          ]
+        },
+        {
+          type: 'actingUpPay', icon: '£', roles: pass21AllStaffRoles, title: 'Acting Up Pay Claim', quote: '“I have been doing a higher-grade role.”',
+          text: '{name} says they have been doing a higher-grade role. Management confirms this is called development until pay is mentioned.',
+          buttons: [
+            { label: 'Pay Acting Allowance', choice: 'payActingAllowance' },
+            { label: 'Thank Them for Growth Mindset', choice: 'growthMindsetThanks' },
+            { label: 'Rotate the Duty', choice: 'rotateActingDuty' },
+            { label: 'Ask HR to Review Indefinitely', choice: 'hrReviewIndefinitely' }
+          ]
+        },
+        {
+          type: 'refusesSystem', icon: '💾', roles: pass21AllStaffRoles, title: 'New System Resistance', quote: '“The spreadsheet had character.”',
+          text: '{name} refuses to use the new reporting system because the old spreadsheet had “character”.',
+          buttons: [
+            { label: 'Provide Training', choice: 'systemTraining' },
+            { label: 'Force Compliance', choice: 'forceSystemCompliance' },
+            { label: 'Let Them Keep the Spreadsheet', choice: 'allowSpreadsheet' },
+            { label: 'Rename the App After Them', choice: 'renameAppAfterStaff' }
+          ]
+        },
+        {
+          type: 'ppeComplaint', icon: '⛑', roles: pass21AllStaffRoles, title: 'PPE Complaint', quote: '“It technically fits.”',
+          text: '{name} says their PPE technically fits, but only if breathing is considered optional.',
+          buttons: [
+            { label: 'Issue Correct PPE', choice: 'issueCorrectPpe' },
+            { label: 'Tell Stores to Check Stock', choice: 'storesCheckPpe' },
+            { label: 'Ask Them to Make Do', choice: 'makeDoPpe' },
+            { label: 'Start a PPE Comfort Survey', choice: 'ppeComfortSurvey' }
+          ]
+        },
+        {
+          type: 'handoverComplaint', icon: '⇄', roles: pass21AllStaffRoles, title: 'Shift Handover Complaint', quote: '“They left us a drawing and the word careful.”',
+          text: '{name} says the previous shift left no useful handover, only a drawing, three arrows, and the word “careful”.',
+          buttons: [
+            { label: 'Improve Handover Process', choice: 'improveHandover' },
+            { label: 'Blame Previous Shift', choice: 'blamePreviousShift' },
+            { label: 'Reward the Drawing', choice: 'rewardDrawing' },
+            { label: 'Add Another Mandatory Form', choice: 'addHandoverForm' }
+          ]
+        },
+        {
+          type: 'tooManyMeetings', icon: '☷', roles: pass21AllStaffRoles, title: 'Too Many Meetings', quote: '“I am in a meeting about why I have no time.”',
+          text: '{name} says they cannot complete their work because they are too busy attending meetings about why work is not complete.',
+          buttons: [
+            { label: 'Cancel Meetings', choice: 'cancelMeetings' },
+            { label: 'Make Meetings Shorter', choice: 'shortenMeetings' },
+            { label: 'Add a Meeting Efficiency Meeting', choice: 'meetingEfficiencyMeeting' },
+            { label: 'Tell Them Attendance Shows Engagement', choice: 'attendanceEngagement' }
+          ]
+        },
+        {
+          type: 'skillConfidence', icon: '★', roles: pass21AllStaffRoles, title: 'Skill Confidence Problem', quote: '“I know exactly what I am doing.”',
+          text: '{name} is technically capable but has recently discovered confidence, which may be more dangerous.',
+          buttons: [
+            { label: 'Mentor Them', choice: 'mentorConfidence' },
+            { label: 'Let Them Lead a Task', choice: 'leadTaskConfidence' },
+            { label: 'Pair With Supervisor', choice: 'supervisorPairConfidence' },
+            { label: 'Encourage Them Publicly', choice: 'publicEncouragementRegret' }
+          ]
+        }
+      ];
+
+      for (const t of pass21HrTemplates) {
+        if (!staffBubbleTemplates.some(existing => existing.type === t.type)) staffBubbleTemplates.push(t);
+      }
+
+      Object.assign(choiceImpactMeta, {
+        respectBoundaries: { tone: 'positive', text: '+1 Morale, -1 Productivity' },
+        updateJobDescription: { tone: 'positive', text: '+1 Productivity, -£300' },
+        askFlexibility: { tone: 'negative', text: '+1 Productivity, -2 Morale' },
+        promoteAway: { tone: 'negative', text: '-1 Productivity, -£700, problem moved' },
+        sendTrainingCert: { tone: 'positive', text: '+2 Safety, +1 Skill, -£1,200' },
+        workUnderSupervision: { tone: 'negative', text: '-1 Productivity, +1 Safety' },
+        extendTrainingDate: { tone: 'negative', text: '+1 Productivity, -1 Safety' },
+        pretendOtherSystem: { tone: 'negative', text: '+1 Productivity, -2 Safety' },
+        buyReplacementTools: { tone: 'positive', text: '+2 Productivity, -£900' },
+        investigateTools: { tone: 'positive', text: '+1 Morale, -1 Productivity' },
+        shareTools: { tone: 'negative', text: '-2 Morale, free' },
+        labelToolsAggressively: { tone: 'positive', text: '+1 Productivity, -£120' },
+        enforceTeaBreaks: { tone: 'negative', text: '+1 Productivity, -2 Morale' },
+        teaRota: { tone: 'positive', text: '+1 Morale, -1 Productivity' },
+        ignoreTeaEscalation: { tone: 'negative', text: '-1 Productivity, -1 Morale' },
+        beverageGovernance: { tone: 'negative', text: '+1 Morale, -2 Productivity, -£180' },
+        payActingAllowance: { tone: 'positive', text: '+3 Morale, -£1,100' },
+        growthMindsetThanks: { tone: 'negative', text: '-3 Morale, +1 Productivity' },
+        rotateActingDuty: { tone: 'positive', text: '+1 Morale, +1 Skill, -1 Productivity' },
+        hrReviewIndefinitely: { tone: 'negative', text: '-1 Morale, no decision' },
+        systemTraining: { tone: 'positive', text: '+1 Skill, -1 Productivity, -£600' },
+        forceSystemCompliance: { tone: 'negative', text: '+2 Productivity, -2 Morale' },
+        allowSpreadsheet: { tone: 'negative', text: '+1 Morale, -2 Skill' },
+        renameAppAfterStaff: { tone: 'positive', text: '+2 Morale, -£250' },
+        issueCorrectPpe: { tone: 'positive', text: '+2 Safety, +1 Morale, -£500' },
+        storesCheckPpe: { tone: 'negative', text: '+1 Safety, -1 Productivity' },
+        makeDoPpe: { tone: 'negative', text: '-3 Safety, -2 Morale' },
+        ppeComfortSurvey: { tone: 'negative', text: '+1 Morale, -1 Productivity, -£150' },
+        improveHandover: { tone: 'positive', text: '+2 Skill, +1 Safety, -1 Productivity' },
+        blamePreviousShift: { tone: 'negative', text: '+1 Productivity, -2 Morale' },
+        rewardDrawing: { tone: 'positive', text: '+1 Morale, -£75' },
+        addHandoverForm: { tone: 'negative', text: '+1 Safety, -2 Productivity' },
+        cancelMeetings: { tone: 'positive', text: '+3 Productivity, +1 Morale' },
+        shortenMeetings: { tone: 'positive', text: '+1 Productivity, +1 Morale' },
+        meetingEfficiencyMeeting: { tone: 'negative', text: '-3 Productivity, -£220' },
+        attendanceEngagement: { tone: 'negative', text: '-2 Morale, no cost' },
+        mentorConfidence: { tone: 'positive', text: '+2 Skill, +1 Safety, -£300' },
+        leadTaskConfidence: { tone: 'negative', text: '+2 Productivity, -2 Safety, random risk' },
+        supervisorPairConfidence: { tone: 'positive', text: '+1 Skill, +1 Safety, -1 Productivity' },
+        publicEncouragementRegret: { tone: 'negative', text: '+1 Morale, -2 Safety' }
+      });
+
+      function pass21ResolveHrChoice(staff, choice) {
+        const s = staff;
+        const improveMorale = (amount = 1) => { s.morale = Math.min(5, s.morale + amount); };
+        const reduceMorale = (amount = 1) => { s.morale = Math.max(1, s.morale - amount); };
+        const improveSkill = (amount = 1) => { s.skill = Math.min(5, s.skill + amount); };
+        const reduceSkill = (amount = 1) => { s.skill = Math.max(1, s.skill - amount); };
+        const improveAttendance = (amount = 1) => { s.attendance = Math.min(5, s.attendance + amount); };
+        const reduceAttendance = (amount = 1) => { s.attendance = Math.max(1, s.attendance - amount); };
+        const workCost = (n, label) => spend(scaledCost(n), label);
+
+        const actions = {
+          respectBoundaries: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          updateJobDescription: () => { workCost(300, 'Job description revision'); adjustTrait('productivity', 1); },
+          askFlexibility: () => { reduceMorale(1); adjustTrait('morale', -2); adjustTrait('productivity', 1); },
+          promoteAway: () => { workCost(700, 'Role redesign'); adjustTrait('productivity', -1); improveMorale(1); },
+          sendTrainingCert: () => { workCost(1200, 'Certificate renewal'); improveSkill(1); adjustTrait('safety', 2); adjustTrait('skill', 1); },
+          workUnderSupervision: () => { adjustTrait('productivity', -1); adjustTrait('safety', 1); },
+          extendTrainingDate: () => { adjustTrait('productivity', 1); adjustTrait('safety', -1); state.pass21TrainingAuditRisk = (state.pass21TrainingAuditRisk || 0) + 1; },
+          pretendOtherSystem: () => { adjustTrait('productivity', 1); adjustTrait('safety', -2); state.pass21TrainingAuditRisk = (state.pass21TrainingAuditRisk || 0) + 2; },
+          buyReplacementTools: () => { workCost(900, 'Replacement tools'); adjustTrait('productivity', 2); },
+          investigateTools: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          shareTools: () => { reduceMorale(1); adjustTrait('morale', -2); },
+          labelToolsAggressively: () => { workCost(120, 'Aggressive tool labels'); adjustTrait('productivity', 1); },
+          enforceTeaBreaks: () => { reduceMorale(1); adjustTrait('morale', -2); adjustTrait('productivity', 1); },
+          teaRota: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          ignoreTeaEscalation: () => { adjustTrait('productivity', -1); adjustTrait('morale', -1); },
+          beverageGovernance: () => { workCost(180, 'Beverage governance group'); improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -2); },
+          payActingAllowance: () => { workCost(1100, 'Acting allowance'); improveMorale(1); adjustTrait('morale', 3); },
+          growthMindsetThanks: () => { reduceMorale(1); adjustTrait('morale', -3); adjustTrait('productivity', 1); },
+          rotateActingDuty: () => { improveMorale(1); improveSkill(1); adjustTrait('skill', 1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          hrReviewIndefinitely: () => { adjustTrait('morale', -1); state.hrCooldown = Math.max(state.hrCooldown || 0, 4); },
+          systemTraining: () => { workCost(600, 'Reporting system training'); improveSkill(1); adjustTrait('skill', 1); adjustTrait('productivity', -1); },
+          forceSystemCompliance: () => { reduceMorale(1); adjustTrait('productivity', 2); adjustTrait('morale', -2); },
+          allowSpreadsheet: () => { improveMorale(1); reduceSkill(1); adjustTrait('morale', 1); adjustTrait('skill', -2); },
+          renameAppAfterStaff: () => { workCost(250, 'App renaming workshop'); improveMorale(1); adjustTrait('morale', 2); },
+          issueCorrectPpe: () => { workCost(500, 'Correct PPE issue'); improveMorale(1); adjustTrait('safety', 2); adjustTrait('morale', 1); },
+          storesCheckPpe: () => { adjustTrait('safety', 1); adjustTrait('productivity', -1); },
+          makeDoPpe: () => { reduceMorale(1); adjustTrait('safety', -3); adjustTrait('morale', -2); },
+          ppeComfortSurvey: () => { workCost(150, 'PPE comfort survey'); improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          improveHandover: () => { improveSkill(1); adjustTrait('skill', 2); adjustTrait('safety', 1); adjustTrait('productivity', -1); },
+          blamePreviousShift: () => { reduceMorale(1); adjustTrait('productivity', 1); adjustTrait('morale', -2); },
+          rewardDrawing: () => { workCost(75, 'Handover drawing recognition'); improveMorale(1); adjustTrait('morale', 1); },
+          addHandoverForm: () => { adjustTrait('safety', 1); adjustTrait('productivity', -2); },
+          cancelMeetings: () => { improveMorale(1); adjustTrait('productivity', 3); adjustTrait('morale', 1); },
+          shortenMeetings: () => { adjustTrait('productivity', 1); adjustTrait('morale', 1); },
+          meetingEfficiencyMeeting: () => { workCost(220, 'Meeting efficiency meeting'); adjustTrait('productivity', -3); },
+          attendanceEngagement: () => { reduceMorale(1); adjustTrait('morale', -2); },
+          mentorConfidence: () => { workCost(300, 'Confidence mentoring'); improveSkill(1); adjustTrait('skill', 2); adjustTrait('safety', 1); },
+          leadTaskConfidence: () => { adjustTrait('productivity', 2); adjustTrait('safety', -2); if (Math.random() < 0.22) state.machine.condition = Math.max(0, (state.machine.condition || 80) - 4); },
+          supervisorPairConfidence: () => { improveSkill(1); adjustTrait('skill', 1); adjustTrait('safety', 1); adjustTrait('productivity', -1); },
+          publicEncouragementRegret: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('safety', -2); }
+        };
+        if (!actions[choice]) return false;
+        actions[choice]();
+        state.hrEventsResolved = (state.hrEventsResolved || 0) + 1;
+        s.bubble = null;
+        setModalClosable(true);
+        $('modalOverlay').classList.remove('show');
+        updatePanelCrewTiles(true);
+        return true;
+      }
+
+      const pass21EventChoiceBase = eventChoice;
+      eventChoice = function(staffId, choice) {
+        const s = state.staff.find(x => x.id === staffId);
+        if (s && pass21ResolveHrChoice(s, choice)) return;
+        return pass21EventChoiceBase(staffId, choice);
+      };
+
+      function pass21ForceHrBubble(type) {
+        const template = staffBubbleTemplates.find(t => t.type === type);
+        if (!template) { openMiniWindow('Dev Tool', '<p>No matching HR event template was found.</p>', true); return; }
+        const staff = (state.staff || []).find(s => !s.bubble && (!template.roles || template.roles.includes(s.role))) || (state.staff || []).find(s => !template.roles || template.roles.includes(s.role));
+        if (!staff) { openMiniWindow('Dev Tool', '<p>No suitable staff member is available for this HR event.</p>', true); return; }
+        staff.bubble = { type: template.type, icon: template.icon };
+        playGameSound('hr');
+        openStaffEvent(staff.id);
+      }
+
+      function maybePass21Events() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        const y = Number(state.year) || 1;
+        const day = Number(state.day) || 0;
+        if (y >= 2 && day % 73 === 0 && state.pass21_externalLocalComplaint_year !== state.year && Math.random() < 0.18) return openPass21ExternalLocalComplaintEvent(false);
+        if (y >= 2 && day % 97 === 0 && state.pass21_sltSiteVisit_year !== state.year && Math.random() < 0.16) return openPass21SltSiteVisitEvent(false);
+        if (day % 83 === 0 && state.pass21_payrollFreeze_year !== state.year && (state.staff || []).length >= 4 && Math.random() < 0.15) return openPass21PayrollFreezeEvent(false);
+        if (y >= 2 && day % 67 === 0 && state.pass21_modelVersionConflict_year !== state.year && Math.random() < 0.16) return openPass21ModelVersionConflictEvent(false);
+        return false;
+      }
+
+      const pass21UpdateBase = update;
+      update = function(dt) {
+        const beforeDay = state.day;
+        const result = pass21UpdateBase(dt);
+        if (state.day !== beforeDay) maybePass21Events();
+        return result;
+      };
+
+      const pass21DevActionBase = devAction;
+      devAction = function(action) {
+        if (action === 'external-local-complaint') { openPass21ExternalLocalComplaintEvent(true); return; }
+        if (action === 'slt-site-visit') { openPass21SltSiteVisitEvent(true); return; }
+        if (action === 'payroll-freeze') { openPass21PayrollFreezeEvent(true); return; }
+        if (action === 'model-version-conflict') { openPass21ModelVersionConflictEvent(true); return; }
+        if (action && action.startsWith('hr21-')) { pass21ForceHrBubble(action.replace('hr21-', '')); return; }
+        return pass21DevActionBase(action);
+      };
+
+      const pass21EnhanceDevToolsBase = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        pass21EnhanceDevToolsBase();
+        const body = $('modalBody');
+        if (!body) return;
+        const grid = body.querySelector('.devToolGrid');
+        if (!grid) return;
+
+        const cardByTitle = (title) => Array.from(body.querySelectorAll('.devToolCard')).find(card => ((card.querySelector('h3') || {}).textContent || '').trim() === title);
+        const ensureCard = (title, desc) => {
+          let card = cardByTitle(title);
+          if (!card) {
+            grid.insertAdjacentHTML('beforeend', `<section class="devToolCard"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p><div class="devToolBtns"></div></section>`);
+            card = cardByTitle(title);
+          }
+          return card;
+        };
+        const appendButton = (title, desc, action, label) => {
+          const card = ensureCard(title, desc);
+          const btns = card && card.querySelector('.devToolBtns');
+          if (!btns || btns.querySelector(`[data-dev-action="${action}"]`)) return;
+          btns.insertAdjacentHTML('beforeend', `<button data-dev-action="${escapeHtml(action)}">${escapeHtml(label)}</button>`);
+        };
+        const moveButton = (btn, title, desc) => {
+          const action = btn.getAttribute('data-dev-action');
+          if (!action) return;
+          appendButton(title, desc, action, btn.textContent.trim() || action);
+        };
+
+        // New pass21 controls in permanent categories.
+        appendButton('Decision Modals', 'Two-stage flow: decision modal closes, separate outcome modal opens.', 'external-local-complaint', 'Local Complaint');
+        appendButton('Decision Modals', 'Two-stage flow: decision modal closes, separate outcome modal opens.', 'slt-site-visit', 'SLT Site Visit');
+        appendButton('Informative Modals', 'One-stage events: information is shown, impact is applied, then the player acknowledges.', 'payroll-freeze', 'Payroll Freeze');
+        appendButton('Informative Modals', 'One-stage events: information is shown, impact is applied, then the player acknowledges.', 'model-version-conflict', 'Model Version Conflict');
+
+        const hrNames = [
+          ['notMyJob', 'Not My Job'], ['certificateExpired', 'Certificate Expired'], ['toolOwnership', 'Tool Ownership'], ['teaEscalation', 'Tea Escalation'], ['actingUpPay', 'Acting Up Pay'],
+          ['refusesSystem', 'System Resistance'], ['ppeComplaint', 'PPE Complaint'], ['handoverComplaint', 'Handover Complaint'], ['tooManyMeetings', 'Too Many Meetings'], ['skillConfidence', 'Skill Confidence']
+        ];
+        for (const [type, label] of hrNames) appendButton('HR Bubble Events', 'Crew-linked bubbles: open on staff, resolve with a compact HR choice, then clear.', 'hr21-' + type, label);
+
+        // Remove pass-labelled cards, but keep their buttons by sorting them into permanent categories first.
+        const route = {
+          'force-year3-depth-kpi': ['Progression / Game State', 'Move time, force annual review outcomes, and test shaft deepening gating.'],
+          'external-trees': ['Decision Modals', 'Two-stage flow: decision modal closes, separate outcome modal opens.'],
+          'unlock-ground-control': ['Role / Mechanic Intros', 'Open progression explanations without waiting for level/year triggers.'],
+          'late-skip-factor': ['Informative Modals', 'One-stage events: information is shown, impact is applied, then the player acknowledges.'],
+          'low-tonnes-complaint': ['HR Bubble Events', 'Crew-linked bubbles: open on staff, resolve with a compact HR choice, then clear.'],
+          'force-fault-row': ['Mine / Ground State', 'Manipulate exploration, ground-control states, rubble, gas and water.'],
+          'pillar-deteriorate': ['Mine / Ground State', 'Manipulate exploration, ground-control states, rubble, gas and water.'],
+          'row-activate-pillars': ['Mine / Ground State', 'Manipulate exploration, ground-control states, rubble, gas and water.'],
+          'release-deferred-events': ['Debug / State Testing', 'Release queued conditions and test internal state without waiting.']
+        };
+        Array.from(body.querySelectorAll('.devToolCard')).forEach(card => {
+          const title = ((card.querySelector('h3') || {}).textContent || '').trim();
+          if (!/^Pass\s+\d+/i.test(title)) return;
+          card.querySelectorAll('[data-dev-action]').forEach(btn => {
+            const action = btn.getAttribute('data-dev-action');
+            const target = route[action] || ['Debug / State Testing', 'Release queued conditions and test internal state without waiting.'];
+            moveButton(btn, target[0], target[1]);
+          });
+          const parent = card.parentElement;
+          card.remove();
+          if (parent && parent.matches('[data-pass4-dev-tools], [data-pass5-dev-tools], [data-pass6-dev-tools], [data-pass7-dev-tools], [data-pass16-dev-tools]') && !parent.querySelector('.devToolCard')) parent.remove();
+        });
+
+        // De-duplicate buttons by dev action within each group.
+        body.querySelectorAll('.devToolBtns').forEach(group => {
+          const seen = new Set();
+          Array.from(group.querySelectorAll('[data-dev-action]')).forEach(btn => {
+            const action = btn.getAttribute('data-dev-action');
+            if (seen.has(action)) btn.remove();
+            else seen.add(action);
+          });
+        });
+      };
+
+      document.addEventListener('click', function(e) {
+        const localBtn = e.target.closest('[data-pass21-ext-local-choice]');
+        if (localBtn) { e.preventDefault(); resolvePass21ExternalLocalComplaint(localBtn.dataset.pass21ExtLocalChoice); return; }
+        const visitBtn = e.target.closest('[data-pass21-slt-visit-choice]');
+        if (visitBtn) { e.preventDefault(); resolvePass21SltSiteVisit(visitBtn.dataset.pass21SltVisitChoice); return; }
+      }, true);
+
+
       ensureDrillingRestrictionState();
         if (!state.exploration.drillingSuspended) return '';
         return `<div class="drillingSuspensionNotice"><strong>Exploration drilling suspended by SLT.</strong><br>Drillers remain paid during outage. Geology remains disappointed. Programmes in progress are paused until the resumption notice arrives.</div>`;
@@ -23049,6 +23591,843 @@
         const disputeBtn = e.target.closest('[data-pass19-dispute-choice]');
         if (disputeBtn) { e.preventDefault(); resolvePass19EmployeeDispute(disputeBtn.dataset.pass19DisputeChoice); return; }
       }, true);
+
+
+      /* Pass 21: selected new decision, informative and HR bubble events, plus permanent Dev Tools grouping cleanup. */
+      const PASS21_ASSETS = {
+        externalLocal: 'assets/images/external_affairs_subsidence.png',
+        sltVisit: 'assets/images/slt_site_visit.png',
+        payroll: 'assets/characters/mr-b-counter.png',
+        modelConflict: 'assets/characters/geology-rock-lickers.png'
+      };
+
+      function pass21CanRunAnnualEvent(key, minYear = 1) {
+        if ((Number(state.year) || 1) < minYear) return false;
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        const fullKey = 'pass21_' + key + '_year';
+        return state[fullKey] !== state.year;
+      }
+
+      function pass21MarkAnnualEvent(key) {
+        state['pass21_' + key + '_year'] = state.year;
+        state['pass21_' + key + '_day'] = state.day;
+      }
+
+      function pass21ShareDelta(amount, reason) {
+        ensureSharePriceState();
+        if (typeof adjustSharePrice === 'function') adjustSharePrice(amount, reason);
+      }
+
+      function openPass21ExternalLocalComplaintEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('externalLocalComplaint', 2)) return false;
+        pass21MarkAnnualEvent('externalLocalComplaint');
+        const body = `${modalCharacterHtml(PASS21_ASSETS.externalLocal, 'External Affairs', 'Community Complaint Handling', 'A local concern has been converted into a stakeholder interface opportunity.', 'EXT')}
+          <p>A local resident has reported a vibration.</p>
+          <p>External Affairs says this could be caused by mining, traffic, weather, historic workings, or an insufficiently patriotic attitude toward industry.</p>
+          <p><strong>Management response required.</strong></p>
+          <div class="beltDecisionGrid">
+            <button class="eventChoiceBtn positive" data-pass21-ext-local-choice="investigate"><strong>Investigate Properly</strong><span>Costs money, improves credibility, and may reveal something inconvenient.</span></button>
+            <button class="eventChoiceBtn" data-pass21-ext-local-choice="letter"><strong>Send a Reassuring Letter</strong><span>Low cost. High confidence. Limited relationship with facts.</span></button>
+            <button class="eventChoiceBtn positive" data-pass21-ext-local-choice="raffle"><strong>Sponsor the Village Raffle</strong><span>Spend cash to convert concern into community interface visibility.</span></button>
+            <button class="eventChoiceBtn negative" data-pass21-ext-local-choice="historic"><strong>Blame Historic Workings</strong><span>Cheap, traditional, and available even when the workings are not historic.</span></button>
+          </div>`;
+        showPreparedModal('External Affairs: Local Complaint', body, { closable: false, windowClass: 'window medium', images: [PASS21_ASSETS.externalLocal] });
+        return true;
+      }
+
+      function resolvePass21ExternalLocalComplaint(choice) {
+        let title = 'Local Complaint Response';
+        let tone = 'info';
+        let body = '';
+        let shareDelta = 0;
+        if (choice === 'investigate') {
+          const cost = scaledCost(2600);
+          spend(cost, 'Local vibration investigation');
+          adjustTrait('safety', 1); adjustTrait('skill', 1); adjustTrait('productivity', -1);
+          tone = 'good'; shareDelta = -1;
+          body = `<p>The complaint has been investigated properly. This has created facts, which External Affairs describes as useful but difficult to control.</p><p><strong>Impact:</strong> ${money(cost)} investigation cost, +1 Safety, +1 Skill, -1 Productivity, minor short-term market discomfort.</p>`;
+        } else if (choice === 'letter') {
+          const cost = scaledCost(450);
+          spend(cost, 'Reassuring letter');
+          state.pass21CommunityConcernRisk = (state.pass21CommunityConcernRisk || 0) + 1;
+          tone = 'info'; shareDelta = 1;
+          body = `<p>A reassuring letter has been sent. It contains three uses of the word robust and no measurements.</p><p><strong>Impact:</strong> ${money(cost)} letter cost, +1p share-price optics, higher chance the issue returns with attachments.</p>`;
+        } else if (choice === 'raffle') {
+          const cost = scaledCost(2200);
+          spend(cost, 'Village raffle sponsorship');
+          adjustTrait('morale', 1);
+          tone = 'good'; shareDelta = 2;
+          body = `<p>The village raffle has received sponsorship. The complaint has not been resolved, but it is now standing next to a banner with your logo on it.</p><p><strong>Impact:</strong> ${money(cost)} community spend, +1 Morale, +2p share-price optics.</p>`;
+        } else {
+          state.pass21CommunityConcernRisk = (state.pass21CommunityConcernRisk || 0) + 2;
+          adjustTrait('safety', -1); adjustTrait('morale', -1);
+          tone = 'warning'; shareDelta = 1;
+          body = `<p>The vibration has been attributed to historic workings. Production appreciates the flexibility of history as a root cause.</p><p><strong>Impact:</strong> +1p short-term share-price optics, -1 Safety, -1 Morale, increased future community escalation risk.</p>`;
+        }
+        openDecisionOutcomeModal({ title, image: PASS21_ASSETS.externalLocal, character: 'External Affairs', department: 'Community Interface', label: 'EXT', tone, body, shareDelta, button: 'Update Stakeholder Narrative' });
+      }
+
+      function pass21VisitStateSummary() {
+        const t = Math.round(annualTonnes());
+        const g = annualGrade();
+        const safety = traitValue('safety');
+        const morale = traitValue('morale');
+        return `Current operating story: ${t.toLocaleString()}t mined, ${g ? g.toFixed(2) : '0.00'}% Goldilocks Grade, Safety ${Math.round(safety)}, Morale ${Math.round(morale)}.`;
+      }
+
+      function openPass21SltSiteVisitEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('sltSiteVisit', 2)) return false;
+        pass21MarkAnnualEvent('sltSiteVisit');
+        const body = `${modalCharacterHtml(PASS21_ASSETS.sltVisit, 'Superior Leadership Team', 'Strategic Visibility Visit', 'Senior leaders are visiting the pit to observe progress without becoming responsible for conditions.', 'SLT')}
+          <p>SLT are visiting the pit and would like to see progress, confidence, and no evidence that either requires money.</p>
+          <p>${escapeHtml(pass21VisitStateSummary())}</p>
+          <p><strong>How should the visit be managed?</strong></p>
+          <div class="beltDecisionGrid">
+            <button class="eventChoiceBtn" data-pass21-slt-visit-choice="real"><strong>Show Them the Real Operation</strong><span>Honest, risky, and not usually how visits are done.</span></button>
+            <button class="eventChoiceBtn positive" data-pass21-slt-visit-choice="controlled"><strong>Prepare a Controlled Route</strong><span>Spend time and cash to keep leaders near laminated confidence.</span></button>
+            <button class="eventChoiceBtn" data-pass21-slt-visit-choice="belt"><strong>Park Them Near the Best-Looking Belt</strong><span>Low cost. Depends heavily on whether the belt behaves.</span></button>
+            <button class="eventChoiceBtn negative" data-pass21-slt-visit-choice="ppeHope"><strong>Give Them PPE and Hope</strong><span>Maximum authenticity. Minimum containment.</span></button>
+          </div>`;
+        showPreparedModal('SLT Site Visit', body, { closable: false, windowClass: 'window medium', images: [PASS21_ASSETS.sltVisit] });
+        return true;
+      }
+
+      function resolvePass21SltSiteVisit(choice) {
+        let title = 'SLT Site Visit Outcome';
+        let tone = 'info';
+        let body = '';
+        let shareDelta = 0;
+        const safeOperation = traitValue('safety') >= 65 && traitValue('morale') >= 55 && !powerOutageActive();
+        if (choice === 'real') {
+          if (safeOperation || Math.random() < 0.42) {
+            adjustTrait('morale', 2); adjustTrait('skill', 1);
+            shareDelta = 3; tone = 'good';
+            body = `<p>SLT saw the real operation and briefly mistook operational competence for the natural outcome of strategy.</p><p><strong>Impact:</strong> +2 Morale, +1 Skill, +3p share-price confidence.</p>`;
+          } else {
+            adjustTrait('morale', -2); adjustTrait('productivity', -2);
+            spend(scaledCost(1800), 'Emergency visit management');
+            shareDelta = -4; tone = 'warning';
+            body = `<p>SLT saw the real operation. Several leaders asked why the dashboard had not prepared them emotionally.</p><p><strong>Impact:</strong> -2 Morale, -2 Productivity, emergency visit-management cost, -4p share-price confidence.</p>`;
+          }
+        } else if (choice === 'controlled') {
+          const cost = scaledCost(2400);
+          spend(cost, 'Controlled SLT visit route');
+          adjustTrait('productivity', -1);
+          shareDelta = 2; tone = 'good';
+          body = `<p>A controlled route has been prepared. SLT viewed the cleanest version of reality and confirmed the strategy is working.</p><p><strong>Impact:</strong> ${money(cost)} preparation cost, -1 Productivity, +2p share-price confidence.</p>`;
+        } else if (choice === 'belt') {
+          const beltGood = state.conveyor && state.conveyor.status === 'running' && !state.conveyor.fault && Math.random() < 0.72;
+          if (beltGood) {
+            shareDelta = 2; tone = 'good'; adjustTrait('productivity', 1);
+            body = `<p>The belt ran for the entire visit. SLT has concluded haulage availability is solved permanently.</p><p><strong>Impact:</strong> +1 Productivity, +2p share-price confidence. The belt is under no obligation to repeat this behaviour.</p>`;
+          } else {
+            shareDelta = -3; tone = 'warning'; adjustTrait('morale', -2);
+            body = `<p>The belt made an unusual noise while SLT were standing near it. Mine Services described this as unfortunate timing and statistically normal behaviour.</p><p><strong>Impact:</strong> -2 Morale, -3p share-price confidence.</p>`;
+          }
+        } else {
+          if (Math.random() < 0.35) {
+            shareDelta = 5; tone = 'good'; adjustTrait('morale', 3);
+            body = `<p>SLT enjoyed the authentic underground experience and have returned to surface describing themselves as operationally connected.</p><p><strong>Impact:</strong> +3 Morale, +5p share-price confidence. Several leaders have requested framed photographs.</p>`;
+          } else {
+            shareDelta = -6; tone = 'danger'; adjustTrait('safety', -2); adjustTrait('morale', -3); spend(scaledCost(2200), 'SLT visit recovery');
+            body = `<p>Giving SLT PPE and hope produced too much reality. One leader asked whether the mine always contained mining.</p><p><strong>Impact:</strong> -2 Safety, -3 Morale, visit recovery cost, -6p share-price confidence.</p>`;
+          }
+        }
+        openDecisionOutcomeModal({ title, image: PASS21_ASSETS.sltVisit, character: 'Superior Leadership Team', department: 'Strategic Visit Consequences', label: 'SLT', tone, body, shareDelta, button: 'Return to Work Before They Suggest Something' });
+      }
+
+      function openPass21PayrollFreezeEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('payrollFreeze', 1)) return false;
+        if (!force && pass21ActiveStaff && pass21ActiveStaff().length < 4) return false;
+        pass21MarkAnnualEvent('payrollFreeze');
+        const cost = scaledCost(900 + Math.max(0, (state.staff || []).length - 3) * 110);
+        spend(cost, 'Payroll exception handling');
+        adjustTrait('morale', -2);
+        state.hrCooldown = Math.max(state.hrCooldown || 0, 5);
+        openOperationalEventModal({
+          title: 'Payroll System Freeze',
+          image: PASS21_ASSETS.payroll,
+          character: 'Payroll and Finance',
+          department: 'Salary Continuity Prevention',
+          label: 'PAY',
+          tone: 'warning',
+          body: `<p>Payroll has frozen because two employees have the same surname, similar initials, or an attitude the system has interpreted as duplication.</p><p>The issue has been classified as fraud, family, or both, pending a spreadsheet from HR that will almost certainly make it worse.</p><p><strong>Impact:</strong> ${money(cost)} exception-handling cost, -2 Morale. HR event pressure has increased because nothing motivates engagement like pay uncertainty.</p>`,
+          button: 'Accept Payroll Reality'
+        });
+        return true;
+      }
+
+      function pass21ApplyModelConflictToBlocks() {
+        const candidates = (state.blocks[MINE_ID] || []).filter(b => b && b.status === 'solid' && !b.isPillar && !b.sterilised && Number(b.tonnes) > 0 && !b.reconciled);
+        const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+        const count = Math.min(4, Math.max(1, Math.floor(shuffled.length * 0.12)));
+        for (const b of shuffled.slice(0, count)) {
+          const current = typeof b.estimatedGrade === 'number' ? b.estimatedGrade : b.grade;
+          const delta = (Math.random() < 0.5 ? -1 : 1) * rand(0.25, 0.85);
+          b.estimatedGrade = clamp(current + delta, 6.5, 18.5);
+          b.gradeConfidence = Math.max(0.25, (Number(b.gradeConfidence) || 0.7) - 0.18);
+          b.modelVersionConflict = true;
+        }
+        return count;
+      }
+
+      function openPass21ModelVersionConflictEvent(force = false) {
+        if (!force && !pass21CanRunAnnualEvent('modelVersionConflict', 2)) return false;
+        pass21MarkAnnualEvent('modelVersionConflict');
+        const changed = pass21ApplyModelConflictToBlocks();
+        adjustTrait('skill', -2);
+        state.pass21ModelVersionConflictUntil = state.day + 45;
+        openOperationalEventModal({
+          title: 'Technical Model Version Conflict',
+          image: PASS21_ASSETS.modelConflict,
+          character: 'Geology Department',
+          department: 'Model Governance and Filename Strategy',
+          label: 'GEO',
+          tone: 'warning',
+          body: `<p>Two versions of the geological model are currently active.</p><p>Geology says the correct one is the one with yesterday's date but today's filename. Mining Engineering says the other one is in the schedule. Survey says both are in the wrong folder.</p><p><strong>Impact:</strong> ${changed} interpreted block${changed === 1 ? '' : 's'} now have reduced model confidence, -2 Skill. Future grade reconciliation may be less emotionally supportive.</p>`,
+          button: 'Accept Version-Controlled Uncertainty'
+        });
+        return true;
+      }
+
+      const pass21AllStaffRoles = ['miner', 'fitter', 'electrician', 'supervisor', 'geologist', 'driller', 'miningEngineer', 'rockDoctor', 'surveyor', 'ventilationEngineer'];
+
+      const pass21HrTemplates = [
+        {
+          type: 'notMyJob', icon: '↔', roles: pass21AllStaffRoles, title: 'Role Boundary Clarification', quote: '“That is not my job.”',
+          text: '{name} has clarified that the task is not in their job description, despite being the reason they were hired.',
+          buttons: [
+            { label: 'Respect Boundaries', choice: 'respectBoundaries' },
+            { label: 'Update the Job Description', choice: 'updateJobDescription' },
+            { label: 'Ask Them to Be Flexible', choice: 'askFlexibility' },
+            { label: 'Promote Them Away From It', choice: 'promoteAway' }
+          ]
+        },
+        {
+          type: 'certificateExpired', icon: '📄', roles: pass21AllStaffRoles, title: 'Training Certificate Expired', quote: '“Am I still allowed?”',
+          text: '{name}\'s training certificate has expired. They remain fully competent, but now only informally.',
+          buttons: [
+            { label: 'Send to Training', choice: 'sendTrainingCert' },
+            { label: 'Let Them Work Under Supervision', choice: 'workUnderSupervision' },
+            { label: 'Ask HR to Extend the Date', choice: 'extendTrainingDate' },
+            { label: 'Pretend It Is in Another System', choice: 'pretendOtherSystem' }
+          ]
+        },
+        {
+          type: 'toolOwnership', icon: '🔩', roles: pass21AllStaffRoles, title: 'Tool Ownership Dispute', quote: '“Someone has borrowed my tools.”',
+          text: '{name} says their tools have been borrowed by another department, which is workplace language for stolen slowly.',
+          buttons: [
+            { label: 'Buy Replacements', choice: 'buyReplacementTools' },
+            { label: 'Investigate Properly', choice: 'investigateTools' },
+            { label: 'Tell Them to Share', choice: 'shareTools' },
+            { label: 'Label Everything Aggressively', choice: 'labelToolsAggressively' }
+          ]
+        },
+        {
+          type: 'teaEscalation', icon: '☕', roles: pass21AllStaffRoles, title: 'Tea Break Escalation', quote: '“The break system has collapsed.”',
+          text: '{name} reports that tea-break discipline has collapsed into an unregulated beverage environment.',
+          buttons: [
+            { label: 'Enforce Break Times', choice: 'enforceTeaBreaks' },
+            { label: 'Install a Rota', choice: 'teaRota' },
+            { label: 'Ignore It', choice: 'ignoreTeaEscalation' },
+            { label: 'Form a Beverage Governance Group', choice: 'beverageGovernance' }
+          ]
+        },
+        {
+          type: 'actingUpPay', icon: '£', roles: pass21AllStaffRoles, title: 'Acting Up Pay Claim', quote: '“I have been doing a higher-grade role.”',
+          text: '{name} says they have been doing a higher-grade role. Management confirms this is called development until pay is mentioned.',
+          buttons: [
+            { label: 'Pay Acting Allowance', choice: 'payActingAllowance' },
+            { label: 'Thank Them for Growth Mindset', choice: 'growthMindsetThanks' },
+            { label: 'Rotate the Duty', choice: 'rotateActingDuty' },
+            { label: 'Ask HR to Review Indefinitely', choice: 'hrReviewIndefinitely' }
+          ]
+        },
+        {
+          type: 'refusesSystem', icon: '💾', roles: pass21AllStaffRoles, title: 'New System Resistance', quote: '“The spreadsheet had character.”',
+          text: '{name} refuses to use the new reporting system because the old spreadsheet had “character”.',
+          buttons: [
+            { label: 'Provide Training', choice: 'systemTraining' },
+            { label: 'Force Compliance', choice: 'forceSystemCompliance' },
+            { label: 'Let Them Keep the Spreadsheet', choice: 'allowSpreadsheet' },
+            { label: 'Rename the App After Them', choice: 'renameAppAfterStaff' }
+          ]
+        },
+        {
+          type: 'ppeComplaint', icon: '⛑', roles: pass21AllStaffRoles, title: 'PPE Complaint', quote: '“It technically fits.”',
+          text: '{name} says their PPE technically fits, but only if breathing is considered optional.',
+          buttons: [
+            { label: 'Issue Correct PPE', choice: 'issueCorrectPpe' },
+            { label: 'Tell Stores to Check Stock', choice: 'storesCheckPpe' },
+            { label: 'Ask Them to Make Do', choice: 'makeDoPpe' },
+            { label: 'Start a PPE Comfort Survey', choice: 'ppeComfortSurvey' }
+          ]
+        },
+        {
+          type: 'handoverComplaint', icon: '⇄', roles: pass21AllStaffRoles, title: 'Shift Handover Complaint', quote: '“They left us a drawing and the word careful.”',
+          text: '{name} says the previous shift left no useful handover, only a drawing, three arrows, and the word “careful”.',
+          buttons: [
+            { label: 'Improve Handover Process', choice: 'improveHandover' },
+            { label: 'Blame Previous Shift', choice: 'blamePreviousShift' },
+            { label: 'Reward the Drawing', choice: 'rewardDrawing' },
+            { label: 'Add Another Mandatory Form', choice: 'addHandoverForm' }
+          ]
+        },
+        {
+          type: 'tooManyMeetings', icon: '☷', roles: pass21AllStaffRoles, title: 'Too Many Meetings', quote: '“I am in a meeting about why I have no time.”',
+          text: '{name} says they cannot complete their work because they are too busy attending meetings about why work is not complete.',
+          buttons: [
+            { label: 'Cancel Meetings', choice: 'cancelMeetings' },
+            { label: 'Make Meetings Shorter', choice: 'shortenMeetings' },
+            { label: 'Add a Meeting Efficiency Meeting', choice: 'meetingEfficiencyMeeting' },
+            { label: 'Tell Them Attendance Shows Engagement', choice: 'attendanceEngagement' }
+          ]
+        },
+        {
+          type: 'skillConfidence', icon: '★', roles: pass21AllStaffRoles, title: 'Skill Confidence Problem', quote: '“I know exactly what I am doing.”',
+          text: '{name} is technically capable but has recently discovered confidence, which may be more dangerous.',
+          buttons: [
+            { label: 'Mentor Them', choice: 'mentorConfidence' },
+            { label: 'Let Them Lead a Task', choice: 'leadTaskConfidence' },
+            { label: 'Pair With Supervisor', choice: 'supervisorPairConfidence' },
+            { label: 'Encourage Them Publicly', choice: 'publicEncouragementRegret' }
+          ]
+        }
+      ];
+
+      for (const t of pass21HrTemplates) {
+        if (!staffBubbleTemplates.some(existing => existing.type === t.type)) staffBubbleTemplates.push(t);
+      }
+
+      Object.assign(choiceImpactMeta, {
+        respectBoundaries: { tone: 'positive', text: '+1 Morale, -1 Productivity' },
+        updateJobDescription: { tone: 'positive', text: '+1 Productivity, -£300' },
+        askFlexibility: { tone: 'negative', text: '+1 Productivity, -2 Morale' },
+        promoteAway: { tone: 'negative', text: '-1 Productivity, -£700, problem moved' },
+        sendTrainingCert: { tone: 'positive', text: '+2 Safety, +1 Skill, -£1,200' },
+        workUnderSupervision: { tone: 'negative', text: '-1 Productivity, +1 Safety' },
+        extendTrainingDate: { tone: 'negative', text: '+1 Productivity, -1 Safety' },
+        pretendOtherSystem: { tone: 'negative', text: '+1 Productivity, -2 Safety' },
+        buyReplacementTools: { tone: 'positive', text: '+2 Productivity, -£900' },
+        investigateTools: { tone: 'positive', text: '+1 Morale, -1 Productivity' },
+        shareTools: { tone: 'negative', text: '-2 Morale, free' },
+        labelToolsAggressively: { tone: 'positive', text: '+1 Productivity, -£120' },
+        enforceTeaBreaks: { tone: 'negative', text: '+1 Productivity, -2 Morale' },
+        teaRota: { tone: 'positive', text: '+1 Morale, -1 Productivity' },
+        ignoreTeaEscalation: { tone: 'negative', text: '-1 Productivity, -1 Morale' },
+        beverageGovernance: { tone: 'negative', text: '+1 Morale, -2 Productivity, -£180' },
+        payActingAllowance: { tone: 'positive', text: '+3 Morale, -£1,100' },
+        growthMindsetThanks: { tone: 'negative', text: '-3 Morale, +1 Productivity' },
+        rotateActingDuty: { tone: 'positive', text: '+1 Morale, +1 Skill, -1 Productivity' },
+        hrReviewIndefinitely: { tone: 'negative', text: '-1 Morale, no decision' },
+        systemTraining: { tone: 'positive', text: '+1 Skill, -1 Productivity, -£600' },
+        forceSystemCompliance: { tone: 'negative', text: '+2 Productivity, -2 Morale' },
+        allowSpreadsheet: { tone: 'negative', text: '+1 Morale, -2 Skill' },
+        renameAppAfterStaff: { tone: 'positive', text: '+2 Morale, -£250' },
+        issueCorrectPpe: { tone: 'positive', text: '+2 Safety, +1 Morale, -£500' },
+        storesCheckPpe: { tone: 'negative', text: '+1 Safety, -1 Productivity' },
+        makeDoPpe: { tone: 'negative', text: '-3 Safety, -2 Morale' },
+        ppeComfortSurvey: { tone: 'negative', text: '+1 Morale, -1 Productivity, -£150' },
+        improveHandover: { tone: 'positive', text: '+2 Skill, +1 Safety, -1 Productivity' },
+        blamePreviousShift: { tone: 'negative', text: '+1 Productivity, -2 Morale' },
+        rewardDrawing: { tone: 'positive', text: '+1 Morale, -£75' },
+        addHandoverForm: { tone: 'negative', text: '+1 Safety, -2 Productivity' },
+        cancelMeetings: { tone: 'positive', text: '+3 Productivity, +1 Morale' },
+        shortenMeetings: { tone: 'positive', text: '+1 Productivity, +1 Morale' },
+        meetingEfficiencyMeeting: { tone: 'negative', text: '-3 Productivity, -£220' },
+        attendanceEngagement: { tone: 'negative', text: '-2 Morale, no cost' },
+        mentorConfidence: { tone: 'positive', text: '+2 Skill, +1 Safety, -£300' },
+        leadTaskConfidence: { tone: 'negative', text: '+2 Productivity, -2 Safety, random risk' },
+        supervisorPairConfidence: { tone: 'positive', text: '+1 Skill, +1 Safety, -1 Productivity' },
+        publicEncouragementRegret: { tone: 'negative', text: '+1 Morale, -2 Safety' }
+      });
+
+      function pass21ResolveHrChoice(staff, choice) {
+        const s = staff;
+        const improveMorale = (amount = 1) => { s.morale = Math.min(5, s.morale + amount); };
+        const reduceMorale = (amount = 1) => { s.morale = Math.max(1, s.morale - amount); };
+        const improveSkill = (amount = 1) => { s.skill = Math.min(5, s.skill + amount); };
+        const reduceSkill = (amount = 1) => { s.skill = Math.max(1, s.skill - amount); };
+        const improveAttendance = (amount = 1) => { s.attendance = Math.min(5, s.attendance + amount); };
+        const reduceAttendance = (amount = 1) => { s.attendance = Math.max(1, s.attendance - amount); };
+        const workCost = (n, label) => spend(scaledCost(n), label);
+
+        const actions = {
+          respectBoundaries: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          updateJobDescription: () => { workCost(300, 'Job description revision'); adjustTrait('productivity', 1); },
+          askFlexibility: () => { reduceMorale(1); adjustTrait('morale', -2); adjustTrait('productivity', 1); },
+          promoteAway: () => { workCost(700, 'Role redesign'); adjustTrait('productivity', -1); improveMorale(1); },
+          sendTrainingCert: () => { workCost(1200, 'Certificate renewal'); improveSkill(1); adjustTrait('safety', 2); adjustTrait('skill', 1); },
+          workUnderSupervision: () => { adjustTrait('productivity', -1); adjustTrait('safety', 1); },
+          extendTrainingDate: () => { adjustTrait('productivity', 1); adjustTrait('safety', -1); state.pass21TrainingAuditRisk = (state.pass21TrainingAuditRisk || 0) + 1; },
+          pretendOtherSystem: () => { adjustTrait('productivity', 1); adjustTrait('safety', -2); state.pass21TrainingAuditRisk = (state.pass21TrainingAuditRisk || 0) + 2; },
+          buyReplacementTools: () => { workCost(900, 'Replacement tools'); adjustTrait('productivity', 2); },
+          investigateTools: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          shareTools: () => { reduceMorale(1); adjustTrait('morale', -2); },
+          labelToolsAggressively: () => { workCost(120, 'Aggressive tool labels'); adjustTrait('productivity', 1); },
+          enforceTeaBreaks: () => { reduceMorale(1); adjustTrait('morale', -2); adjustTrait('productivity', 1); },
+          teaRota: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          ignoreTeaEscalation: () => { adjustTrait('productivity', -1); adjustTrait('morale', -1); },
+          beverageGovernance: () => { workCost(180, 'Beverage governance group'); improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -2); },
+          payActingAllowance: () => { workCost(1100, 'Acting allowance'); improveMorale(1); adjustTrait('morale', 3); },
+          growthMindsetThanks: () => { reduceMorale(1); adjustTrait('morale', -3); adjustTrait('productivity', 1); },
+          rotateActingDuty: () => { improveMorale(1); improveSkill(1); adjustTrait('skill', 1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          hrReviewIndefinitely: () => { adjustTrait('morale', -1); state.hrCooldown = Math.max(state.hrCooldown || 0, 4); },
+          systemTraining: () => { workCost(600, 'Reporting system training'); improveSkill(1); adjustTrait('skill', 1); adjustTrait('productivity', -1); },
+          forceSystemCompliance: () => { reduceMorale(1); adjustTrait('productivity', 2); adjustTrait('morale', -2); },
+          allowSpreadsheet: () => { improveMorale(1); reduceSkill(1); adjustTrait('morale', 1); adjustTrait('skill', -2); },
+          renameAppAfterStaff: () => { workCost(250, 'App renaming workshop'); improveMorale(1); adjustTrait('morale', 2); },
+          issueCorrectPpe: () => { workCost(500, 'Correct PPE issue'); improveMorale(1); adjustTrait('safety', 2); adjustTrait('morale', 1); },
+          storesCheckPpe: () => { adjustTrait('safety', 1); adjustTrait('productivity', -1); },
+          makeDoPpe: () => { reduceMorale(1); adjustTrait('safety', -3); adjustTrait('morale', -2); },
+          ppeComfortSurvey: () => { workCost(150, 'PPE comfort survey'); improveMorale(1); adjustTrait('morale', 1); adjustTrait('productivity', -1); },
+          improveHandover: () => { improveSkill(1); adjustTrait('skill', 2); adjustTrait('safety', 1); adjustTrait('productivity', -1); },
+          blamePreviousShift: () => { reduceMorale(1); adjustTrait('productivity', 1); adjustTrait('morale', -2); },
+          rewardDrawing: () => { workCost(75, 'Handover drawing recognition'); improveMorale(1); adjustTrait('morale', 1); },
+          addHandoverForm: () => { adjustTrait('safety', 1); adjustTrait('productivity', -2); },
+          cancelMeetings: () => { improveMorale(1); adjustTrait('productivity', 3); adjustTrait('morale', 1); },
+          shortenMeetings: () => { adjustTrait('productivity', 1); adjustTrait('morale', 1); },
+          meetingEfficiencyMeeting: () => { workCost(220, 'Meeting efficiency meeting'); adjustTrait('productivity', -3); },
+          attendanceEngagement: () => { reduceMorale(1); adjustTrait('morale', -2); },
+          mentorConfidence: () => { workCost(300, 'Confidence mentoring'); improveSkill(1); adjustTrait('skill', 2); adjustTrait('safety', 1); },
+          leadTaskConfidence: () => { adjustTrait('productivity', 2); adjustTrait('safety', -2); if (Math.random() < 0.22) state.machine.condition = Math.max(0, (state.machine.condition || 80) - 4); },
+          supervisorPairConfidence: () => { improveSkill(1); adjustTrait('skill', 1); adjustTrait('safety', 1); adjustTrait('productivity', -1); },
+          publicEncouragementRegret: () => { improveMorale(1); adjustTrait('morale', 1); adjustTrait('safety', -2); }
+        };
+        if (!actions[choice]) return false;
+        actions[choice]();
+        state.hrEventsResolved = (state.hrEventsResolved || 0) + 1;
+        s.bubble = null;
+        setModalClosable(true);
+        $('modalOverlay').classList.remove('show');
+        updatePanelCrewTiles(true);
+        return true;
+      }
+
+      const pass21EventChoiceBase = eventChoice;
+      eventChoice = function(staffId, choice) {
+        const s = state.staff.find(x => x.id === staffId);
+        if (s && pass21ResolveHrChoice(s, choice)) return;
+        return pass21EventChoiceBase(staffId, choice);
+      };
+
+      function pass21ForceHrBubble(type) {
+        const template = staffBubbleTemplates.find(t => t.type === type);
+        if (!template) { openMiniWindow('Dev Tool', '<p>No matching HR event template was found.</p>', true); return; }
+        const staff = (state.staff || []).find(s => !s.bubble && (!template.roles || template.roles.includes(s.role))) || (state.staff || []).find(s => !template.roles || template.roles.includes(s.role));
+        if (!staff) { openMiniWindow('Dev Tool', '<p>No suitable staff member is available for this HR event.</p>', true); return; }
+        staff.bubble = { type: template.type, icon: template.icon };
+        playGameSound('hr');
+        openStaffEvent(staff.id);
+      }
+
+      function maybePass21Events() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        const y = Number(state.year) || 1;
+        const day = Number(state.day) || 0;
+        if (y >= 2 && day % 73 === 0 && state.pass21_externalLocalComplaint_year !== state.year && Math.random() < 0.18) return openPass21ExternalLocalComplaintEvent(false);
+        if (y >= 2 && day % 97 === 0 && state.pass21_sltSiteVisit_year !== state.year && Math.random() < 0.16) return openPass21SltSiteVisitEvent(false);
+        if (day % 83 === 0 && state.pass21_payrollFreeze_year !== state.year && (state.staff || []).length >= 4 && Math.random() < 0.15) return openPass21PayrollFreezeEvent(false);
+        if (y >= 2 && day % 67 === 0 && state.pass21_modelVersionConflict_year !== state.year && Math.random() < 0.16) return openPass21ModelVersionConflictEvent(false);
+        return false;
+      }
+
+      const pass21UpdateBase = update;
+      update = function(dt) {
+        const beforeDay = state.day;
+        const result = pass21UpdateBase(dt);
+        if (state.day !== beforeDay) maybePass21Events();
+        return result;
+      };
+
+      const pass21DevActionBase = devAction;
+      devAction = function(action) {
+        if (action === 'external-local-complaint') { openPass21ExternalLocalComplaintEvent(true); return; }
+        if (action === 'slt-site-visit') { openPass21SltSiteVisitEvent(true); return; }
+        if (action === 'payroll-freeze') { openPass21PayrollFreezeEvent(true); return; }
+        if (action === 'model-version-conflict') { openPass21ModelVersionConflictEvent(true); return; }
+        if (action && action.startsWith('hr21-')) { pass21ForceHrBubble(action.replace('hr21-', '')); return; }
+        return pass21DevActionBase(action);
+      };
+
+      const pass21EnhanceDevToolsBase = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        pass21EnhanceDevToolsBase();
+        const body = $('modalBody');
+        if (!body) return;
+        const grid = body.querySelector('.devToolGrid');
+        if (!grid) return;
+
+        const cardByTitle = (title) => Array.from(body.querySelectorAll('.devToolCard')).find(card => ((card.querySelector('h3') || {}).textContent || '').trim() === title);
+        const ensureCard = (title, desc) => {
+          let card = cardByTitle(title);
+          if (!card) {
+            grid.insertAdjacentHTML('beforeend', `<section class="devToolCard"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p><div class="devToolBtns"></div></section>`);
+            card = cardByTitle(title);
+          }
+          return card;
+        };
+        const appendButton = (title, desc, action, label) => {
+          const card = ensureCard(title, desc);
+          const btns = card && card.querySelector('.devToolBtns');
+          if (!btns || btns.querySelector(`[data-dev-action="${action}"]`)) return;
+          btns.insertAdjacentHTML('beforeend', `<button data-dev-action="${escapeHtml(action)}">${escapeHtml(label)}</button>`);
+        };
+        const moveButton = (btn, title, desc) => {
+          const action = btn.getAttribute('data-dev-action');
+          if (!action) return;
+          appendButton(title, desc, action, btn.textContent.trim() || action);
+        };
+
+        // New pass21 controls in permanent categories.
+        appendButton('Decision Modals', 'Two-stage flow: decision modal closes, separate outcome modal opens.', 'external-local-complaint', 'Local Complaint');
+        appendButton('Decision Modals', 'Two-stage flow: decision modal closes, separate outcome modal opens.', 'slt-site-visit', 'SLT Site Visit');
+        appendButton('Informative Modals', 'One-stage events: information is shown, impact is applied, then the player acknowledges.', 'payroll-freeze', 'Payroll Freeze');
+        appendButton('Informative Modals', 'One-stage events: information is shown, impact is applied, then the player acknowledges.', 'model-version-conflict', 'Model Version Conflict');
+
+        const hrNames = [
+          ['notMyJob', 'Not My Job'], ['certificateExpired', 'Certificate Expired'], ['toolOwnership', 'Tool Ownership'], ['teaEscalation', 'Tea Escalation'], ['actingUpPay', 'Acting Up Pay'],
+          ['refusesSystem', 'System Resistance'], ['ppeComplaint', 'PPE Complaint'], ['handoverComplaint', 'Handover Complaint'], ['tooManyMeetings', 'Too Many Meetings'], ['skillConfidence', 'Skill Confidence']
+        ];
+        for (const [type, label] of hrNames) appendButton('HR Bubble Events', 'Crew-linked bubbles: open on staff, resolve with a compact HR choice, then clear.', 'hr21-' + type, label);
+
+        // Remove pass-labelled cards, but keep their buttons by sorting them into permanent categories first.
+        const route = {
+          'force-year3-depth-kpi': ['Progression / Game State', 'Move time, force annual review outcomes, and test shaft deepening gating.'],
+          'external-trees': ['Decision Modals', 'Two-stage flow: decision modal closes, separate outcome modal opens.'],
+          'unlock-ground-control': ['Role / Mechanic Intros', 'Open progression explanations without waiting for level/year triggers.'],
+          'late-skip-factor': ['Informative Modals', 'One-stage events: information is shown, impact is applied, then the player acknowledges.'],
+          'low-tonnes-complaint': ['HR Bubble Events', 'Crew-linked bubbles: open on staff, resolve with a compact HR choice, then clear.'],
+          'force-fault-row': ['Mine / Ground State', 'Manipulate exploration, ground-control states, rubble, gas and water.'],
+          'pillar-deteriorate': ['Mine / Ground State', 'Manipulate exploration, ground-control states, rubble, gas and water.'],
+          'row-activate-pillars': ['Mine / Ground State', 'Manipulate exploration, ground-control states, rubble, gas and water.'],
+          'release-deferred-events': ['Debug / State Testing', 'Release queued conditions and test internal state without waiting.']
+        };
+        Array.from(body.querySelectorAll('.devToolCard')).forEach(card => {
+          const title = ((card.querySelector('h3') || {}).textContent || '').trim();
+          if (!/^Pass\s+\d+/i.test(title)) return;
+          card.querySelectorAll('[data-dev-action]').forEach(btn => {
+            const action = btn.getAttribute('data-dev-action');
+            const target = route[action] || ['Debug / State Testing', 'Release queued conditions and test internal state without waiting.'];
+            moveButton(btn, target[0], target[1]);
+          });
+          const parent = card.parentElement;
+          card.remove();
+          if (parent && parent.matches('[data-pass4-dev-tools], [data-pass5-dev-tools], [data-pass6-dev-tools], [data-pass7-dev-tools], [data-pass16-dev-tools]') && !parent.querySelector('.devToolCard')) parent.remove();
+        });
+
+        // De-duplicate buttons by dev action within each group.
+        body.querySelectorAll('.devToolBtns').forEach(group => {
+          const seen = new Set();
+          Array.from(group.querySelectorAll('[data-dev-action]')).forEach(btn => {
+            const action = btn.getAttribute('data-dev-action');
+            if (seen.has(action)) btn.remove();
+            else seen.add(action);
+          });
+        });
+      };
+
+      document.addEventListener('click', function(e) {
+        const localBtn = e.target.closest('[data-pass21-ext-local-choice]');
+        if (localBtn) { e.preventDefault(); resolvePass21ExternalLocalComplaint(localBtn.dataset.pass21ExtLocalChoice); return; }
+        const visitBtn = e.target.closest('[data-pass21-slt-visit-choice]');
+        if (visitBtn) { e.preventDefault(); resolvePass21SltSiteVisit(visitBtn.dataset.pass21SltVisitChoice); return; }
+      }, true);
+
+
+      /* Pass 22: revenue sound, fault generation reliability, grade/level assets and level-transition pause cleanup. */
+      const PASS22_ASSETS = {
+        revenueSound: 'assets/audio/cha_ching.mp3',
+        levelReached: 'assets/images/new_level_reached.png',
+        gradeBetter: 'assets/images/grade_variance_better.png',
+        gradeWorse: 'assets/images/grade_variance_worse.png'
+      };
+
+      let pass22RevenueAudio = null;
+      let pass22LastRevenueSoundAt = 0;
+
+      function pass22PlayRevenueFallback() {
+        try {
+          // Short piggy-bank / coin cascade fallback, used if the optional MP3 is absent.
+          playTone(988, 0.00, 0.055, 'triangle', 0.085);
+          playTone(1318, 0.055, 0.060, 'triangle', 0.078);
+          playTone(1760, 0.118, 0.095, 'sine', 0.070);
+          playTone(2217, 0.195, 0.080, 'triangle', 0.052);
+        } catch (err) {
+          console.log('Revenue fallback SFX failed:', err);
+        }
+      }
+
+      function pass22PlayRevenueSound() {
+        const now = Date.now();
+        if (now - pass22LastRevenueSoundAt < 180) return;
+        pass22LastRevenueSoundAt = now;
+        try {
+          if (!pass22RevenueAudio) {
+            pass22RevenueAudio = new Audio(PASS22_ASSETS.revenueSound);
+            pass22RevenueAudio.preload = 'auto';
+          }
+          pass22RevenueAudio.currentTime = 0;
+          pass22RevenueAudio.volume = 0.68;
+          const result = pass22RevenueAudio.play();
+          if (result && typeof result.catch === 'function') result.catch(() => pass22PlayRevenueFallback());
+        } catch (err) {
+          pass22PlayRevenueFallback();
+        }
+      }
+
+      const pass22CompleteMiningBlockBase = completeMiningBlock;
+      completeMiningBlock = function(target, pos) {
+        const beforeRevenue = Number(state.revenue) || 0;
+        const beforeCash = Number(state.cash) || 0;
+        const wasOreBlock = !!(target && !target.isPillar && target.status !== 'rubble' && target.wasRubble !== true && Number(target.tonnes) > 0);
+        const result = pass22CompleteMiningBlockBase(target, pos);
+        const revenueDelta = (Number(state.revenue) || 0) - beforeRevenue;
+        const cashDelta = (Number(state.cash) || 0) - beforeCash;
+        if (wasOreBlock && (revenueDelta > 0 || cashDelta > 0)) pass22PlayRevenueSound();
+        return result;
+      };
+
+      function pass22FaultKey(row) {
+        return String(Number(state.depthIndex) || 0) + ':' + String(row);
+      }
+
+      function pass22FaultableBlocksForRow(row) {
+        return (state.blocks[MINE_ID] || []).filter(b => b && Number(b.r) === Number(row) && !b.isPillar && b.status === 'solid' && Number(b.tonnes) > 0 && !b.faulted);
+      }
+
+      function pass22ApplyFaultsToRow(row, force = false) {
+        if (!pass16FaultsUnlocked || !pass16FaultsUnlocked() || row === null || row === undefined || row < 0) return [];
+        state.pass22FaultRowsChecked = state.pass22FaultRowsChecked || {};
+        const key = pass22FaultKey(row);
+        if (state.pass22FaultRowsChecked[key] && !force) return [];
+        const candidates = pass22FaultableBlocksForRow(row);
+        if (!candidates.length) {
+          state.pass22FaultRowsChecked[key] = 'no-candidates';
+          return [];
+        }
+
+        const depth = Number(state.depthIndex) || 0;
+        const year = Number(state.year) || 1;
+        const deterministicRoll = seeded((Number(row) || 0) * 193 + depth * 1601 + year * 37 + 9221);
+        const rowsSinceFault = Number(state.pass22RowsSinceFault) || 0;
+        const shouldFault = force || deterministicRoll <= 0.50 || rowsSinceFault >= 2;
+        if (!shouldFault) {
+          state.pass22FaultRowsChecked[key] = 'clear';
+          state.pass22RowsSinceFault = rowsSinceFault + 1;
+          return [];
+        }
+
+        const ordered = candidates
+          .map(b => ({ b, s: seeded((Number(b.r) || 0) * 263 + (Number(b.c) || 0) * 421 + depth * 89 + 22117) }))
+          .sort((a, b) => b.s - a.s)
+          .map(x => x.b);
+        const countSeed = seeded((Number(row) || 0) * 71 + depth * 811 + year * 47 + 141);
+        const count = Math.min(ordered.length, force ? Math.max(1, Math.min(3, ordered.length)) : (countSeed > 0.86 ? 3 : countSeed > 0.38 ? 2 : 1));
+        const selected = ordered.slice(0, count);
+        selected.forEach((b, i) => {
+          b.faulted = true;
+          b.faultDip = seeded((Number(b.r) || 0) * 137 + (Number(b.c) || 0) * 43 + i * 11 + 7) > 0.5 ? 1 : -1;
+          b.faultSeed = seeded((Number(b.r) || 0) * 673 + (Number(b.c) || 0) * 17 + 22);
+        });
+        state.faultedRows = state.faultedRows || {};
+        state.faultedRows[key] = selected.map(b => gridRef(b)).join(', ');
+        state.pass22FaultRowsChecked[key] = state.faultedRows[key];
+        state.pass22RowsSinceFault = 0;
+        return selected;
+      }
+
+      const pass22CompleteExplorationProgramBase = completeExplorationProgram;
+      completeExplorationProgram = function() {
+        const rowBefore = state.exploration ? state.exploration.row : null;
+        const result = pass22CompleteExplorationProgramBase();
+        if (rowBefore !== null && rowBefore !== undefined && rowBefore >= 0) {
+          const alreadyFaulted = (state.blocks[MINE_ID] || []).some(b => Number(b.r) === Number(rowBefore) && b.faulted);
+          if (!alreadyFaulted) {
+            const faulted = pass22ApplyFaultsToRow(rowBefore, false);
+            if (faulted.length && typeof pass16FaultDiscoveryEvent === 'function') pass16FaultDiscoveryEvent(rowBefore, faulted);
+            if (faulted.length && board) {
+              const y = board.y + (Number(rowBefore) + 0.5) * board.cell;
+              spawnFloatingText(board.x + board.w * 0.52, y, ['FAULTED GROUND', 'mines faster'], '#fef3c7');
+            }
+          }
+        }
+        return result;
+      };
+
+      // Reinforce fault visibility after later draw overrides. Faulted cells keep grade colour, but now receive a heavier crack and label marker.
+      const pass22DrawFaultOverlayBase = typeof pass16DrawFaultOverlay === 'function' ? pass16DrawFaultOverlay : null;
+      pass16DrawFaultOverlay = function(block, r) {
+        if (pass22DrawFaultOverlayBase) pass22DrawFaultOverlayBase(block, r);
+        if (!block || !block.faulted || ['locked', 'void', 'rubble', 'damaged'].includes(block.status) || block.isPillar) return;
+        ctx.save();
+        const dip = block.faultDip === -1 ? -1 : 1;
+        const x1 = dip > 0 ? r.x + r.w * 0.10 : r.x + r.w * 0.90;
+        const x2 = dip > 0 ? r.x + r.w * 0.90 : r.x + r.w * 0.10;
+        const y1 = r.y + r.h * 0.90;
+        const y2 = r.y + r.h * 0.10;
+        ctx.strokeStyle = 'rgba(2,6,23,0.96)';
+        ctx.lineWidth = Math.max(3.2, r.w * 0.105);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(r.x + r.w * 0.50, r.y + r.h * 0.50);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(254,243,199,0.84)';
+        ctx.lineWidth = Math.max(1.1, r.w * 0.034);
+        ctx.beginPath();
+        ctx.moveTo(r.x + r.w * 0.32, r.y + r.h * 0.66);
+        ctx.lineTo(r.x + r.w * 0.21, r.y + r.h * 0.79);
+        ctx.moveTo(r.x + r.w * 0.60, r.y + r.h * 0.36);
+        ctx.lineTo(r.x + r.w * 0.72, r.y + r.h * 0.25);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(15,23,42,0.90)';
+        ctx.font = '900 ' + Math.max(7, r.w * 0.15) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('F', r.x + r.w * 0.18, r.y + r.h * 0.20);
+        ctx.restore();
+      };
+
+      // Make the Dev action use the same strengthened final fault routine.
+      const pass22DevActionBase = devAction;
+      devAction = function(action) {
+        if (action === 'force-fault-row') {
+          const rows = Array.from(new Set((state.blocks[MINE_ID] || []).filter(b => b && b.status === 'solid' && !b.isPillar && Number(b.tonnes) > 0).map(b => b.r))).sort((a, b) => b - a);
+          const candidateRow = rows.find(r => !(state.blocks[MINE_ID] || []).some(b => b.r === r && b.faulted));
+          if (candidateRow === undefined) { showProductionComment('Dev: no unfaulted solid row is available to fault.', 'Dev Tools', 4); return; }
+          const faulted = pass22ApplyFaultsToRow(candidateRow, true);
+          if (faulted.length) {
+            if (typeof pass16FaultDiscoveryEvent === 'function') pass16FaultDiscoveryEvent(candidateRow, faulted);
+            showProductionComment('Dev: faulted ground forced on Grid Row ' + gridRowNumber(candidateRow) + '.', 'Dev Tools', 4);
+          } else showProductionComment('Dev: no faultable blocks found on that row.', 'Dev Tools', 4);
+          return;
+        }
+        return pass22DevActionBase(action);
+      };
+
+      // Force grade reconciliation queue items to carry the ready artwork even if an older route created the event.
+      const pass22PushQueueEventBase = pushQueueEvent;
+      pushQueueEvent = function(ev) {
+        if (ev && /Grade reconciliation|Grade estimate reconciled|Grade estimate|reconciliation issue/i.test(String(ev.title || '')) || (ev && ev.label === 'GRD')) {
+          const text = String((ev && ev.title) || '') + ' ' + String((ev && ev.body) || '');
+          const worse = /issue|below|worse|broadly|downside/i.test(text) && !/upside|better/i.test(text);
+          const better = /upside|better|above|favour|favorable|favourable/i.test(text) && !worse;
+          ev = {
+            label: 'GRD',
+            character: better ? 'Geology Department' : 'Grade Control',
+            department: better ? 'Reconciliation Upside' : 'Reconciliation Variance',
+            imageText: better ? 'Better than Estimate — Asset pending' : 'Worse than Estimate — Asset pending',
+            ...ev,
+            image: worse ? PASS22_ASSETS.gradeWorse : PASS22_ASSETS.gradeBetter
+          };
+        }
+        return pass22PushQueueEventBase(ev);
+      };
+
+      const pass22ReconcileMinedGradeBase = reconcileMinedGrade;
+      reconcileMinedGrade = function(block) {
+        const estimated = block && typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block && block.actualGrade;
+        const result = pass22ReconcileMinedGradeBase(block);
+        // If no modal fired but the mined/estimated difference is material, create a low-frequency art-backed notice.
+        if (block && !block.pass22GradeArtChecked) {
+          block.pass22GradeArtChecked = true;
+          const actual = Number(block.actualGrade);
+          const est = Number(estimated);
+          if (Number.isFinite(actual) && Number.isFinite(est) && Math.abs(actual - est) > 0.45 && Math.random() < 0.20) {
+            const better = actual > est;
+            pushQueueEvent({
+              tone: better ? 'good' : 'warning',
+              icon: better ? '◆' : '!',
+              label: 'GRD',
+              image: better ? PASS22_ASSETS.gradeBetter : PASS22_ASSETS.gradeWorse,
+              character: better ? 'Geology Department' : 'Grade Control',
+              department: better ? 'Better Than Estimate' : 'Worse Than Estimate',
+              imageText: better ? 'Better than Estimate — Asset pending' : 'Worse than Estimate — Asset pending',
+              title: better ? 'Grade Reconciliation Upside' : 'Grade Reconciliation Issue',
+              body: `<p><strong>Estimated grade:</strong> ${est.toFixed(2)}%</p><p><strong>Mined grade:</strong> ${actual.toFixed(2)}%</p><p>${better ? 'Everyone has suddenly remembered believing in the model.' : 'Everyone would like to know who approved the model, ideally before remembering they did.'}</p>`
+            });
+          }
+        }
+        return result;
+      };
+
+      function pass22LevelArrivalBody(details) {
+        return `${modalCharacterHtml(PASS22_ASSETS.levelReached, 'New Level Reached', 'Shaft Deepening Milestone', 'The mine has reached a new level. The consequences have been promoted accordingly.', 'LEVEL')}
+          <div class="letter"><h2>${escapeHtml(details.title)}</h2>${details.body}</div>
+          <div class="btnRow"><button class="primary" data-level-arrival-continue data-next-intro="${escapeHtml(details.next || '')}" data-next-intro-2="${escapeHtml(details.next2 || '')}">Continue Operational Escalation</button></div>`;
+      }
+
+      const pass22OpenLevelArrivalModalBase = openLevelArrivalModal;
+      openLevelArrivalModal = function() {
+        state.pass22LevelTransitionPending = true;
+        state.pass22LevelArrivalOpenedDay = state.day;
+        playLevelCompleteSound();
+        if ((Number(state.depthIndex) || 0) === 2 && (!(state.pass17LastSeismicEventDay > 0) || state.pass17LastSeismicEventDay < state.day)) {
+          state.pass17LastSeismicEventDay = state.day;
+        }
+        const details = levelArrivalDetails();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = details.title;
+        $('modalBody').innerHTML = pass22LevelArrivalBody(details);
+        $('modalOverlay').classList.add('show');
+        if ((Number(state.depthIndex) || 0) === 2) {
+          const btn = document.querySelector('[data-level-arrival-continue]');
+          if (btn) btn.dataset.pass17OpenAssets = 'secondMiner';
+        }
+      };
+
+      const pass22InvestInDeclineBase = investInDecline;
+      investInDecline = function() {
+        state.pass22LevelTransitionPending = true;
+        return pass22InvestInDeclineBase();
+      };
+
+      function pass22ResumeAfterLevelTransition(reason = '') {
+        if (!state.pass22LevelTransitionPending) return;
+        if (isModalOpen()) return;
+        state.pass22LevelTransitionPending = false;
+        state.pass17CurrentWindowType = '';
+        state.manualPaused = false;
+        state.paused = false;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+        showProductionComment('Level transition complete. Shift controls released back to Production.', 'Shaft Deepening', 4.5);
+      }
+
+      document.addEventListener('click', function(e) {
+        const continueBtn = e.target.closest('[data-level-arrival-continue]');
+        if (continueBtn) {
+          state.pass22LevelTransitionPending = true;
+          setTimeout(() => {
+            if (!isModalOpen()) pass22ResumeAfterLevelTransition('level-continue');
+          }, 80);
+          setTimeout(() => {
+            if (!isModalOpen()) pass22ResumeAfterLevelTransition('level-continue-late');
+          }, 450);
+        }
+        if (e.target.closest('[data-window="hr"], [data-window="assets"], [data-open-role-intro]')) {
+          if (state.pass22LevelTransitionPending) {
+            setTimeout(() => {
+              // Keep the modal open for the recruitment/assets step, but make closing it resume cleanly.
+              const close = $('modalCloseBtn');
+              if (close) close.setAttribute('data-pass22-level-flow-close', 'true');
+            }, 0);
+          }
+        }
+        if (e.target.closest('[data-close], #modalCloseBtn, [data-close-decline], [data-close-formal-review]')) {
+          setTimeout(() => pass22ResumeAfterLevelTransition('modal-close'), 80);
+        }
+      }, true);
+
+      // If any code path leaves a level-flow modal without clearing pause, normalise it after the overlay has gone.
+      const pass22UpdateBase = update;
+      update = function(dt) {
+        const result = pass22UpdateBase(dt);
+        if (state.pass22LevelTransitionPending && !isModalOpen() && state.paused) pass22ResumeAfterLevelTransition('update-normalise');
+        return result;
+      };
 
 
       ensureDrillingRestrictionState();
