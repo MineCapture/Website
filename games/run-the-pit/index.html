@@ -22650,6 +22650,396 @@
         }
         return result;
       };
+      /* Pass 19: new satirical decision/restriction modals — Union, employee dispute and Survey reconciliation. */
+      const PASS19_ASSETS = {
+        union: 'assets/characters/s-cargill-union-rep.png',
+        dispute: 'assets/images/employee_dispute.png',
+        survey: 'assets/images/survey_reconciliation_error.png'
+      };
+
+      function pass19RoleDepartment(role) {
+        const map = {
+          miner: 'Mining',
+          supervisor: 'Management',
+          shiftManager: 'Management',
+          manager: 'Management',
+          fitter: 'Engineering',
+          electrician: 'Engineering',
+          geologist: 'Geology',
+          driller: 'Drilling',
+          miningEngineer: 'Mining Engineering',
+          rockDoctor: 'Ground Control',
+          surveyor: 'Survey',
+          ventilationEngineer: 'Ventilation'
+        };
+        return map[role] || 'Operations';
+      }
+
+      function pass19ActiveStaff() {
+        return (state.staff || []).filter(s => s && !s.fired && !s.resigned);
+      }
+
+      function pass19FallbackStaff(name, role) {
+        return { id: 'pass19_' + role + '_' + name.replace(/\W+/g, '').toLowerCase(), name, role, morale: 3, skill: 3, attendance: 3, salary: 0, trait: 'Representative sample' };
+      }
+
+      function pass19DepartmentStaff(dept) {
+        return pass19ActiveStaff().filter(s => pass19RoleDepartment(s.role) === dept);
+      }
+
+      function pass19ChooseEmployeeDisputePair(force = false) {
+        const staff = pass19ActiveStaff();
+        const byDept = new Map();
+        for (const s of staff) {
+          const dept = pass19RoleDepartment(s.role);
+          if (!byDept.has(dept)) byDept.set(dept, []);
+          byDept.get(dept).push(s);
+        }
+        const departments = Array.from(byDept.keys()).filter(d => byDept.get(d).length);
+        if (departments.length >= 2) {
+          let bestPairs = [];
+          const preferred = [
+            ['Geology', 'Mining'],
+            ['Mining', 'Engineering'],
+            ['Mining', 'Survey'],
+            ['Geology', 'Ground Control'],
+            ['Mining Engineering', 'Finance'],
+            ['Ventilation', 'Mining'],
+            ['Management', 'Mining']
+          ];
+          for (const [aDept, bDept] of preferred) {
+            if (byDept.has(aDept) && byDept.has(bDept)) bestPairs.push([aDept, bDept]);
+          }
+          if (!bestPairs.length) {
+            for (let i = 0; i < departments.length; i++) {
+              for (let j = i + 1; j < departments.length; j++) bestPairs.push([departments[i], departments[j]]);
+            }
+          }
+          const [aDept, bDept] = randomItem(bestPairs);
+          return {
+            a: randomItem(byDept.get(aDept)),
+            b: randomItem(byDept.get(bDept)),
+            aDept,
+            bDept,
+            realStaff: true
+          };
+        }
+
+        if (!force) return null;
+        return {
+          a: pass19FallbackStaff('A. Geologist', 'geologist'),
+          b: pass19FallbackStaff('A. Miner', 'miner'),
+          aDept: 'Geology',
+          bDept: 'Mining',
+          realStaff: false
+        };
+      }
+
+      function pass19PairHas(pair, deptA, deptB) {
+        if (!pair) return false;
+        const a = pair.aDept;
+        const b = pair.bDept;
+        return (a === deptA && b === deptB) || (a === deptB && b === deptA);
+      }
+
+      function pass19StaffByDept(pair, dept) {
+        if (!pair) return null;
+        if (pair.aDept === dept) return pair.a;
+        if (pair.bDept === dept) return pair.b;
+        return pair.a;
+      }
+
+      function pass19EmployeeDisputeNarrative(pair) {
+        const a = pair.a;
+        const b = pair.b;
+        const aName = a.name || 'Employee A';
+        const bName = b.name || 'Employee B';
+        if (pass19PairHas(pair, 'Geology', 'Mining')) {
+          const geo = pass19StaffByDept(pair, 'Geology');
+          const miner = pass19StaffByDept(pair, 'Mining');
+          return `${geo.name} and ${miner.name} have had a formal disagreement. Apparently ${geo.name} offering to re-model ${miner.name}'s face is not a recommended form of communication.`;
+        }
+        if (pass19PairHas(pair, 'Mining', 'Engineering')) {
+          const miner = pass19StaffByDept(pair, 'Mining');
+          const eng = pass19StaffByDept(pair, 'Engineering');
+          return `${miner.name} and ${eng.name} have had a formal disagreement after ${eng.name} described the machine damage as operator contribution and ${miner.name} described the maintenance plan as decorative paperwork.`;
+        }
+        if (pass19PairHas(pair, 'Mining', 'Survey')) {
+          const miner = pass19StaffByDept(pair, 'Mining');
+          const survey = pass19StaffByDept(pair, 'Survey');
+          return `${miner.name} and ${survey.name} have had a formal disagreement after ${survey.name} claimed the heading was exactly where planned and ${miner.name} pointed out that the machine was not.`;
+        }
+        if (pass19PairHas(pair, 'Geology', 'Ground Control')) {
+          const geo = pass19StaffByDept(pair, 'Geology');
+          const rock = pass19StaffByDept(pair, 'Ground Control');
+          return `${geo.name} and ${rock.name} have had a formal disagreement over whether the ground is structurally complex or actively trying to leave.`;
+        }
+        if (pass19PairHas(pair, 'Ventilation', 'Mining')) {
+          const vent = pass19StaffByDept(pair, 'Ventilation');
+          const miner = pass19StaffByDept(pair, 'Mining');
+          return `${vent.name} and ${miner.name} have had a formal disagreement after ${miner.name} requested more air and ${vent.name} asked whether they had tried breathing more efficiently.`;
+        }
+        if (pair.aDept === 'Management' || pair.bDept === 'Management') {
+          const mgr = pair.aDept === 'Management' ? pair.a : pair.b;
+          const other = pair.aDept === 'Management' ? pair.b : pair.a;
+          return `${mgr.name} and ${other.name} have had a formal disagreement after ${mgr.name} attempted to resolve a practical issue by scheduling a meeting about it.`;
+        }
+        return `${aName} and ${bName} have had a formal disagreement. Both departments agree the other department started it, which HR has described as a promising foundation for facilitated dialogue.`;
+      }
+
+      function pass19ApplyStaffMorale(staff, delta) {
+        if (!staff || !state.staff || !state.staff.includes(staff)) return;
+        staff.morale = clamp((Number(staff.morale) || 3) + delta, 1, 5);
+      }
+
+      function openPass19EmployeeDisputeEvent(force = false) {
+        if (!force && ((Number(state.year) || 1) < 2 || pass19ActiveStaff().length < 5)) return false;
+        const pair = pass19ChooseEmployeeDisputePair(force);
+        if (!pair) return false;
+        state.pass19ActiveDispute = {
+          aId: pair.a.id,
+          bId: pair.b.id,
+          aName: pair.a.name,
+          bName: pair.b.name,
+          aRole: pair.a.role,
+          bRole: pair.b.role,
+          aDept: pair.aDept,
+          bDept: pair.bDept,
+          realStaff: pair.realStaff
+        };
+        state.pass19EmployeeDisputeLastDay = state.day;
+        const body = `${modalCharacterHtml(PASS19_ASSETS.dispute, 'HR Department', 'Workplace Harmony Intervention', 'Two employees have achieved cross-functional disagreement at reportable intensity.', 'HR')}
+          <p>${escapeHtml(pass19EmployeeDisputeNarrative(pair))}</p>
+          <p><strong>How would you like to resolve this dispute?</strong></p>
+          <div class="btnRow">
+            <button class="eventChoiceBtn positive" data-pass19-dispute-choice="mediation"><strong>Send Them to Mandatory Mediation</strong><span>Low-risk HR process. Everyone repeats the same complaint using safer words.</span></button>
+            <button class="eventChoiceBtn" data-pass19-dispute-choice="separate"><strong>Keep Them Operationally Apart</strong><span>Reduce friction by ensuring departments interact even less than usual.</span></button>
+            <button class="eventChoiceBtn negative" data-pass19-dispute-choice="underground"><strong>Tell Them to Sort It Out Underground</strong><span>Fast, cheap, and professionally indefensible.</span></button>
+            <button class="eventChoiceBtn" data-pass19-dispute-choice="rebrand"><strong>Rebrand the Dispute as Cross-Functional Challenge</strong><span>Convert shouting into culture data.</span></button>
+          </div>`;
+        showPreparedModal('Employee Dispute', body, { closable: false, windowClass: 'window medium', images: [PASS19_ASSETS.dispute] });
+        return true;
+      }
+
+      function resolvePass19EmployeeDispute(choice) {
+        document.querySelectorAll('[data-pass19-dispute-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+        const active = state.pass19ActiveDispute || {};
+        const a = (state.staff || []).find(s => s.id === active.aId) || pass19FallbackStaff(active.aName || 'Employee A', active.aRole || 'miner');
+        const b = (state.staff || []).find(s => s.id === active.bId) || pass19FallbackStaff(active.bName || 'Employee B', active.bRole || 'geologist');
+        let title = 'Employee Dispute Outcome';
+        let tone = 'info';
+        let body = '';
+        let shareDelta = 0;
+        if (choice === 'mediation') {
+          spend(scaledCost(900), 'Mandatory mediation');
+          adjustTrait('morale', 2); adjustTrait('productivity', -1);
+          pass19ApplyStaffMorale(a, 1); pass19ApplyStaffMorale(b, 1);
+          tone = 'good';
+          body = `<p>HR successfully creates a safe space in which ${escapeHtml(a.name)} and ${escapeHtml(b.name)} can repeat their original complaints using less useful language.</p><p><strong>Impact:</strong> +2 Morale, -1 Productivity, ${money(scaledCost(900))} mediation cost.</p>`;
+        } else if (choice === 'separate') {
+          adjustTrait('morale', 1); adjustTrait('productivity', -2); adjustTrait('safety', 1);
+          tone = 'info';
+          body = `<p>The dispute is resolved by ensuring neither employee has to interact with the consequences of the other employee's job.</p><p><strong>Impact:</strong> +1 Morale, +1 Safety, -2 Productivity.</p>`;
+        } else if (choice === 'underground') {
+          adjustTrait('productivity', 2); adjustTrait('morale', -3); adjustTrait('safety', -3);
+          pass19ApplyStaffMorale(a, -1); pass19ApplyStaffMorale(b, -1);
+          tone = 'warning'; shareDelta = -1;
+          body = `<p>Management empowers the workforce to resolve the matter informally, which is a bold way of saying no manager wanted to attend.</p><p><strong>Impact:</strong> +2 Productivity, -3 Morale, -3 Safety. HR has opened a file with no immediate intention of reading it.</p>`;
+        } else {
+          adjustTrait('productivity', 1); adjustTrait('morale', -1);
+          tone = 'info'; shareDelta = 1;
+          body = `<p>The disagreement is reclassified as healthy challenge. HR records this as evidence of psychological safety, despite several witnesses describing it as shouting.</p><p><strong>Impact:</strong> +1 Productivity, -1 Morale. The culture dashboard briefly improves.</p>`;
+        }
+        state.pass19ActiveDispute = null;
+        openDecisionOutcomeModal({ title, image: PASS19_ASSETS.dispute, character: 'HR Department', department: 'Employee Relations', label: 'HR', tone, body, shareDelta, button: 'Return to Managed Tension' });
+        updatePanelCrewTiles(true);
+      }
+
+      function openPass19UnionPayDemandEvent(force = false) {
+        if (!force && ((Number(state.year) || 1) < 2 || pass19ActiveStaff().length < 4)) return false;
+        if (!force && state.pass19UnionPayDemandYear === state.year) return false;
+        state.pass19UnionPayDemandYear = state.year;
+        const staffCount = Math.max(1, pass19ActiveStaff().length || 4);
+        const body = `${modalCharacterHtml(PASS19_ASSETS.union, 'S. Cargill', 'Lead Union Representative', 'A fictional union representative has arrived with a simple demand and complicated consequences.', 'UNION')}
+          <p><strong>S. Cargill</strong>, Lead Union Representative, has formally notified management that the union demands everyone be paid the same regardless of experience, qualifications, skills, behaviour, attendance record, performance, machine damage history, or ability to find the work area without escort.</p>
+          <p>The proposal has been described as a historic step toward fairness, unity, and the complete removal of incentive from the payroll system.</p>
+          <p><strong>Management response required.</strong></p>
+          <div class="btnRow">
+            <button class="eventChoiceBtn positive" data-pass19-union-choice="accept"><strong>Accept the Union Proposal</strong><span>Immediate harmony. Future competence becomes emotionally optional.</span></button>
+            <button class="eventChoiceBtn" data-pass19-union-choice="competence"><strong>Offer Equal Pay for Equal Competence</strong><span>Reasonable, measurable, and therefore provocative.</span></button>
+            <button class="eventChoiceBtn" data-pass19-union-choice="workingGroup"><strong>Launch a Pay Harmonisation Working Group</strong><span>Do nothing, but with minutes.</span></button>
+            <button class="eventChoiceBtn negative" data-pass19-union-choice="pathway"><strong>Rebrand Lower Pay as a Development Pathway</strong><span>Corporate language deployed at close range.</span></button>
+          </div>
+          <p class="smallNote">Affected headcount: ${staffCount}.</p>`;
+        showPreparedModal('Union Pay Equality Demand', body, { closable: false, windowClass: 'window medium', images: [PASS19_ASSETS.union] });
+        return true;
+      }
+
+      function resolvePass19UnionPayDemand(choice) {
+        document.querySelectorAll('[data-pass19-union-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+        const staffCount = Math.max(1, pass19ActiveStaff().length || 4);
+        let tone = 'info';
+        let body = '';
+        let shareDelta = 0;
+        if (choice === 'accept') {
+          const cost = scaledCost(420 * staffCount);
+          spend(cost, 'Union pay harmonisation');
+          adjustTrait('morale', 4); adjustTrait('productivity', -3); adjustTrait('skill', -2);
+          pass19ActiveStaff().forEach(s => pass19ApplyStaffMorale(s, 1));
+          tone = 'warning'; shareDelta = -3;
+          body = `<p>The workforce welcomes the new pay structure. High performers are especially pleased to learn that their effort has been successfully neutralised.</p><p><strong>Impact:</strong> +4 Morale, -3 Productivity, -2 Skill, ${money(cost)} payroll harmonisation cost.</p>`;
+        } else if (choice === 'competence') {
+          adjustTrait('skill', 2); adjustTrait('productivity', 1); adjustTrait('morale', -1);
+          tone = 'info'; shareDelta = 1;
+          body = `<p>The union rejects the proposal on the grounds that linking pay to competence risks creating expectations around competence.</p><p><strong>Impact:</strong> +2 Skill, +1 Productivity, -1 Morale. Follow-up discussion remains highly likely.</p>`;
+        } else if (choice === 'workingGroup') {
+          const cost = scaledCost(1300);
+          spend(cost, 'Pay harmonisation working group');
+          adjustTrait('morale', 1); adjustTrait('productivity', -1);
+          tone = 'info';
+          body = `<p>A working group has been formed to investigate whether doing nothing can be presented as structured engagement.</p><p><strong>Impact:</strong> +1 Morale, -1 Productivity, ${money(cost)} workshop and biscuit cost.</p>`;
+        } else {
+          adjustTrait('morale', -3); adjustTrait('productivity', 2);
+          pass19ActiveStaff().forEach(s => pass19ApplyStaffMorale(s, -1));
+          tone = 'warning'; shareDelta = 2;
+          state.hrCooldown = Math.max(state.hrCooldown || 0, 8);
+          body = `<p>HR successfully explains that lower pay is not lower pay, but a structured opportunity to grow toward a salary that may never arrive.</p><p><strong>Impact:</strong> +2 Productivity, -3 Morale. The market appreciates the discipline; the crew do not.</p>`;
+        }
+        openDecisionOutcomeModal({ title: 'Union Pay Demand Outcome', image: PASS19_ASSETS.union, character: 'S. Cargill', department: 'Industrial Relations', label: 'UNION', tone, body, shareDelta, button: 'Return to Negotiated Uncertainty' });
+        updatePanelCrewTiles(true);
+      }
+
+      function pass19MachineOrTargetOccupiesCell(r, c) {
+        const machines = [state.machine1, state.machine2, state.machine, state.bolter].filter(Boolean);
+        for (const m of machines) {
+          if (m.r === r && m.c === c) return true;
+          if (m.target && m.target.r === r && m.target.c === c) return true;
+        }
+        return false;
+      }
+
+      function pass19OnAdvancedBeltLine(block) {
+        if (!block) return false;
+        return block.c === beltColumn() && block.r >= beltHeadRow() && block.r <= FIRST_MINE_ROW;
+      }
+
+      function pass19SurveyRestorationEligible(block) {
+        if (!block) return false;
+        if (block.status !== 'void') return false;
+        if (block.isPillar || block.sterilised || block.wasRubble || block.surveyCorrectionRestored) return false;
+        if (!(Number(block.tonnes) > 0)) return false;
+        if (pass19MachineOrTargetOccupiesCell(block.r, block.c)) return false;
+        if (pass19OnAdvancedBeltLine(block) || isActiveBeltCell(block)) return false;
+        return true;
+      }
+
+      function pass19SurveyRestorationCandidates() {
+        return (state.blocks[MINE_ID] || []).filter(pass19SurveyRestorationEligible);
+      }
+
+      function pass19CreateDevSurveyCandidateIfNeeded() {
+        if (pass19SurveyRestorationCandidates().length) return;
+        const candidates = (state.blocks[MINE_ID] || []).filter(b => b && b.status === 'solid' && !b.isPillar && !b.sterilised && Number(b.tonnes) > 0 && !pass19MachineOrTargetOccupiesCell(b.r, b.c) && !pass19OnAdvancedBeltLine(b));
+        const block = candidates.find(b => b.r >= LOCKED_ROWS && Math.abs(b.c - START_COL) > 1) || candidates[0];
+        if (!block) return;
+        block.status = 'void';
+        block.progress = 100;
+        recordMinedBlock(block);
+      }
+
+      function pass19RestoreSurveyBlock(force = false) {
+        if (force) pass19CreateDevSurveyCandidateIfNeeded();
+        const candidates = pass19SurveyRestorationCandidates();
+        if (!candidates.length) return null;
+        const block = randomItem(candidates);
+        block.status = 'solid';
+        block.progress = 0;
+        block.reconciled = false;
+        block.surveyCorrectionRestored = true;
+        const key = blockPersistenceKey(block);
+        if (Array.isArray(state.minedBlockKeys)) state.minedBlockKeys = state.minedBlockKeys.filter(k => k !== key);
+        if (board) {
+          const rr = cellRect(MINE_ID, block.r, block.c);
+          spawnFloatingText(rr.x + rr.w / 2, rr.y + rr.h / 2, ['SURVEY CORRECTION', gridRef(block)], '#bfdbfe');
+        }
+        return block;
+      }
+
+      function openPass19SurveyReconciliationEvent(force = false) {
+        if (!force && ((Number(state.year) || 1) < 2 || state.pass19SurveyReconciliationYear === state.year)) return false;
+        const block = pass19RestoreSurveyBlock(force);
+        if (!block) {
+          if (force) openMiniWindow('Survey Reconciliation Unavailable', '<p>No safe mined-out production block is available for Survey to restore. Mine at least one non-belt block, move machines off it, then retry.</p>', true);
+          return false;
+        }
+        state.pass19SurveyReconciliationYear = state.year;
+        state.pass19SurveyReconciliationLastDay = state.day;
+        const body = `${modalCharacterHtml(PASS19_ASSETS.survey, 'Survey Department', 'Quarterly Reality Alignment Check', 'Survey has found a spatial discrepancy and would like Production to update its definition of mined.', 'SURV')}
+          <p>The Survey Department have completed their quarterly checks and identified a reconciliation error at <strong>${escapeHtml(gridRef(block))}</strong>.</p>
+          <p>Mining are adamant that they have already mined this block. Survey have provided definitive proof that they have not, or at least they will once the point cloud finally loads on their PC.</p>
+          <p>The block has therefore been restored to the mine plan in the interests of spatial accuracy, operational confusion, and making everyone’s numbers worse.</p>
+          <p><strong>Impact:</strong> one previously mined-out block has been restored. Historical production remains unchanged because correcting the report would involve Finance.</p>
+          <div class="btnRow"><button class="primary" data-close>Accept Updated Reality</button></div>`;
+        showPreparedModal('Survey Reconciliation Error', body, { closable: true, windowClass: 'window medium', images: [PASS19_ASSETS.survey] });
+        showProductionComment('Survey has restored a block to the mine plan. Mining has described this as geological gaslighting.', 'Survey', 6.5);
+        return true;
+      }
+
+      function pass19MaybeQuarterlySurveyDay() {
+        const doy = dayOfYear();
+        return [90, 180, 270, 360].some(q => Math.abs(doy - q) <= 4);
+      }
+
+      function maybePass19SatiricalDecisionEvents() {
+        if (!state.running || state.paused || isModalOpen()) return false;
+        const y = Math.max(1, Number(state.year) || 1);
+        if (y < 2) return false;
+        if (state.day % 61 === 0 && state.pass19UnionPayDemandYear !== state.year && pass19ActiveStaff().length >= 4 && (traitValue('morale') < 74 || Math.random() < 0.24)) {
+          return openPass19UnionPayDemandEvent(false);
+        }
+        if (state.day % 41 === 0 && (state.day - (state.pass19EmployeeDisputeLastDay || -999)) > 70 && pass19ActiveStaff().length >= 5) {
+          const chance = traitValue('morale') < 65 ? 0.55 : 0.24;
+          if (Math.random() < chance && openPass19EmployeeDisputeEvent(false)) return true;
+        }
+        if (pass19MaybeQuarterlySurveyDay() && state.pass19SurveyReconciliationYear !== state.year && pass19SurveyRestorationCandidates().length && Math.random() < 0.34) {
+          return openPass19SurveyReconciliationEvent(false);
+        }
+        return false;
+      }
+
+      const pass19UpdateBase = update;
+      update = function(dt) {
+        const beforeDay = state.day;
+        const result = pass19UpdateBase(dt);
+        if (state.day !== beforeDay) maybePass19SatiricalDecisionEvents();
+        return result;
+      };
+
+      const pass19DevActionBase = devAction;
+      devAction = function(action) {
+        if (action === 'union-pay-demand') { openPass19UnionPayDemandEvent(true); return; }
+        if (action === 'employee-dispute') { openPass19EmployeeDisputeEvent(true); return; }
+        if (action === 'survey-reconciliation') { openPass19SurveyReconciliationEvent(true); return; }
+        return pass19DevActionBase(action);
+      };
+
+      const pass19EnhanceDevToolsBase = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        pass19EnhanceDevToolsBase();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-pass19-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-pass19-dev-tools>
+          <section class="devToolCard"><h3>Pass 19 Decision / Restriction Events</h3><p>Manual triggers for the new union, employee-relations and Survey reconciliation modal flows.</p><div class="devToolBtns"><button data-dev-action="union-pay-demand">Union Pay Demand</button><button data-dev-action="employee-dispute">Employee Dispute</button><button data-dev-action="survey-reconciliation">Survey Reconciliation</button></div></section>
+        </div>`);
+      };
+
+      document.addEventListener('click', function(e) {
+        const unionBtn = e.target.closest('[data-pass19-union-choice]');
+        if (unionBtn) { e.preventDefault(); resolvePass19UnionPayDemand(unionBtn.dataset.pass19UnionChoice); return; }
+        const disputeBtn = e.target.closest('[data-pass19-dispute-choice]');
+        if (disputeBtn) { e.preventDefault(); resolvePass19EmployeeDispute(disputeBtn.dataset.pass19DisputeChoice); return; }
+      }, true);
+
 
       ensureDrillingRestrictionState();
 
