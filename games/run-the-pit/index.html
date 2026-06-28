@@ -17010,7 +17010,7 @@
         $('modalTitle').textContent = 'Management Menu';
         $('modalBody').innerHTML = `<p>Urgent events appear in the alert queue. Use this menu for planned management windows.</p>
           <div class="menuGrid">
-            <button class="menuButtonCard" data-window="targets"><strong>Targets</strong><span>Current 3-metric SLT KPI package.</span></button>
+            <button class="menuButtonCard" data-window="targets"><strong>Targets</strong><span>Fixed phase KPI package.</span></button>
             <button class="menuButtonCard" data-window="exploration"><strong>Explore</strong><span>Drilling, reserves and future rows.</span></button>
             <button class="menuButtonCard" data-window="research"><strong>Research</strong><span>Invest in trait-improving studies.</span></button>
             <button class="menuButtonCard" data-window="hr"><strong>HR</strong><span>Recruitment and S.H.A.F.T. interventions.</span></button>
@@ -17524,6 +17524,601 @@
       };
 
       setManualPauseFlagForCurrentState();
+
+
+      /* June 28 playtest pass 3: fixed phase KPI packages and proactive pillar failure / sterilised ground. */
+
+      function fixedKpiPackageForCurrentPhase(year = state.year, depthIndex = state.depthIndex) {
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        const listed = y >= 4;
+        let t = {
+          phaseKey: 'trial',
+          phaseTitle: 'Year 1 — Trial Mining',
+          phaseTheme: 'This is only a trial. Nothing serious. Definitely not the start of a mine.',
+          kpiKeys: ['bulkSample'],
+          tonnes: TARGET_TONNES,
+          grade: TARGET_GRADE,
+          discoveredRows: 0,
+          surplusTarget: 0,
+          lomTargetTonnes: 0,
+          technicalHires: 0,
+          pillarSupports: 0,
+          maxPillarFailures: 99,
+          beltExtensions: 0,
+          secondMinerTonnes: 0,
+          safetyMin: 0,
+          ventilationActions: 0,
+          sharePriceTarget: 0
+        };
+
+        if (y <= 1 && depth === 0) return t;
+
+        if (depth === 0 && y === 2) {
+          t = {
+            ...t,
+            phaseKey: 'reserve-confirmation',
+            phaseTitle: 'Year 2 — Full Production Surprise',
+            phaseTheme: 'The trial was successful enough to become full production before anyone checked whether the drilling existed.',
+            kpiKeys: ['productionDelivery', 'exploration', 'surplus'],
+            tonnes: 15000,
+            grade: 14.0,
+            discoveredRows: 2,
+            surplusTarget: 0
+          };
+        } else if (depth === 0) {
+          t = {
+            ...t,
+            phaseKey: 'reserve-scale-up',
+            phaseTitle: 'Production Scale-Up — Still on the Original Level',
+            phaseTheme: 'The -1000 Level must now justify the next level of ambition, capital and personal exposure.',
+            kpiKeys: ['productionDelivery', 'lom', 'surplus'],
+            tonnes: y === 3 ? 18000 : 22000 + Math.max(0, y - 4) * 2500,
+            grade: y === 3 ? 14.0 : 14.1,
+            lomTargetTonnes: y === 3 ? 52000 : 65000 + Math.max(0, y - 4) * 8000,
+            surplusTarget: y === 3 ? 5000 : 10000 + Math.max(0, y - 4) * 4000,
+            discoveredRows: y >= 4 ? 3 : 2
+          };
+        } else if (depth === 1) {
+          t = {
+            ...t,
+            phaseKey: 'ground-control',
+            phaseTitle: '-1100 Level — Ground Support Reality',
+            phaseTheme: 'Mining has gone deeper and somebody has finally asked whether the roof is meant to stay up.',
+            kpiKeys: ['productionDelivery', 'ground', 'technical'],
+            tonnes: 23000 + Math.max(0, y - 3) * 1500,
+            grade: 14.1,
+            technicalHires: 2,
+            pillarSupports: 3,
+            maxPillarFailures: 0,
+            surplusTarget: 5000
+          };
+        } else if (depth === 2) {
+          t = {
+            ...t,
+            phaseKey: 'fleet-scale-up',
+            phaseTitle: '-1200 Level — Fleet and Belt Scale-Up',
+            phaseTheme: 'SLT has identified that one continuous miner can only produce the output of one continuous miner.',
+            kpiKeys: ['productionDelivery', 'fleet', 'belt'],
+            tonnes: 34000 + Math.max(0, y - 4) * 2500,
+            grade: 14.1,
+            secondMinerTonnes: 9000 + Math.max(0, y - 4) * 1200,
+            beltExtensions: 1,
+            surplusTarget: 8000
+          };
+        } else if (depth === 3) {
+          t = {
+            ...t,
+            phaseKey: 'gas-water',
+            phaseTitle: '-1300 Level — Gas, Water and Services',
+            phaseTheme: 'The mine is deeper and has developed atmosphere and moisture, neither of which were shown on the forecast.',
+            kpiKeys: ['productionDelivery', 'safety', 'surplus'],
+            tonnes: 38000 + Math.max(0, y - 5) * 3000,
+            grade: 14.2,
+            safetyMin: 58,
+            surplusTarget: 12000
+          };
+        } else {
+          t = {
+            ...t,
+            phaseKey: 'ventilation-value',
+            phaseTitle: '-1400 Level — Heat, Ventilation and Value',
+            phaseTheme: 'The mine is too hot, the company is public, and SLT has discovered it holds shares.',
+            kpiKeys: ['productionDelivery', 'ventilation', 'safety'],
+            tonnes: 42000 + Math.max(0, y - 6) * 3500,
+            grade: 14.2,
+            safetyMin: 62,
+            ventilationActions: 1,
+            surplusTarget: 15000
+          };
+        }
+
+        if (listed && !t.kpiKeys.includes('sharePrice')) t.kpiKeys = [...t.kpiKeys, 'sharePrice'];
+        if (listed) {
+          ensureSharePriceState();
+          t.sharePriceTarget = state.sharePriceTarget || Math.round((state.yearStartSharePrice || 100) + 4 + Math.max(0, y - 4));
+        }
+        return t;
+      }
+
+      function sanitiseFixedPhaseTargets(raw = {}, year = state.year) {
+        const defaults = fixedKpiPackageForCurrentPhase(year, state.depthIndex);
+        const t = { ...defaults, ...(raw || {}) };
+        t.kpiKeys = Array.isArray(t.kpiKeys) && t.kpiKeys.length ? Array.from(new Set(t.kpiKeys)) : defaults.kpiKeys;
+        if (Math.max(1, Number(year) || 1) < 4) t.kpiKeys = t.kpiKeys.filter(k => k !== 'sharePrice');
+        if (!featureUnlocked('exploration')) { t.discoveredRows = 0; t.kpiKeys = t.kpiKeys.filter(k => k !== 'exploration' && k !== 'lom'); }
+        if (!featureUnlocked('technicalTeam')) { t.technicalHires = 0; t.kpiKeys = t.kpiKeys.filter(k => k !== 'technical'); }
+        if (!featureUnlocked('groundSupport')) { t.pillarSupports = 0; t.maxPillarFailures = 99; t.kpiKeys = t.kpiKeys.filter(k => k !== 'ground'); }
+        if (!featureUnlocked('beltAdvancement')) { t.beltExtensions = 0; t.kpiKeys = t.kpiKeys.filter(k => k !== 'belt'); }
+        if (!featureUnlocked('secondMiner')) { t.secondMinerTonnes = 0; t.kpiKeys = t.kpiKeys.filter(k => k !== 'fleet'); }
+        if (!featureUnlocked('ventilation')) { t.ventilationActions = 0; t.kpiKeys = t.kpiKeys.filter(k => k !== 'ventilation'); }
+        t.tonnes = Math.max(0, Number(t.tonnes) || TARGET_TONNES);
+        t.grade = Math.max(0, Number(t.grade) || TARGET_GRADE);
+        t.discoveredRows = Math.max(0, Number(t.discoveredRows) || 0);
+        t.surplusTarget = Math.max(0, Number(t.surplusTarget) || 0);
+        t.lomTargetTonnes = Math.max(0, Number(t.lomTargetTonnes) || 0);
+        t.technicalHires = Math.max(0, Number(t.technicalHires) || 0);
+        t.pillarSupports = Math.max(0, Number(t.pillarSupports) || 0);
+        t.maxPillarFailures = typeof t.maxPillarFailures === 'number' ? t.maxPillarFailures : 99;
+        t.beltExtensions = Math.max(0, Number(t.beltExtensions) || 0);
+        t.secondMinerTonnes = Math.max(0, Number(t.secondMinerTonnes) || 0);
+        t.safetyMin = Math.max(0, Number(t.safetyMin) || 0);
+        t.ventilationActions = Math.max(0, Number(t.ventilationActions) || 0);
+        return t;
+      }
+
+      targetsForYear = function(year) {
+        return sanitiseFixedPhaseTargets(fixedKpiPackageForCurrentPhase(year, state.depthIndex), year);
+      };
+
+      activeAnnualTargets = function() {
+        const current = state.annualTargets || targetsForYear(state.year);
+        return sanitiseFixedPhaseTargets(current, state.year);
+      };
+
+      applyAnnualTargetUnlockGuards = function() {
+        state.annualTargets = activeAnnualTargets();
+        return state.annualTargets;
+      };
+
+      activeYearOneObjective = function() {
+        return (Number(state.year) || 1) <= 1 && (Number(state.depthIndex) || 0) === 0;
+      };
+
+      focusKpiKeysForYear = function(year = state.year) {
+        const t = state.annualTargets && Math.max(1, Number(year) || 1) === (Number(state.year) || 1)
+          ? activeAnnualTargets()
+          : targetsForYear(year);
+        return Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : ['productionDelivery'];
+      };
+
+      metricLabelForKey = function(key) {
+        const labels = {
+          bulkSample: 'Bulk Sample Objective', productionDelivery: 'Production Delivery', tonnes: 'Mined Tonnes', grade: 'Goldilocks Grade', surplus: 'Operating Surplus',
+          exploration: 'Exploration Drilling', lom: 'Ore Reserve Inventory', technical: 'Technical Capability', ground: 'Ground Control', fleet: '2ndHOPE Utilisation',
+          belt: 'Belt Advancement', safety: 'Safety Floor', ventilation: 'Ventilation Readiness', sharePrice: 'Share Price'
+        };
+        return labels[key] || key;
+      };
+
+      function secondMinerAnnualTonnes() {
+        return Math.max(0, Number(state.secondMinerTonnesThisYear) || 0);
+      }
+
+      function ventilationKpiReady() {
+        return !!(state.assets && state.assets.fanOwned) && !!ventilationEngineerOnCrew();
+      }
+
+      formatMetricTargetValue = function(key, target = activeAnnualTargets()) {
+        const t = target || {};
+        if (key === 'bulkSample') return `${Math.round(t.tonnes || TARGET_TONNES).toLocaleString()}t at ${Number(t.grade || TARGET_GRADE).toFixed(1)}% Goldilocks Grade`;
+        if (key === 'productionDelivery') return `${Math.round(t.tonnes || TARGET_TONNES).toLocaleString()}t at minimum ${Number(t.grade || TARGET_GRADE).toFixed(1)}% Goldilocks Grade`;
+        if (key === 'exploration') return `${Math.round(t.discoveredRows || 0)} new exploration row${Math.round(t.discoveredRows || 0) === 1 ? '' : 's'}`;
+        if (key === 'surplus') return `${money(t.surplusTarget || 0)} minimum Operating Surplus`;
+        if (key === 'lom') return `${Math.round(t.lomTargetTonnes || 0).toLocaleString()}t Ore Reserve Inventory`;
+        if (key === 'technical') return `${Math.round(t.technicalHires || 0)} technical role${Math.round(t.technicalHires || 0) === 1 ? '' : 's'} filled`;
+        if (key === 'ground') return `${Math.round(t.pillarSupports || 0)} pillars supported · max ${typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99 ? t.maxPillarFailures : 0} failures`;
+        if (key === 'fleet') return `${Math.round(t.secondMinerTonnes || 0).toLocaleString()}t mined by 2ndHOPE`;
+        if (key === 'belt') return `${Math.round(t.beltExtensions || 0)} belt advancement action${Math.round(t.beltExtensions || 0) === 1 ? '' : 's'}`;
+        if (key === 'safety') return `Safety Floor ${Math.round(t.safetyMin || 0)}+`;
+        if (key === 'ventilation') return `Ventilation Engineer + Mine Fan installed`;
+        if (key === 'sharePrice') return `Share Price target ${formatSharePrice(t.sharePriceTarget || state.sharePriceTarget)}`;
+        if (key === 'tonnes') return `${Math.round(t.tonnes || TARGET_TONNES).toLocaleString()}t Mined Tonnes`;
+        if (key === 'grade') return `${Number(t.grade || TARGET_GRADE).toFixed(1)}% Goldilocks Grade`;
+        return metricLabelForKey(key);
+      };
+
+      targetSummaryWithValuesHtml = function(target = activeAnnualTargets()) {
+        const t = target || {};
+        const keys = Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : focusKpiKeysForYear(state.year);
+        return `<p><strong>${escapeHtml(t.phaseTitle || 'Fixed KPI Package')}:</strong> ${escapeHtml(t.phaseTheme || 'Targets are now fixed by phase so replay strategy matters.')}</p><ul>${keys.map(key => `<li><strong>${escapeHtml(metricLabelForKey(key))}:</strong> ${escapeHtml(formatMetricTargetValue(key, t))}</li>`).join('')}</ul>`;
+      };
+
+      targetSummaryHtml = function(target = activeAnnualTargets()) {
+        return targetSummaryWithValuesHtml(target);
+      };
+
+      function productionDeliveryStatus(target) {
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const tonnesStatus = progressKpiStatus(yrTonnes, target.tonnes || TARGET_TONNES);
+        const gradeStatus = gradeKpiStatus(yrGrade, target.grade || TARGET_GRADE, yrTonnes);
+        if (tonnesStatus === 'failing' || gradeStatus === 'failing') return 'failing';
+        if (tonnesStatus === 'atRisk' || gradeStatus === 'atRisk') return 'atRisk';
+        return 'onTrack';
+      }
+
+      focusedMetricCard = function(key, target = activeAnnualTargets()) {
+        ensureSharePriceState();
+        const yrTonnes = annualTonnes();
+        const yrGrade = annualGrade();
+        const finance = currentFinanceStatus();
+        const lom = lifeOfMineMetrics();
+        const exp = state.exploration.discoveredRowsThisYear || 0;
+        if (key === 'bulkSample') {
+          const status = productionDeliveryStatus(target);
+          const pctValue = Math.min(pct(yrTonnes, target.tonnes || TARGET_TONNES), target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100);
+          return { key, title: metricLabelForKey(key), status, html: kpiCardHtml('Bulk Sample Objective', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || TARGET_TONNES).toLocaleString()}t · ${yrGrade.toFixed(2)} / ${(target.grade || TARGET_GRADE).toFixed(2)}%`, pctValue, status, 'Year 1 remains the original product-trial promise: simple, visible, and definitely not serious.') };
+        }
+        if (key === 'productionDelivery') {
+          const status = productionDeliveryStatus(target);
+          const pctValue = Math.min(pct(yrTonnes, target.tonnes || TARGET_TONNES), target.grade ? clamp((yrGrade / target.grade) * 100, 0, 120) : 100);
+          return { key, title: metricLabelForKey(key), status, html: kpiCardHtml('Production Delivery', `${Math.round(yrTonnes).toLocaleString()} / ${Math.round(target.tonnes || 0).toLocaleString()}t · ${yrGrade.toFixed(2)} / ${(target.grade || 0).toFixed(2)}%`, pctValue, status, `Expected tonnes by now: ${Math.round((target.tonnes || 0) * finance.elapsed).toLocaleString()}t. Grade remains non-negotiable because Sales already used it.`) };
+        }
+        if (key === 'exploration') return { key, title: metricLabelForKey(key), status: progressKpiStatus(exp, target.discoveredRows || 0), html: kpiCardHtml('Exploration Drilling', `${exp} / ${target.discoveredRows || 0} rows`, pct(exp, target.discoveredRows || 1), progressKpiStatus(exp, target.discoveredRows || 0), state.exploration.drillingSuspended ? 'Suspended by SLT until they rediscover reserves need drilling.' : 'Convert cash into drill core so the brochure can become geology.') };
+        if (key === 'surplus') return { key, title: metricLabelForKey(key), status: directKpiStatus(state.cash, target.surplusTarget || 0, Math.max(2500, (target.surplusTarget || 0) * 0.20)), html: kpiCardHtml('Operating Surplus', `${money(state.cash)} / ${money(target.surplusTarget || 0)}`, target.surplusTarget ? pct(Math.max(0, state.cash), target.surplusTarget) : (state.cash >= 0 ? 100 : 0), directKpiStatus(state.cash, target.surplusTarget || 0, Math.max(2500, (target.surplusTarget || 0) * 0.20)), 'Revenue minus spend. Finance will not reward underspend, but will remember overspend.') };
+        if (key === 'lom') {
+          const status = directKpiStatus(lom.tonnes, target.lomTargetTonnes || Math.max(1, (target.tonnes || TARGET_TONNES) * 1.15), Math.max(2000, (target.lomTargetTonnes || 0) * 0.12));
+          return { key, title: metricLabelForKey(key), status, html: kpiCardHtml('Ore Reserve Inventory', `${Math.round(lom.tonnes).toLocaleString()} / ${Math.round(target.lomTargetTonnes || 0).toLocaleString()}t`, pct(lom.tonnes, target.lomTargetTonnes || 1), status, 'Explored reserve confidence. Improve it through drilling, not investor adjectives.') };
+        }
+        if (key === 'technical') return { key, title: metricLabelForKey(key), status: progressKpiStatus(technicalTeamCoverage(), target.technicalHires || 0), html: kpiCardHtml('Technical Capability', `${technicalTeamCoverage()} / ${target.technicalHires || 0} roles`, pct(technicalTeamCoverage(), target.technicalHires || 1), progressKpiStatus(technicalTeamCoverage(), target.technicalHires || 0), 'Mining Engineer and Rock Doctor coverage is now considered an innovation.') };
+        if (key === 'ground') {
+          const supportStatus = progressKpiStatus(state.pillarSupportsThisYear || 0, target.pillarSupports || 0);
+          const failStatus = annualPillarFailures() <= (typeof target.maxPillarFailures === 'number' ? target.maxPillarFailures : 99) ? 'onTrack' : 'failing';
+          const status = failStatus === 'failing' ? 'failing' : supportStatus;
+          return { key, title: metricLabelForKey(key), status, html: kpiCardHtml('Ground Control', `${state.pillarSupportsThisYear || 0} / ${target.pillarSupports || 0} supports · ${annualPillarFailures()} failures`, failStatus === 'failing' ? 0 : pct(state.pillarSupportsThisYear || 0, target.pillarSupports || 1), status, 'Critical pillars now deteriorate whether Production has reached them or not.') };
+        }
+        if (key === 'fleet') {
+          const owned = !!(state.assets && state.assets.secondMinerOwned);
+          const utilisation = secondMinerAnnualTonnes();
+          const useStatus = owned ? progressKpiStatus(utilisation, target.secondMinerTonnes || 1) : 'failing';
+          return { key, title: metricLabelForKey(key), status: useStatus, html: kpiCardHtml('2ndHOPE Utilisation', `${owned ? Math.round(utilisation).toLocaleString() : 'Not owned'} / ${Math.round(target.secondMinerTonnes || 0).toLocaleString()}t`, owned ? pct(utilisation, target.secondMinerTonnes || 1) : 0, useStatus, 'The production target now assumes a second miner because one miner produces one miner of output.') };
+        }
+        if (key === 'belt') return { key, title: metricLabelForKey(key), status: progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions || 0), html: kpiCardHtml('Belt Advancement', `${state.beltExtensionsThisYear || 0} / ${target.beltExtensions || 0}`, pct(state.beltExtensionsThisYear || 0, target.beltExtensions || 1), progressKpiStatus(state.beltExtensionsThisYear || 0, target.beltExtensions || 0), 'Advance infrastructure before treating distance as a behavioural issue.') };
+        if (key === 'safety') return { key, title: metricLabelForKey(key), status: directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8), html: kpiCardHtml('Safety Floor', `${Math.round(traitValue('safety'))} / ${Math.round(target.safetyMin || 0)}`, clamp((traitValue('safety') / Math.max(1, target.safetyMin || 1)) * 100, 0, 120), directKpiStatus(traitValue('safety'), target.safetyMin || 0, 8), 'Deep mining requires safety to remain above PowerPoint level.') };
+        if (key === 'ventilation') {
+          const ok = ventilationKpiReady();
+          const partial = !!(state.assets && state.assets.fanOwned) || !!ventilationEngineerOnCrew();
+          return { key, title: metricLabelForKey(key), status: ok ? 'onTrack' : partial ? 'atRisk' : 'failing', html: kpiCardHtml('Ventilation Readiness', `${state.assets && state.assets.fanOwned ? 'Fan installed' : 'No fan'} · ${ventilationEngineerOnCrew() ? 'Engineer hired' : 'No engineer'}`, ok ? 100 : partial ? 55 : 0, ok ? 'onTrack' : partial ? 'atRisk' : 'failing', 'The deeper mine has become too hot for optimism alone.') };
+        }
+        if (key === 'sharePrice') return { key, title: metricLabelForKey(key), status: sharePriceKpiStatus(), html: kpiCardHtml('Share Price', `${formatSharePrice()} / ${formatSharePrice(target.sharePriceTarget || state.sharePriceTarget)}`, pct(state.sharePrice, target.sharePriceTarget || state.sharePriceTarget || 1), sharePriceKpiStatus(), 'SLT now holds shares, so this is suddenly everyone’s most important safety metric.') };
+        return { key, title: metricLabelForKey(key), status: 'onTrack', html: '' };
+      };
+
+      focusedKpiRows = function() {
+        const target = activeAnnualTargets();
+        return focusKpiKeysForYear(state.year).map(key => focusedMetricCard(key, target));
+      };
+
+      progressiveKpiRows = function() { return focusedKpiRows().map(({ key, title, status }) => ({ key, title, status })); };
+      annualKpiStatusList = function() { return focusedKpiRows().map(({ key, title, status }) => ({ key, title, status })); };
+      annualTargetPassed = function() { return annualKpiStatusList().every(x => x.status === 'onTrack'); };
+
+      annualKpiTrackerHtml = function() {
+        ensureSharePriceState();
+        const finance = currentFinanceStatus();
+        const target = activeAnnualTargets();
+        const rows = focusedKpiRows();
+        const overallStatus = aggregateKpiStatus(rows);
+        const summaryBits = [`Year ${state.year}`, `Day ${dayOfYear()} / ${YEAR_LENGTH_DAYS}`, `${Math.round(finance.elapsed * 100)}% elapsed`, currentLevelName()];
+        if (sharePriceMetricActive()) summaryBits.push(`Share ${formatSharePrice()}`);
+        const label = activeYearOneObjective() ? 'Trial Objective' : 'Fixed Phase KPIs';
+        const valueLine = rows.map(x => escapeHtml(formatMetricTargetValue(x.key, target))).join(' · ');
+        return `<div class="financeSummaryGrid">
+          <div class="financeSummaryCard ${statusCssClass(overallStatus)}"><strong>Annual Position</strong>${summaryBits.join(' · ')}</div>
+          <div class="financeSummaryCard"><strong>${label}</strong>${valueLine}</div>
+        </div><div class="kpiTrackerGrid">${rows.map(x => x.html).join('')}</div>`;
+      };
+
+      function fixedKpiReviewRowsHtml() {
+        return annualKpiStatusList().map(r => `<div class="row"><div class="avatarDot" style="background:${r.status === 'onTrack' ? '#22c55e' : r.status === 'atRisk' ? '#f59e0b' : '#ef4444'}"></div><div><strong>${escapeHtml(r.title)}</strong><span>${escapeHtml(formatMetricTargetValue(r.key, activeAnnualTargets()))}</span></div><span class="tag">${r.status === 'onTrack' ? '✓ On track' : r.status === 'atRisk' ? '! At risk' : '✕ Failing'}</span></div>`).join('');
+      }
+
+      openAnnualPerformanceReview = function(rating, fired) {
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        const target = activeAnnualTargets();
+        const ratingText = rating === 'successful' ? 'Successful' : 'Needs Improvement';
+        const pipText = fired
+          ? `<div class="pipNotice"><strong>PIP outcome:</strong> The Performance Improvement Plan has successfully identified a performance improvement opportunity outside the organisation.</div>`
+          : rating === 'needsImprovement'
+            ? `<div class="pipNotice"><strong>Performance Improvement Plan:</strong> You have been placed on a supportive process designed to help you understand that next year’s failure will be treated differently.</div>`
+            : `<div class="pipNotice"><strong>PIP status:</strong> Cleared. Previous underperformance has been temporarily reinterpreted as development.</div>`;
+        const pleadButton = rating === 'needsImprovement' ? `<button class="warn" data-plead-case>${fired ? 'Plead for Reconsideration' : 'Plead Your Case'}</button>` : '';
+        const buttonHtml = fired ? `<button class="primary" data-accept-reassignment>Accept Reassignment</button>${pleadButton}` : `<button class="primary" data-next-year>${rating === 'successful' ? 'Accept Next Operating Year' : 'Accept PIP and Continue'}</button>${pleadButton}`;
+        const successRecognitionHtml = rating === 'successful' ? annualSuccessRecognitionHtml(state.year) : '';
+        const body = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Annual Moderation Panel', 'The KPI package was fixed for the phase, which means failure can be attributed to execution with greater confidence.', 'SLT')}
+          <div class="letter"><h2>Annual Performance Review — Year ${state.year}</h2><p>Dear Mine Manager,</p><p>The <strong>Superior Leadership Team</strong> has completed your annual review against the fixed KPI package for <strong>${escapeHtml(target.phaseTitle || 'the current operating phase')}</strong>.</p>${annualReviewRatingHtml(rating === 'successful' ? 'successful' : 'needs')}<p><strong>Rating:</strong> ${ratingText}</p><div class="rows">${fixedKpiReviewRowsHtml()}</div>${pipText}${successRecognitionHtml}<p>${rating === 'successful' ? 'Your success confirms the targets were realistic and therefore suitable for upward revision next time.' : fired ? 'Unfortunately, two consecutive Needs Improvement ratings mean the organisation must now support your development from a safer distance.' : 'The SLT remains confident that next year will demonstrate improvement, particularly now that the consequences have been explained.'}</p><p class="sig">Superior Leadership Team<br>ManySalts Mine<br>Delivering Value Through Other People</p></div><div class="btnRow">${buttonHtml}</div>`;
+        showPreparedModal('Annual Performance Review', body, { closable: false, windowClass: 'window medium', images: ['assets/characters/slt-silhouette.png'] });
+      };
+
+      function escalationTargetKeys(target = activeAnnualTargets()) {
+        return (Array.isArray(target.kpiKeys) ? target.kpiKeys : []).filter(k => !['technical', 'ventilation'].includes(k));
+      }
+
+      function escalateSingleKpiTarget(key, target) {
+        if (key === 'bulkSample' || key === 'productionDelivery') {
+          target.tonnes = Math.round((target.tonnes || TARGET_TONNES) * 1.07);
+          target.grade = Math.min(15.4, Number(target.grade || TARGET_GRADE) + 0.05);
+          return `${metricLabelForKey(key)} increased to ${formatMetricTargetValue(key, target)}.`;
+        }
+        if (key === 'exploration') { target.discoveredRows = (target.discoveredRows || 0) + 1; return `Exploration Drilling increased to ${formatMetricTargetValue(key, target)}.`; }
+        if (key === 'surplus') { target.surplusTarget = Math.round((target.surplusTarget || 0) * 1.20 + 2500); return `Operating Surplus increased to ${formatMetricTargetValue(key, target)}.`; }
+        if (key === 'lom') { target.lomTargetTonnes = Math.round((target.lomTargetTonnes || (target.tonnes || TARGET_TONNES) * 1.15) * 1.10); return `Ore Reserve Inventory increased to ${formatMetricTargetValue(key, target)}.`; }
+        if (key === 'ground') { target.pillarSupports = (target.pillarSupports || 0) + 1; return `Ground Control increased to ${formatMetricTargetValue(key, target)}.`; }
+        if (key === 'fleet') { target.secondMinerTonnes = Math.round((target.secondMinerTonnes || 0) * 1.12 + 500); return `2ndHOPE Utilisation increased to ${formatMetricTargetValue(key, target)}.`; }
+        if (key === 'belt') { target.beltExtensions = (target.beltExtensions || 0) + 1; return `Belt Advancement increased to ${formatMetricTargetValue(key, target)}.`; }
+        if (key === 'safety') { target.safetyMin = Math.min(85, (target.safetyMin || 0) + 2); return `Safety Floor increased to ${formatMetricTargetValue(key, target)}.`; }
+        if (key === 'sharePrice') { target.sharePriceTarget = Math.round((target.sharePriceTarget || state.sharePriceTarget || 100) + 2); state.sharePriceTarget = target.sharePriceTarget; return `Share Price target increased to ${formatMetricTargetValue(key, target)}.`; }
+        return `${metricLabelForKey(key)} left unchanged due to insufficient executive imagination.`;
+      }
+
+      triggerMidYearReview = function() {
+        applyAnnualTargetUnlockGuards();
+        if (activeYearOneObjective()) {
+          showProductionComment('Mid-year alignment review skipped. Year 1 remains the original bulk sample: 10,000t at 14.0% Goldilocks Grade.', 'SLT', 5.5);
+          return;
+        }
+        const original = { ...activeAnnualTargets(), kpiKeys: [...focusKpiKeysForYear(state.year)] };
+        const revised = { ...original, kpiKeys: [...original.kpiKeys] };
+        const beforeRows = annualKpiStatusList();
+        const changes = [];
+        for (const row of beforeRows) {
+          if (row.status === 'onTrack' && escalationTargetKeys(original).includes(row.key)) changes.push(escalateSingleKpiTarget(row.key, revised));
+        }
+        const reason = changes.length
+          ? 'One or more KPIs are on track. The Superior Leadership Team has therefore concluded the targets were insufficiently ambitious.'
+          : 'No KPI is sufficiently on track to justify a formal increase. The targets remain unchanged, which SLT has described as support.';
+        state.annualTargets = sanitiseFixedPhaseTargets(revised, state.year);
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Mid-Year Alignment Review';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Strategic Adjustment Without Accountability', 'The KPI list has not changed. Only reality has been revised.', 'SLT')}<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p>${changes.length ? `<p><strong>Revisions:</strong><br>${changes.map(escapeHtml).join('<br>')}</p>` : ''}<div class="sltReviewBox"><div class="reviewPanel"><h3>Original Fixed KPIs</h3>${targetSummaryWithValuesHtml(original)}</div><div class="reviewPanel"><h3>Revised Fixed KPIs</h3>${targetSummaryWithValuesHtml(state.annualTargets)}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div><div class="btnRow"><button class="primary" data-close-formal-review>Accept Revised Reality</button></div>`;
+        $('modalOverlay').classList.add('show');
+      };
+
+      focusedYearStartBriefingHtml = function(year) {
+        const target = targetsForYear(year);
+        const targetBlock = `<div class="letter"><h2>${escapeHtml(target.phaseTitle || 'Fixed KPI Package')}</h2><p>${escapeHtml(target.phaseTheme || 'Targets are fixed by phase so the player can plan and the SLT can still move the goalposts mid-year.')}</p><h3>Fixed KPI Package</h3>${targetSummaryWithValuesHtml(target)}<p class="sig">Superior Leadership Team<br>Predictable Ambition, Adjustable Reality</p></div>`;
+        return targetBlock;
+      };
+
+      const baseCompleteMiningBlockForFixedKpis = completeMiningBlock;
+      completeMiningBlock = function(target, pos) {
+        const minerWas2 = state.machine === state.machine2;
+        const clearingRubble = !!(target && (target.status === 'rubble' || target.wasRubble === true));
+        const beforeTonnes = Number(state.tonnes) || 0;
+        baseCompleteMiningBlockForFixedKpis(target, pos);
+        if (minerWas2 && !clearingRubble) {
+          state.secondMinerTonnesThisYear = (Number(state.secondMinerTonnesThisYear) || 0) + Math.max(0, (Number(state.tonnes) || 0) - beforeTonnes);
+        }
+      };
+
+      const baseAdvanceToNextYearForFixedKpis = advanceToNextYear;
+      advanceToNextYear = function() {
+        state.secondMinerTonnesThisYear = 0;
+        return baseAdvanceToNextYearForFixedKpis();
+      };
+
+      function setBlockToSterilisedGround(block) {
+        if (!block || block.status === 'locked') return 'none';
+        if (block.status === 'void' || block.status === 'rubble') { setBlockToRubble(block, false); return 'rubble'; }
+        if (block.isPillar) {
+          block.support = false;
+          block.pillarState = block.pillarState === 'critical' ? 'critical' : 'fractured';
+          block.exposureAge = Math.max(block.exposureAge || 0, 170);
+          block.sterilised = false;
+          return 'pillar';
+        }
+        block.status = 'damaged';
+        block.sterilised = true;
+        block.progress = 0;
+        block.tonnes = 0;
+        block.actualGrade = 0;
+        block.estimatedGrade = 0;
+        block.grade = 0;
+        block.gradeConfidence = 1;
+        block.gasPocket = false;
+        block.waterPocket = false;
+        return 'sterilised';
+      }
+
+      function pillarRiskMultiplier() {
+        const safety = traitValue('safety');
+        const rockDoc = rockDoctorOnCrew();
+        const eng = miningEngineerOnCrew();
+        let mult = depthRiskFactor();
+        mult *= clamp(1.25 - safety / 180, 0.62, 1.20);
+        if (rockDoc) mult *= clamp(1.05 - (Number(rockDoc.skill) || 3) * 0.055, 0.72, 0.98);
+        else mult *= 1.18;
+        if (eng) mult *= clamp(1.04 - (Number(eng.skill) || 3) * 0.035, 0.80, 1.00);
+        else mult *= 1.08;
+        mult *= (1 - clamp((state.researchBonuses && state.researchBonuses.groundControl) || 0, -0.10, 0.25));
+        return clamp(mult, 0.45, 1.85);
+      }
+
+      pillarDeteriorationSettings = function() {
+        const depth = Math.max(1, Number(state.depthIndex) || 1);
+        const risk = pillarRiskMultiplier();
+        return {
+          ambientRate: (0.44 + depth * 0.10) * risk,
+          exposedRate: (0.52 + depth * 0.12) * risk,
+          cracking: 55,
+          spalling: 98,
+          fractured: 148,
+          critical: 205,
+          fail: 270,
+          failChance: clamp(0.012 + depth * 0.004, 0.012, 0.045)
+        };
+      };
+
+      function maybeWarnPillarDeterioration(block, prior, nextState) {
+        if (!block || prior === nextState) return;
+        if (nextState === 'cracking' && block.lastWarningStage !== 'cracking') {
+          block.lastWarningStage = 'cracking';
+          pushQueueEvent({
+            tone: 'warning', icon: 'GND', label: 'GND', image: 'assets/characters/rock-doctor.png', character: 'Rock Doctor', department: 'Ground Control', title: 'Pillar Distress Detected',
+            body: `<p>Rock Doctor has identified early signs of pillar distress at <strong>Grid ${gridRef(block)}</strong>, including in ground Production has not yet reached.</p><p><strong>Action:</strong> mine access to the pillar and support it with the bolter before the surrounding reserve becomes a theoretical asset.</p>`
+          });
+        }
+        if (nextState === 'critical' && block.lastWarningStage !== 'critical') {
+          block.lastWarningStage = 'critical';
+          pushQueueEvent({
+            tone: 'danger', icon: 'GND', label: 'GND', image: 'assets/characters/rock-doctor.png', character: 'Rock Doctor', department: 'Ground Control', title: 'Critical Pillar Failure Risk',
+            body: `<p>A pillar at <strong>Grid ${gridRef(block)}</strong> is now showing signs of non-alignment with the Life of Mine plan.</p><p><strong>Action:</strong> create access and install support. Ignoring the issue may result in sterilised ground and lost reserve.</p>`
+          });
+        }
+      }
+
+      updateExposedPillarsOneDay = function() {
+        if (!featureUnlocked('groundSupport')) return;
+        const blocks = state.blocks[MINE_ID] || [];
+        const cfg = pillarDeteriorationSettings();
+        for (const b of blocks) {
+          if (!b.isPillar || b.status === 'void' || b.support || b.pillarState === 'supported' || b.pillarState === 'failed') continue;
+          const neighbours = [[1,0],[-1,0],[0,1],[0,-1]].map(([dr, dc]) => blockAt(MINE_ID, b.r + dr, b.c + dc)).filter(Boolean);
+          const exposed = neighbours.filter(n => n.status === 'void' || n.status === 'rubble').length;
+          const prior = b.pillarState || 'stable';
+          b.exposureAge = (b.exposureAge || 0) + cfg.ambientRate + exposed * cfg.exposedRate;
+          let nextState = 'stable';
+          if (b.exposureAge > cfg.critical) nextState = 'critical';
+          else if (b.exposureAge > cfg.fractured) nextState = 'fractured';
+          else if (b.exposureAge > cfg.spalling) nextState = 'spalling';
+          else if (b.exposureAge > cfg.cracking) nextState = 'cracking';
+          b.pillarState = nextState;
+          maybeWarnPillarDeterioration(b, prior, nextState);
+          if (b.exposureAge > cfg.fail && b.pillarState === 'critical' && Math.random() < cfg.failChance) failPillar(b);
+        }
+      };
+
+      failPillar = function(block) {
+        if (!block || block.pillarState === 'failed') return;
+        const failedGrid = gridRef(block);
+        block.pillarState = 'failed';
+        block.failedFromLatentRisk = !adjacentBlocks(block).some(n => n.status === 'void' || n.status === 'rubble');
+        setBlockToRubble(block, true);
+        block.pillarState = 'failed';
+        block.failedGridRef = failedGrid;
+
+        let rubbleCreated = 1;
+        let sterilisedGround = 0;
+        let stressedPillars = 0;
+        const affected = adjacentBlocks(block).filter(n => n && n.status !== 'locked');
+        for (const n of affected) {
+          const result = setBlockToSterilisedGround(n);
+          if (result === 'rubble') rubbleCreated++;
+          else if (result === 'sterilised') sterilisedGround++;
+          else if (result === 'pillar') stressedPillars++;
+        }
+        const affectedRefs = affected.length ? affected.map(b => 'Grid ' + gridRef(b)).join(', ') : 'no adjacent blocks';
+        state.pillarFailures = (state.pillarFailures || 0) + 1;
+        state.sterilisedBlocksThisYear = (state.sterilisedBlocksThisYear || 0) + sterilisedGround;
+        adjustTrait('safety', -16);
+        adjustTrait('morale', -10);
+        adjustTrait('productivity', -6);
+        spend(scaledCost(14000), 'Ground-control sterilisation');
+        pushQueueEvent({
+          tone: 'danger', icon: '⛏', label: 'GND', image: 'assets/characters/rock-doctor.png', character: 'Rock Doctor', department: 'Ground Control', title: 'Pillar Failure — Ground Sterilised',
+          body: `<p>A pillar at <strong>Grid ${failedGrid}</strong> has failed ${block.failedFromLatentRisk ? 'before Production had mined access to it' : 'after visible signs of ground deterioration'}.</p><p>The Rock Doctor has sterilised nearby ground: <strong>${escapeHtml(affectedRefs)}</strong>.</p><p><strong>Immediate impact:</strong> ${rubbleCreated} rubble block${rubbleCreated === 1 ? '' : 's'}, ${sterilisedGround} unmined block${sterilisedGround === 1 ? '' : 's'} sterilised, ${stressedPillars} adjacent pillar${stressedPillars === 1 ? '' : 's'} stressed.</p><p>Sterilised blocks cannot be mined. Ignoring failing pillars now removes reserve rather than merely postponing inconvenience.</p><p><strong>Penalty:</strong> -16 Safety, -10 Morale, -6 Productivity, ${money(scaledCost(14000))} investigation and recovery cost.</p>`
+        });
+      };
+
+      const baseShowBlockInfoForSterilisedGround = showBlockInfo;
+      showBlockInfo = function(block) {
+        if (block && block.status === 'damaged' && block.sterilised) {
+          showProductionComment('Sterilised ground. The Rock Doctor has removed this block from the mineable reserve after nearby pillar failure. Finance is checking whether sterilised tonnes can still appear in a presentation.', 'Ground Control', 7.5);
+          return;
+        }
+        return baseShowBlockInfoForSterilisedGround(block);
+      };
+
+      const baseBeginNextMachineStepForSterilisedGround = beginNextMachineStep;
+      beginNextMachineStep = function() {
+        const next = nextMachineBlock();
+        if (next && next.status === 'damaged' && next.sterilised) {
+          state.machine.autoMining = false;
+          state.machine.status = 'idle';
+          showProductionComment('The block ahead is sterilised ground. Rock Doctor will not allow Production to mine the consequence of ignoring ground support.', 'Ground Control', 6.5);
+          return;
+        }
+        return baseBeginNextMachineStepForSterilisedGround();
+      };
+
+      const baseDevActionForFixedKpisAndPillars = devAction;
+      devAction = function(action) {
+        if (action === 'pillar-deteriorate') {
+          if ((state.depthIndex || 0) < 1) { state.depthIndex = 1; state.mineLevel = -1100; }
+          const p = (state.blocks[MINE_ID] || []).find(b => b.isPillar && !b.support && b.pillarState !== 'failed');
+          if (p) { p.exposureAge = Math.max(p.exposureAge || 0, 206); p.pillarState = 'critical'; maybeWarnPillarDeterioration(p, 'stable', 'critical'); showProductionComment('Dev: pillar forced to critical state.', 'Dev Tools', 4); }
+          return;
+        }
+        if (action === 'pillar-fail') {
+          if ((state.depthIndex || 0) < 1) { state.depthIndex = 1; state.mineLevel = -1100; }
+          const p = (state.blocks[MINE_ID] || []).find(b => b.isPillar && !b.support && b.pillarState !== 'failed');
+          if (p) failPillar(p);
+          return;
+        }
+        if (action === 'buy-second-dev') { state.secondMinerTonnesThisYear = state.secondMinerTonnesThisYear || 0; }
+        return baseDevActionForFixedKpisAndPillars(action);
+      };
+
+      const baseEnhanceDevToolsForFixedKpisAndPillars = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        baseEnhanceDevToolsForFixedKpisAndPillars();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-fixed-kpi-pillar-dev-tools]')) return;
+        body.insertAdjacentHTML('beforeend', `<div data-fixed-kpi-pillar-dev-tools>
+          <section class="devToolCard"><h3>Fixed KPIs / Pillar Failure</h3><p>Test fixed phase KPI packages and proactive pillar deterioration independent of exposure.</p><div class="devToolBtns"><button data-dev-action="pillar-deteriorate">Force Critical Pillar</button><button data-dev-action="pillar-fail">Force Pillar Failure</button></div></section>
+        </div>`);
+      };
+
+
+      function fixedKpiStrictPassed(key, target = activeAnnualTargets()) {
+        if (key === 'bulkSample' || key === 'productionDelivery') return annualTonnes() >= (target.tonnes || TARGET_TONNES) && annualGrade() >= (target.grade || TARGET_GRADE);
+        if (key === 'exploration') return (state.exploration.discoveredRowsThisYear || 0) >= (target.discoveredRows || 0);
+        if (key === 'surplus') return state.cash >= (target.surplusTarget || 0);
+        if (key === 'lom') return lifeOfMineMetrics().tonnes >= (target.lomTargetTonnes || 0);
+        if (key === 'technical') return technicalTeamCoverage() >= (target.technicalHires || 0);
+        if (key === 'ground') return (state.pillarSupportsThisYear || 0) >= (target.pillarSupports || 0) && annualPillarFailures() <= (typeof target.maxPillarFailures === 'number' ? target.maxPillarFailures : 99);
+        if (key === 'fleet') return !!(state.assets && state.assets.secondMinerOwned) && secondMinerAnnualTonnes() >= (target.secondMinerTonnes || 0);
+        if (key === 'belt') return (state.beltExtensionsThisYear || 0) >= (target.beltExtensions || 0);
+        if (key === 'safety') return traitValue('safety') >= (target.safetyMin || 0);
+        if (key === 'ventilation') return ventilationKpiReady();
+        if (key === 'sharePrice') return (state.sharePrice || 0) >= (target.sharePriceTarget || state.sharePriceTarget || 0);
+        return true;
+      }
+
+      const progressAnnualKpiStatusListForFixedPhase = annualKpiStatusList;
+      annualKpiStatusList = function() {
+        const target = activeAnnualTargets();
+        const rows = focusedKpiRows().map(({ key, title, status }) => ({ key, title, status }));
+        if (dayOfYear() >= YEAR_LENGTH_DAYS || state.yearReviewDue) {
+          return rows.map(r => ({ ...r, status: fixedKpiStrictPassed(r.key, target) ? 'onTrack' : 'failing' }));
+        }
+        return rows;
+      };
+
+      annualTargetPassed = function() {
+        const target = activeAnnualTargets();
+        return focusKpiKeysForYear(state.year).every(key => fixedKpiStrictPassed(key, target));
+      };
+
+      state.secondMinerTonnesThisYear = state.secondMinerTonnesThisYear || 0;
+      state.sterilisedBlocksThisYear = state.sterilisedBlocksThisYear || 0;
+      state.annualTargets = sanitiseFixedPhaseTargets(state.annualTargets || targetsForYear(state.year), state.year);
 
 
       ensureDrillingRestrictionState();
