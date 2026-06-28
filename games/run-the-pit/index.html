@@ -5339,7 +5339,69 @@
       }
     }
 
-  </style>
+  
+
+    /* Pass 8: research programme, hiring tabs and compact modal polish */
+    .researchHeroTile {
+      min-height: 148px;
+      border-radius: 16px;
+      border: 1px solid rgba(56,189,248,0.38);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(56,189,248,0.22), transparent 34%),
+        linear-gradient(135deg, rgba(15,23,42,0.96), rgba(8,47,73,0.92));
+      display: grid;
+      grid-template-columns: 128px minmax(0,1fr);
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .researchHeroPlaceholder {
+      height: 112px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 2px dashed rgba(186,230,253,0.45);
+      background: rgba(2,6,23,0.44);
+      color: #bae6fd;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      line-height: 1.05;
+    }
+
+    .researchHeroTile h3 { margin: 0 0 6px; color: #e0f2fe; }
+    .researchHeroTile p { margin: 0; color: #cbd5e1; }
+
+    .researchOptionCard.activeResearch {
+      border-color: rgba(56,189,248,0.72);
+      background: linear-gradient(180deg, rgba(14,116,144,0.28), rgba(15,23,42,0.80));
+      box-shadow: 0 0 0 2px rgba(56,189,248,0.12), inset 0 1px rgba(255,255,255,0.08);
+    }
+
+    .researchOptionCard.disabledResearch {
+      opacity: 0.48;
+      filter: grayscale(0.55);
+    }
+
+    .researchOptionCard.disabledResearch button { pointer-events: none; }
+
+    .targetSummaryList strong.targetValueEmphasis,
+    .revisionValueEmphasis {
+      color: #fde68a;
+      font-weight: 950;
+    }
+
+    @media (max-width: 620px) {
+      .researchHeroTile {
+        grid-template-columns: 1fr;
+        min-height: 0;
+      }
+      .researchHeroPlaceholder { height: 86px; }
+    }
+</style>
 </head>
 <body>
   <audio id="bgMusic" src="assets/audio/theme.mp3" loop preload="auto" playsinline></audio>
@@ -19993,6 +20055,375 @@
         }
         return baseDevActionForPass7(action);
       };
+
+
+      /* Playtest pass 8: KPI copy, research UI, hidden decision odds, hiring split, safety countdown and tonnage progression. */
+
+      function pass8YearOneKpiLetter() {
+        return `<div class="letter"><h2>Year 1 KPI Notice — Bulk Sample</h2>
+          <p>The Superior Leadership Team guarantees that this area is strictly for trial mining and will never be used for future production. As such, mining layout, pillar support, ground control, ventilation, feasibility studies and other usual obstacles to progress do not apply.</p>
+          <p><strong>Mine 10,000 tonnes at minimum 14.0% Goldilocks Grade.</strong></p>
+          <p class="sig">Superior Leadership Team<br>Trial Mining Without Long-Term Consequences</p></div>`;
+      }
+
+      function pass8YearTwoKpiLetter() {
+        return `<div class="letter"><h2>Year 2 KPI Notice — Reserve Confirmation</h2>
+          <p>In Year 1, the Superior Leadership Team confirmed this was only a bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now support scalable mining.</p>
+          <p>Only the first four rows of the -1000 Level are already interpreted. The rest requires cash to be converted into drill core so Geology can confirm what has already been promised externally.</p>
+          <p><strong>New requirements:</strong> buy a drill, hire one Geologist and two named Drillers, and unlock new rows.</p>
+          <p class="sig">Superior Leadership Team<br>Reserve Confidence Through Retrospective Evidence</p></div>`;
+      }
+
+      const baseFixedKpiPackageForPass8 = fixedKpiPackageForCurrentPhase;
+      fixedKpiPackageForCurrentPhase = function(year = state.year, depthIndex = state.depthIndex) {
+        const t = baseFixedKpiPackageForPass8(year, depthIndex);
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        if (depth === 0 && y <= 1) {
+          t.phaseTitle = 'Year 1 KPI Notice — Bulk Sample';
+          t.phaseTheme = 'The Superior Leadership Team guarantees that this area is strictly for trial mining and will never be used for future production. As such, mining layout, pillar support, ground control, ventilation, feasibility studies and other usual obstacles to progress do not apply.';
+          t.kpiKeys = ['bulkSample'];
+          t.tonnes = TARGET_TONNES;
+          t.grade = TARGET_GRADE;
+        }
+        if (depth === 0 && y === 2) {
+          t.phaseKey = 'reserve-confirmation';
+          t.phaseTitle = 'Year 2 KPI Notice — Reserve Confirmation';
+          t.phaseTheme = 'In Year 1, the Superior Leadership Team confirmed this was only a bulk sample. Due to business pressures, strategic opportunity, and the board already being briefed, the trial area must now support scalable mining.';
+          t.kpiKeys = ['productionDelivery', 'exploration', 'surplus'];
+        }
+        return t;
+      };
+
+      const baseYearStartBriefingHtmlForPass8 = yearStartBriefingHtml;
+      yearStartBriefingHtml = function(year) {
+        const depth = Number(state.depthIndex) || 0;
+        if (depth === 0 && Math.max(1, Number(year) || 1) <= 1) return pass8YearOneKpiLetter();
+        if (depth === 0 && Number(year) === 2) return pass8YearTwoKpiLetter();
+        return baseYearStartBriefingHtmlForPass8(year);
+      };
+
+      if (typeof focusedYearStartBriefingHtml === 'function') {
+        const baseFocusedYearStartBriefingHtmlForPass8 = focusedYearStartBriefingHtml;
+        focusedYearStartBriefingHtml = function(year) {
+          const depth = Number(state.depthIndex) || 0;
+          if (depth === 0 && Math.max(1, Number(year) || 1) <= 1) return pass8YearOneKpiLetter();
+          if (depth === 0 && Number(year) === 2) return pass8YearTwoKpiLetter();
+          return baseFocusedYearStartBriefingHtmlForPass8(year);
+        };
+      }
+
+      function pass8PlayDecisionResultSound(tone) {
+        const t = String(tone || '').toLowerCase();
+        if (t === 'good' || t === 'positive' || t === 'success') {
+          playTone(880, 0.00, 0.10, 'triangle', 0.08);
+          playTone(1174, 0.10, 0.12, 'triangle', 0.075);
+          playTone(1568, 0.22, 0.18, 'triangle', 0.065);
+          return;
+        }
+        if (t === 'warning' || t === 'danger' || t === 'negative' || t === 'bad') {
+          playTone(260, 0.00, 0.18, 'sawtooth', 0.09);
+          playTone(190, 0.16, 0.20, 'square', 0.07);
+          playTone(130, 0.34, 0.24, 'sawtooth', 0.055);
+          return;
+        }
+        playTone(640, 0.00, 0.08, 'triangle', 0.045);
+        playTone(760, 0.09, 0.09, 'triangle', 0.04);
+      }
+
+      const baseOpenDecisionOutcomeModalForPass8 = openDecisionOutcomeModal;
+      openDecisionOutcomeModal = function(ev) {
+        const result = baseOpenDecisionOutcomeModalForPass8(ev);
+        pass8PlayDecisionResultSound(ev && ev.tone ? ev.tone : 'info');
+        return result;
+      };
+
+      function pass8ResearchHeroHtml() {
+        return `<div class="researchHeroTile">
+          <div class="researchHeroPlaceholder">RESEARCH<br>ASSET<br>PENDING</div>
+          <div><h3>Mining Engineering Research Programme</h3>
+          <p>Research converts time, cash and engineering confidence into trait improvement. One project can run at a time; all other studies are deferred until the current recommendation has become expensive enough to be meaningful.</p></div>
+        </div>`;
+      }
+
+      openResearchWindow = function() {
+        setModalClosable(true);
+        $('modalWindow').className = 'window';
+        $('modalTitle').textContent = 'Research Programme';
+        const eng = miningEngineerOnCrew();
+        const active = state.engineeringResearch;
+        let body = pass8ResearchHeroHtml();
+        body += `<p>Research can improve Productivity, Skill, Morale or Safety after a long study, a hidden success roll, and a magnitude roll on completion.</p>`;
+        body += researchStatusSummaryHtml();
+        if (featureUnlocked('technicalTeam') && eng) {
+          const rows = researchOptionsForTraits().map(opt => {
+            const isActive = !!active && active.key === opt.key;
+            const disabled = !!active && !isActive;
+            const pctDone = isActive ? clamp((active.progress || 0) / Math.max(1, active.days || opt.days) * 100, 0, 100) : 0;
+            const status = isActive
+              ? `<div class="researchProgressBar"><span style="width:${pctDone.toFixed(0)}%"></span></div><span>Active study · ${pctDone.toFixed(0)}% complete · about ${Math.max(0, Math.ceil((active.days - (active.progress || 0)))).toLocaleString()} days remaining</span>`
+              : disabled
+                ? `<span>Unavailable until the current research project is completed.</span>`
+                : `<span>${escapeHtml(opt.desc)} Cost ${money(scaledCost(opt.cost))}. Duration ${opt.days} days. Potential result +${opt.min} to +${opt.max} ${traitLabel(opt.trait)}.</span>`;
+            return `<div class="row researchOptionCard ${isActive ? 'activeResearch' : ''} ${disabled ? 'disabledResearch' : ''}"><div class="avatarDot" style="background:${isActive ? '#22c55e' : '#38bdf8'}"></div><div><strong>${escapeHtml(opt.title)}</strong>${status}</div><button data-start-engineering-research="${opt.key}" ${active ? 'disabled' : ''}>${isActive ? 'Active' : 'Start'}</button></div>`;
+          }).join('');
+          body += `<div class="rows">${rows}</div>`;
+        }
+        body += `<div class="btnRow"><button data-window="staff">Staff</button><button data-window="assets">Assets</button><button data-close>Close</button></div>`;
+        $('modalBody').innerHTML = body;
+        $('modalOverlay').classList.add('show');
+      };
+
+      // Operating Culture Monitor should not appear as a KPI event in the queue.
+      applyTraitDriftEvent = function(key = null) {
+        const ev = key ? traitDriftEvents.find(x => x.key === key) : randomItem(traitDriftEvents);
+        if (!ev) return;
+        for (const [trait, delta] of Object.entries(ev.effects || {})) adjustTrait(trait, delta);
+        if (ev.cost) spend(ev.cost, ev.title);
+        const effectsText = Object.entries(ev.effects || {}).map(([trait, delta]) => `${delta >= 0 ? '+' : ''}${delta} ${traitLabel(trait)}`).join(', ');
+        openOperationalEventModal({
+          title: ev.title,
+          image: 'assets/characters/operating-culture-monitor.png',
+          character: 'Operating Culture Monitor',
+          department: 'Behavioural KPI Drift',
+          label: 'CULT',
+          tone: ev.tone || 'info',
+          body: `<p>${escapeHtml(ev.body)}</p><p><strong>Impact:</strong> ${escapeHtml(effectsText || 'No measurable impact')}${ev.cost ? ', ' + money(scaledCost(ev.cost)) + ' cost' : ''}.</p>`,
+          button: 'Accept Cultural Learning'
+        });
+      };
+
+      // Keep decision odds hidden in normal play. The choice still modifies the hidden roll and consequence magnitude.
+      resolveHseInspectionChoice = function(choice) {
+        const ev = state.pendingHseInspection;
+        if (!ev || ev.resolved) return;
+        ev.resolved = true;
+        document.querySelectorAll('[data-hse-inspection-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+
+        const baseFine = Math.round((9000 + state.year * 1500 + (state.depthIndex || 0) * 4200) * operatingScaleFactor());
+        const passed = Math.random() < hseInspectionPassChance(choice);
+        const severityRoll = pass7Magnitude(0.72, 1.42);
+        let fineMult = 1;
+        let title = passed ? 'HSE Inspection — Passed' : 'HSE Inspection — Failed';
+        let tone = passed ? 'good' : 'warning';
+        let body = '';
+        const impacts = [];
+
+        if (choice === 'cleanup') {
+          const cleanupBase = Math.round(2400 * pass7Magnitude(0.9, 1.45));
+          spend(cleanupBase, 'Pre-inspection clean up');
+          const prodDelta = pass7TraitDelta(-2);
+          adjustTrait('productivity', prodDelta);
+          impacts.push('-' + money(scaledCost(cleanupBase)), `${prodDelta} Productivity`);
+          body += `<p>A clean-up crew has been deployed to convert visible non-compliance into tidier non-compliance. The amount of tidiness achieved is being treated as commercially sensitive.</p>`;
+          fineMult *= 0.72;
+        }
+
+        if (choice === 'it') {
+          const moraleDelta = pass7TraitDelta(-4);
+          const safetyDelta = pass7TraitDelta(-2);
+          adjustTrait('morale', moraleDelta);
+          adjustTrait('safety', safetyDelta);
+          impacts.push(`${moraleDelta} Morale`, `${safetyDelta} Safety`);
+          body += `<p>IT has been ordered to identify the anonymous email sender. The workforce has interpreted this as a lesson about reporting concerns through unofficial channels.</p>`;
+          fineMult *= 1.18;
+        }
+
+        if (choice === 'inactive') {
+          body += `<p>The inspection party has been shown a quiet section of the mine containing limited activity and therefore limited evidence.</p>`;
+          fineMult *= 1.28;
+        }
+
+        if (choice === 'trust') {
+          body += `<p>You trusted the team to explain the work as performed, the procedures as written, and the difference as a developmental gap.</p>`;
+        }
+
+        if (passed) {
+          const safetyDelta = pass7TraitDelta(choice === 'trust' ? 2 : 1);
+          adjustTrait('safety', safetyDelta);
+          impacts.push(`+${Math.abs(safetyDelta)} Safety`);
+          if (choice === 'trust') {
+            const moraleDelta = pass7TraitDelta(1);
+            adjustTrait('morale', moraleDelta);
+            impacts.push(`+${Math.abs(moraleDelta)} Morale`);
+          }
+          body += `<p><strong>Outcome:</strong> The HSE was unable to identify any material infractions, this time. The word <em>this</em> is doing significant work.</p>`;
+        } else {
+          const fine = Math.max(1200, Math.round(baseFine * fineMult * severityRoll));
+          state.cash -= fine;
+          state.expenditure += fine;
+          state.lifetimeExpenditure = (state.lifetimeExpenditure || 0) + fine;
+          state.hseFines = (state.hseFines || 0) + fine;
+          const safetyDelta = pass7TraitDelta(-6);
+          const moraleDelta = pass7TraitDelta(-4);
+          adjustTrait('safety', safetyDelta);
+          adjustTrait('morale', moraleDelta);
+          impacts.push(money(-fine) + ' fine', `${safetyDelta} Safety`, `${moraleDelta} Morale`);
+          if (choice === 'inactive') {
+            body += `<p><strong>Outcome:</strong> The inspector found the operating panel by following the sound of panic. The attempt to show an inactive area has been recorded as interpretive site selection.</p>`;
+          } else if (choice === 'it') {
+            body += `<p><strong>Outcome:</strong> The HSE has asked why management response to a safety concern began with user tracing rather than hazard control.</p>`;
+          } else {
+            body += `<p><strong>Outcome:</strong> Several areas appear to rely on optimism rather than procedure. The inspector has described this as common but not comforting.</p>`;
+          }
+        }
+
+        body += `<p><strong>Impact:</strong> ${escapeHtml(impacts.join(' · '))}.</p>`;
+        state.pendingHseInspection = null;
+        openDecisionOutcomeModal({
+          title,
+          image: 'assets/characters/hse-inspector.png',
+          character: 'Health and Safety Executive',
+          department: 'Unexpected Procedure Reality Check',
+          label: 'HSE',
+          tone,
+          body,
+          button: passed ? 'File the Report Before They Change Their Mind' : 'Accept Statutory Learning Opportunity'
+        });
+        showProductionComment(passed ? 'HSE found no infractions, this time. Paperwork has briefly aligned with reality.' : 'HSE has issued a fine. Safety has asked whether this can be coded to Production.', 'Safety', 8);
+      };
+
+      // Safety hold countdown must use real time while the modal pauses the operating clock.
+      updateSafetyStanddownHold = function() {
+        if (!state.safetyStanddownActive) return;
+        const remaining = Math.max(0, (state.safetyHoldUntil || 0) - Date.now());
+        const timer = $('safetyStanddownTimer');
+        const status = $('safetyStanddownStatus');
+        const btn = document.querySelector('[data-safety-dismiss]');
+        if (timer) timer.textContent = formatSafetyTime(remaining);
+        if (status) status.textContent = remaining > 0 ? 'Standdown in progress...' : 'Hold point satisfied.';
+        if (btn) {
+          btn.classList.toggle('locked', remaining > 0);
+          btn.setAttribute('aria-disabled', remaining > 0 ? 'true' : 'false');
+          btn.textContent = remaining > 0 ? 'Safety Hold Point Active' : 'Return to Operational Uncertainty';
+        }
+        const closeBtn = $('modalCloseBtn');
+        if (closeBtn) closeBtn.style.display = state.safetyStanddownActive ? 'none' : '';
+        if (remaining <= 0 && state.safetyHoldInterval) {
+          clearInterval(state.safetyHoldInterval);
+          state.safetyHoldInterval = null;
+        }
+      };
+
+      const baseShowSafetyStanddownForPass8 = showSafetyStanddown;
+      showSafetyStanddown = function(event, impacts, positive) {
+        const result = baseShowSafetyStanddownForPass8(event, impacts, positive);
+        clearInterval(state.safetyHoldInterval);
+        state.safetyHoldInterval = setInterval(updateSafetyStanddownHold, 250);
+        setTimeout(updateSafetyStanddownHold, 50);
+        setTimeout(updateSafetyStanddownHold, 300);
+        setTimeout(updateSafetyStanddownHold, 800);
+        return result;
+      };
+
+      // Split Technical recruitment into Technical Services and Engineering.
+      hiringDisciplineTabs = function() {
+        return [
+          { key: 'supervisors', label: 'Supervisors', roles: ['supervisor'] },
+          { key: 'miners', label: 'Miners', roles: ['miner'] },
+          { key: 'tradesmen', label: 'Tradesmen', roles: ['fitter', 'electrician'] },
+          { key: 'technicalServices', label: 'Technical Services', roles: ['geologist', 'driller', 'surveyor'] },
+          { key: 'engineering', label: 'Engineering', roles: ['miningEngineer', 'rockDoctor', 'ventilationEngineer'] }
+        ];
+      };
+
+      roleIntroKeyToTab = function(key) {
+        if (key === 'exploration' || key === 'survey') return 'technicalServices';
+        if (key === 'miningEngineering' || key === 'groundControl' || key === 'ventilation') return 'engineering';
+        return 'supervisors';
+      };
+
+      recruitmentTabsHtml = function() {
+        const tabs = hiringDisciplineTabs();
+        if (state.hiringTab === 'technical') state.hiringTab = 'technicalServices';
+        if (!tabs.some(t => t.key === state.hiringTab)) state.hiringTab = 'supervisors';
+        const active = tabs.find(t => t.key === state.hiringTab) || tabs[0];
+        ensureCandidatePool(active.roles, false);
+        sortCandidatesByRole();
+        const tabHtml = `<div class="hiringTabBar">${tabs.map(t => `<button class="hiringTabBtn ${t.key === active.key ? 'active' : ''}" data-hiring-tab="${t.key}">${t.label}</button>`).join('')}</div>`;
+        const roleSections = active.roles.map(role => {
+          const cards = state.candidates.filter(c => c.role === role).map(c => candidateCard(c)).join('') || '<p>No ' + escapeHtml(roleName(role).toLowerCase()) + ' candidates currently available. S.H.A.F.T. is checking whether anyone still answers unknown numbers.</p>';
+          return `<section class="crewRoleSection"><div class="crewRoleHeader"><h3>${escapeHtml(roleName(role))}</h3><span>${escapeHtml(roleUnlockText(role))}</span></div><div class="gridCards">${cards}</div></section>`;
+        }).join('');
+        return `${tabHtml}${roleSections}`;
+      };
+
+      // Mid-year review should bold the target value, not the metric name.
+      targetSummaryWithValuesHtml = function(target = activeAnnualTargets()) {
+        const t = target || {};
+        const keys = Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : focusKpiKeysForYear(state.year);
+        const intro = `<p><strong>${escapeHtml(t.phaseTitle || 'Fixed KPI Package')}:</strong> ${escapeHtml(t.phaseTheme || 'Targets are now fixed by phase so replay strategy matters.')}</p>`;
+        return `${intro}<ul class="targetSummaryList">${keys.map(key => `<li>${escapeHtml(metricLabelForKey(key))}: <strong class="targetValueEmphasis">${escapeHtml(formatMetricTargetValue(key, t))}</strong></li>`).join('')}</ul>`;
+      };
+      targetSummaryHtml = function(target = activeAnnualTargets()) { return targetSummaryWithValuesHtml(target); };
+
+      function pass8EscalateSingleKpiTarget(key, target) {
+        const label = metricLabelForKey(key);
+        if (key === 'productionDelivery' || key === 'bulkSample') {
+          target.tonnes = Math.round((target.tonnes || TARGET_TONNES) * 1.06 + 500);
+          return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`;
+        }
+        if (key === 'exploration') {
+          target.discoveredRows = (target.discoveredRows || 0) + 1;
+          return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`;
+        }
+        if (key === 'surplus') { target.surplusTarget = Math.round((target.surplusTarget || 0) * 1.20 + 2500); return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`; }
+        if (key === 'lom') { target.lomTargetTonnes = Math.round((target.lomTargetTonnes || (target.tonnes || TARGET_TONNES) * 1.15) * 1.10); return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`; }
+        if (key === 'ground') { target.pillarSupports = (target.pillarSupports || 0) + 1; return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`; }
+        if (key === 'fleet') { target.secondMinerTonnes = Math.round((target.secondMinerTonnes || 0) * 1.12 + 500); return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`; }
+        if (key === 'belt') { target.beltExtensions = (target.beltExtensions || 0) + 1; return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`; }
+        if (key === 'safety') { target.safetyMin = Math.min(85, (target.safetyMin || 0) + 2); return `${escapeHtml(label)} increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`; }
+        if (key === 'sharePrice') { target.sharePriceTarget = Math.round((target.sharePriceTarget || state.sharePriceTarget || 100) + 2); state.sharePriceTarget = target.sharePriceTarget; return `${escapeHtml(label)} target increased to <strong class="revisionValueEmphasis">${escapeHtml(formatMetricTargetValue(key, target))}</strong>.`; }
+        return `${escapeHtml(label)} left unchanged due to insufficient executive imagination.`;
+      }
+
+      triggerMidYearReview = function() {
+        applyAnnualTargetUnlockGuards();
+        if (activeYearOneObjective()) {
+          showProductionComment('Mid-year alignment review skipped. Year 1 remains the original bulk sample: 10,000t at 14.0% Goldilocks Grade.', 'SLT', 5.5);
+          return;
+        }
+        const original = { ...activeAnnualTargets(), kpiKeys: [...focusKpiKeysForYear(state.year)] };
+        const revised = { ...original, kpiKeys: [...original.kpiKeys] };
+        const beforeRows = annualKpiStatusList();
+        const changes = [];
+        for (const row of beforeRows) {
+          if (row.status === 'onTrack' && escalationTargetKeys(original).includes(row.key)) changes.push(pass8EscalateSingleKpiTarget(row.key, revised));
+        }
+        const reason = changes.length
+          ? 'One or more KPIs are on track. The Superior Leadership Team has therefore concluded the targets were insufficiently ambitious.'
+          : 'No KPI is sufficiently on track to justify a formal increase. The targets remain unchanged, which SLT has described as support.';
+        state.annualTargets = sanitiseFixedPhaseTargets(revised, state.year);
+        state.paused = true;
+        if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        pauseMusicForFormalModal();
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = 'Mid-Year Alignment Review';
+        $('modalBody').innerHTML = `${modalCharacterHtml('assets/characters/slt-silhouette.png', 'Superior Leadership Team', 'Strategic Adjustment Without Accountability', 'The KPI list has not changed. Only reality has been revised.', 'SLT')}<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${reason}</p>${changes.length ? `<p><strong>Revisions:</strong><br>${changes.join('<br>')}</p>` : ''}<div class="sltReviewBox"><div class="reviewPanel"><h3>Original Fixed KPIs</h3>${targetSummaryWithValuesHtml(original)}</div><div class="reviewPanel"><h3>Revised Fixed KPIs</h3>${targetSummaryWithValuesHtml(state.annualTargets)}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div><div class="btnRow"><button class="primary" data-close-formal-review>Accept Revised Reality</button></div>`;
+        $('modalOverlay').classList.add('show');
+      };
+
+      // Tonnage balance: increase baseline and reward advancing into newly explored/higher rows.
+      const PASS8_BASE_BLOCK_TONNES_FACTOR = 0.56;
+      function pass8RowTonnesMultiplier(row) {
+        const forwardScore = clamp((MINE_ROWS - 1 - Number(row || 0)) / Math.max(1, MINE_ROWS - 1), 0, 1);
+        return clamp(0.92 + forwardScore * 0.30, 0.90, 1.24);
+      }
+
+      const baseInitBlocksForPass8 = initBlocks;
+      initBlocks = function() {
+        baseInitBlocksForPass8();
+        const blocks = state.blocks && state.blocks[MINE_ID] ? state.blocks[MINE_ID] : [];
+        for (const b of blocks) {
+          if (!b || b.isPillar) continue;
+          const sourceTonnes = Number(b.pass6OriginalTonnes || b.pass7OriginalTonnes || b.pass8OriginalTonnes || b.tonnes || 0);
+          if (!b.pass8OriginalTonnes) b.pass8OriginalTonnes = sourceTonnes;
+          const rowMult = pass8RowTonnesMultiplier(b.r);
+          b.tonnes = Math.max(180, Math.round(sourceTonnes * PASS8_BASE_BLOCK_TONNES_FACTOR * rowMult));
+        }
+      };
+
 
 
       ensureDrillingRestrictionState();
