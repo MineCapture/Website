@@ -25465,498 +25465,648 @@
       }
 
 
-      /* Event Refactor Pass 1 — central event config and generic event openers.
-         This pass keeps the single-file build and preserves existing gameplay logic.
-         Events can now be opened/queued by stable ID instead of requiring bespoke modal code. */
-      const EVENT_REFACTOR_PASS_1 = {
-        name: 'Event Refactor Pass 1',
+      /* Event System Refactor Pass 2 — category-led event architecture.
+         Categories are based on player interaction, not department/source.
+         Existing player-facing copy is preserved by delegating legacy events until they are migrated verbatim.
+         Production Manager comments intentionally remain outside this event system. */
+      const RTP_EVENT_REFACTOR_PASS_2 = {
+        name: 'Event System Refactor Pass 2',
         date: '2026-06-29',
-        intent: 'Separate event/modal content from core mining, KPI and machine logic while keeping the current single HTML build.'
+        categories: ['hrBubble', 'informative', 'decision', 'progression', 'restrictive', 'queueAlert'],
+        note: 'Source/department is metadata. Interaction type selects the renderer.'
       };
 
-      const EVENT_CONFIG = {
-        'belt.availabilityComplaint': {
-          id: 'belt.availabilityComplaint',
-          type: 'decision',
-          family: 'operational',
-          kind: 'beltComplaint',
-          title: 'Belt Availability Complaint',
-          label: 'BELT',
-          icon: '↻',
-          tone: 'warning',
-          priority: 60,
-          image: 'assets/images/belt_availability_complaint.png',
-          character: 'Mine Services',
-          department: 'Belt Availability',
-          imageText: 'The crew have produced a visual explanation of why the belt is once again too far away.',
-          body: '<p>The crew have once again observed that if the belt ran when required, production targets would be easier to achieve.</p><p>This insight has been escalated to management for strategic consideration.</p>',
-          choices: [
-            {
-              id: 'infrastructure',
-              label: 'Offer to follow up at the next infrastructure meeting',
-              detail: '+2 Morale, -1 Productivity. Concern enters the meeting ecosystem.',
-              style: 'positive',
-              apply: () => {
-                adjustTrait('morale', 2);
-                adjustTrait('productivity', -1);
-                showProductionComment('The crew appreciate that their concern has entered the meeting ecosystem.', 'Mine Services', 5);
-                return { tone: 'good', body: '<p>The belt availability concern has entered the infrastructure meeting ecosystem.</p><p><strong>Impact:</strong> +2 Morale, -1 Productivity. A meeting has been created, which gives the concern a safe administrative habitat.</p>' };
-              }
-            },
-            {
-              id: 'control',
-              label: 'Remind them to only focus on things they can control',
-              detail: '-2 Morale, -1 Safety, +1 Productivity. Resilience is issued downward.',
-              style: 'negative',
-              apply: () => {
-                adjustTrait('morale', -2);
-                adjustTrait('safety', -1);
-                adjustTrait('productivity', 1);
-                showProductionComment('The team receives a practical lesson in resilience and learned helplessness.', 'S.H.A.F.T.', 5);
-                return { tone: 'warning', body: '<p>Resilience has been issued downward.</p><p><strong>Impact:</strong> -2 Morale, -1 Safety, +1 Productivity. The belt remains outside the crew\'s control, which is why the advice was so affordable.</p>' };
-              }
-            },
-            {
-              id: 'pretend',
-              label: 'Pretend to Listen',
-              detail: '50% chance -1 Morale. Nodding is deployed.',
-              apply: () => {
-                const detected = Math.random() < 0.5;
-                if (detected) {
-                  adjustTrait('morale', -1);
-                  showProductionComment('Nodding was detected as nodding. Morale has adjusted accordingly.', 'Mine Services', 5);
-                  return { tone: 'warning', body: '<p>Nodding was detected as nodding.</p><p><strong>Impact:</strong> -1 Morale. The crew have requested a higher grade of pretending.</p>' };
-                }
-                showProductionComment('Nodding is deployed successfully. No measurable outcome has occurred.', 'Mine Services', 5);
-                return { tone: 'info', body: '<p>Nodding was deployed successfully.</p><p><strong>Impact:</strong> none measurable. This is considered a strong result by several departments.</p>' };
-              }
-            },
-            {
-              id: 'fix-yourself',
-              label: 'Tell them they could always fix it themselves',
-              detail: '+1 Productivity, -3 Morale, possible Skill gain or belt fault.',
-              style: 'negative',
-              apply: () => {
-                adjustTrait('productivity', 1);
-                adjustTrait('morale', -3);
-                const hasTrade = !!(crewByRole('fitter') || crewByRole('electrician'));
-                if (hasTrade) {
-                  adjustTrait('skill', 1);
-                  state.conveyor.condition = Math.max(0, Math.min(100, (state.conveyor.condition || 80) + 3));
-                  showProductionComment('Empowerment has been issued with just enough competence nearby to avoid immediate disaster.', 'Mine Services', 5);
-                  return { tone: 'good', body: '<p>The crew fixed enough of the issue to call it empowerment.</p><p><strong>Impact:</strong> +1 Productivity, +1 Skill, -3 Morale, conveyor condition +3%.</p>' };
-                }
-                showProductionComment('Empowerment has been issued without resources. The belt has interpreted this as a fault condition.', 'Mine Services', 5);
-                triggerConveyorFault('mechanical');
-                return { tone: 'danger', body: '<p>Empowerment was issued without resources.</p><p><strong>Impact:</strong> +1 Productivity, -3 Morale, and the belt has interpreted the management intervention as a mechanical fault.</p>' };
-              }
-            }
-          ],
-          outcome: {
-            title: 'Belt Availability Outcome',
-            button: 'Return to Belt-Dependent Production'
-          }
-        },
+      const RTP_EVENT_INTERACTION_TYPES = Object.freeze({
+        HR_BUBBLE: 'hrBubble',
+        INFORMATIVE: 'informative',
+        DECISION: 'decision',
+        PROGRESSION: 'progression',
+        RESTRICTIVE: 'restrictive',
+        QUEUE_ALERT: 'queueAlert'
+      });
 
-        'externalAffairs.screeningTrees': {
-          id: 'externalAffairs.screeningTrees',
-          type: 'decision',
-          family: 'externalAffairs',
-          kind: 'screeningTrees',
-          title: 'External Affairs Proposal',
-          label: 'EXT',
-          icon: 'EXT',
-          tone: 'info',
-          priority: 45,
-          image: 'assets/images/external_affairs_community.png',
-          fallbackImage: 'assets/characters/community-relations.png',
-          character: 'External Affairs',
-          department: 'Community Visibility Reduction',
-          imageText: 'External Affairs has identified that the mine may be easier to manage if fewer people can see it.',
-          body: '<p>External Affairs have developed a plan to improve community relations.</p><p>They propose planting trees around the edge of the mine site to prevent external parties from becoming aware of the mine’s existence.</p><p>The plan has been described as nature-based stakeholder invisibility.</p>',
-          choices: [
-            {
-              id: 'trees',
-              label: 'Agree and plant trees',
-              detail: 'Moderate spend. Improves reputation slowly by hiding the mine behind photosynthesis.',
-              style: 'positive',
-              apply: () => {
-                const cost = scaledCost(2200);
-                spend(2200, 'Community tree screen');
-                adjustTrait('morale', 1);
-                if (sharePriceMetricActive()) adjustSharePrice(1, 'External Affairs planted a visibility screen');
-                return { tone: 'good', body: `<p>Trees have been planted around the mine boundary. External Affairs has confirmed that, once mature, they will almost certainly obscure the site from anyone not using eyes, maps, drones, roads or local knowledge.</p><p><strong>Impact:</strong> ${money(cost)} spend, +1 Morale, small reputation benefit.</p>` };
-              }
-            },
-            {
-              id: 'wall',
-              label: 'Suggest a more immediate solution like a wall or curtain',
-              detail: 'Higher spend. Faster concealment. Suspiciously literal.',
-              apply: () => {
-                const cost = scaledCost(4200);
-                spend(4200, 'Community relations wall and curtain study');
-                adjustTrait('productivity', -1);
-                if (sharePriceMetricActive()) adjustSharePrice(Math.random() < 0.55 ? 2 : -2, 'External Affairs installed a visual reassurance barrier');
-                return { tone: 'warning', body: `<p>A more immediate barrier has been specified. It is being described externally as a community reassurance screen and internally as a wall, because that is what it is.</p><p><strong>Impact:</strong> ${money(cost)} spend, -1 Productivity. Reputation impact depends on whether anyone asks why the reassurance needed to be opaque.</p>` };
-              }
-            },
-            {
-              id: 'yellow',
-              label: 'Paint all mine buildings yellow instead',
-              detail: 'Cheap, highly visible, and therefore strategically confusing.',
-              apply: () => {
-                const cost = scaledCost(850);
-                spend(850, 'Yellow building paint');
-                adjustTrait('morale', 1);
-                if (sharePriceMetricActive()) adjustSharePrice(-1, 'Mine buildings painted highly visible yellow');
-                return { tone: 'warning', body: `<p>The mine buildings have been painted yellow. The site is now less industrial-looking only to people who believe warning signs are a camouflage pattern.</p><p><strong>Impact:</strong> ${money(cost)} spend, +1 Morale, minor reputation confusion.</p>` };
-              }
-            },
-            {
-              id: 'sport',
-              label: 'Offer bribe disguised as community investment to local kids sport clubs',
-              detail: 'Expensive. Excellent optics until anyone reads the invoice.',
-              style: 'negative',
-              apply: () => {
-                const cost = scaledCost(5200);
-                spend(5200, 'Community sport investment');
-                adjustTrait('morale', 2);
-                if (sharePriceMetricActive()) adjustSharePrice(3, 'Community sport investment announcement');
-                state.externalAffairsScandalRisk = (state.externalAffairsScandalRisk || 0) + 1;
-                return { tone: 'good', body: `<p>Local youth sport has received a generous community investment with a sponsorship banner large enough to cover several difficult questions.</p><p><strong>Impact:</strong> ${money(cost)} spend, +2 Morale, short-term reputation benefit. External Affairs has requested nobody use the word bribe in writing.</p>` };
-              }
-            }
-          ],
-          outcome: {
-            title: 'Community Relations Outcome',
-            department: 'Community Interface',
-            button: 'Update Stakeholder Narrative'
-          }
+      const RTP_EVENT_CATEGORY_META = Object.freeze({
+        hrBubble: {
+          label: 'HR Bubble Event',
+          modal: true,
+          description: 'Named staff issue. Opens from staff card or grouped HR queue icon.'
         },
-
-        'sales.customerSpecificationChange': {
-          id: 'sales.customerSpecificationChange',
-          type: 'info',
-          family: 'salesMarketing',
-          kind: 'gradeRestriction',
-          title: 'Customer Specification Change',
-          label: 'SPEC',
-          icon: 'SPEC',
-          tone: 'warning',
-          priority: 42,
-          image: 'assets/characters/sales-marketing.png',
-          character: 'Sales and Marketing',
-          department: 'Product Quality Announcement Unit',
-          imageText: 'Sales and Marketing have announced a product promise and transferred the consequences underground.',
-          body: (ctx) => '<p>Sales and Marketing have agreed a new customer contract.</p><p>The customer requires consistent product quality, which Sales has interpreted as a Production problem.</p><p><strong>Restriction:</strong> for the next quarter, marginal and poor grade blocks cannot be mined.</p><p>Sales would like to clarify that the deal has already been announced externally.</p>' + (ctx && ctx.dashboardLine ? ctx.dashboardLine : ''),
-          button: 'Accept Grade Constraint'
+        informative: {
+          label: 'Informative Modal',
+          modal: true,
+          description: 'Acknowledge-only event that tells the player something without offering a decision or applying a hard restriction.'
         },
-
-        'slt.siteVisit': {
-          id: 'slt.siteVisit',
-          type: 'info',
-          family: 'slt',
-          kind: 'sltVisit',
-          title: 'SLT Site Visit',
-          label: 'SLT',
-          icon: 'SLT',
-          tone: 'warning',
-          priority: 40,
-          image: 'assets/images/slt_site_visit.png',
-          character: 'Superior Leadership Team',
-          department: 'Strategic Visibility Visit',
-          imageText: 'Senior leaders are visiting the pit to observe progress without becoming responsible for conditions.',
-          body: '<p>The Superior Leadership Team has arrived underground in high-visibility clothing, office shoes, and several expressions of controlled alarm.</p><p>The visit is intended to improve operational visibility, although the visitors have asked whether visibility can be achieved from somewhere with fewer noises.</p>',
-          button: 'Return to Work Before They Suggest Something'
+        decision: {
+          label: 'Decision Modal',
+          modal: true,
+          description: 'Player chooses one of four responses; hidden likelihood and magnitude logic resolves the outcome.'
         },
-
-        'finance.drillingSuspension': {
-          id: 'finance.drillingSuspension',
-          type: 'info',
-          family: 'finance',
-          kind: 'drillingSuspension',
-          title: 'Exploration Drilling Suspended',
-          label: 'FIN',
-          icon: '£',
-          tone: 'warning',
-          priority: 48,
-          image: 'assets/characters/mr-b-counter.png',
-          character: 'Mr B. Counter',
-          department: 'Department of Financial Prevention',
-          imageText: 'Finance has detected expenditure and is responding with process.',
-          body: '<p>Finance has reviewed the exploration drilling programme and identified a serious issue: it appears to cost money before generating a PowerPoint-ready reserve statement.</p><p>Drilling has been temporarily suspended while the expenditure line is renamed, reforecast, and made someone else’s responsibility.</p>',
-          button: 'Acknowledge Financial Reality'
+        progression: {
+          label: 'Progression / Gameplay Modal',
+          modal: true,
+          description: 'Unlock, onboarding, level transition, annual review, dependency explanation, or progression gate.'
+        },
+        restrictive: {
+          label: 'Restrictive / Game-Impact Modal',
+          modal: true,
+          description: 'Applies, clears, explains or enforces a gameplay constraint.'
+        },
+        queueAlert: {
+          label: 'Queue Alert',
+          modal: false,
+          description: 'Queue icon that routes to another pane, active hold point or existing state screen rather than opening its own modal.'
         }
-      };
+      });
 
-      window.RTP_EVENT_REFACTOR_PASS_1 = EVENT_REFACTOR_PASS_1;
-      window.RTP_EVENT_CONFIG = EVENT_CONFIG;
-
-      function configuredEventValue(value, ctx, ev) {
-        if (typeof value === 'function') return value(ctx || {}, ev || null);
-        return value;
+      function rtpEventHtml(value, context = {}) {
+        if (typeof value === 'function') return value(context);
+        return value == null ? '' : String(value);
       }
 
-      function getEventConfig(eventId, overrides = {}) {
-        const base = EVENT_CONFIG[String(eventId || '')];
-        if (!base) return null;
-        const cfg = { ...base, ...(overrides || {}) };
-        cfg.id = cfg.id || String(eventId || '');
-        cfg.context = { ...((base && base.context) || {}), ...(((overrides || {}).context) || {}) };
-        return cfg;
+      function rtpEventText(value, context = {}) {
+        if (typeof value === 'function') return value(context);
+        return value == null ? '' : String(value);
       }
 
-      function configuredEventImage(ev) {
-        return ev.image || ev.fallbackImage || '';
+      function rtpEventContent(event, context = {}) {
+        const raw = typeof event.content === 'function' ? event.content(context) : (event.content || {});
+        return raw || {};
       }
 
-      function configuredEventBodyHtml(ev, ctx) {
-        return configuredEventValue(ev.body, ctx, ev) || '<p>Event details unavailable.</p>';
-      }
-
-      function configuredEventCharacterHtml(ev, ctx) {
-        const image = configuredEventValue(configuredEventImage(ev), ctx, ev);
+      function rtpEventCharacterHtml(event, context = {}) {
+        const content = rtpEventContent(event, context);
+        const image = rtpEventText(content.image || event.image, context);
         if (!image) return '';
         return modalCharacterHtml(
           image,
-          configuredEventValue(ev.character, ctx, ev) || ev.title || 'Operational Event',
-          configuredEventValue(ev.department, ctx, ev) || 'Operational Update',
-          configuredEventValue(ev.imageText, ctx, ev) || 'A department has produced a visual explanation for why this is now your problem.',
-          configuredEventValue(ev.label, ctx, ev) || 'EVT'
+          rtpEventText(content.character || event.character || event.title || 'Operational Event', context),
+          rtpEventText(content.department || event.department || event.source || 'Operational Update', context),
+          rtpEventHtml(content.imageText || event.imageText || 'A department has arrived with findings and implications.', context),
+          rtpEventText(content.initials || event.initials || event.label || 'EVT', context)
         );
       }
 
-      function configuredChoiceButtonHtml(eventId, choice) {
-        const style = choice.style ? ' ' + escapeHtml(choice.style) : '';
-        return `<button class="eventChoiceBtn${style}" data-configured-event-choice="${escapeHtml(choice.id)}" data-configured-event-id="${escapeHtml(eventId)}"><strong>${escapeHtml(choice.label || choice.id)}</strong><span>${escapeHtml(choice.detail || choice.hint || '')}</span></button>`;
+      function rtpEventBodyHtml(event, context = {}) {
+        const content = rtpEventContent(event, context);
+        if (content.html != null) return rtpEventHtml(content.html, context);
+        if (content.bodyHtml != null) return rtpEventHtml(content.bodyHtml, context);
+        const body = rtpEventHtml(content.body || event.body || '<p>Event details unavailable.</p>', context);
+        if (content.letterTitle || content.wrapLetter) {
+          return `<div class="letter"><h2>${escapeHtml(rtpEventText(content.letterTitle || event.title || 'Event', context))}</h2>${body}</div>`;
+        }
+        return body;
       }
 
-      function openConfiguredInfoEvent(ev, ctx = {}) {
-        if (!ev) return false;
-        if (isModalOpen()) {
-          queueConfiguredEvent(ev.id, { context: ctx });
-          return true;
-        }
-        setModalClosable(ev.closable !== false);
-        $('modalWindow').className = ev.windowClass || 'window medium';
-        $('modalTitle').textContent = configuredEventValue(ev.title, ctx, ev) || 'Operational Event';
-        $('modalBody').innerHTML = configuredEventCharacterHtml(ev, ctx) + configuredEventBodyHtml(ev, ctx) + `<div class="btnRow"><button class="primary" data-close>${escapeHtml(configuredEventValue(ev.button, ctx, ev) || 'Accept Operational Reality')}</button></div>`;
-        $('modalOverlay').classList.add('show');
+      function rtpNormalisedChoices(event, context = {}) {
+        const list = typeof event.choices === 'function' ? event.choices(context) : (event.choices || []);
+        return Array.isArray(list) ? list : [];
+      }
+
+      function rtpOpenSimpleModalForEvent(event, context = {}, defaultButton = 'Accept Operational Reality') {
+        const content = rtpEventContent(event, context);
+        openOperationalEventModal({
+          title: rtpEventText(content.title || event.title || 'Operational Event', context),
+          image: rtpEventText(content.image || event.image, context),
+          character: rtpEventText(content.character || event.character || event.title || 'Operational Event', context),
+          department: rtpEventText(content.department || event.department || event.source || 'Operational Update', context),
+          label: rtpEventText(content.label || event.label || 'EVT', context),
+          tone: rtpEventText(content.tone || event.tone || 'info', context),
+          body: rtpEventBodyHtml(event, context),
+          button: rtpEventText(content.button || event.button || defaultButton, context)
+        });
         return true;
       }
 
-      function openConfiguredDecisionEvent(ev, ctx = {}) {
-        if (!ev) return false;
-        if (isModalOpen()) {
-          queueConfiguredEvent(ev.id, { context: ctx });
-          return true;
-        }
-        state.activeConfiguredEvent = { id: ev.id, context: ctx };
-        setModalClosable(ev.closable === true);
-        $('modalWindow').className = ev.windowClass || 'window medium';
-        $('modalTitle').textContent = configuredEventValue(ev.title, ctx, ev) || 'Decision Event';
-        const choices = (ev.choices || []).map(choice => configuredChoiceButtonHtml(ev.id, choice)).join('');
-        $('modalBody').innerHTML = configuredEventCharacterHtml(ev, ctx) + configuredEventBodyHtml(ev, ctx) + `<p><strong>Management response required.</strong></p><div class="beltDecisionGrid">${choices}</div>`;
-        $('modalOverlay').classList.add('show');
-        return true;
+      function rtpEventById(eventId) {
+        return RTP_EVENTS[String(eventId || '')] || null;
       }
 
-      function openEventById(eventId, overrides = {}) {
-        const ev = getEventConfig(eventId, overrides);
-        if (!ev) {
-          openOperationalEventModal({ title: 'Missing Event Config', label: 'EVT', tone: 'warning', body: `<p>Event config <strong>${escapeHtml(String(eventId || ''))}</strong> was requested but is not defined.</p>` });
+      function openEventById(eventId, context = {}) {
+        const event = rtpEventById(eventId);
+        if (!event) {
+          console.warn('[RTP Event System] Unknown event id:', eventId);
           return false;
         }
-        const ctx = { ...(ev.context || {}), ...(overrides.context || {}) };
-        if (ev.type === 'decision') return openConfiguredDecisionEvent(ev, ctx);
-        return openConfiguredInfoEvent(ev, ctx);
+        const enrichedContext = { ...(context || {}), eventId: event.id, event };
+        switch (event.interactionType) {
+          case RTP_EVENT_INTERACTION_TYPES.HR_BUBBLE:
+            return openHrBubbleEvent(event, enrichedContext);
+          case RTP_EVENT_INTERACTION_TYPES.INFORMATIVE:
+            return openInformativeEvent(event, enrichedContext);
+          case RTP_EVENT_INTERACTION_TYPES.DECISION:
+            return openDecisionEvent(event, enrichedContext);
+          case RTP_EVENT_INTERACTION_TYPES.PROGRESSION:
+            return openProgressionEvent(event, enrichedContext);
+          case RTP_EVENT_INTERACTION_TYPES.RESTRICTIVE:
+            return openRestrictiveEvent(event, enrichedContext);
+          case RTP_EVENT_INTERACTION_TYPES.QUEUE_ALERT:
+            return openQueueAlert(event, enrichedContext);
+          default:
+            console.warn('[RTP Event System] Event has invalid interactionType:', event.id, event.interactionType);
+            return false;
+        }
       }
 
-      function configuredEventOutcomeBase(ev, choice, ctx) {
-        const outcome = { ...(ev.outcome || {}), ...(choice.result || {}) };
-        return {
-          title: outcome.title || ((configuredEventValue(ev.title, ctx, ev) || 'Decision') + ' Outcome'),
-          image: outcome.image || configuredEventImage(ev),
-          character: outcome.character || configuredEventValue(ev.character, ctx, ev),
-          department: outcome.department || configuredEventValue(ev.department, ctx, ev),
-          label: outcome.label || configuredEventValue(ev.label, ctx, ev),
-          tone: outcome.tone || choice.tone || ev.tone || 'info',
-          imageText: outcome.imageText || 'A management decision has produced a measurable consequence.',
-          body: outcome.body || '<p>The decision has been recorded. Consequences have been allocated according to procedure.</p>',
-          button: outcome.button || 'Accept Consequence'
-        };
+      function openHrBubbleEvent(event, context = {}) {
+        if (typeof event.open === 'function') return event.open(context);
+        if (context.staffId) return openStaffEvent(context.staffId);
+        if (context.staff && context.staff.id) return openStaffEvent(context.staff.id);
+        return false;
       }
 
-      function resolveConfiguredDecision(eventId, choiceId, explicitContext = null) {
-        const active = state.activeConfiguredEvent || {};
-        const ev = getEventConfig(eventId || active.id);
-        if (!ev || ev.type !== 'decision') return false;
-        const choice = (ev.choices || []).find(c => c.id === choiceId);
-        if (!choice) return false;
-        const ctx = explicitContext || active.context || {};
-        document.querySelectorAll('[data-configured-event-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
-        let applyResult = {};
-        if (typeof choice.apply === 'function') applyResult = choice.apply(ctx, ev, choice) || {};
-        const outcome = { ...configuredEventOutcomeBase(ev, choice, ctx), ...applyResult };
-        state.activeConfiguredEvent = null;
-        updateHud();
-        openDecisionOutcomeModal(outcome);
+      function openInformativeEvent(event, context = {}) {
+        if (typeof event.open === 'function') return event.open(context);
+        return rtpOpenSimpleModalForEvent(event, context, event.button || 'Acknowledge');
+      }
+
+      function openProgressionEvent(event, context = {}) {
+        if (typeof event.beforeOpen === 'function') event.beforeOpen(context);
+        if (typeof event.open === 'function') return event.open(context);
+        const content = rtpEventContent(event, context);
+        const btn = content.nextActionHtml != null
+          ? rtpEventHtml(content.nextActionHtml, context)
+          : `<button class="primary" data-close>${escapeHtml(rtpEventText(content.button || event.button || 'Continue', context))}</button>`;
+        setModalClosable(content.closable !== false);
+        $('modalWindow').className = content.windowClass || 'window medium';
+        $('modalTitle').textContent = rtpEventText(content.title || event.title || 'Progression Update', context);
+        $('modalBody').innerHTML = rtpEventCharacterHtml(event, context) + rtpEventBodyHtml(event, context) + `<div class="btnRow">${btn}</div>`;
+        $('modalOverlay').classList.add('show');
+        if (typeof event.afterOpen === 'function') event.afterOpen(context);
         return true;
       }
 
-      function queueConfiguredEvent(eventId, overrides = {}) {
-        const ev = getEventConfig(eventId, overrides);
-        if (!ev) return null;
+      function openDecisionEvent(event, context = {}) {
+        if (typeof event.open === 'function') return event.open(context);
+        const choices = rtpNormalisedChoices(event, context);
+        if (choices.length !== 4) {
+          console.warn('[RTP Event System] Decision event should have exactly four choices:', event.id, choices.length);
+        }
+        state.activeConfiguredDecision = { eventId: event.id, context };
+        setModalClosable(false);
+        $('modalWindow').className = 'window medium';
+        $('modalTitle').textContent = rtpEventText(event.title || 'Decision Event', context);
+        const choiceGridClass = event.choiceGridClass || 'eventChoiceGrid';
+        const choiceHtml = choices.map(choice => {
+          const cls = choice.style ? ` ${escapeHtml(choice.style)}` : '';
+          return `<button class="eventChoiceBtn${cls}" data-rtp-event-choice="${escapeHtml(choice.id)}" data-rtp-event-id="${escapeHtml(event.id)}"><strong>${escapeHtml(rtpEventText(choice.label, context))}</strong><span>${escapeHtml(rtpEventText(choice.detail || choice.hint || '', context))}</span></button>`;
+        }).join('');
+        $('modalBody').innerHTML = rtpEventCharacterHtml(event, context) + rtpEventBodyHtml(event, context) + `<div class="${choiceGridClass}">${choiceHtml}</div>`;
+        $('modalOverlay').classList.add('show');
+        return true;
+      }
+
+      function resolveConfiguredDecisionChoice(eventId, choiceId, contextOverride = null) {
+        const event = rtpEventById(eventId);
+        if (!event || event.interactionType !== RTP_EVENT_INTERACTION_TYPES.DECISION) return false;
+        const activeContext = contextOverride || (state.activeConfiguredDecision && state.activeConfiguredDecision.eventId === event.id ? state.activeConfiguredDecision.context : {}) || {};
+        const context = { ...(activeContext || {}), event, eventId: event.id, choiceId };
+        const choices = rtpNormalisedChoices(event, context);
+        const choice = choices.find(c => c.id === choiceId);
+        if (!choice) return false;
+        document.querySelectorAll('[data-rtp-event-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+        let outcome = null;
+        if (typeof choice.resolve === 'function') outcome = choice.resolve(context);
+        else if (typeof event.resolve === 'function') outcome = event.resolve(choice, context);
+        if (outcome && outcome.handled) return true;
+        if (outcome === false) return false;
+        const result = outcome || {};
+        state.activeConfiguredDecision = null;
+        openDecisionOutcomeModal({
+          title: rtpEventText(result.title || event.outcomeTitle || `${event.title || 'Decision'} Outcome`, context),
+          image: rtpEventText(result.image || event.outcomeImage || event.image, context),
+          character: rtpEventText(result.character || event.character || event.title || 'Event', context),
+          department: rtpEventText(result.department || event.department || event.source || 'Operational Update', context),
+          label: rtpEventText(result.label || event.label || 'EVT', context),
+          tone: rtpEventText(result.tone || event.tone || 'info', context),
+          body: rtpEventHtml(result.body || '<p>The decision has been recorded.</p>', context),
+          button: rtpEventText(result.button || event.outcomeButton || 'Continue', context)
+        });
+        return true;
+      }
+
+      function openRestrictiveEvent(event, context = {}) {
+        if (typeof event.apply === 'function') event.apply(context);
+        if (typeof event.open === 'function') return event.open(context);
+        return rtpOpenSimpleModalForEvent(event, context, event.button || 'Accept Constraint');
+      }
+
+      function openQueueAlert(event, context = {}) {
+        if (typeof event.open === 'function') return event.open(context);
+        const action = event.action || context.action;
+        if (action === 'openAssets') { openWindow('assets'); return true; }
+        if (action === 'openStaffEvent' && context.staffId) { openStaffEvent(context.staffId); return true; }
+        if (action === 'showSafetyHoldPoint') {
+          const overlay = $('safetyStanddownOverlay');
+          if (overlay) overlay.classList.add('show');
+          return true;
+        }
+        if (action === 'noop') return true;
+        return false;
+      }
+
+      const RTP_EVENTS = {
+        'queueAlert.hrGrouped': {
+          id: 'queueAlert.hrGrouped',
+          interactionType: 'queueAlert',
+          source: 'HR',
+          label: 'HR',
+          action: 'openStaffEvent',
+          description: 'Grouped mobile HR icon; opens the first unresolved staff bubble.'
+        },
+        'queueAlert.asset.belt': {
+          id: 'queueAlert.asset.belt',
+          interactionType: 'queueAlert',
+          source: 'Mine Services',
+          label: 'BELT',
+          action: 'openAssets',
+          description: 'Conveyor/belt state alert; opens Assets rather than a modal.'
+        },
+        'queueAlert.asset.miner': {
+          id: 'queueAlert.asset.miner',
+          interactionType: 'queueAlert',
+          source: 'Maintenance',
+          label: 'CM',
+          action: 'openAssets',
+          description: 'Continuous miner state alert; opens Assets rather than a modal.'
+        },
+        'queueAlert.safety.activeHoldPoint': {
+          id: 'queueAlert.safety.activeHoldPoint',
+          interactionType: 'queueAlert',
+          source: 'Safety Department',
+          label: 'SAFE',
+          action: 'showSafetyHoldPoint',
+          description: 'Returns to the active safety hold-point overlay.'
+        },
+        'informative.researchOutcome': {
+          id: 'informative.researchOutcome',
+          interactionType: 'informative',
+          source: 'Mining Engineering',
+          label: 'ENG',
+          description: 'Research outcomes are acknowledge-only informative modals with already-applied effects.'
+        },
+        'informative.traitDrift': {
+          id: 'informative.traitDrift',
+          interactionType: 'informative',
+          source: 'Operating Culture Monitor',
+          label: 'CULT',
+          open: context => applyTraitDriftEvent(context.key || null)
+        },
+        'decision.hseSurpriseInspection': {
+          id: 'decision.hseSurpriseInspection',
+          interactionType: 'decision',
+          source: 'HSE',
+          label: 'HSE',
+          open: () => { triggerHseInspectionEvent(); return true; }
+        },
+        'decision.geologyModelReinterpretation': {
+          id: 'decision.geologyModelReinterpretation',
+          interactionType: 'decision',
+          source: 'Geology Department',
+          title: 'Geology Model Reinterpretation',
+          label: 'GEO',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Interpretation of Reality Unit',
+          imageText: 'The model may improve. The biscuits definitely will not survive.',
+          content: {
+            wrapLetter: true,
+            letterTitle: 'Model Improvement Opportunity',
+            body: '<p>The Geologist thinks they can improve the model, but it will require investment in extra tea, biscuits, and interpretive confidence.</p><p>They point at a variogram chart which they say shows a clear structure, sill, and range.</p><p>To you, it looks like a heart ECG monitor chart.</p>'
+          },
+          choices: [
+            { id: 'science', style: 'positive', label: 'Trust the Science and Invest', detail: 'Fund the tea and biscuits. The model may improve, or become more confidently wrong.', resolve: () => { resolveGeologyReinterpretationChoice('science'); return { handled: true }; } },
+            { id: 'consultant', label: 'Employ a Consultant to Conduct a Review', detail: 'More expensive, more slides, and a chance of professionally packaged uncertainty.', resolve: () => { resolveGeologyReinterpretationChoice('consultant'); return { handled: true }; } },
+            { id: 'dashboard', label: 'Request a Confidence Dashboard Before Changing Anything', detail: 'Cheaper than science, less useful than evidence, and ideal for management assurance.', resolve: () => { resolveGeologyReinterpretationChoice('dashboard'); return { handled: true }; } },
+            { id: 'decline', style: 'negative', label: 'Decline, the Model Already Shows Enough High Grade Blocks', detail: 'Spend nothing. The Geologist will remember this when the model next changes.', resolve: () => { resolveGeologyReinterpretationChoice('decline'); return { handled: true }; } }
+          ]
+        },
+        'decision.externalTechnicalReview': {
+          id: 'decision.externalTechnicalReview',
+          interactionType: 'decision',
+          source: 'External Technical Assurance',
+          label: 'BORC',
+          open: context => { triggerExternalTechnicalReviewEvent(!!context.force); return true; }
+        },
+        'decision.sltSiteVisit': {
+          id: 'decision.sltSiteVisit',
+          interactionType: 'decision',
+          source: 'SLT',
+          label: 'SLT',
+          open: context => { openPass21SltSiteVisitEvent(!!context.force); return true; }
+        },
+        'decision.externalLocalComplaint': {
+          id: 'decision.externalLocalComplaint',
+          interactionType: 'decision',
+          source: 'External Affairs',
+          label: 'EXT',
+          open: context => { openPass21ExternalLocalComplaintEvent(context.kind || null); return true; }
+        },
+        'decision.employeeDispute': {
+          id: 'decision.employeeDispute',
+          interactionType: 'decision',
+          source: 'HR',
+          label: 'HR',
+          open: () => { openPass19EmployeeDisputeEvent(); return true; }
+        },
+        'decision.unionPayDemand': {
+          id: 'decision.unionPayDemand',
+          interactionType: 'decision',
+          source: 'HR / Union',
+          label: 'UNION',
+          open: () => { openPass19UnionPayDemandEvent(); return true; }
+        },
+        'decision.crewAccident': {
+          id: 'decision.crewAccident',
+          interactionType: 'decision',
+          source: 'HR / Safety',
+          label: 'HR',
+          open: context => { triggerCrewAccidentEvent(!!context.force); return true; }
+        },
+        'decision.shiftManager': {
+          id: 'decision.shiftManager',
+          interactionType: 'decision',
+          source: 'Shift Manager',
+          label: 'MGR',
+          open: context => { openPass23ShiftManagerEvent(context.key || null); return true; }
+        },
+        'progression.roleUnlock': {
+          id: 'progression.roleUnlock',
+          interactionType: 'progression',
+          source: 'S.H.A.F.T.',
+          label: 'ROLE',
+          open: context => openRoleUnlockIntro(context.key, context.customTitle || null, context.nextKey || null)
+        },
+        'progression.levelArrival': {
+          id: 'progression.levelArrival',
+          interactionType: 'progression',
+          source: 'Geology Department',
+          label: 'SHAFT',
+          open: () => { openLevelArrivalModal(); return true; }
+        },
+        'progression.shaftDeepeningProposal': {
+          id: 'progression.shaftDeepeningProposal',
+          interactionType: 'progression',
+          source: 'Geology Department',
+          label: 'GEO',
+          open: () => { openShaftDeepeningProposal(); return true; }
+        },
+        'progression.annualReview': {
+          id: 'progression.annualReview',
+          interactionType: 'progression',
+          source: 'SLT',
+          label: 'SLT',
+          description: 'Annual performance review / PIP progression modal. Existing function owns the exact copy.'
+        },
+        'progression.researchWindow': {
+          id: 'progression.researchWindow',
+          interactionType: 'progression',
+          source: 'Mining Engineering',
+          label: 'ENG',
+          open: () => { openResearchWindow(); return true; }
+        },
+        'restrictive.explorationDrillingSuspended': {
+          id: 'restrictive.explorationDrillingSuspended',
+          interactionType: 'restrictive',
+          source: 'SLT / Geology',
+          label: 'GEO',
+          restrictionKey: 'exploration.drillingSuspended',
+          open: () => { suspendExplorationDrilling(); return true; }
+        },
+        'restrictive.explorationDrillingResumed': {
+          id: 'restrictive.explorationDrillingResumed',
+          interactionType: 'restrictive',
+          source: 'SLT / Geology',
+          label: 'GEO',
+          restrictionKey: 'exploration.drillingSuspended',
+          open: () => { resumeExplorationDrilling(); return true; }
+        },
+        'restrictive.gradeConstraint': {
+          id: 'restrictive.gradeConstraint',
+          interactionType: 'restrictive',
+          source: 'Sales & Marketing / Plant / Quality',
+          label: 'SPEC',
+          restrictionKey: 'gradeRestriction',
+          open: context => applyGradeConstraintEvent(context.originalEvent || randomItem(gradeConstraintEvents()))
+        },
+        'restrictive.safetyHoldPoint': {
+          id: 'restrictive.safetyHoldPoint',
+          interactionType: 'restrictive',
+          source: 'Safety Department',
+          label: 'SAFE',
+          subtype: 'holdPoint',
+          description: 'Safety standdowns remain on the specialised hold-point renderer.'
+        },
+        'restrictive.heatVentilation': {
+          id: 'restrictive.heatVentilation',
+          interactionType: 'restrictive',
+          source: 'Ventilation Engineering',
+          label: 'VENT',
+          open: () => { forceHeatVentilationEvent(); return true; }
+        },
+        'restrictive.powerOutage': {
+          id: 'restrictive.powerOutage',
+          interactionType: 'restrictive',
+          source: 'Electrical / Maintenance',
+          label: 'POWER',
+          open: context => { triggerPowerOutageEvent(!!context.force); return true; }
+        },
+        'restrictive.surveyReconciliation': {
+          id: 'restrictive.surveyReconciliation',
+          interactionType: 'restrictive',
+          source: 'Survey',
+          label: 'SURV',
+          open: () => { openPass19SurveyReconciliationEvent(); return true; }
+        },
+        'restrictive.modelVersionConflict': {
+          id: 'restrictive.modelVersionConflict',
+          interactionType: 'restrictive',
+          source: 'Technical Services',
+          label: 'MODEL',
+          open: () => { openPass21ModelVersionConflictEvent(); return true; }
+        }
+      };
+
+      function rtpDecisionEventIds() {
+        return Object.values(RTP_EVENTS).filter(ev => ev.interactionType === RTP_EVENT_INTERACTION_TYPES.DECISION).map(ev => ev.id);
+      }
+
+      function rtpEventCategorySummary() {
+        const summary = {};
+        Object.values(RTP_EVENT_INTERACTION_TYPES).forEach(type => { summary[type] = 0; });
+        Object.values(RTP_EVENTS).forEach(ev => { summary[ev.interactionType] = (summary[ev.interactionType] || 0) + 1; });
+        return summary;
+      }
+
+      function eventInteractionPressureProfile() {
+        const y = Math.max(1, Number(state.year) || 1);
+        const depth = Math.max(0, Number(state.depthIndex) || 0);
+        if (y <= 1 && depth === 0) return { checkEveryDays: 34, maxNormalQueued: 2, weights: { hrBubble: 3, informative: 4, decision: 1, progression: 0, restrictive: 0.4 } };
+        if (depth === 0 && y <= 2) return { checkEveryDays: 27, maxNormalQueued: 3, weights: { hrBubble: 3, informative: 3, decision: 2, progression: 0, restrictive: 0.8 } };
+        if (depth <= 1) return { checkEveryDays: 23, maxNormalQueued: 3, weights: { hrBubble: 3, informative: 2, decision: 2.5, progression: 0, restrictive: 1.0 } };
+        if (depth <= 2) return { checkEveryDays: 19, maxNormalQueued: 4, weights: { hrBubble: 3, informative: 1.5, decision: 3, progression: 0, restrictive: 1.4 } };
+        return { checkEveryDays: 16, maxNormalQueued: 4, weights: { hrBubble: 3, informative: 1, decision: 3.5, progression: 0, restrictive: 1.7 } };
+      }
+
+      function queueConfiguredEvent(eventId, context = {}, queueOverrides = {}) {
+        const event = rtpEventById(eventId);
+        if (!event) return null;
         return pushQueueEvent({
-          eventId,
-          context: overrides.context || {},
-          kind: overrides.kind || ev.kind || ev.family || 'configuredEvent',
-          tone: overrides.tone || ev.tone || 'warning',
-          icon: overrides.icon || ev.icon || ev.label || '!',
-          label: overrides.label || ev.label || 'EVT',
-          image: overrides.image || configuredEventImage(ev),
-          character: overrides.character || ev.character,
-          department: overrides.department || ev.department,
-          title: overrides.title || ev.title || 'Queued Event',
-          body: overrides.body || null
+          eventId: event.id,
+          interactionType: event.interactionType,
+          source: event.source,
+          tone: queueOverrides.tone || event.tone || (event.interactionType === 'restrictive' ? 'warning' : event.interactionType === 'hrBubble' ? 'hr' : 'info'),
+          icon: queueOverrides.icon || event.icon || event.label || 'EVT',
+          label: queueOverrides.label || event.label || 'EVT',
+          title: queueOverrides.title || event.title || RTP_EVENT_CATEGORY_META[event.interactionType]?.label || 'Event',
+          context
         });
       }
 
-      const eventRefactorBaseOpenOperationalEventModal = openOperationalEventModal;
-      openOperationalEventModal = function(ev) {
-        if (typeof ev === 'string') return openEventById(ev);
-        if (ev && ev.eventId) return openEventById(ev.eventId, ev);
-        return eventRefactorBaseOpenOperationalEventModal(ev);
+      const rtpBaseResolveGeologyReinterpretationChoice = resolveGeologyReinterpretationChoice;
+      resolveGeologyReinterpretationChoice = function(choice) {
+        if (choice !== 'dashboard') return rtpBaseResolveGeologyReinterpretationChoice(choice);
+        const ev = state.pendingGeologyReinterpretation;
+        if (!ev || ev.resolved) return;
+        ev.resolved = true;
+        document.querySelectorAll('[data-geology-reinterpret-choice], [data-rtp-event-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+        const targets = geologyDecisionTargets();
+        const geo = geologistOnCrew();
+        const geoSkill = geo ? Number(geo.skill) || 3 : 2;
+        const cost = 1800;
+        spend(cost, 'Geology confidence dashboard');
+        const successChance = clamp(0.30 + geoSkill * 0.06, 0.38, 0.66);
+        const success = Math.random() < successChance;
+        let adjusted = 0;
+        if (success) {
+          const limit = Math.min(targets.length, Math.max(3, Math.round(targets.length * 0.38)));
+          targets.slice().sort(() => Math.random() - 0.5).slice(0, limit).forEach(b => {
+            b.gradeConfidence = Math.min(0.94, Math.max(0.22, (Number(b.gradeConfidence) || 0.52) + 0.12));
+            adjusted++;
+          });
+          adjustTrait('skill', 1);
+          if (geo) geo.skill = Math.min(5, (Number(geo.skill) || 3) + 1);
+          openDecisionOutcomeModal({
+            title: 'Geology Model Outcome',
+            image: 'assets/characters/geology-rock-lickers.png',
+            character: 'Geology Department',
+            department: 'Interpretation of Reality Unit',
+            label: 'GEO',
+            tone: 'good',
+            body: `<p>The Geologist has produced a confidence dashboard. It contains several reassuring colours and only one axis label that appears to be in the wrong units.</p><p><strong>Movement:</strong> ${adjusted} block confidence estimates improved. Grade interpretations have not changed, but management confidence in the interpretation has been temporarily increased.</p><p><strong>Impact:</strong> -${money(scaledCost(cost))} budget, +1 Skill.</p>`,
+            button: 'Accept the Dashboard'
+          });
+        } else {
+          adjustTrait('morale', -1);
+          openDecisionOutcomeModal({
+            title: 'Geology Model Outcome',
+            image: 'assets/characters/geology-rock-lickers.png',
+            character: 'Geology Department',
+            department: 'Interpretation of Reality Unit',
+            label: 'GEO',
+            tone: 'warning',
+            body: `<p>The confidence dashboard has clarified that confidence remains a presentation choice rather than a geological property.</p><p>No useful model change has been identified. The Geologist has asked whether next time they may use the biscuits method instead.</p><p><strong>Impact:</strong> -${money(scaledCost(cost))} budget, -1 Morale. The current model remains unchanged.</p>`,
+            button: 'File the Dashboard'
+          });
+        }
+        state.pendingGeologyReinterpretation = null;
+        showProductionComment('Geology produced a dashboard. The colours were more decisive than the data.', 'Geology', 7.5);
       };
 
-      const eventRefactorBaseOpenQueuedEvent = openQueuedEvent;
+      const rtpBaseTriggerGeologyReinterpretationEvent = triggerGeologyReinterpretationEvent;
+      triggerGeologyReinterpretationEvent = function(force = false) {
+        if (!force && !canTriggerGeologyReinterpretation()) return false;
+        const targets = geologyReinterpretationTargets();
+        if (!targets.length) return false;
+        state.pendingGeologyReinterpretation = {
+          id: 'geo_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+          cells: targets.map(b => ({ r: b.r, c: b.c })),
+          resolved: false
+        };
+        state.lastGeologyReinterpretationDay = state.day;
+        return openEventById('decision.geologyModelReinterpretation', { force: !!force });
+      };
+
+      const rtpBaseOpenMobileEventQueueItem = openMobileEventQueueItem;
+      openMobileEventQueueItem = function(key) {
+        if (!key) return;
+        if (key.startsWith('staff:')) return openEventById('queueAlert.hrGrouped', { staffId: key.slice(6) });
+        if (key === 'belt') return openEventById('queueAlert.asset.belt');
+        if (key === 'miner' || key === 'miner1' || key === 'miner2') {
+          state.activeMachine = key === 'miner2' ? 'miner2' : 'miner1';
+          return openEventById('queueAlert.asset.miner', { machineKey: state.activeMachine });
+        }
+        if (key === 'safety') return openEventById('queueAlert.safety.activeHoldPoint');
+        return rtpBaseOpenMobileEventQueueItem(key);
+      };
+
+      const rtpBaseOpenQueuedEvent = openQueuedEvent;
       openQueuedEvent = function(id) {
         const idx = state.queueEvents.findIndex(ev => ev.id === id);
-        if (idx >= 0) {
-          const ev = state.queueEvents[idx];
-          if (ev && ev.eventId && EVENT_CONFIG[ev.eventId]) {
-            state.queueEvents.splice(idx, 1);
-            updateMobileEventQueue(true);
-            return openEventById(ev.eventId, { context: ev.context || {}, kind: ev.kind, tone: ev.tone, label: ev.label, icon: ev.icon });
-          }
+        if (idx < 0) return;
+        const ev = state.queueEvents[idx];
+        if (ev && ev.eventId && rtpEventById(ev.eventId)) {
+          state.queueEvents.splice(idx, 1);
+          updateMobileEventQueue(true);
+          return openEventById(ev.eventId, { ...(ev.context || {}), queueEvent: ev });
         }
-        return eventRefactorBaseOpenQueuedEvent(id);
+        return rtpBaseOpenQueuedEvent(id);
       };
 
-      document.body.addEventListener('click', function(e) {
-        const configuredChoiceBtn = e.target.closest('[data-configured-event-choice]');
-        if (!configuredChoiceBtn) return;
-        e.preventDefault();
-        e.stopPropagation();
-        if (state.manualPaused) {
-          showProductionComment('Game paused. Event decisions remain visible but cannot be resolved until time resumes.', 'Pause', 3.8);
-          return;
+      const rtpBasePushQueueEvent = pushQueueEvent;
+      pushQueueEvent = function(ev = {}) {
+        if (ev && ev.eventId) {
+          const cfg = rtpEventById(ev.eventId);
+          if (cfg) ev = { interactionType: cfg.interactionType, source: cfg.source, label: cfg.label || ev.label, icon: cfg.icon || ev.icon || cfg.label || ev.label, ...ev };
         }
-        resolveConfiguredDecision(configuredChoiceBtn.dataset.configuredEventId, configuredChoiceBtn.dataset.configuredEventChoice);
+        return rtpBasePushQueueEvent(ev);
+      };
+
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-rtp-event-choice]');
+        if (!btn) return;
+        e.preventDefault();
+        resolveConfiguredDecisionChoice(btn.dataset.rtpEventId, btn.dataset.rtpEventChoice);
       }, true);
 
-      const eventRefactorBaseMaybeQueueBeltDistanceConcern = maybeQueueBeltDistanceConcern;
-      maybeQueueBeltDistanceConcern = function(force = false) {
-        if (!featureUnlocked('beltAdvancement')) return;
-        if (!state.conveyor || state.conveyor.status !== 'running') return;
-        if (!surveyorOnCrew()) return;
-        const extension = beltExtensionStatus();
-        if (!extension.canExtend) return;
-        const active = machinePreviewOrigin(state.machine) || blockAt(MINE_ID, state.machine.r, state.machine.c);
-        const distance = beltServiceDistance(active);
-        if (!force && distance < 4.0) return;
-        const cooldown = (Number(state.depthIndex) || 0) === 0 ? YEAR_LENGTH_DAYS : 130;
-        if (!force && state.day - (state.lastBeltDistanceConcernDay || -999) < cooldown) return;
-        const unresolved = state.queueEvents.some(ev => ev && (ev.kind === 'beltComplaint' || ev.kind === 'beltDistance' || ev.eventId === 'belt.availabilityComplaint'));
-        if (unresolved) return;
-        state.lastBeltDistanceConcernDay = state.day;
-        queueConfiguredEvent('belt.availabilityComplaint');
-      };
-
-      addBeltMoanBubble = function() {
-        maybeQueueBeltDistanceConcern(true);
-      };
-
-      const eventRefactorBaseExternalAffairsEventList = externalAffairsEventList;
-      externalAffairsEventList = function() {
-        return (eventRefactorBaseExternalAffairsEventList() || []).map(ev => {
-          if (ev && ev.kind === 'screeningTrees') return { ...ev, eventId: 'externalAffairs.screeningTrees', image: EVENT_CONFIG['externalAffairs.screeningTrees'].image };
-          return ev;
-        });
-      };
-
-      const eventRefactorBaseOpenExternalAffairsChoiceModal = openExternalAffairsChoiceModal;
-      openExternalAffairsChoiceModal = function(ev) {
-        if (ev && ev.eventId && EVENT_CONFIG[ev.eventId]) return openEventById(ev.eventId);
-        return eventRefactorBaseOpenExternalAffairsChoiceModal(ev);
-      };
-
-      const eventRefactorBaseResolveExternalAffairsChoice = resolveExternalAffairsChoice;
-      resolveExternalAffairsChoice = function(encoded) {
-        const [kind, choice] = String(encoded || '').split(':');
-        if (kind === 'screeningTrees') return resolveConfiguredDecision('externalAffairs.screeningTrees', choice);
-        return eventRefactorBaseResolveExternalAffairsChoice(encoded);
-      };
-
-      const eventRefactorBaseForceExternalAffairsEvent = forceExternalAffairsEvent;
-      forceExternalAffairsEvent = function(kind = null) {
-        if (kind === 'screeningTrees') {
-          state.externalAffairsDoneThisYear = true;
-          return openEventById('externalAffairs.screeningTrees');
-        }
-        return eventRefactorBaseForceExternalAffairsEvent(kind);
-      };
-
-      const eventRefactorBaseGradeConstraintEvents = gradeConstraintEvents;
-      gradeConstraintEvents = function() {
-        return (eventRefactorBaseGradeConstraintEvents() || []).map(ev => ev && ev.type === 'customer' ? { ...ev, eventId: 'sales.customerSpecificationChange' } : ev);
-      };
-
-      const eventRefactorBaseApplyGradeConstraintEvent = applyGradeConstraintEvent;
-      applyGradeConstraintEvent = function(ev) {
-        if (!ev || !ev.eventId || !EVENT_CONFIG[ev.eventId]) return eventRefactorBaseApplyGradeConstraintEvent(ev);
-        state.gradeConstraintEventDoneThisYear = true;
-        state.gradeRestriction = {
-          type: ev.type,
-          title: ev.title,
-          source: ev.source,
-          label: ev.label,
-          minBand: ev.minBand,
-          expiresDay: state.day + ev.duration,
-          image: ev.image,
-          character: ev.character
-        };
-        openEventById(ev.eventId, {
-          context: {
-            originalEvent: ev,
-            dashboardLine: `<p><strong>SLT Dashboard:</strong> active grade restriction shown as ${escapeHtml(gradeRestrictionShortLabel(state.gradeRestriction))}.</p>`
-          }
-        });
-        showProductionComment('Grade now matters because someone outside Production has remembered product specification.', 'Grade Control', 8);
-        return true;
-      };
-
-      const eventRefactorBaseDevAction = devAction;
+      const rtpBaseDevActionForEventPass2 = devAction;
       devAction = function(action) {
-        if (action === 'event-refactor-belt') { queueConfiguredEvent('belt.availabilityComplaint'); return; }
-        if (action === 'event-refactor-external') { openEventById('externalAffairs.screeningTrees'); return; }
-        if (action === 'event-refactor-sales') { openEventById('sales.customerSpecificationChange', { context: { dashboardLine: '<p><strong>SLT Dashboard:</strong> active grade restriction preview from Event Refactor test.</p>' } }); return; }
-        if (action === 'event-refactor-finance') { openEventById('finance.drillingSuspension'); return; }
-        if (action === 'event-refactor-slt') { openEventById('slt.siteVisit'); return; }
-        return eventRefactorBaseDevAction(action);
+        if (!action) return;
+        if (action === 'event2-geology') {
+          state.year = Math.max(2, Number(state.year) || 1);
+          state.lastGeologyReinterpretationDay = -999;
+          if (!triggerGeologyReinterpretationEvent(true)) showProductionComment('Dev trigger: no eligible explored, unmined blocks are available for reinterpretation.', 'Event System', 5);
+          return;
+        }
+        if (action === 'event2-hse') { openEventById('decision.hseSurpriseInspection'); return; }
+        if (action === 'event2-slt') { openEventById('decision.sltSiteVisit', { force: true }); return; }
+        if (action === 'event2-role-ground') { openEventById('progression.roleUnlock', { key: 'groundControl', customTitle: 'Dev: Ground Control Intro' }); return; }
+        if (action === 'event2-shaft') { markShaftDeepeningAvailable(false); openEventById('progression.shaftDeepeningProposal'); return; }
+        if (action === 'event2-drill-suspend') { ensureDrillingRestrictionState(); openEventById('restrictive.explorationDrillingSuspended'); return; }
+        if (action === 'event2-drill-resume') { ensureDrillingRestrictionState(); state.exploration.drillingSuspended = true; openEventById('restrictive.explorationDrillingResumed'); return; }
+        if (action === 'event2-belt-alert') { openEventById('queueAlert.asset.belt'); return; }
+        if (action === 'event2-miner-alert') { openEventById('queueAlert.asset.miner'); return; }
+        return rtpBaseDevActionForEventPass2(action);
       };
 
-      const eventRefactorBaseEnhanceDevTools = enhanceDevToolsForNewSystems;
+      const rtpBaseEnhanceDevToolsForEventPass2 = enhanceDevToolsForNewSystems;
       enhanceDevToolsForNewSystems = function() {
-        eventRefactorBaseEnhanceDevTools();
+        rtpBaseEnhanceDevToolsForEventPass2();
         const body = $('modalBody');
-        if (!body || body.querySelector('[data-event-refactor-pass1-dev-tools]')) return;
+        if (!body || body.querySelector('[data-event-refactor-pass2-dev-tools]')) return;
+        const summary = rtpEventCategorySummary();
+        const html = `<section class="devToolCard" data-event-refactor-pass2-dev-tools><h3>Event System Refactor Pass 2</h3><p>Category-led event tests. Current registry: HR ${summary.hrBubble || 0}, Info ${summary.informative || 0}, Decision ${summary.decision || 0}, Progression ${summary.progression || 0}, Restrictive ${summary.restrictive || 0}, Queue ${summary.queueAlert || 0}.</p><div class="devToolBtns"><button data-dev-action="event2-geology">Geology Decision (4 options)</button><button data-dev-action="event2-hse">HSE Decision</button><button data-dev-action="event2-slt">SLT Decision</button><button data-dev-action="event2-role-ground">Progression: Ground</button><button data-dev-action="event2-shaft">Progression: Shaft</button><button data-dev-action="event2-drill-suspend">Restrict: Suspend Drilling</button><button data-dev-action="event2-drill-resume">Restrict: Resume Drilling</button><button data-dev-action="event2-belt-alert">Queue: Belt</button><button data-dev-action="event2-miner-alert">Queue: Miner</button></div></section>`;
         const grid = body.querySelector('.devToolGrid');
-        const html = `<section class="devToolCard" data-event-refactor-pass1-dev-tools><h3>Event Refactor Pass 1</h3><p>Central EVENT_CONFIG tests: info, decision and queued configured events.</p><div class="devToolBtns"><button data-dev-action="event-refactor-belt">Queued Belt Decision</button><button data-dev-action="event-refactor-external">External Affairs Decision</button><button data-dev-action="event-refactor-sales">Sales Info</button><button data-dev-action="event-refactor-finance">Finance Info</button><button data-dev-action="event-refactor-slt">SLT Info</button></div></section>`;
         if (grid) grid.insertAdjacentHTML('beforeend', html);
         else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
       };
 
+      window.RTP_EVENT_REFACTOR_PASS_2 = RTP_EVENT_REFACTOR_PASS_2;
+      window.RTP_EVENT_INTERACTION_TYPES = RTP_EVENT_INTERACTION_TYPES;
+      window.RTP_EVENT_CATEGORY_META = RTP_EVENT_CATEGORY_META;
+      window.RTP_EVENTS = RTP_EVENTS;
+      window.openEventById = openEventById;
+      window.queueConfiguredEvent = queueConfiguredEvent;
+      window.rtpEventCategorySummary = rtpEventCategorySummary;
 
 
 
