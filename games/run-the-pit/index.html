@@ -25465,6 +25465,501 @@
       }
 
 
+      /* Event Refactor Pass 1 — central event config and generic event openers.
+         This pass keeps the single-file build and preserves existing gameplay logic.
+         Events can now be opened/queued by stable ID instead of requiring bespoke modal code. */
+      const EVENT_REFACTOR_PASS_1 = {
+        name: 'Event Refactor Pass 1',
+        date: '2026-06-29',
+        intent: 'Separate event/modal content from core mining, KPI and machine logic while keeping the current single HTML build.'
+      };
+
+      const EVENT_CONFIG = {
+        'belt.availabilityComplaint': {
+          id: 'belt.availabilityComplaint',
+          type: 'decision',
+          family: 'operational',
+          kind: 'beltComplaint',
+          title: 'Belt Availability Complaint',
+          label: 'BELT',
+          icon: '↻',
+          tone: 'warning',
+          priority: 60,
+          image: 'assets/images/belt_availability_complaint.png',
+          character: 'Mine Services',
+          department: 'Belt Availability',
+          imageText: 'The crew have produced a visual explanation of why the belt is once again too far away.',
+          body: '<p>The crew have once again observed that if the belt ran when required, production targets would be easier to achieve.</p><p>This insight has been escalated to management for strategic consideration.</p>',
+          choices: [
+            {
+              id: 'infrastructure',
+              label: 'Offer to follow up at the next infrastructure meeting',
+              detail: '+2 Morale, -1 Productivity. Concern enters the meeting ecosystem.',
+              style: 'positive',
+              apply: () => {
+                adjustTrait('morale', 2);
+                adjustTrait('productivity', -1);
+                showProductionComment('The crew appreciate that their concern has entered the meeting ecosystem.', 'Mine Services', 5);
+                return { tone: 'good', body: '<p>The belt availability concern has entered the infrastructure meeting ecosystem.</p><p><strong>Impact:</strong> +2 Morale, -1 Productivity. A meeting has been created, which gives the concern a safe administrative habitat.</p>' };
+              }
+            },
+            {
+              id: 'control',
+              label: 'Remind them to only focus on things they can control',
+              detail: '-2 Morale, -1 Safety, +1 Productivity. Resilience is issued downward.',
+              style: 'negative',
+              apply: () => {
+                adjustTrait('morale', -2);
+                adjustTrait('safety', -1);
+                adjustTrait('productivity', 1);
+                showProductionComment('The team receives a practical lesson in resilience and learned helplessness.', 'S.H.A.F.T.', 5);
+                return { tone: 'warning', body: '<p>Resilience has been issued downward.</p><p><strong>Impact:</strong> -2 Morale, -1 Safety, +1 Productivity. The belt remains outside the crew\'s control, which is why the advice was so affordable.</p>' };
+              }
+            },
+            {
+              id: 'pretend',
+              label: 'Pretend to Listen',
+              detail: '50% chance -1 Morale. Nodding is deployed.',
+              apply: () => {
+                const detected = Math.random() < 0.5;
+                if (detected) {
+                  adjustTrait('morale', -1);
+                  showProductionComment('Nodding was detected as nodding. Morale has adjusted accordingly.', 'Mine Services', 5);
+                  return { tone: 'warning', body: '<p>Nodding was detected as nodding.</p><p><strong>Impact:</strong> -1 Morale. The crew have requested a higher grade of pretending.</p>' };
+                }
+                showProductionComment('Nodding is deployed successfully. No measurable outcome has occurred.', 'Mine Services', 5);
+                return { tone: 'info', body: '<p>Nodding was deployed successfully.</p><p><strong>Impact:</strong> none measurable. This is considered a strong result by several departments.</p>' };
+              }
+            },
+            {
+              id: 'fix-yourself',
+              label: 'Tell them they could always fix it themselves',
+              detail: '+1 Productivity, -3 Morale, possible Skill gain or belt fault.',
+              style: 'negative',
+              apply: () => {
+                adjustTrait('productivity', 1);
+                adjustTrait('morale', -3);
+                const hasTrade = !!(crewByRole('fitter') || crewByRole('electrician'));
+                if (hasTrade) {
+                  adjustTrait('skill', 1);
+                  state.conveyor.condition = Math.max(0, Math.min(100, (state.conveyor.condition || 80) + 3));
+                  showProductionComment('Empowerment has been issued with just enough competence nearby to avoid immediate disaster.', 'Mine Services', 5);
+                  return { tone: 'good', body: '<p>The crew fixed enough of the issue to call it empowerment.</p><p><strong>Impact:</strong> +1 Productivity, +1 Skill, -3 Morale, conveyor condition +3%.</p>' };
+                }
+                showProductionComment('Empowerment has been issued without resources. The belt has interpreted this as a fault condition.', 'Mine Services', 5);
+                triggerConveyorFault('mechanical');
+                return { tone: 'danger', body: '<p>Empowerment was issued without resources.</p><p><strong>Impact:</strong> +1 Productivity, -3 Morale, and the belt has interpreted the management intervention as a mechanical fault.</p>' };
+              }
+            }
+          ],
+          outcome: {
+            title: 'Belt Availability Outcome',
+            button: 'Return to Belt-Dependent Production'
+          }
+        },
+
+        'externalAffairs.screeningTrees': {
+          id: 'externalAffairs.screeningTrees',
+          type: 'decision',
+          family: 'externalAffairs',
+          kind: 'screeningTrees',
+          title: 'External Affairs Proposal',
+          label: 'EXT',
+          icon: 'EXT',
+          tone: 'info',
+          priority: 45,
+          image: 'assets/images/external_affairs_community.png',
+          fallbackImage: 'assets/characters/community-relations.png',
+          character: 'External Affairs',
+          department: 'Community Visibility Reduction',
+          imageText: 'External Affairs has identified that the mine may be easier to manage if fewer people can see it.',
+          body: '<p>External Affairs have developed a plan to improve community relations.</p><p>They propose planting trees around the edge of the mine site to prevent external parties from becoming aware of the mine’s existence.</p><p>The plan has been described as nature-based stakeholder invisibility.</p>',
+          choices: [
+            {
+              id: 'trees',
+              label: 'Agree and plant trees',
+              detail: 'Moderate spend. Improves reputation slowly by hiding the mine behind photosynthesis.',
+              style: 'positive',
+              apply: () => {
+                const cost = scaledCost(2200);
+                spend(2200, 'Community tree screen');
+                adjustTrait('morale', 1);
+                if (sharePriceMetricActive()) adjustSharePrice(1, 'External Affairs planted a visibility screen');
+                return { tone: 'good', body: `<p>Trees have been planted around the mine boundary. External Affairs has confirmed that, once mature, they will almost certainly obscure the site from anyone not using eyes, maps, drones, roads or local knowledge.</p><p><strong>Impact:</strong> ${money(cost)} spend, +1 Morale, small reputation benefit.</p>` };
+              }
+            },
+            {
+              id: 'wall',
+              label: 'Suggest a more immediate solution like a wall or curtain',
+              detail: 'Higher spend. Faster concealment. Suspiciously literal.',
+              apply: () => {
+                const cost = scaledCost(4200);
+                spend(4200, 'Community relations wall and curtain study');
+                adjustTrait('productivity', -1);
+                if (sharePriceMetricActive()) adjustSharePrice(Math.random() < 0.55 ? 2 : -2, 'External Affairs installed a visual reassurance barrier');
+                return { tone: 'warning', body: `<p>A more immediate barrier has been specified. It is being described externally as a community reassurance screen and internally as a wall, because that is what it is.</p><p><strong>Impact:</strong> ${money(cost)} spend, -1 Productivity. Reputation impact depends on whether anyone asks why the reassurance needed to be opaque.</p>` };
+              }
+            },
+            {
+              id: 'yellow',
+              label: 'Paint all mine buildings yellow instead',
+              detail: 'Cheap, highly visible, and therefore strategically confusing.',
+              apply: () => {
+                const cost = scaledCost(850);
+                spend(850, 'Yellow building paint');
+                adjustTrait('morale', 1);
+                if (sharePriceMetricActive()) adjustSharePrice(-1, 'Mine buildings painted highly visible yellow');
+                return { tone: 'warning', body: `<p>The mine buildings have been painted yellow. The site is now less industrial-looking only to people who believe warning signs are a camouflage pattern.</p><p><strong>Impact:</strong> ${money(cost)} spend, +1 Morale, minor reputation confusion.</p>` };
+              }
+            },
+            {
+              id: 'sport',
+              label: 'Offer bribe disguised as community investment to local kids sport clubs',
+              detail: 'Expensive. Excellent optics until anyone reads the invoice.',
+              style: 'negative',
+              apply: () => {
+                const cost = scaledCost(5200);
+                spend(5200, 'Community sport investment');
+                adjustTrait('morale', 2);
+                if (sharePriceMetricActive()) adjustSharePrice(3, 'Community sport investment announcement');
+                state.externalAffairsScandalRisk = (state.externalAffairsScandalRisk || 0) + 1;
+                return { tone: 'good', body: `<p>Local youth sport has received a generous community investment with a sponsorship banner large enough to cover several difficult questions.</p><p><strong>Impact:</strong> ${money(cost)} spend, +2 Morale, short-term reputation benefit. External Affairs has requested nobody use the word bribe in writing.</p>` };
+              }
+            }
+          ],
+          outcome: {
+            title: 'Community Relations Outcome',
+            department: 'Community Interface',
+            button: 'Update Stakeholder Narrative'
+          }
+        },
+
+        'sales.customerSpecificationChange': {
+          id: 'sales.customerSpecificationChange',
+          type: 'info',
+          family: 'salesMarketing',
+          kind: 'gradeRestriction',
+          title: 'Customer Specification Change',
+          label: 'SPEC',
+          icon: 'SPEC',
+          tone: 'warning',
+          priority: 42,
+          image: 'assets/characters/sales-marketing.png',
+          character: 'Sales and Marketing',
+          department: 'Product Quality Announcement Unit',
+          imageText: 'Sales and Marketing have announced a product promise and transferred the consequences underground.',
+          body: (ctx) => '<p>Sales and Marketing have agreed a new customer contract.</p><p>The customer requires consistent product quality, which Sales has interpreted as a Production problem.</p><p><strong>Restriction:</strong> for the next quarter, marginal and poor grade blocks cannot be mined.</p><p>Sales would like to clarify that the deal has already been announced externally.</p>' + (ctx && ctx.dashboardLine ? ctx.dashboardLine : ''),
+          button: 'Accept Grade Constraint'
+        },
+
+        'slt.siteVisit': {
+          id: 'slt.siteVisit',
+          type: 'info',
+          family: 'slt',
+          kind: 'sltVisit',
+          title: 'SLT Site Visit',
+          label: 'SLT',
+          icon: 'SLT',
+          tone: 'warning',
+          priority: 40,
+          image: 'assets/images/slt_site_visit.png',
+          character: 'Superior Leadership Team',
+          department: 'Strategic Visibility Visit',
+          imageText: 'Senior leaders are visiting the pit to observe progress without becoming responsible for conditions.',
+          body: '<p>The Superior Leadership Team has arrived underground in high-visibility clothing, office shoes, and several expressions of controlled alarm.</p><p>The visit is intended to improve operational visibility, although the visitors have asked whether visibility can be achieved from somewhere with fewer noises.</p>',
+          button: 'Return to Work Before They Suggest Something'
+        },
+
+        'finance.drillingSuspension': {
+          id: 'finance.drillingSuspension',
+          type: 'info',
+          family: 'finance',
+          kind: 'drillingSuspension',
+          title: 'Exploration Drilling Suspended',
+          label: 'FIN',
+          icon: '£',
+          tone: 'warning',
+          priority: 48,
+          image: 'assets/characters/mr-b-counter.png',
+          character: 'Mr B. Counter',
+          department: 'Department of Financial Prevention',
+          imageText: 'Finance has detected expenditure and is responding with process.',
+          body: '<p>Finance has reviewed the exploration drilling programme and identified a serious issue: it appears to cost money before generating a PowerPoint-ready reserve statement.</p><p>Drilling has been temporarily suspended while the expenditure line is renamed, reforecast, and made someone else’s responsibility.</p>',
+          button: 'Acknowledge Financial Reality'
+        }
+      };
+
+      window.RTP_EVENT_REFACTOR_PASS_1 = EVENT_REFACTOR_PASS_1;
+      window.RTP_EVENT_CONFIG = EVENT_CONFIG;
+
+      function configuredEventValue(value, ctx, ev) {
+        if (typeof value === 'function') return value(ctx || {}, ev || null);
+        return value;
+      }
+
+      function getEventConfig(eventId, overrides = {}) {
+        const base = EVENT_CONFIG[String(eventId || '')];
+        if (!base) return null;
+        const cfg = { ...base, ...(overrides || {}) };
+        cfg.id = cfg.id || String(eventId || '');
+        cfg.context = { ...((base && base.context) || {}), ...(((overrides || {}).context) || {}) };
+        return cfg;
+      }
+
+      function configuredEventImage(ev) {
+        return ev.image || ev.fallbackImage || '';
+      }
+
+      function configuredEventBodyHtml(ev, ctx) {
+        return configuredEventValue(ev.body, ctx, ev) || '<p>Event details unavailable.</p>';
+      }
+
+      function configuredEventCharacterHtml(ev, ctx) {
+        const image = configuredEventValue(configuredEventImage(ev), ctx, ev);
+        if (!image) return '';
+        return modalCharacterHtml(
+          image,
+          configuredEventValue(ev.character, ctx, ev) || ev.title || 'Operational Event',
+          configuredEventValue(ev.department, ctx, ev) || 'Operational Update',
+          configuredEventValue(ev.imageText, ctx, ev) || 'A department has produced a visual explanation for why this is now your problem.',
+          configuredEventValue(ev.label, ctx, ev) || 'EVT'
+        );
+      }
+
+      function configuredChoiceButtonHtml(eventId, choice) {
+        const style = choice.style ? ' ' + escapeHtml(choice.style) : '';
+        return `<button class="eventChoiceBtn${style}" data-configured-event-choice="${escapeHtml(choice.id)}" data-configured-event-id="${escapeHtml(eventId)}"><strong>${escapeHtml(choice.label || choice.id)}</strong><span>${escapeHtml(choice.detail || choice.hint || '')}</span></button>`;
+      }
+
+      function openConfiguredInfoEvent(ev, ctx = {}) {
+        if (!ev) return false;
+        if (isModalOpen()) {
+          queueConfiguredEvent(ev.id, { context: ctx });
+          return true;
+        }
+        setModalClosable(ev.closable !== false);
+        $('modalWindow').className = ev.windowClass || 'window medium';
+        $('modalTitle').textContent = configuredEventValue(ev.title, ctx, ev) || 'Operational Event';
+        $('modalBody').innerHTML = configuredEventCharacterHtml(ev, ctx) + configuredEventBodyHtml(ev, ctx) + `<div class="btnRow"><button class="primary" data-close>${escapeHtml(configuredEventValue(ev.button, ctx, ev) || 'Accept Operational Reality')}</button></div>`;
+        $('modalOverlay').classList.add('show');
+        return true;
+      }
+
+      function openConfiguredDecisionEvent(ev, ctx = {}) {
+        if (!ev) return false;
+        if (isModalOpen()) {
+          queueConfiguredEvent(ev.id, { context: ctx });
+          return true;
+        }
+        state.activeConfiguredEvent = { id: ev.id, context: ctx };
+        setModalClosable(ev.closable === true);
+        $('modalWindow').className = ev.windowClass || 'window medium';
+        $('modalTitle').textContent = configuredEventValue(ev.title, ctx, ev) || 'Decision Event';
+        const choices = (ev.choices || []).map(choice => configuredChoiceButtonHtml(ev.id, choice)).join('');
+        $('modalBody').innerHTML = configuredEventCharacterHtml(ev, ctx) + configuredEventBodyHtml(ev, ctx) + `<p><strong>Management response required.</strong></p><div class="beltDecisionGrid">${choices}</div>`;
+        $('modalOverlay').classList.add('show');
+        return true;
+      }
+
+      function openEventById(eventId, overrides = {}) {
+        const ev = getEventConfig(eventId, overrides);
+        if (!ev) {
+          openOperationalEventModal({ title: 'Missing Event Config', label: 'EVT', tone: 'warning', body: `<p>Event config <strong>${escapeHtml(String(eventId || ''))}</strong> was requested but is not defined.</p>` });
+          return false;
+        }
+        const ctx = { ...(ev.context || {}), ...(overrides.context || {}) };
+        if (ev.type === 'decision') return openConfiguredDecisionEvent(ev, ctx);
+        return openConfiguredInfoEvent(ev, ctx);
+      }
+
+      function configuredEventOutcomeBase(ev, choice, ctx) {
+        const outcome = { ...(ev.outcome || {}), ...(choice.result || {}) };
+        return {
+          title: outcome.title || ((configuredEventValue(ev.title, ctx, ev) || 'Decision') + ' Outcome'),
+          image: outcome.image || configuredEventImage(ev),
+          character: outcome.character || configuredEventValue(ev.character, ctx, ev),
+          department: outcome.department || configuredEventValue(ev.department, ctx, ev),
+          label: outcome.label || configuredEventValue(ev.label, ctx, ev),
+          tone: outcome.tone || choice.tone || ev.tone || 'info',
+          imageText: outcome.imageText || 'A management decision has produced a measurable consequence.',
+          body: outcome.body || '<p>The decision has been recorded. Consequences have been allocated according to procedure.</p>',
+          button: outcome.button || 'Accept Consequence'
+        };
+      }
+
+      function resolveConfiguredDecision(eventId, choiceId, explicitContext = null) {
+        const active = state.activeConfiguredEvent || {};
+        const ev = getEventConfig(eventId || active.id);
+        if (!ev || ev.type !== 'decision') return false;
+        const choice = (ev.choices || []).find(c => c.id === choiceId);
+        if (!choice) return false;
+        const ctx = explicitContext || active.context || {};
+        document.querySelectorAll('[data-configured-event-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+        let applyResult = {};
+        if (typeof choice.apply === 'function') applyResult = choice.apply(ctx, ev, choice) || {};
+        const outcome = { ...configuredEventOutcomeBase(ev, choice, ctx), ...applyResult };
+        state.activeConfiguredEvent = null;
+        updateHud();
+        openDecisionOutcomeModal(outcome);
+        return true;
+      }
+
+      function queueConfiguredEvent(eventId, overrides = {}) {
+        const ev = getEventConfig(eventId, overrides);
+        if (!ev) return null;
+        return pushQueueEvent({
+          eventId,
+          context: overrides.context || {},
+          kind: overrides.kind || ev.kind || ev.family || 'configuredEvent',
+          tone: overrides.tone || ev.tone || 'warning',
+          icon: overrides.icon || ev.icon || ev.label || '!',
+          label: overrides.label || ev.label || 'EVT',
+          image: overrides.image || configuredEventImage(ev),
+          character: overrides.character || ev.character,
+          department: overrides.department || ev.department,
+          title: overrides.title || ev.title || 'Queued Event',
+          body: overrides.body || null
+        });
+      }
+
+      const eventRefactorBaseOpenOperationalEventModal = openOperationalEventModal;
+      openOperationalEventModal = function(ev) {
+        if (typeof ev === 'string') return openEventById(ev);
+        if (ev && ev.eventId) return openEventById(ev.eventId, ev);
+        return eventRefactorBaseOpenOperationalEventModal(ev);
+      };
+
+      const eventRefactorBaseOpenQueuedEvent = openQueuedEvent;
+      openQueuedEvent = function(id) {
+        const idx = state.queueEvents.findIndex(ev => ev.id === id);
+        if (idx >= 0) {
+          const ev = state.queueEvents[idx];
+          if (ev && ev.eventId && EVENT_CONFIG[ev.eventId]) {
+            state.queueEvents.splice(idx, 1);
+            updateMobileEventQueue(true);
+            return openEventById(ev.eventId, { context: ev.context || {}, kind: ev.kind, tone: ev.tone, label: ev.label, icon: ev.icon });
+          }
+        }
+        return eventRefactorBaseOpenQueuedEvent(id);
+      };
+
+      document.body.addEventListener('click', function(e) {
+        const configuredChoiceBtn = e.target.closest('[data-configured-event-choice]');
+        if (!configuredChoiceBtn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (state.manualPaused) {
+          showProductionComment('Game paused. Event decisions remain visible but cannot be resolved until time resumes.', 'Pause', 3.8);
+          return;
+        }
+        resolveConfiguredDecision(configuredChoiceBtn.dataset.configuredEventId, configuredChoiceBtn.dataset.configuredEventChoice);
+      }, true);
+
+      const eventRefactorBaseMaybeQueueBeltDistanceConcern = maybeQueueBeltDistanceConcern;
+      maybeQueueBeltDistanceConcern = function(force = false) {
+        if (!featureUnlocked('beltAdvancement')) return;
+        if (!state.conveyor || state.conveyor.status !== 'running') return;
+        if (!surveyorOnCrew()) return;
+        const extension = beltExtensionStatus();
+        if (!extension.canExtend) return;
+        const active = machinePreviewOrigin(state.machine) || blockAt(MINE_ID, state.machine.r, state.machine.c);
+        const distance = beltServiceDistance(active);
+        if (!force && distance < 4.0) return;
+        const cooldown = (Number(state.depthIndex) || 0) === 0 ? YEAR_LENGTH_DAYS : 130;
+        if (!force && state.day - (state.lastBeltDistanceConcernDay || -999) < cooldown) return;
+        const unresolved = state.queueEvents.some(ev => ev && (ev.kind === 'beltComplaint' || ev.kind === 'beltDistance' || ev.eventId === 'belt.availabilityComplaint'));
+        if (unresolved) return;
+        state.lastBeltDistanceConcernDay = state.day;
+        queueConfiguredEvent('belt.availabilityComplaint');
+      };
+
+      addBeltMoanBubble = function() {
+        maybeQueueBeltDistanceConcern(true);
+      };
+
+      const eventRefactorBaseExternalAffairsEventList = externalAffairsEventList;
+      externalAffairsEventList = function() {
+        return (eventRefactorBaseExternalAffairsEventList() || []).map(ev => {
+          if (ev && ev.kind === 'screeningTrees') return { ...ev, eventId: 'externalAffairs.screeningTrees', image: EVENT_CONFIG['externalAffairs.screeningTrees'].image };
+          return ev;
+        });
+      };
+
+      const eventRefactorBaseOpenExternalAffairsChoiceModal = openExternalAffairsChoiceModal;
+      openExternalAffairsChoiceModal = function(ev) {
+        if (ev && ev.eventId && EVENT_CONFIG[ev.eventId]) return openEventById(ev.eventId);
+        return eventRefactorBaseOpenExternalAffairsChoiceModal(ev);
+      };
+
+      const eventRefactorBaseResolveExternalAffairsChoice = resolveExternalAffairsChoice;
+      resolveExternalAffairsChoice = function(encoded) {
+        const [kind, choice] = String(encoded || '').split(':');
+        if (kind === 'screeningTrees') return resolveConfiguredDecision('externalAffairs.screeningTrees', choice);
+        return eventRefactorBaseResolveExternalAffairsChoice(encoded);
+      };
+
+      const eventRefactorBaseForceExternalAffairsEvent = forceExternalAffairsEvent;
+      forceExternalAffairsEvent = function(kind = null) {
+        if (kind === 'screeningTrees') {
+          state.externalAffairsDoneThisYear = true;
+          return openEventById('externalAffairs.screeningTrees');
+        }
+        return eventRefactorBaseForceExternalAffairsEvent(kind);
+      };
+
+      const eventRefactorBaseGradeConstraintEvents = gradeConstraintEvents;
+      gradeConstraintEvents = function() {
+        return (eventRefactorBaseGradeConstraintEvents() || []).map(ev => ev && ev.type === 'customer' ? { ...ev, eventId: 'sales.customerSpecificationChange' } : ev);
+      };
+
+      const eventRefactorBaseApplyGradeConstraintEvent = applyGradeConstraintEvent;
+      applyGradeConstraintEvent = function(ev) {
+        if (!ev || !ev.eventId || !EVENT_CONFIG[ev.eventId]) return eventRefactorBaseApplyGradeConstraintEvent(ev);
+        state.gradeConstraintEventDoneThisYear = true;
+        state.gradeRestriction = {
+          type: ev.type,
+          title: ev.title,
+          source: ev.source,
+          label: ev.label,
+          minBand: ev.minBand,
+          expiresDay: state.day + ev.duration,
+          image: ev.image,
+          character: ev.character
+        };
+        openEventById(ev.eventId, {
+          context: {
+            originalEvent: ev,
+            dashboardLine: `<p><strong>SLT Dashboard:</strong> active grade restriction shown as ${escapeHtml(gradeRestrictionShortLabel(state.gradeRestriction))}.</p>`
+          }
+        });
+        showProductionComment('Grade now matters because someone outside Production has remembered product specification.', 'Grade Control', 8);
+        return true;
+      };
+
+      const eventRefactorBaseDevAction = devAction;
+      devAction = function(action) {
+        if (action === 'event-refactor-belt') { queueConfiguredEvent('belt.availabilityComplaint'); return; }
+        if (action === 'event-refactor-external') { openEventById('externalAffairs.screeningTrees'); return; }
+        if (action === 'event-refactor-sales') { openEventById('sales.customerSpecificationChange', { context: { dashboardLine: '<p><strong>SLT Dashboard:</strong> active grade restriction preview from Event Refactor test.</p>' } }); return; }
+        if (action === 'event-refactor-finance') { openEventById('finance.drillingSuspension'); return; }
+        if (action === 'event-refactor-slt') { openEventById('slt.siteVisit'); return; }
+        return eventRefactorBaseDevAction(action);
+      };
+
+      const eventRefactorBaseEnhanceDevTools = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        eventRefactorBaseEnhanceDevTools();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-event-refactor-pass1-dev-tools]')) return;
+        const grid = body.querySelector('.devToolGrid');
+        const html = `<section class="devToolCard" data-event-refactor-pass1-dev-tools><h3>Event Refactor Pass 1</h3><p>Central EVENT_CONFIG tests: info, decision and queued configured events.</p><div class="devToolBtns"><button data-dev-action="event-refactor-belt">Queued Belt Decision</button><button data-dev-action="event-refactor-external">External Affairs Decision</button><button data-dev-action="event-refactor-sales">Sales Info</button><button data-dev-action="event-refactor-finance">Finance Info</button><button data-dev-action="event-refactor-slt">SLT Info</button></div></section>`;
+        if (grid) grid.insertAdjacentHTML('beforeend', html);
+        else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
+      };
+
+
+
+
       ensureDrillingRestrictionState();
 
       applyAnnualTargetUnlockGuards();
