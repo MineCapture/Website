@@ -25465,15 +25465,15 @@
       }
 
 
-      /* Event System Refactor Pass 2 — category-led event architecture.
+      /* Event System Refactor Pass 3 — Stage 1 category model rename.
          Categories are based on player interaction, not department/source.
          Existing player-facing copy is preserved by delegating legacy events until they are migrated verbatim.
          Production Manager comments intentionally remain outside this event system. */
       const RTP_EVENT_REFACTOR_PASS_2 = {
-        name: 'Event System Refactor Pass 2',
+        name: 'Event System Refactor Pass 3 — Stage 1',
         date: '2026-06-29',
-        categories: ['hrBubble', 'informative', 'decision', 'progression', 'restrictive', 'queueAlert'],
-        note: 'Source/department is metadata. Interaction type selects the renderer.'
+        categories: ['hrBubble', 'informative', 'decision', 'progression', 'gameMechanic', 'queueAlert'],
+        note: 'Source/department is metadata. Interaction type selects the renderer. GameMechanic replaces the earlier restrictive category.'
       };
 
       const RTP_EVENT_INTERACTION_TYPES = Object.freeze({
@@ -25481,7 +25481,7 @@
         INFORMATIVE: 'informative',
         DECISION: 'decision',
         PROGRESSION: 'progression',
-        RESTRICTIVE: 'restrictive',
+        GAME_MECHANIC: 'gameMechanic',
         QUEUE_ALERT: 'queueAlert'
       });
 
@@ -25506,10 +25506,10 @@
           modal: true,
           description: 'Unlock, onboarding, level transition, annual review, dependency explanation, or progression gate.'
         },
-        restrictive: {
-          label: 'Restrictive / Game-Impact Modal',
+        gameMechanic: {
+          label: 'Game Mechanic Modal',
           modal: true,
-          description: 'Applies, clears, explains or enforces a gameplay constraint.'
+          description: 'Forced or optional event that changes, introduces, suspends, resumes or explains a game mechanic.'
         },
         queueAlert: {
           label: 'Queue Alert',
@@ -25578,7 +25578,10 @@
       }
 
       function rtpEventById(eventId) {
-        return RTP_EVENTS[String(eventId || '')] || null;
+        const key = String(eventId || '');
+        if (RTP_EVENTS[key]) return RTP_EVENTS[key];
+        if (key.startsWith('restrictive.')) return RTP_EVENTS[key.replace(/^restrictive\./, 'gameMechanic.')] || null;
+        return null;
       }
 
       function openEventById(eventId, context = {}) {
@@ -25597,8 +25600,8 @@
             return openDecisionEvent(event, enrichedContext);
           case RTP_EVENT_INTERACTION_TYPES.PROGRESSION:
             return openProgressionEvent(event, enrichedContext);
-          case RTP_EVENT_INTERACTION_TYPES.RESTRICTIVE:
-            return openRestrictiveEvent(event, enrichedContext);
+          case RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC:
+            return openGameMechanicEvent(event, enrichedContext);
           case RTP_EVENT_INTERACTION_TYPES.QUEUE_ALERT:
             return openQueueAlert(event, enrichedContext);
           default:
@@ -25684,10 +25687,16 @@
         return true;
       }
 
-      function openRestrictiveEvent(event, context = {}) {
+      function openGameMechanicEvent(event, context = {}) {
         if (typeof event.apply === 'function') event.apply(context);
         if (typeof event.open === 'function') return event.open(context);
-        return rtpOpenSimpleModalForEvent(event, context, event.button || 'Accept Constraint');
+        const defaultButton = event.mechanicMode === 'optional' ? 'Review Mechanic' : 'Acknowledge Mechanic';
+        return rtpOpenSimpleModalForEvent(event, context, event.button || defaultButton);
+      }
+
+      function openRestrictiveEvent(event, context = {}) {
+        // Compatibility wrapper for pre-Stage-1 internal/dev references.
+        return openGameMechanicEvent(event, context);
       }
 
       function openQueueAlert(event, context = {}) {
@@ -25864,62 +25873,70 @@
           label: 'ENG',
           open: () => { openResearchWindow(); return true; }
         },
-        'restrictive.explorationDrillingSuspended': {
-          id: 'restrictive.explorationDrillingSuspended',
-          interactionType: 'restrictive',
+        'gameMechanic.explorationDrillingSuspended': {
+          id: 'gameMechanic.explorationDrillingSuspended',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'SLT / Geology',
           label: 'GEO',
           restrictionKey: 'exploration.drillingSuspended',
           open: () => { suspendExplorationDrilling(); return true; }
         },
-        'restrictive.explorationDrillingResumed': {
-          id: 'restrictive.explorationDrillingResumed',
-          interactionType: 'restrictive',
+        'gameMechanic.explorationDrillingResumed': {
+          id: 'gameMechanic.explorationDrillingResumed',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'SLT / Geology',
           label: 'GEO',
           restrictionKey: 'exploration.drillingSuspended',
           open: () => { resumeExplorationDrilling(); return true; }
         },
-        'restrictive.gradeConstraint': {
-          id: 'restrictive.gradeConstraint',
-          interactionType: 'restrictive',
+        'gameMechanic.gradeConstraint': {
+          id: 'gameMechanic.gradeConstraint',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'Sales & Marketing / Plant / Quality',
           label: 'SPEC',
           restrictionKey: 'gradeRestriction',
           open: context => applyGradeConstraintEvent(context.originalEvent || randomItem(gradeConstraintEvents()))
         },
-        'restrictive.safetyHoldPoint': {
-          id: 'restrictive.safetyHoldPoint',
-          interactionType: 'restrictive',
+        'gameMechanic.safetyHoldPoint': {
+          id: 'gameMechanic.safetyHoldPoint',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'Safety Department',
           label: 'SAFE',
           subtype: 'holdPoint',
           description: 'Safety standdowns remain on the specialised hold-point renderer.'
         },
-        'restrictive.heatVentilation': {
-          id: 'restrictive.heatVentilation',
-          interactionType: 'restrictive',
+        'gameMechanic.heatVentilation': {
+          id: 'gameMechanic.heatVentilation',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'Ventilation Engineering',
           label: 'VENT',
           open: () => { forceHeatVentilationEvent(); return true; }
         },
-        'restrictive.powerOutage': {
-          id: 'restrictive.powerOutage',
-          interactionType: 'restrictive',
+        'gameMechanic.powerOutage': {
+          id: 'gameMechanic.powerOutage',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'Electrical / Maintenance',
           label: 'POWER',
           open: context => { triggerPowerOutageEvent(!!context.force); return true; }
         },
-        'restrictive.surveyReconciliation': {
-          id: 'restrictive.surveyReconciliation',
-          interactionType: 'restrictive',
+        'gameMechanic.surveyReconciliation': {
+          id: 'gameMechanic.surveyReconciliation',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'Survey',
           label: 'SURV',
           open: () => { openPass19SurveyReconciliationEvent(); return true; }
         },
-        'restrictive.modelVersionConflict': {
-          id: 'restrictive.modelVersionConflict',
-          interactionType: 'restrictive',
+        'gameMechanic.modelVersionConflict': {
+          id: 'gameMechanic.modelVersionConflict',
+          interactionType: 'gameMechanic',
+          mechanicMode: 'forced',
           source: 'Technical Services',
           label: 'MODEL',
           open: () => { openPass21ModelVersionConflictEvent(); return true; }
@@ -25940,11 +25957,11 @@
       function eventInteractionPressureProfile() {
         const y = Math.max(1, Number(state.year) || 1);
         const depth = Math.max(0, Number(state.depthIndex) || 0);
-        if (y <= 1 && depth === 0) return { checkEveryDays: 34, maxNormalQueued: 2, weights: { hrBubble: 3, informative: 4, decision: 1, progression: 0, restrictive: 0.4 } };
-        if (depth === 0 && y <= 2) return { checkEveryDays: 27, maxNormalQueued: 3, weights: { hrBubble: 3, informative: 3, decision: 2, progression: 0, restrictive: 0.8 } };
-        if (depth <= 1) return { checkEveryDays: 23, maxNormalQueued: 3, weights: { hrBubble: 3, informative: 2, decision: 2.5, progression: 0, restrictive: 1.0 } };
-        if (depth <= 2) return { checkEveryDays: 19, maxNormalQueued: 4, weights: { hrBubble: 3, informative: 1.5, decision: 3, progression: 0, restrictive: 1.4 } };
-        return { checkEveryDays: 16, maxNormalQueued: 4, weights: { hrBubble: 3, informative: 1, decision: 3.5, progression: 0, restrictive: 1.7 } };
+        if (y <= 1 && depth === 0) return { checkEveryDays: 34, maxNormalQueued: 2, weights: { hrBubble: 3, informative: 4, decision: 1, progression: 0, gameMechanic: 0.4 } };
+        if (depth === 0 && y <= 2) return { checkEveryDays: 27, maxNormalQueued: 3, weights: { hrBubble: 3, informative: 3, decision: 2, progression: 0, gameMechanic: 0.8 } };
+        if (depth <= 1) return { checkEveryDays: 23, maxNormalQueued: 3, weights: { hrBubble: 3, informative: 2, decision: 2.5, progression: 0, gameMechanic: 1.0 } };
+        if (depth <= 2) return { checkEveryDays: 19, maxNormalQueued: 4, weights: { hrBubble: 3, informative: 1.5, decision: 3, progression: 0, gameMechanic: 1.4 } };
+        return { checkEveryDays: 16, maxNormalQueued: 4, weights: { hrBubble: 3, informative: 1, decision: 3.5, progression: 0, gameMechanic: 1.7 } };
       }
 
       function queueConfiguredEvent(eventId, context = {}, queueOverrides = {}) {
@@ -25954,7 +25971,7 @@
           eventId: event.id,
           interactionType: event.interactionType,
           source: event.source,
-          tone: queueOverrides.tone || event.tone || (event.interactionType === 'restrictive' ? 'warning' : event.interactionType === 'hrBubble' ? 'hr' : 'info'),
+          tone: queueOverrides.tone || event.tone || (event.interactionType === 'gameMechanic' ? 'warning' : event.interactionType === 'hrBubble' ? 'hr' : 'info'),
           icon: queueOverrides.icon || event.icon || event.label || 'EVT',
           label: queueOverrides.label || event.label || 'EVT',
           title: queueOverrides.title || event.title || RTP_EVENT_CATEGORY_META[event.interactionType]?.label || 'Event',
@@ -26081,8 +26098,8 @@
         if (action === 'event2-slt') { openEventById('decision.sltSiteVisit', { force: true }); return; }
         if (action === 'event2-role-ground') { openEventById('progression.roleUnlock', { key: 'groundControl', customTitle: 'Dev: Ground Control Intro' }); return; }
         if (action === 'event2-shaft') { markShaftDeepeningAvailable(false); openEventById('progression.shaftDeepeningProposal'); return; }
-        if (action === 'event2-drill-suspend') { ensureDrillingRestrictionState(); openEventById('restrictive.explorationDrillingSuspended'); return; }
-        if (action === 'event2-drill-resume') { ensureDrillingRestrictionState(); state.exploration.drillingSuspended = true; openEventById('restrictive.explorationDrillingResumed'); return; }
+        if (action === 'event2-drill-suspend') { ensureDrillingRestrictionState(); openEventById('gameMechanic.explorationDrillingSuspended'); return; }
+        if (action === 'event2-drill-resume') { ensureDrillingRestrictionState(); state.exploration.drillingSuspended = true; openEventById('gameMechanic.explorationDrillingResumed'); return; }
         if (action === 'event2-belt-alert') { openEventById('queueAlert.asset.belt'); return; }
         if (action === 'event2-miner-alert') { openEventById('queueAlert.asset.miner'); return; }
         return rtpBaseDevActionForEventPass2(action);
@@ -26094,7 +26111,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-event-refactor-pass2-dev-tools]')) return;
         const summary = rtpEventCategorySummary();
-        const html = `<section class="devToolCard" data-event-refactor-pass2-dev-tools><h3>Event System Refactor Pass 2</h3><p>Category-led event tests. Current registry: HR ${summary.hrBubble || 0}, Info ${summary.informative || 0}, Decision ${summary.decision || 0}, Progression ${summary.progression || 0}, Restrictive ${summary.restrictive || 0}, Queue ${summary.queueAlert || 0}.</p><div class="devToolBtns"><button data-dev-action="event2-geology">Geology Decision (4 options)</button><button data-dev-action="event2-hse">HSE Decision</button><button data-dev-action="event2-slt">SLT Decision</button><button data-dev-action="event2-role-ground">Progression: Ground</button><button data-dev-action="event2-shaft">Progression: Shaft</button><button data-dev-action="event2-drill-suspend">Restrict: Suspend Drilling</button><button data-dev-action="event2-drill-resume">Restrict: Resume Drilling</button><button data-dev-action="event2-belt-alert">Queue: Belt</button><button data-dev-action="event2-miner-alert">Queue: Miner</button></div></section>`;
+        const html = `<section class="devToolCard" data-event-refactor-pass2-dev-tools><h3>Event System Refactor Pass 3 — Stage 1</h3><p>Category-led event tests. Current registry: HR ${summary.hrBubble || 0}, Info ${summary.informative || 0}, Decision ${summary.decision || 0}, Progression ${summary.progression || 0}, Game Mechanics ${summary.gameMechanic || 0}, Queue ${summary.queueAlert || 0}.</p><div class="devToolBtns"><button data-dev-action="event2-geology">Geology Decision (4 options)</button><button data-dev-action="event2-hse">HSE Decision</button><button data-dev-action="event2-slt">SLT Decision</button><button data-dev-action="event2-role-ground">Progression: Ground</button><button data-dev-action="event2-shaft">Progression: Shaft</button><button data-dev-action="event2-drill-suspend">Mechanic: Suspend Drilling</button><button data-dev-action="event2-drill-resume">Mechanic: Resume Drilling</button><button data-dev-action="event2-belt-alert">Queue: Belt</button><button data-dev-action="event2-miner-alert">Queue: Miner</button></div></section>`;
         const grid = body.querySelector('.devToolGrid');
         if (grid) grid.insertAdjacentHTML('beforeend', html);
         else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
@@ -26105,6 +26122,7 @@
       window.RTP_EVENT_CATEGORY_META = RTP_EVENT_CATEGORY_META;
       window.RTP_EVENTS = RTP_EVENTS;
       window.openEventById = openEventById;
+      window.openGameMechanicEvent = openGameMechanicEvent;
       window.queueConfiguredEvent = queueConfiguredEvent;
       window.rtpEventCategorySummary = rtpEventCategorySummary;
 
