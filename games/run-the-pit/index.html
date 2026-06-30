@@ -26720,6 +26720,324 @@
         else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
       };
 
+
+      /* Event System Refactor Pass 3 — Stage 4 informative migration.
+         Scope: migrate selected low-risk acknowledge-only events to the generic informative renderer.
+         Existing player-facing copy is preserved verbatim; legacy behaviour remains fallback where not migrated. */
+      function rtpStage4PatchInformativeEvents() {
+        rtpStage2MergeEvent('informative.skipFactor.adjustment', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Shaft Maintenance / Finance',
+          label: 'SKIP',
+          triggerMode: 'lateYearRandom',
+          delivery: 'modal',
+          migrationStatus: 'stage4GenericInformativeRenderer',
+          copyPolicy: 'preserveVerbatim',
+          title: 'Skip Factor Adjustment',
+          content: context => {
+            const ev = context.originalEvent || {};
+            return {
+              title: 'Skip Factor Adjustment',
+              image: 'assets/characters/shaft-maintenance.png',
+              character: 'Shaft Maintenance',
+              department: 'Hoisting Reconciliation Unit',
+              label: 'SKIP',
+              tone: ev.tone,
+              body: `<p>${escapeHtml(ev.text || '')}</p><p><strong>Impact:</strong> ${escapeHtml(context.pctText || '')} to annual mined tonnes (${(context.delta || 0) > 0 ? '+' : ''}${Math.round(context.delta || 0).toLocaleString()}t).</p><p>The SLT Dashboard has been updated to reflect the most convenient version of hoisted reality.</p>`,
+              button: 'Accept Reconciled Tonnage'
+            };
+          }
+        });
+
+        rtpStage2MergeEvent('informative.meetingInvitation', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Management Calendar',
+          label: 'MTG',
+          triggerMode: 'randomMeeting',
+          delivery: 'modal',
+          migrationStatus: 'stage4GenericInformativeRenderer',
+          copyPolicy: 'preserveVerbatim',
+          title: 'Meeting Invitation',
+          content: context => {
+            const ev = context.originalEvent || {};
+            return {
+              title: 'Meeting Invitation',
+              image: 'assets/characters/meeting-that-could-have-been-email.png',
+              character: 'Corporate Alignment Forum',
+              department: 'Meeting Generation Office',
+              label: 'MTG',
+              tone: ev.tone || 'warning',
+              body: `<p>${escapeHtml(ev.text || '')}</p><p><strong>Impact:</strong> ${escapeHtml(context.impactText || ev.impact || 'No measurable benefit identified.')}.</p><p>The meeting minutes will be circulated once nobody remembers what was agreed.</p>`,
+              button: 'Return Slightly Less Informed'
+            };
+          }
+        });
+
+        rtpStage2MergeEvent('informative.gasPocket', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mine Services / Geology',
+          label: 'GAS',
+          triggerMode: 'randomMiningEvent',
+          delivery: 'queued',
+          migrationStatus: 'stage4GenericInformativeRenderer',
+          copyPolicy: 'preserveVerbatim',
+          title: 'Gas Pocket Encountered',
+          open: null,
+          content: context => {
+            const qe = context.queueEvent || {};
+            return {
+              title: qe.title || 'Gas Pocket Encountered',
+              image: qe.image || 'assets/characters/ventilation-warning.png',
+              character: qe.character || 'Ventilation Warning',
+              department: qe.department || 'Unexpected Atmosphere Department',
+              label: qe.label || 'GAS',
+              tone: qe.tone || 'warning',
+              body: qe.body || `<p>The miner has intersected a gas pocket on ${currentLevelName()}. The machine is still mostly a machine, but now with more atmosphere than requested.</p><p><strong>Impact:</strong> operational impact recorded.</p><p>Deeper levels introduce hazards that make the previous level look retrospectively well planned.</p>`,
+              button: qe.button || 'Acknowledge Atmospheric Learning'
+            };
+          }
+        });
+
+        rtpStage2MergeEvent('informative.waterInflow', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mine Services / Geology',
+          label: 'WATER',
+          triggerMode: 'randomMiningEvent',
+          delivery: 'queued',
+          migrationStatus: 'stage4GenericInformativeRenderer',
+          copyPolicy: 'preserveVerbatim',
+          title: 'Water Inflow',
+          open: null,
+          content: context => {
+            const qe = context.queueEvent || {};
+            return {
+              title: qe.title || 'Water Inflow',
+              image: qe.image || 'assets/characters/pump-operator.png',
+              character: qe.character || 'Pump Operator',
+              department: qe.department || 'Water Management',
+              label: qe.label || 'WATER',
+              tone: qe.tone || 'warning',
+              body: qe.body || `<p>A wet zone has been opened on ${currentLevelName()}. Pumping has been authorised because the alternative was calling it a new sump.</p><p><strong>Impact:</strong> water-management impact recorded.</p>`,
+              button: qe.button || 'Acknowledge Water Management'
+            };
+          }
+        });
+
+        rtpStage2RegisterTemplateGroup(typeof externalAffairsEventList === 'function' ? externalAffairsEventList().filter(ev => ev && ev.direct) : [], ev => ({
+          id: `informative.externalAffairs.${rtpStage2Slug(ev.kind || ev.title)}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'External Affairs',
+          label: 'EXT',
+          triggerMode: 'randomAnnualExternalAffairs',
+          delivery: 'modal',
+          migrationStatus: 'stage4GenericInformativeRenderer',
+          copyPolicy: 'preserveVerbatim',
+          title: ev.title || 'External Affairs Event',
+          content: () => ({
+            title: ev.title,
+            image: ev.image,
+            character: ev.character,
+            department: ev.department,
+            label: 'EXT',
+            tone: ev.kind === 'governmentNegative' ? 'warning' : 'info',
+            body: ev.body,
+            button: 'Accept Policy Environment'
+          })
+        }));
+
+        rtpStage2RegisterTemplateGroup(typeof engineeringResearchEvents === 'function' ? engineeringResearchEvents() : [], (event, index) => ({
+          id: `informative.engineeringResearchNote.${rtpStage2Slug(event.title || ('note' + index))}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mining Engineering',
+          label: 'ENG',
+          triggerMode: 'randomEngineeringNote',
+          delivery: 'modal',
+          migrationStatus: 'stage4GenericInformativeRenderer',
+          copyPolicy: 'preserveVerbatim',
+          title: event.title || 'Mining Engineering Note',
+          content: context => {
+            const ev = context.originalEvent || event;
+            return {
+              title: ev.title,
+              image: 'assets/characters/mining-engineer.png',
+              character: 'Mining Engineer',
+              department: 'Technical Services Precision Unit',
+              label: 'ENG',
+              tone: 'info',
+              body: `<p>${escapeHtml(ev.text || '')}</p><p><strong>Impact:</strong> ${(ev.cost || 0) ? money(scaledCost(ev.cost)) + ' cost. ' : ''}${Object.entries(ev.traits || {}).map(([k,v]) => (v > 0 ? '+' : '') + v + ' ' + traitLabel(k)).join(' · ') || 'No measurable impact, but a drawing was revised.'}</p>`,
+              button: 'Accept Technical Clarification'
+            };
+          }
+        }));
+      }
+
+      rtpStage4PatchInformativeEvents();
+
+      const rtpStage4BaseApplySkipFactorEvent = applySkipFactorEvent;
+      applySkipFactorEvent = function(event) {
+        if (!event) return false;
+        const annual = annualTonnes();
+        if (annual < 2500) return false;
+        const delta = Math.round(annual * event.pct);
+        if (!delta) return false;
+        const currentGrade = annualGrade() || grade() || TARGET_GRADE;
+        state.tonnes = Math.max(state.yearStartTonnes || 0, state.tonnes + delta);
+        state.k2oTonnes = Math.max(state.yearStartK2oTonnes || 0, state.k2oTonnes + delta * currentGrade);
+        state.skipFactorTotalTonnes = (state.skipFactorTotalTonnes || 0) + delta;
+        state.skipFactorDoneThisYear = true;
+        const pctText = (event.pct > 0 ? '+' : '') + Math.round(event.pct * 100) + '%';
+        const opened = openEventById('informative.skipFactor.adjustment', { originalEvent: event, delta, pctText });
+        showProductionComment('Skip factor adjustment applied. The mine did not necessarily change, but the tonnes have become more aligned with expectation.', 'Shaft', 7);
+        return opened;
+      };
+
+      const rtpStage4BaseApplyPointlessMeetingEvent = applyPointlessMeetingEvent;
+      applyPointlessMeetingEvent = function(event) {
+        if (!event) return false;
+        state.meetingEventDoneThisYear = true;
+        state.meetingEvents = (state.meetingEvents || 0) + 1;
+        const impacts = [];
+
+        if (event.pct) {
+          const annual = annualTonnes();
+          const base = Math.max(annual, 2500);
+          const delta = Math.round(base * event.pct);
+          if (delta) {
+            const currentGrade = annualGrade() || grade() || TARGET_GRADE;
+            state.tonnes = Math.max(state.yearStartTonnes || 0, state.tonnes + delta);
+            state.k2oTonnes = Math.max(state.yearStartK2oTonnes || 0, state.k2oTonnes + delta * currentGrade);
+            impacts.push(`${delta > 0 ? '+' : ''}${Math.round(delta).toLocaleString()}t reported mined tonnes`);
+          }
+        }
+
+        if (event.cost) {
+          spend(event.cost, 'Meeting consequence');
+          impacts.push('-' + money(event.cost));
+        }
+
+        for (const [trait, delta] of Object.entries(event.traits || {})) {
+          adjustTrait(trait, delta);
+          impacts.push((delta > 0 ? '+' : '') + delta + ' ' + traitLabel(trait));
+        }
+
+        const impactText = impacts.length ? impacts.join(' · ') : (event.impact || 'No measurable benefit identified.');
+        const opened = openEventById('informative.meetingInvitation', { originalEvent: event, impactText });
+        showProductionComment('You attended a meeting that could have been an email. Production continued in earnest, which is not always the same as correctly.', 'Management', 7);
+        return opened;
+      };
+
+      const rtpStage4BaseTriggerGasPocketEvent = triggerGasPocketEvent;
+      triggerGasPocketEvent = function(target = {}, pos = null) {
+        target.gasReleased = true;
+        const damage = Math.round(10 + (state.depthIndex || 0) * 5);
+        state.machine.condition = Math.max(0, state.machine.condition - damage);
+        adjustTrait('safety', -2);
+        adjustTrait('morale', -1);
+        const body = `<p>The miner has intersected a gas pocket on ${currentLevelName()}. The machine is still mostly a machine, but now with more atmosphere than requested.</p><p><strong>Impact:</strong> -${damage}% machine condition, -2 Safety, -1 Morale.</p><p>Deeper levels introduce hazards that make the previous level look retrospectively well planned.</p>`;
+        pushQueueEvent({
+          eventId: 'informative.gasPocket',
+          context: { body },
+          tone: 'warning',
+          icon: 'G',
+          label: 'GAS',
+          image: 'assets/characters/ventilation-warning.png',
+          title: 'Gas Pocket Encountered',
+          body
+        });
+        if (pos) spawnFloatingText(pos.x, pos.y - board.cell * 0.7, ['GAS POCKET', '-' + damage + '% condition'], '#bbf7d0');
+      };
+
+      const rtpStage4BaseTriggerWaterPocketEvent = triggerWaterPocketEvent;
+      triggerWaterPocketEvent = function(target = {}, pos = null) {
+        target.waterReleased = true;
+        const cost = 1600 + (state.depthIndex || 0) * 600;
+        spend(cost, 'Water management', pos);
+        adjustTrait('productivity', -2);
+        const body = `<p>A wet zone has been opened on ${currentLevelName()}. Pumping has been authorised because the alternative was calling it a new sump.</p><p><strong>Impact:</strong> -2 Productivity, ${money(scaledCost(cost))} water-management cost.</p>`;
+        pushQueueEvent({
+          eventId: 'informative.waterInflow',
+          context: { body },
+          tone: 'warning',
+          icon: 'W',
+          label: 'WATER',
+          image: 'assets/characters/pump-operator.png',
+          title: 'Water Inflow',
+          body
+        });
+      };
+
+      function rtpStage4OpenDirectExternalAffairsEvent(ev) {
+        if (!ev) return false;
+        if (typeof ev.apply === 'function') ev.apply();
+        const opened = openEventById(`informative.externalAffairs.${rtpStage2Slug(ev.kind || ev.title)}`, { originalEvent: ev });
+        showProductionComment('External Affairs has generated a condition outside the mine plan. Production remains responsible for absorbing it.', 'External Affairs', 7);
+        return opened;
+      }
+
+      const rtpStage4BaseMaybeExternalAffairsEvent = maybeExternalAffairsEvent;
+      maybeExternalAffairsEvent = function() {
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) return false;
+        if (state.externalAffairsDoneThisYear) return false;
+        const doy = dayOfYear();
+        if (doy < 65 || doy > YEAR_LENGTH_DAYS - 35) return false;
+        const chance = clamp(0.055 + Math.max(0, state.depthIndex || 0) * 0.025 + Math.max(0, state.year - 3) * 0.004, 0.04, 0.14);
+        if (Math.random() > chance) return false;
+        const list = externalAffairsEventList();
+        const ev = list[Math.floor(Math.random() * list.length)];
+        state.externalAffairsDoneThisYear = true;
+        if (ev.kind === 'community') state.communityEvents = (state.communityEvents || 0) + 1;
+        if (ev.kind === 'protest') state.protestEvents = (state.protestEvents || 0) + 1;
+        if (ev.kind && ev.kind.startsWith('government')) state.governmentEvents = (state.governmentEvents || 0) + 1;
+        if (ev.direct) return rtpStage4OpenDirectExternalAffairsEvent(ev);
+        openExternalAffairsChoiceModal(ev);
+        return true;
+      };
+
+      const rtpStage4BaseTriggerEngineeringResearch = triggerEngineeringResearch;
+      triggerEngineeringResearch = function() {
+        const list = engineeringResearchEvents();
+        const event = list[Math.floor(Math.random() * list.length)];
+        spend(event.cost || 0, 'Engineering review');
+        for (const [trait, delta] of Object.entries(event.traits || {})) adjustTrait(trait, delta);
+        return openEventById(`informative.engineeringResearchNote.${rtpStage2Slug(event.title)}`, { originalEvent: event });
+      };
+
+      const rtpStage4BaseDevAction = devAction;
+      devAction = function(action) {
+        if (!action) return;
+        if (action === 'event4-skip') {
+          if (annualTonnes() < 3000) {
+            const g = annualGrade() || grade() || TARGET_GRADE;
+            state.tonnes = Math.max(state.tonnes || 0, (state.yearStartTonnes || 0) + 5000);
+            state.k2oTonnes = Math.max(state.k2oTonnes || 0, (state.yearStartK2oTonnes || 0) + 5000 * g);
+          }
+          state.skipFactorDoneThisYear = false;
+          applySkipFactorEvent(randomItem(skipFactorEvents()));
+          return;
+        }
+        if (action === 'event4-meeting') { state.meetingEventDoneThisYear = false; applyPointlessMeetingEvent(randomItem(meetingEvents())); return; }
+        if (action === 'event4-gas') { triggerGasPocketEvent({}, machinePos ? machinePos() : null); return; }
+        if (action === 'event4-water') { triggerWaterPocketEvent({}, machinePos ? machinePos() : null); return; }
+        if (action === 'event4-government-positive') { rtpStage4OpenDirectExternalAffairsEvent(externalAffairsEventList().find(ev => ev.kind === 'governmentPositive')); return; }
+        if (action === 'event4-government-negative') { rtpStage4OpenDirectExternalAffairsEvent(externalAffairsEventList().find(ev => ev.kind === 'governmentNegative')); return; }
+        if (action === 'event4-engineering-note') { triggerEngineeringResearch(); return; }
+        return rtpStage4BaseDevAction(action);
+      };
+
+      const rtpStage4BaseEnhanceDevTools = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage4BaseEnhanceDevTools();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-event-refactor-stage4-dev-tools]')) return;
+        const html = `<section class="devToolCard" data-event-refactor-stage4-dev-tools><h3>Event System Refactor Pass 3 — Stage 4</h3><p>Generic informative-renderer migration tests. These should preserve the old event copy and effects.</p><div class="devToolBtns"><button data-dev-action="event4-skip">Info: Skip Factor</button><button data-dev-action="event4-meeting">Info: Meeting</button><button data-dev-action="event4-gas">Info Queue: Gas</button><button data-dev-action="event4-water">Info Queue: Water</button><button data-dev-action="event4-government-positive">Info: Gov +</button><button data-dev-action="event4-government-negative">Info: Gov -</button><button data-dev-action="event4-engineering-note">Info: Engineering Note</button></div></section>`;
+        const grid = body.querySelector('.devToolGrid');
+        if (grid) grid.insertAdjacentHTML('beforeend', html);
+        else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 4';
+      RTP_EVENT_REFACTOR_PASS_2.stage4 = 'Selected acknowledge-only informative events now use the generic informative renderer with verbatim copy and legacy fallback retained.';
+
       window.RTP_EVENT_REFACTOR_PASS_2 = RTP_EVENT_REFACTOR_PASS_2;
       window.RTP_EVENT_INTERACTION_TYPES = RTP_EVENT_INTERACTION_TYPES;
       window.RTP_EVENT_CATEGORY_META = RTP_EVENT_CATEGORY_META;
