@@ -27277,6 +27277,467 @@
       RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 5';
       RTP_EVENT_REFACTOR_PASS_2.stage5 = 'Selected progression/onboarding/review/dependency modals now use the generic progression renderer with copy and side effects preserved.';
 
+
+      /* Event System Refactor Pass 3 — Stage 6 decision migration.
+         Scope: migrate selected four-option management decisions to the generic decision renderer.
+         Existing copy, options and resolver effects are preserved by delegating outcomes to existing resolver functions. */
+      function rtpStage6MergeEvent(id, patch) {
+        const current = RTP_EVENTS[id] || {};
+        RTP_EVENTS[id] = { ...current, ...patch, id };
+        return RTP_EVENTS[id];
+      }
+
+      function rtpStage6DecisionChoice(id, label, detail, resolve, style = '') {
+        return { id, label, detail, style, resolve };
+      }
+
+      const rtpStage6BaseOpenDecisionEvent = openDecisionEvent;
+      openDecisionEvent = function(event, context = {}) {
+        if (!event) return false;
+        if (event.useGenericRenderer) {
+          const ctx = { ...(context || {}) };
+          if (typeof event.beforeOpen === 'function') {
+            const ok = event.beforeOpen(ctx);
+            if (ok === false) return false;
+          }
+          const choices = rtpNormalisedChoices(event, ctx);
+          if (choices.length !== 4) {
+            console.warn('[RTP Event System] Decision event should have exactly four choices:', event.id, choices.length);
+          }
+          state.activeConfiguredDecision = { eventId: event.id, context: ctx };
+          setModalClosable(false);
+          $('modalWindow').className = event.windowClass || 'window medium';
+          $('modalTitle').textContent = rtpEventText(event.title || (rtpEventContent(event, ctx).title) || 'Decision Event', ctx);
+          const choiceGridClass = event.choiceGridClass || 'beltDecisionGrid';
+          const choiceHtml = choices.map(choice => {
+            const cls = choice.style ? ` ${escapeHtml(choice.style)}` : '';
+            return `<button class="eventChoiceBtn${cls}" data-rtp-event-choice="${escapeHtml(choice.id)}" data-rtp-event-id="${escapeHtml(event.id)}"><strong>${escapeHtml(rtpEventText(choice.label, ctx))}</strong><span>${escapeHtml(rtpEventText(choice.detail || choice.hint || '', ctx))}</span></button>`;
+          }).join('');
+          $('modalBody').innerHTML = rtpEventCharacterHtml(event, ctx) + rtpEventBodyHtml(event, ctx) + `<div class="${escapeHtml(choiceGridClass)}">${choiceHtml}</div>`;
+          $('modalOverlay').classList.add('show');
+          if (typeof event.afterOpen === 'function') event.afterOpen(ctx);
+          return true;
+        }
+        return rtpStage6BaseOpenDecisionEvent(event, context);
+      };
+
+      const rtpStage6BaseResolveConfiguredDecisionChoice = resolveConfiguredDecisionChoice;
+      resolveConfiguredDecisionChoice = function(eventId, choiceId, contextOverride = null) {
+        const event = rtpEventById(eventId);
+        if (!event || !event.useGenericRenderer) return rtpStage6BaseResolveConfiguredDecisionChoice(eventId, choiceId, contextOverride);
+        const activeContext = contextOverride || (state.activeConfiguredDecision && state.activeConfiguredDecision.eventId === event.id ? state.activeConfiguredDecision.context : {}) || {};
+        const context = { ...(activeContext || {}), event, eventId: event.id, choiceId };
+        const choices = rtpNormalisedChoices(event, context);
+        const choice = choices.find(c => c.id === choiceId);
+        if (!choice) return false;
+        document.querySelectorAll('[data-rtp-event-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+        let outcome = null;
+        if (typeof choice.resolve === 'function') outcome = choice.resolve(context);
+        else if (typeof event.resolve === 'function') outcome = event.resolve(choice, context);
+        if (outcome && outcome.handled) {
+          state.activeConfiguredDecision = null;
+          return true;
+        }
+        if (outcome === false) return false;
+        const result = outcome || {};
+        state.activeConfiguredDecision = null;
+        openDecisionOutcomeModal({
+          title: rtpEventText(result.title || event.outcomeTitle || `${event.title || 'Decision'} Outcome`, context),
+          image: rtpEventText(result.image || event.outcomeImage || event.image, context),
+          character: rtpEventText(result.character || event.character || event.title || 'Event', context),
+          department: rtpEventText(result.department || event.department || event.source || 'Operational Update', context),
+          label: rtpEventText(result.label || event.label || 'EVT', context),
+          tone: rtpEventText(result.tone || event.tone || 'info', context),
+          body: rtpEventHtml(result.body || '<p>The decision has been recorded.</p>', context),
+          button: rtpEventText(result.button || event.outcomeButton || 'Continue', context)
+        });
+        return true;
+      };
+
+      function rtpStage6PatchDecisionEvents() {
+        rtpStage6MergeEvent('decision.hseSurpriseInspection', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          triggerMode: 'randomOrDev',
+          delivery: 'modal',
+          source: 'HSE',
+          title: 'HSE Surprise Inspection',
+          label: 'HSE',
+          image: 'assets/characters/hse-inspector.png',
+          character: 'Health and Safety Executive',
+          department: 'Unexpected Procedure Reality Check',
+          imageText: 'A clipboard has entered the site boundary and is asking difficult questions.',
+          beforeOpen: () => {
+            state.hseInspectionDoneThisYear = true;
+            state.hseInspections = (state.hseInspections || 0) + 1;
+            state.pendingHseInspection = { id: 'hse_' + Date.now() + '_' + Math.floor(Math.random() * 100000), resolved: false };
+            return true;
+          },
+          content: {
+            wrapLetter: true,
+            letterTitle: 'Unplanned Regulatory Attention',
+            body: '<p>The Health and Safety Executive has arrived following an anonymous email alleging that existing procedures may not be entirely compatible with survival.</p><p>The inspection team is asking to see the mine, the procedures, the people, and the gap between them.</p>'
+          },
+          choices: [
+            rtpStage6DecisionChoice('inactive', 'Show the HSE Part of the Mine That Isn’t Operating Today', 'Reduce visible risk by selecting an area with fewer people, machines, and facts.', () => { resolveHseInspectionChoice('inactive'); return { handled: true }; }),
+            rtpStage6DecisionChoice('trust', 'Trust Your Team to Perform Well', 'A bold strategy based on training, memory, and nobody improvising.', () => { resolveHseInspectionChoice('trust'); return { handled: true }; }, 'positive'),
+            rtpStage6DecisionChoice('cleanup', 'Deploy Clean Up Crew to Cover Up Known Problems', 'Spend money and production time converting obvious issues into less obvious issues.', () => { resolveHseInspectionChoice('cleanup'); return { handled: true }; }),
+            rtpStage6DecisionChoice('it', 'Order IT to Find Which User Sent the Email', 'Focus on the real hazard: uncontrolled communication.', () => { resolveHseInspectionChoice('it'); return { handled: true }; }, 'negative')
+          ]
+        });
+
+        rtpStage6MergeEvent('decision.externalTechnicalReview', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          triggerMode: 'randomOrDev',
+          delivery: 'modal',
+          source: 'External Technical Assurance',
+          title: 'External Technical Review',
+          label: 'BORC',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'BORC Review Team',
+          department: 'External Technical Assurance',
+          imageText: 'The Brilliant Ore Reserve Committee has arrived with questions, lanyards, and a working knowledge of appendices.',
+          beforeOpen: context => {
+            if (!context.force && sharePriceMetricActive() && state.externalTechnicalReviewDoneThisYear) return false;
+            state.externalTechnicalReviewDoneThisYear = true;
+            return true;
+          },
+          content: {
+            wrapLetter: true,
+            letterTitle: 'External Technical Review',
+            body: '<p>BORC have targeted your site for external technical review, to audit the Mine’s Competent Person.</p><p>This is surprising because you were not aware that the site had a Competent Person, or that BORC has ever done anything like this before.</p><p>The review team has requested access to the technical report, the geological model, the mining assumptions, and the person responsible for signing things they may not have read.</p>'
+          },
+          choices: [
+            rtpStage6DecisionChoice('transparent', 'Be Open and Transparent, We’ve Got Nothing to Hide', 'A phrase traditionally spoken immediately before discovering something hidden.', () => { resolveExternalTechnicalReviewChoice('transparent'); return { handled: true }; }, 'positive'),
+            rtpStage6DecisionChoice('competence', 'Send Employees with Dangerous Levels of Competence Home for the Day', 'Reduce the risk of someone answering accurately.', () => { resolveExternalTechnicalReviewChoice('competence'); return { handled: true }; }),
+            rtpStage6DecisionChoice('report', 'Ask if Anyone on Site Has Ever Read the 350-page Technical Report', 'Find the assumptions page before BORC does.', () => { resolveExternalTechnicalReviewChoice('report'); return { handled: true }; }),
+            rtpStage6DecisionChoice('bribe', 'Attempt Bribe', 'High risk, negligible judgement, catastrophic downside.', () => { resolveExternalTechnicalReviewChoice('bribe'); return { handled: true }; }, 'negative')
+          ]
+        });
+
+        rtpStage6MergeEvent('decision.sltSiteVisit', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          triggerMode: 'annualOrDev',
+          delivery: 'modal',
+          source: 'SLT',
+          title: 'SLT Site Visit',
+          label: 'SLT',
+          image: PASS21_ASSETS.sltVisit,
+          character: 'Superior Leadership Team',
+          department: 'Strategic Visibility Visit',
+          imageText: 'Senior leaders are visiting the pit to observe progress without becoming responsible for conditions.',
+          beforeOpen: context => {
+            if (!context.force && !pass21CanRunAnnualEvent('sltSiteVisit', 2)) return false;
+            pass21MarkAnnualEvent('sltSiteVisit');
+            return true;
+          },
+          content: () => ({
+            bodyHtml: `<p>SLT are visiting the pit and would like to see progress, confidence, and no evidence that either requires money.</p><p>${escapeHtml(pass21VisitStateSummary())}</p><p><strong>How should the visit be managed?</strong></p>`
+          }),
+          choices: [
+            rtpStage6DecisionChoice('real', 'Show Them the Real Operation', 'Honest, risky, and not usually how visits are done.', () => { resolvePass21SltSiteVisit('real'); return { handled: true }; }),
+            rtpStage6DecisionChoice('controlled', 'Prepare a Controlled Route', 'Spend time and cash to keep leaders near laminated confidence.', () => { resolvePass21SltSiteVisit('controlled'); return { handled: true }; }, 'positive'),
+            rtpStage6DecisionChoice('belt', 'Park Them Near the Best-Looking Belt', 'Low cost. Depends heavily on whether the belt behaves.', () => { resolvePass21SltSiteVisit('belt'); return { handled: true }; }),
+            rtpStage6DecisionChoice('ppeHope', 'Give Them PPE and Hope', 'Maximum authenticity. Minimum containment.', () => { resolvePass21SltSiteVisit('ppeHope'); return { handled: true }; }, 'negative')
+          ]
+        });
+
+        rtpStage6MergeEvent('decision.crewAccident', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          triggerMode: 'randomOrDev',
+          delivery: 'modal',
+          source: 'HR / Safety',
+          title: 'Crew Accident Report',
+          label: 'ACC',
+          character: context => {
+            const ev = state.pendingCrewAccident || {};
+            return ev.name || 'Incident Review';
+          },
+          department: 'Incident Classification and Blame Identification',
+          image: context => {
+            const ev = state.pendingCrewAccident || {};
+            const person = (state.staff || []).find(s => s.id === ev.staffId);
+            return (person && portraitPath(person)) || 'assets/characters/safety-standdown.png';
+          },
+          beforeOpen: context => {
+            if (!state.staff || !state.staff.length) return false;
+            if (!context.force && (state.crewAccidentDoneThisYear || state.day - (state.lastCrewAccidentDay || -999) < 65)) return false;
+            const templates = crewAccidentTemplates();
+            let template = randomItem(templates);
+            let staff = template.role ? state.staff.filter(s => s.role === template.role) : [];
+            if (!staff.length) { template = randomItem(templates.filter(t => !t.role)); staff = state.staff; }
+            const person = randomItem(staff);
+            state.crewAccidentDoneThisYear = true;
+            state.lastCrewAccidentDay = state.day;
+            state.pendingCrewAccident = { id: 'acc_' + Date.now() + '_' + Math.floor(Math.random() * 100000), staffId: person.id, text: template.text.replace('{name}', person.name), name: person.name, resolved: false };
+            return true;
+          },
+          content: () => ({ bodyHtml: `<p>${escapeHtml((state.pendingCrewAccident || {}).text || '')}</p><p>The incident requires a management response before it becomes a statistic with a more expensive name.</p>` }),
+          choices: [
+            rtpStage6DecisionChoice('investigate', 'Perform Investigation to Find Blame', 'Improve procedure, reduce goodwill, and identify the nearest accountable person.', () => { resolveCrewAccidentChoice('investigate'); return { handled: true }; }),
+            rtpStage6DecisionChoice('hide', 'Try to Hide It', 'No immediate cost, unless the hidden thing becomes visible.', () => { resolveCrewAccidentChoice('hide'); return { handled: true }; }, 'negative'),
+            rtpStage6DecisionChoice('pay', 'Pay for Their Silence', 'Resolve the human element through discretionary support.', () => { resolveCrewAccidentChoice('pay'); return { handled: true }; }),
+            rtpStage6DecisionChoice('medical', 'Send Them to Medical', 'Do the correct thing, which is expensive and inconvenient.', () => { resolveCrewAccidentChoice('medical'); return { handled: true }; }, 'positive')
+          ]
+        });
+
+        rtpStage6MergeEvent('decision.employeeDispute', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          triggerMode: 'randomOrDev',
+          delivery: 'modal',
+          source: 'HR',
+          title: 'Employee Dispute',
+          label: 'HR',
+          image: PASS19_ASSETS.dispute,
+          character: 'HR Department',
+          department: 'Workplace Harmony Intervention',
+          imageText: 'Two employees have achieved cross-functional disagreement at reportable intensity.',
+          beforeOpen: context => {
+            if (!context.force && ((Number(state.year) || 1) < 2 || pass19ActiveStaff().length < 5)) return false;
+            const pair = pass19ChooseEmployeeDisputePair(context.force);
+            if (!pair) return false;
+            context.pair = pair;
+            state.pass19ActiveDispute = {
+              aId: pair.a.id,
+              bId: pair.b.id,
+              aName: pair.a.name,
+              bName: pair.b.name,
+              aRole: pair.a.role,
+              bRole: pair.b.role,
+              aDept: pair.aDept,
+              bDept: pair.bDept,
+              realStaff: pair.realStaff
+            };
+            state.pass19EmployeeDisputeLastDay = state.day;
+            return true;
+          },
+          content: context => ({ bodyHtml: `<p>${escapeHtml(pass19EmployeeDisputeNarrative(context.pair))}</p><p><strong>How would you like to resolve this dispute?</strong></p>` }),
+          choices: [
+            rtpStage6DecisionChoice('mediation', 'Send Them to Mandatory Mediation', 'Low-risk HR process. Everyone repeats the same complaint using safer words.', () => { resolvePass19EmployeeDispute('mediation'); return { handled: true }; }, 'positive'),
+            rtpStage6DecisionChoice('separate', 'Keep Them Operationally Apart', 'Reduce friction by ensuring departments interact even less than usual.', () => { resolvePass19EmployeeDispute('separate'); return { handled: true }; }),
+            rtpStage6DecisionChoice('underground', 'Tell Them to Sort It Out Underground', 'Fast, cheap, and professionally indefensible.', () => { resolvePass19EmployeeDispute('underground'); return { handled: true }; }, 'negative'),
+            rtpStage6DecisionChoice('rebrand', 'Rebrand the Dispute as Cross-Functional Challenge', 'Convert shouting into culture data.', () => { resolvePass19EmployeeDispute('rebrand'); return { handled: true }; })
+          ]
+        });
+
+        rtpStage6MergeEvent('decision.unionPayDemand', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          triggerMode: 'randomOrDev',
+          delivery: 'modal',
+          source: 'HR / Union',
+          title: 'Union Pay Equality Demand',
+          label: 'UNION',
+          image: PASS19_ASSETS.union,
+          character: 'S. Cargill',
+          department: 'Lead Union Representative',
+          imageText: 'A fictional union representative has arrived with a simple demand and complicated consequences.',
+          beforeOpen: context => {
+            if (!context.force && ((Number(state.year) || 1) < 2 || pass19ActiveStaff().length < 4)) return false;
+            if (!context.force && state.pass19UnionPayDemandYear === state.year) return false;
+            state.pass19UnionPayDemandYear = state.year;
+            context.staffCount = Math.max(1, pass19ActiveStaff().length || 4);
+            return true;
+          },
+          content: context => ({ bodyHtml: `<p><strong>S. Cargill</strong>, Lead Union Representative, has formally notified management that the union demands everyone be paid the same regardless of experience, qualifications, skills, behaviour, attendance record, performance, machine damage history, or ability to find the work area without escort.</p><p>The proposal has been described as a historic step toward fairness, unity, and the complete removal of incentive from the payroll system.</p><p><strong>Management response required.</strong></p><p class="smallNote">Affected headcount: ${Math.max(1, context.staffCount || pass19ActiveStaff().length || 4)}.</p>` }),
+          choices: [
+            rtpStage6DecisionChoice('accept', 'Accept the Union Proposal', 'Immediate harmony. Future competence becomes emotionally optional.', () => { resolvePass19UnionPayDemand('accept'); return { handled: true }; }, 'positive'),
+            rtpStage6DecisionChoice('competence', 'Offer Equal Pay for Equal Competence', 'Reasonable, measurable, and therefore provocative.', () => { resolvePass19UnionPayDemand('competence'); return { handled: true }; }),
+            rtpStage6DecisionChoice('workingGroup', 'Launch a Pay Harmonisation Working Group', 'Do nothing, but with minutes.', () => { resolvePass19UnionPayDemand('workingGroup'); return { handled: true }; }),
+            rtpStage6DecisionChoice('pathway', 'Rebrand Lower Pay as a Development Pathway', 'Corporate language deployed at close range.', () => { resolvePass19UnionPayDemand('pathway'); return { handled: true }; }, 'negative')
+          ]
+        });
+
+        rtpStage6MergeEvent('decision.beltAvailabilityComplaint', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          triggerMode: 'queuedOrDev',
+          delivery: 'queuedModal',
+          source: 'Mining Crew',
+          title: 'Belt Availability Complaint',
+          label: 'BELT',
+          character: 'Mining Crew',
+          department: 'Operational Excuse Development',
+          content: () => ({ bodyHtml: beltComplaintDecisionBody() }),
+          choices: [
+            rtpStage6DecisionChoice('infrastructure', 'Offer to follow up at the next infrastructure meeting', '+2 Morale, -1 Productivity. Concern enters the meeting ecosystem.', () => { resolveBeltComplaintChoice('infrastructure'); return { handled: true }; }, 'positive'),
+            rtpStage6DecisionChoice('control', 'Remind them to only focus on things they can control', '-2 Morale, -1 Safety, +1 Productivity. Resilience is issued downward.', () => { resolveBeltComplaintChoice('control'); return { handled: true }; }, 'negative'),
+            rtpStage6DecisionChoice('pretend', 'Pretend to Listen', '50% chance -1 Morale. Nodding is deployed.', () => { resolveBeltComplaintChoice('pretend'); return { handled: true }; }),
+            rtpStage6DecisionChoice('fix-yourself', 'Tell them they could always fix it themselves', '+1 Productivity, -3 Morale, possible Skill gain or belt fault.', () => { resolveBeltComplaintChoice('fix-yourself'); return { handled: true }; }, 'negative')
+          ]
+        });
+      }
+
+      function rtpStage6PatchShiftManagerDecisions() {
+        const build = (ev, randomMode = false) => ({
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: true,
+          migrationStatus: 'stage6GenericDecision',
+          copyPolicy: 'verbatimFromPass23Data',
+          triggerMode: 'randomOrDev',
+          delivery: 'modal',
+          source: 'Shift Manager',
+          title: ev ? ev.title : 'Shift Manager Event',
+          label: 'MGR',
+          character: context => (context.manager && context.manager.name) || (currentManager() || {}).name || 'Shift Manager',
+          department: 'Shift Management',
+          image: context => pass23ShiftManagerPortrait(context.manager || currentManager()),
+          imageText: 'The Shift Manager has identified an issue that can only be solved by creating a decision record.',
+          beforeOpen: context => {
+            const manager = currentManager && currentManager();
+            if (!manager) {
+              openMiniWindow('No Shift Manager', '<p>No Shift Manager is currently available to turn operational confusion into structured accountability.</p>', true);
+              return false;
+            }
+            const selected = randomMode ? randomItem(pass23ShiftManagerDecisionEvents) : (ev || pass23ShiftManagerByKey(context.key));
+            if (!selected) return false;
+            context.manager = manager;
+            context.shiftEvent = selected;
+            state.pass23ActiveShiftManagerEvent = selected.key;
+            return true;
+          },
+          content: context => ({ bodyHtml: `<p>${escapeHtml((context.shiftEvent.prompt || '').replace('{name}', context.manager.name))}</p><p><strong>Management response required.</strong></p>` }),
+          choices: context => (context.shiftEvent.options || []).map((opt, idx) => rtpStage6DecisionChoice(opt.key, opt.label, opt.hint, () => { resolvePass23ShiftManagerEvent(context.shiftEvent.key, opt.key); return { handled: true }; }, idx === 1 ? 'positive' : idx === 3 ? 'negative' : ''))
+        });
+        rtpStage6MergeEvent('decision.shiftManager', { ...build(null, true), id: 'decision.shiftManager' });
+        (pass23ShiftManagerDecisionEvents || []).forEach(ev => {
+          rtpStage6MergeEvent(`decision.shiftManager.${ev.key}`, { ...build(ev, false), id: `decision.shiftManager.${ev.key}` });
+        });
+      }
+
+
+      function rtpStage6PatchExternalAffairsDecisions() {
+        const externalChoices = (typeof externalAffairsEventList === 'function' ? externalAffairsEventList() : [])
+          .filter(ev => ev && !ev.direct && Array.isArray(ev.choices) && ev.choices.length === 4);
+        externalChoices.forEach(ev => {
+          const id = `decision.externalAffairs.${ev.kind}`;
+          rtpStage6MergeEvent(id, {
+            interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+            useGenericRenderer: true,
+            migrationStatus: 'stage6GenericDecision',
+            copyPolicy: 'verbatimFromExternalAffairsList',
+            triggerMode: 'randomOrDev',
+            delivery: 'modal',
+            source: 'External Affairs',
+            title: context => (context.externalEvent || ev).title || 'External Affairs Event',
+            label: 'EXT',
+            image: context => (context.externalEvent || ev).image || 'assets/characters/external-affairs.png',
+            character: context => (context.externalEvent || ev).character || 'External Affairs',
+            department: context => (context.externalEvent || ev).department || 'Corporate Interface',
+            imageText: 'The outside world has become aware of the mine.',
+            beforeOpen: context => {
+              context.externalEvent = context.externalEvent || (externalAffairsEventList().find(x => x && x.kind === ev.kind) || ev);
+              return true;
+            },
+            content: context => ({ bodyHtml: (context.externalEvent || ev).body || '' }),
+            choices: context => ((context.externalEvent || ev).choices || []).map(([key, label, detail]) => rtpStage6DecisionChoice(key, label, detail, () => { resolveExternalAffairsChoice(`${(context.externalEvent || ev).kind}:${key}`); return { handled: true }; }))
+          });
+        });
+      }
+
+      rtpStage6PatchDecisionEvents();
+      rtpStage6PatchShiftManagerDecisions();
+      rtpStage6PatchExternalAffairsDecisions();
+
+
+      const rtpStage6BaseOpenExternalAffairsChoiceModal = openExternalAffairsChoiceModal;
+      openExternalAffairsChoiceModal = function(ev) {
+        if (ev && ev.kind && rtpEventById(`decision.externalAffairs.${ev.kind}`)) {
+          return openEventById(`decision.externalAffairs.${ev.kind}`, { externalEvent: ev });
+        }
+        return rtpStage6BaseOpenExternalAffairsChoiceModal(ev);
+      };
+
+      const rtpStage6BaseTriggerHseInspectionEvent = triggerHseInspectionEvent;
+      triggerHseInspectionEvent = function() { return openEventById('decision.hseSurpriseInspection'); };
+
+      const rtpStage6BaseTriggerExternalTechnicalReviewEvent = triggerExternalTechnicalReviewEvent;
+      triggerExternalTechnicalReviewEvent = function(force = false) { return openEventById('decision.externalTechnicalReview', { force }); };
+
+      const rtpStage6BaseOpenPass21SltSiteVisitEvent = openPass21SltSiteVisitEvent;
+      openPass21SltSiteVisitEvent = function(force = false) { return openEventById('decision.sltSiteVisit', { force }); };
+
+      const rtpStage6BaseTriggerCrewAccidentEvent = triggerCrewAccidentEvent;
+      triggerCrewAccidentEvent = function(force = false) { return openEventById('decision.crewAccident', { force }); };
+
+      const rtpStage6BaseOpenPass19EmployeeDisputeEvent = openPass19EmployeeDisputeEvent;
+      openPass19EmployeeDisputeEvent = function(force = false) { return openEventById('decision.employeeDispute', { force }); };
+
+      const rtpStage6BaseOpenPass19UnionPayDemandEvent = openPass19UnionPayDemandEvent;
+      openPass19UnionPayDemandEvent = function(force = false) { return openEventById('decision.unionPayDemand', { force }); };
+
+      const rtpStage6BaseOpenPass23ShiftManagerEvent = openPass23ShiftManagerEvent;
+      openPass23ShiftManagerEvent = function(key = null, force = false) {
+        if (key && rtpEventById(`decision.shiftManager.${key}`)) return openEventById(`decision.shiftManager.${key}`, { key, force });
+        return openEventById('decision.shiftManager', { key, force });
+      };
+
+      const rtpStage6BaseTriggerShiftManagerEvent = triggerShiftManagerEvent;
+      triggerShiftManagerEvent = function(key = null) {
+        if (key && rtpEventById(`decision.shiftManager.${key}`)) return openEventById(`decision.shiftManager.${key}`, { key, force: true });
+        if (!key || key === 'random' || key === 'pass23') return openEventById('decision.shiftManager');
+        return rtpStage6BaseTriggerShiftManagerEvent(key);
+      };
+
+      const rtpStage6BaseOpenQueuedEvent = openQueuedEvent;
+      openQueuedEvent = function(id) {
+        const ev = (state.queueEvents || []).find(item => item && item.id === id);
+        if (ev && ev.eventId && rtpEventById(ev.eventId)) {
+          const idx = state.queueEvents.findIndex(item => item && item.id === id);
+          if (idx >= 0) state.queueEvents.splice(idx, 1);
+          updateMobileEventQueue(true);
+          return openEventById(ev.eventId, { ...(ev.context || {}), queueEventId: id, queueEvent: ev });
+        }
+        return rtpStage6BaseOpenQueuedEvent(id);
+      };
+
+      const rtpStage6BaseDevAction = devAction;
+      devAction = function(action) {
+        if (!action) return;
+        if (action === 'event6-hse') { openEventById('decision.hseSurpriseInspection'); return; }
+        if (action === 'event6-borc') { openEventById('decision.externalTechnicalReview', { force: true }); return; }
+        if (action === 'event6-slt') { openEventById('decision.sltSiteVisit', { force: true }); return; }
+        if (action === 'event6-accident') { openEventById('decision.crewAccident', { force: true }); return; }
+        if (action === 'event6-dispute') { openEventById('decision.employeeDispute', { force: true }); return; }
+        if (action === 'event6-union') { openEventById('decision.unionPayDemand', { force: true }); return; }
+        if (action === 'event6-belt-complaint') { openEventById('decision.beltAvailabilityComplaint'); return; }
+        if (action === 'event6-shift-random') { openEventById('decision.shiftManager'); return; }
+        if (action && action.startsWith('event6-shift-')) { openEventById(`decision.shiftManager.${action.replace('event6-shift-', '')}`, { force: true }); return; }
+        return rtpStage6BaseDevAction(action);
+      };
+
+      const rtpStage6BaseEnhanceDevTools = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage6BaseEnhanceDevTools();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-event-refactor-stage6-dev-tools]')) return;
+        const html = `<section class="devToolCard" data-event-refactor-stage6-dev-tools><h3>Event System Refactor Pass 3 — Stage 6</h3><p>Generic decision-renderer tests. These should preserve old copy, four-option choices and existing resolver effects.</p><div class="devToolBtns"><button data-dev-action="event6-hse">Decision: HSE</button><button data-dev-action="event6-borc">Decision: BORC</button><button data-dev-action="event6-slt">Decision: SLT Visit</button><button data-dev-action="event6-accident">Decision: Crew Accident</button><button data-dev-action="event6-dispute">Decision: Employee Dispute</button><button data-dev-action="event6-union">Decision: Union Pay</button><button data-dev-action="event6-belt-complaint">Decision: Belt Complaint</button><button data-dev-action="event6-shift-random">Decision: Shift Manager</button><button data-dev-action="event6-shift-shiftPlanOptimisation">Shift: Plan</button><button data-dev-action="event6-shift-handoverIntegrity">Shift: Handover</button><button data-dev-action="event6-shift-dailyTargetCascade">Shift: Target</button><button data-dev-action="event6-shift-blameContinuity">Shift: Blame</button><button data-dev-action="event6-shift-meetingDiscipline">Shift: Meeting</button></div></section>`;
+        const grid = body.querySelector('.devToolGrid');
+        if (grid) grid.insertAdjacentHTML('beforeend', html);
+        else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6';
+      RTP_EVENT_REFACTOR_PASS_2.stage6 = 'Selected four-option decision modals now use the generic decision renderer, preserving existing copy and delegating effects to existing resolvers.';
+
       window.RTP_EVENT_REFACTOR_PASS_2 = RTP_EVENT_REFACTOR_PASS_2;
       window.RTP_EVENT_INTERACTION_TYPES = RTP_EVENT_INTERACTION_TYPES;
       window.RTP_EVENT_CATEGORY_META = RTP_EVENT_CATEGORY_META;
