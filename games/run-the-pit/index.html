@@ -29126,6 +29126,66 @@
         };
       }
 
+
+      /* Event System Refactor Pass 3 — Stage 9 Fix 1.
+         Optional game-mechanic events rendered with decision-style buttons must resolve through
+         the same configured-choice path as decision events. Stage 8 made Geology Model
+         Reinterpretation a gameMechanic.optional event, but the Stage 3/6 choice resolver still
+         rejected non-decision interaction types. This wrapper keeps the mechanic classification
+         while allowing its four option buttons to call the existing geology resolver. */
+      function rtpStage9Fix1ResolveDecisionStyleMechanicChoice(eventId, choiceId, contextOverride = null) {
+        const event = rtpEventById(eventId);
+        if (!event || event.interactionType !== RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC) return null;
+        const activeContext = contextOverride || (state.activeConfiguredDecision && (state.activeConfiguredDecision.eventId === event.id || state.activeConfiguredDecision.eventId === event.canonicalId) ? state.activeConfiguredDecision.context : {}) || {};
+        const context = { ...(activeContext || {}), event, eventId: event.id, choiceId };
+        const choices = rtpNormalisedChoices(event, context);
+        const isDecisionStyleMechanic = event.choiceRenderer === 'decisionStyle' || (event.mechanicMode === 'optional' && choices.length > 0);
+        if (!isDecisionStyleMechanic) return null;
+        const choice = choices.find(c => c && c.id === choiceId);
+        if (!choice) return false;
+
+        document.querySelectorAll('[data-rtp-event-choice]').forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+
+        let outcome = null;
+        if (typeof choice.resolve === 'function') outcome = choice.resolve(context);
+        else if (typeof event.resolve === 'function') outcome = event.resolve(choice, context);
+
+        if (outcome && outcome.handled) {
+          state.activeConfiguredDecision = null;
+          return true;
+        }
+        if (outcome === false) return false;
+
+        const result = outcome || {};
+        state.activeConfiguredDecision = null;
+        openDecisionOutcomeModal({
+          title: rtpEventText(result.title || event.outcomeTitle || `${event.title || 'Mechanic'} Outcome`, context),
+          image: rtpEventText(result.image || event.outcomeImage || event.image, context),
+          character: rtpEventText(result.character || event.character || event.title || 'Event', context),
+          department: rtpEventText(result.department || event.department || event.source || 'Operational Update', context),
+          label: rtpEventText(result.label || event.label || 'EVT', context),
+          tone: rtpEventText(result.tone || event.tone || 'info', context),
+          body: rtpEventHtml(result.body || '<p>The mechanic decision has been recorded.</p>', context),
+          button: rtpEventText(result.button || event.outcomeButton || 'Continue', context)
+        });
+        return true;
+      }
+
+      const rtpStage9Fix1BaseResolveConfiguredDecisionChoice = resolveConfiguredDecisionChoice;
+      resolveConfiguredDecisionChoice = function(eventId, choiceId, contextOverride = null) {
+        const mechanicResult = rtpStage9Fix1ResolveDecisionStyleMechanicChoice(eventId, choiceId, contextOverride);
+        if (mechanicResult !== null) return mechanicResult;
+        return rtpStage9Fix1BaseResolveConfiguredDecisionChoice(eventId, choiceId, contextOverride);
+      };
+
+      ['gameMechanic.geologyModelReinterpretation', 'decision.geologyModelReinterpretation'].forEach(id => {
+        if (RTP_EVENTS[id]) {
+          RTP_EVENTS[id].choiceRenderer = 'decisionStyle';
+          RTP_EVENTS[id].mechanicMode = 'optional';
+          RTP_EVENTS[id].migrationStatus = 'configuredGameMechanicDecisionStyleFixed';
+        }
+      });
+
       RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 9';
       RTP_EVENT_REFACTOR_PASS_2.stage8 = 'Game-mechanic events now route through gameMechanic with forced/optional mechanicMode metadata. Selected mechanics are configured; safety hold-points, ground-control consequences and HOPE support remain specialised legacy delegates.';
       RTP_EVENT_REFACTOR_PASS_2.stage9 = 'Event pressure engine now applies phase/year/depth profiles, category cooldowns, queue caps, HR caps and deferred-event controls while preserving critical safety/ground bypasses.';
