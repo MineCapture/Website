@@ -9330,7 +9330,7 @@
           label: 'HOPE',
           tone: 'warning',
           body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p><p>HOPE would like to thank you for supporting its continuous improvement journey.</p>`,
-          button: 'Accept the Strategy of HOPE'
+          button: 'Accept the strategy of HOPE'
         });
         showProductionComment(label + ' has been returned to service in its previous condition, which HOPE describes as a successful upgrade.', 'Vendor Support', 7);
         return true;
@@ -14772,7 +14772,7 @@
         if (action === 'meeting-event') { state.meetingEventDoneThisYear = false; applyPointlessMeetingEvent(randomItem(meetingEvents())); return; }
         if (action === 'external-affairs') { forceExternalAffairsEvent(); return; }
         if (action === 'grade-constraint') { state.gradeConstraintEventDoneThisYear = false; applyGradeConstraintEvent(randomItem(gradeConstraintEvents())); return; }
-        if (action === 'hope-support') { state.hopeSupportEventDoneThisYear = false; state.year = Math.max(2, state.year); const key = state.assets && state.assets.secondMinerOwned && Math.random() < 0.5 ? 'miner2' : 'miner1'; const miner = minerStateForKey(key); const label = key === 'miner2' ? '2ndHOPE' : '1stHOPE'; if (miner && (miner.status === 'mining' || miner.status === 'tramming')) runWithMinerContext(miner, () => stopAutoMining(label + ' has stopped for a HOPE software support intervention.', 'Vendor Support')); if (miner) miner.condition = Math.max(0, (miner.condition || 80) - 8); const cost = scaledCost(2400 + (state.assets && state.assets.secondMinerOwned ? 900 : 0)); spend(cost, 'HOPE software support'); openOperationalEventModal({ title: 'HOPE: It’s Our Strategy', image: 'assets/characters/hope-support-engineer.png', character: 'HOPE Support Engineers', department: 'Vendor Strategy and Rollback Services', label: 'HOPE', tone: 'warning', body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p>`, button: 'Accept the Strategy of HOPE' }); return; }
+        if (action === 'hope-support') { state.hopeSupportEventDoneThisYear = false; state.year = Math.max(2, state.year); const key = state.assets && state.assets.secondMinerOwned && Math.random() < 0.5 ? 'miner2' : 'miner1'; const miner = minerStateForKey(key); const label = key === 'miner2' ? '2ndHOPE' : '1stHOPE'; if (miner && (miner.status === 'mining' || miner.status === 'tramming')) runWithMinerContext(miner, () => stopAutoMining(label + ' has stopped for a HOPE software support intervention.', 'Vendor Support')); if (miner) miner.condition = Math.max(0, (miner.condition || 80) - 8); const cost = scaledCost(2400 + (state.assets && state.assets.secondMinerOwned ? 900 : 0)); spend(cost, 'HOPE software support'); openOperationalEventModal({ title: 'HOPE: It’s Our Strategy', image: 'assets/characters/hope-support-engineer.png', character: 'HOPE Support Engineers', department: 'Vendor Strategy and Rollback Services', label: 'HOPE', tone: 'warning', body: `<p>HOPE support engineers have arrived on site to perform a software update on <strong>${label}</strong>.</p><p>After three hours battling with a USB pen, several drivers, and one laptop that “worked yesterday”, it has been determined that a software rollback is the most efficient solution.</p><p><strong>Impact:</strong> ${label} condition -8%, ${money(cost)} support invoice, and no measurable improvement.</p>`, button: 'Accept the strategy of HOPE' }); return; }
         if (action === 'heat-event') { forceHeatVentilationEvent(); return; }
         if (action === 'power-outage') { state.powerOutageDoneThisYear = false; triggerPowerOutageEvent(true); return; }
         if (action === 'crew-accident') { state.crewAccidentDoneThisYear = false; triggerCrewAccidentEvent(true); return; }
@@ -24210,8 +24210,9 @@
         const body = `${modalCharacterHtml(PASS19_ASSETS.survey, 'Survey Department', 'Quarterly Reality Alignment Check', 'Survey has found a spatial discrepancy and would like Production to update its definition of mined.', 'SURV')}
           <p>The Survey Department have completed their quarterly checks and identified a reconciliation error at <strong>${escapeHtml(gridRef(block))}</strong>.</p>
           <p>Mining are adamant that they have already mined this block. Survey have provided definitive proof that they have not, or at least they will once the point cloud finally loads on their PC.</p>
+          <p><strong>Restored grid square:</strong> Grid ${escapeHtml(gridRef(block))} has been added back to the mine plan.</p>
           <p>The block has therefore been restored to the mine plan in the interests of spatial accuracy, operational confusion, and making everyone’s numbers worse.</p>
-          <p><strong>Impact:</strong> one previously mined-out block has been restored. Historical production remains unchanged because correcting the report would involve Finance.</p>
+          <p><strong>Impact:</strong> one previously mined-out block has been restored at Grid ${escapeHtml(gridRef(block))}. Historical production remains unchanged because correcting the report would involve Finance.</p>
           <div class="btnRow"><button class="primary" data-close>Accept Updated Reality</button></div>`;
         showPreparedModal('Survey Reconciliation Error', body, { closable: true, windowClass: 'window medium', images: [PASS19_ASSETS.survey] });
         showProductionComment('Survey has restored a block to the mine plan. Mining has described this as geological gaslighting.', 'Survey', 6.5);
@@ -28712,8 +28713,9 @@
           tone: 'warning',
           body: `<p>The Survey Department have completed their quarterly checks and identified a reconciliation error at <strong>${escapeHtml(gridRef(context.block))}</strong>.</p>
           <p>Mining are adamant that they have already mined this block. Survey have provided definitive proof that they have not, or at least they will once the point cloud finally loads on their PC.</p>
+          <p><strong>Restored grid square:</strong> Grid ${escapeHtml(gridRef(context.block))} has been added back to the mine plan.</p>
           <p>The block has therefore been restored to the mine plan in the interests of spatial accuracy, operational confusion, and making everyone’s numbers worse.</p>
-          <p><strong>Impact:</strong> one previously mined-out block has been restored. Historical production remains unchanged because correcting the report would involve Finance.</p>`,
+          <p><strong>Impact:</strong> one previously mined-out block has been restored at Grid ${escapeHtml(gridRef(context.block))}. Historical production remains unchanged because correcting the report would involve Finance.</p>`,
           button: 'Accept Updated Reality'
         })
       });
@@ -29224,6 +29226,322 @@
       setTimeout(resize, 900);
       requestAnimationFrame(frame);
     })();
-  </script>
+  
+
+      /* Event System Refactor Pass 3 — Stage 9 Fix 2.
+         Restore the intended shaft-deepening transition order:
+         1) level arrival welcome, 2) department intro, 3) recruitment window.
+         This avoids the layered progression/event overrides skipping straight to HR. */
+      (function rtpStage9Fix2LevelArrivalOrdering(){
+        function rtpStage9Fix2ResumeLevelFlow(reason = '') {
+          if (state.rtpStage9Fix2LevelFlowActive) {
+            state.rtpStage9Fix2LevelFlowActive = false;
+          }
+          if (state.pass22LevelTransitionPending) {
+            state.pass22LevelTransitionPending = false;
+          }
+          state.manualPaused = false;
+          state.paused = false;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+        }
+
+        function rtpStage9Fix2LevelArrivalImage() {
+          try {
+            if (typeof PASS22_ASSETS !== 'undefined' && PASS22_ASSETS && PASS22_ASSETS.levelReached) return PASS22_ASSETS.levelReached;
+          } catch (err) {}
+          return 'assets/images/new_level_reached.png';
+        }
+
+        window.rtpStage9Fix2OpenLevelArrivalModal = function rtpStage9Fix2OpenLevelArrivalModal() {
+          const details = levelArrivalDetails();
+          state.rtpStage9Fix2LevelFlowActive = true;
+          state.rtpStage9Fix2LevelFlowDepth = Number(state.depthIndex) || 0;
+          state.rtpStage9Fix2LevelFlowNext = details.next || '';
+          state.rtpStage9Fix2LevelFlowNext2 = details.next2 || '';
+          state.pass22LevelTransitionPending = true;
+          state.paused = true;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+          if (typeof playLevelCompleteSound === 'function') {
+            try { playLevelCompleteSound(); } catch (err) {}
+          }
+          setModalClosable(false);
+          $('modalWindow').className = 'window medium';
+          $('modalTitle').textContent = details.title;
+          $('modalBody').innerHTML = `${modalCharacterHtml(rtpStage9Fix2LevelArrivalImage(), 'New Level Reached', 'Shaft Deepening Milestone', 'The mine has reached a new level. The consequences have been promoted accordingly.', 'LEVEL')}
+            <div class="letter"><h2>${escapeHtml(details.title)}</h2>${details.body}</div>
+            <div class="btnRow"><button class="primary" data-level-arrival-continue data-stage9-fix2-level-continue data-next-intro="${escapeHtml(details.next || '')}" data-next-intro-2="${escapeHtml(details.next2 || '')}">Continue Operational Escalation</button></div>`;
+          $('modalOverlay').classList.add('show');
+          if ((Number(state.depthIndex) || 0) === 2) {
+            const btn = document.querySelector('[data-level-arrival-continue]');
+            if (btn) btn.dataset.pass17OpenAssets = 'secondMiner';
+          }
+          return true;
+        };
+
+        openLevelArrivalModal = function() {
+          return window.rtpStage9Fix2OpenLevelArrivalModal();
+        };
+
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('[data-stage9-fix2-level-continue], [data-level-arrival-continue]');
+          if (!btn || !state.rtpStage9Fix2LevelFlowActive) return;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          const next = btn.dataset.nextIntro || state.rtpStage9Fix2LevelFlowNext || '';
+          const next2 = btn.dataset.nextIntro2 || state.rtpStage9Fix2LevelFlowNext2 || '';
+
+          if (next) {
+            // Keep the transition flow active until the recruitment/asset window is closed.
+            openRoleUnlockIntro(next, null, next2 || null);
+            return;
+          }
+
+          const overlay = btn.closest('.overlay') || $('modalOverlay');
+          if (overlay) overlay.classList.remove('show');
+          rtpStage9Fix2ResumeLevelFlow('no-next-intro');
+        }, true);
+
+        document.addEventListener('click', function(e) {
+          if (!state.rtpStage9Fix2LevelFlowActive) return;
+          if (e.target.closest('[data-window="hr"], [data-window="assets"]')) {
+            setTimeout(() => {
+              const close = $('modalCloseBtn');
+              if (close) close.setAttribute('data-pass22-level-flow-close', 'true');
+            }, 0);
+          }
+          if (e.target.closest('[data-close], #modalCloseBtn, [data-close-decline], [data-close-formal-review]')) {
+            setTimeout(() => {
+              if (!isModalOpen()) rtpStage9Fix2ResumeLevelFlow('modal-close');
+            }, 80);
+          }
+        }, true);
+
+        if (typeof RTP_EVENT_REFACTOR_PASS_2 === 'object' && RTP_EVENT_REFACTOR_PASS_2) {
+          RTP_EVENT_REFACTOR_PASS_2.stage9Fix2 = 'Restored shaft-deepening transition ordering: level arrival welcome before department intro before recruitment.';
+        }
+      })();
+
+
+
+      /* Event Refactor Stage 9 Follow-up Fix 3 — playtest notes.
+         1) Survey reconciliation copy now names the restored grid square.
+         2) HOPE support acknowledgement button copy updated.
+         3) Row tonnage labels now show tonnes per block, and row block tonnes are normalised.
+         4) Year 2 starting-level tonnage target softened.
+         5) Owned 2ndHOPE is re-placed on each new level, with preferred spawn column F. */
+      (function rtpStage9Fix3PlaytestNotes(){
+        function rtpFix3FormatKtPerBlock(t) {
+          const tonnes = Math.max(0, Number(t) || 0);
+          if (tonnes >= 9950) return Math.round(tonnes / 1000).toLocaleString() + 'kt/block';
+          if (tonnes >= 1000) return (tonnes / 1000).toFixed(1).replace(/\.0$/, '') + 'kt/block';
+          return Math.round(tonnes).toLocaleString() + 't/block';
+        }
+
+        function rtpFix3ModelledBlockValue(block) {
+          if (!block || Number(block.tonnes) <= 0) return 0;
+          const g = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
+          if (typeof blockRevenue === 'function') return blockRevenue(Number(block.tonnes) || 0, Number(g) || 0);
+          return 0;
+        }
+
+        function rtpFix3NormaliseBlockTonnesByRow() {
+          const blocks = (state.blocks && state.blocks[MINE_ID]) || [];
+          for (let r = 0; r < MINE_ROWS; r++) {
+            const rowBlocks = blocks.filter(b => b && b.r === r && !b.isPillar && b.status !== 'locked' && Number(b.tonnes) > 0);
+            if (!rowBlocks.length) continue;
+            const avg = rowBlocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0) / rowBlocks.length;
+            const rowTonnes = Math.max(250, Math.round(avg / 50) * 50);
+            rowBlocks.forEach(b => {
+              if (b.status !== 'void' || b.surveyCorrectionRestored) {
+                b.tonnes = rowTonnes;
+                b.rowTonnesNormalised = true;
+              }
+            });
+          }
+        }
+
+        if (typeof initBlocks === 'function') {
+          const rtpFix3InitBlocksBase = initBlocks;
+          initBlocks = function() {
+            const result = rtpFix3InitBlocksBase.apply(this, arguments);
+            rtpFix3NormaliseBlockTonnesByRow();
+            return result;
+          };
+          rtpFix3NormaliseBlockTonnesByRow();
+        }
+
+        if (typeof rowReserveEstimate === 'function') {
+          const rtpFix3RowReserveEstimateBase = rowReserveEstimate;
+          rowReserveEstimate = function(row) {
+            const est = rtpFix3RowReserveEstimateBase(row) || { tonnes: 0, grade: 0, blocks: 0 };
+            est.tonnesPerBlock = est.blocks > 0 ? est.tonnes / est.blocks : 0;
+            return est;
+          };
+        }
+
+        if (typeof drawRowReserveLabels === 'function') {
+          drawRowReserveLabels = function() {
+            if (!board) return;
+            const b = board;
+            ctx.save();
+            for (let r = 0; r < MINE_ROWS; r++) {
+              const est = rowReserveEstimate(r);
+              if (!est.blocks || est.tonnes <= 0) continue;
+              const y = b.y + r * b.cell;
+              const label = rtpFix3FormatKtPerBlock(est.tonnesPerBlock || (est.tonnes / est.blocks));
+              const x = b.x + 4;
+              const w = Math.max(50, b.cell * 1.10);
+              const h = Math.max(13, b.cell * 0.25);
+              ctx.fillStyle = 'rgba(15,23,42,0.62)';
+              roundRect(ctx, x, y + 3, w, h, h / 2);
+              ctx.fill();
+              ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+              ctx.lineWidth = 1;
+              ctx.stroke();
+              ctx.fillStyle = '#e0f2fe';
+              ctx.font = '900 ' + Math.max(7, b.cell * 0.13) + 'px Arial';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(label, x + w / 2, y + 3 + h / 2);
+            }
+            ctx.restore();
+          };
+        }
+
+        if (typeof showBlockInfo === 'function') {
+          const rtpFix3ShowBlockInfoBase = showBlockInfo;
+          showBlockInfo = function(block) {
+            if (!block || block.status === 'locked' || block.status === 'void' || block.status === 'rubble' || block.status === 'damaged' || block.isPillar) {
+              return rtpFix3ShowBlockInfoBase(block);
+            }
+            const estGrade = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
+            const restrictionReason = typeof gradeRestrictionBlockReason === 'function' ? gradeRestrictionBlockReason(block) : '';
+            if (restrictionReason) return rtpFix3ShowBlockInfoBase(block);
+            const confidence = block.gradeConfidence ? Math.round(block.gradeConfidence * 100) + '% confidence' : 'model confidence unavailable';
+            const value = rtpFix3ModelledBlockValue(block);
+            showProductionComment('Grid ' + gridRef(block) + ': ' + Math.round(block.tonnes).toLocaleString() + 't/block at modelled ' + Number(estGrade || 0).toFixed(1) + '% Goldilocks Grade (' + confidence + '). Estimated value: ' + money(value) + '.', 'Block Estimate', 6);
+          };
+        }
+
+        if (typeof forgivingProductionTonnes === 'function') {
+          const rtpFix3ForgivingProductionTonnesBase = forgivingProductionTonnes;
+          forgivingProductionTonnes = function(year = state.year, depthIndex = state.depthIndex) {
+            const y = Math.max(1, Number(year) || 1);
+            const depth = Math.max(0, Number(depthIndex) || 0);
+            if (depth <= 0 && y === 2) return 10500;
+            if (depth <= 0 && y >= 3) return 11500 + Math.max(0, y - 3) * 900;
+            return rtpFix3ForgivingProductionTonnesBase(year, depthIndex);
+          };
+        }
+
+        if (typeof productionEscalationLimit === 'function') {
+          const rtpFix3ProductionEscalationLimitBase = productionEscalationLimit;
+          productionEscalationLimit = function(depthIndex = state.depthIndex) {
+            const depth = Math.max(0, Number(depthIndex) || 0);
+            if (depth <= 0) return 0.06;
+            return rtpFix3ProductionEscalationLimitBase(depthIndex);
+          };
+        }
+
+        if (typeof rebalanceProductionTarget === 'function') {
+          const rtpFix3RebalanceProductionTargetBase = rebalanceProductionTarget;
+          rebalanceProductionTarget = function(target, year = state.year, depthIndex = state.depthIndex, preserveEscalation = false) {
+            const t = rtpFix3RebalanceProductionTargetBase(target, year, depthIndex, preserveEscalation);
+            const y = Math.max(1, Number(year) || 1);
+            const depth = Math.max(0, Number(depthIndex) || 0);
+            if (depth <= 0 && y === 2) {
+              const baseTonnes = 10500;
+              const cap = Math.round(baseTonnes * (1 + productionEscalationLimit(depth)));
+              t.tonnes = preserveEscalation ? Math.min(Math.max(Number(t.tonnes) || baseTonnes, baseTonnes), cap) : baseTonnes;
+            }
+            return t;
+          };
+        }
+
+        function rtpFix3PreferredSecondMinerSpot() {
+          const preferredCol = Math.min(MINE_COLS - 1, 5); // column F on the current 9-column board
+          const candidateRows = [START_ROW, START_ROW + 1, START_ROW - 1, START_ROW + 2, START_ROW - 2].filter(r => r >= 0 && r < MINE_ROWS);
+          const candidates = [];
+          for (const r of candidateRows) {
+            candidates.push({ r, c: preferredCol });
+            candidates.push({ r, c: Math.min(MINE_COLS - 1, preferredCol + 1) });
+            candidates.push({ r, c: Math.max(0, preferredCol - 1) });
+          }
+          return candidates.find(pos => {
+            const b = blockAt(MINE_ID, pos.r, pos.c);
+            return b && !machineOccupiesCell(pos.r, pos.c) && (b.status === 'void' || b.status === 'cleared' || b.status === 'solid');
+          }) || { r: START_ROW, c: preferredCol };
+        }
+
+        if (typeof placeSecondMinerAtStart === 'function') {
+          placeSecondMinerAtStart = function() {
+            syncMinerAliases();
+            const spot = rtpFix3PreferredSecondMinerSpot();
+            const b = blockAt(MINE_ID, spot.r, spot.c);
+            if (b && b.status === 'solid' && !b.isPillar) {
+              b.status = 'void';
+              b.tonnes = 0;
+              b.grade = 0;
+              b.actualGrade = 0;
+              b.estimatedGrade = 0;
+              b.progress = 100;
+            }
+            state.machine2.q = MINE_ID;
+            state.machine2.r = spot.r;
+            state.machine2.c = spot.c;
+            state.machine2.status = 'idle';
+            state.machine2.autoMining = false;
+            state.machine2.dir = 'up';
+            state.machine2.target = null;
+            state.machine2.progress = 0;
+            state.machine2.facing = -Math.PI / 2;
+            state.machine2.lastSafeCell = { q: MINE_ID, r: spot.r, c: spot.c };
+          };
+        }
+
+        if (typeof resetMineForNewDepth === 'function') {
+          const rtpFix3ResetMineForNewDepthBase = resetMineForNewDepth;
+          resetMineForNewDepth = function() {
+            const result = rtpFix3ResetMineForNewDepthBase.apply(this, arguments);
+            syncMinerAliases();
+            if (state.machine1) {
+              state.machine1.q = MINE_ID;
+              state.machine1.r = START_ROW;
+              state.machine1.c = START_COL;
+              state.machine1.status = 'idle';
+              state.machine1.autoMining = false;
+              state.machine1.target = null;
+              state.machine1.progress = 0;
+              state.machine1.lastSafeCell = { q: MINE_ID, r: START_ROW, c: START_COL };
+            }
+            state.machine = state.machine1 || state.machine;
+            if (state.assets && state.assets.secondMinerOwned) {
+              placeSecondMinerAtStart();
+              if (state.activeMachine !== 'miner1' && state.activeMachine !== 'miner2') state.activeMachine = 'miner1';
+            } else if (state.machine2) {
+              state.machine2.q = MINE_ID;
+              state.machine2.r = START_ROW;
+              state.machine2.c = Math.min(MINE_COLS - 1, 5);
+              state.machine2.status = 'idle';
+              state.machine2.autoMining = false;
+              state.machine2.target = null;
+              state.machine2.progress = 0;
+              state.machine2.lastSafeCell = { q: MINE_ID, r: START_ROW, c: state.machine2.c };
+            }
+            return result;
+          };
+        }
+
+        try {
+          if (typeof applyAnnualTargetUnlockGuards === 'function') applyAnnualTargetUnlockGuards();
+        } catch (err) {}
+
+        if (typeof RTP_EVENT_REFACTOR_PASS_2 === 'object' && RTP_EVENT_REFACTOR_PASS_2) {
+          RTP_EVENT_REFACTOR_PASS_2.stage9Fix3 = 'Applied playtest fixes: survey grid-square copy, HOPE button copy, per-block row tonnes, softer Year 2 tonnes, and 2ndHOPE level reset placement.';
+        }
+      })();
+
+</script>
 </body>
 </html>
