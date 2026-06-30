@@ -26501,6 +26501,184 @@
         return rtpBasePushQueueEvent(ev);
       };
 
+      /* Event System Refactor Pass 3 — Stage 3 queue-alert routing cleanup.
+         Queue icons now carry explicit event-system IDs and context, while old key-based behaviour remains the fallback. */
+      function rtpStage3QueueEventByQueueId(queueId) {
+        return (state.queueEvents || []).find(ev => ev && ev.id === queueId) || null;
+      }
+
+      function rtpStage3BeltQueueEventId() {
+        const fault = state.conveyor && state.conveyor.fault;
+        if (fault === 'trip') return 'queueAlert.asset.conveyorTrip';
+        if (fault === 'buried') return 'queueAlert.asset.conveyorBuried';
+        if (fault === 'drive') return 'queueAlert.asset.conveyorDrive';
+        if (fault === 'mechanical') return 'queueAlert.asset.conveyorMechanical';
+        return 'queueAlert.asset.belt';
+      }
+
+      function rtpStage3QueueAlertMetaForKey(key) {
+        const rawKey = String(key || '');
+        if (!rawKey) return null;
+        if (rawKey === 'hr-group') return { eventId: 'queueAlert.hrGrouped', context: { grouped: true } };
+        if (rawKey.startsWith('staff:')) return { eventId: 'queueAlert.hrGrouped', context: { staffId: rawKey.slice(6), grouped: false } };
+        if (rawKey === 'belt') return { eventId: rtpStage3BeltQueueEventId(), context: { asset: 'belt', fault: state.conveyor && state.conveyor.fault } };
+        if (rawKey === 'miner1') return { eventId: 'queueAlert.asset.miner1Broken', context: { asset: 'miner', machineKey: 'miner1' } };
+        if (rawKey === 'miner2') return { eventId: 'queueAlert.asset.miner2Broken', context: { asset: 'miner', machineKey: 'miner2' } };
+        if (rawKey === 'miner') return { eventId: 'queueAlert.asset.miner', context: { asset: 'miner', machineKey: state.activeMachine || 'miner1' } };
+        if (rawKey === 'safety') return { eventId: 'queueAlert.safety.activeHoldPoint', context: { activeHoldPoint: true } };
+        if (rawKey.startsWith('queue:')) {
+          const queueId = rawKey.slice(6);
+          const queued = rtpStage3QueueEventByQueueId(queueId);
+          if (queued && queued.eventId && rtpEventById(queued.eventId)) return { eventId: queued.eventId, context: { ...(queued.context || {}), queueEventId: queueId, queueEvent: queued } };
+          return { eventId: 'queueAlert.event.genericQueued', context: { queueEventId: queueId, queueEvent: queued } };
+        }
+        return null;
+      }
+
+      function rtpStage3OpenFirstStaffIssue(context = {}) {
+        if (state.manualPaused) {
+          showProductionComment('Game paused. HR issues remain visible but cannot be resolved until time resumes.', 'Pause', 3.8);
+          return true;
+        }
+        if (context.staffId && (state.staff || []).some(s => s && s.id === context.staffId && s.bubble)) {
+          openStaffEvent(context.staffId);
+          return true;
+        }
+        if (typeof pass9OpenFirstStaffIssue === 'function') return !!pass9OpenFirstStaffIssue();
+        const first = (state.staff || []).find(s => s && s.bubble);
+        if (first) { openStaffEvent(first.id); return true; }
+        updateMobileEventQueue(true);
+        showProductionComment('No unresolved HR issues remain. Human Resources will be notified that this condition is temporary.', 'HR', 4);
+        return true;
+      }
+
+      function rtpStage3OpenAssetAlert(context = {}) {
+        if (context.machineKey === 'miner1' || context.machineKey === 'miner2') state.activeMachine = context.machineKey;
+        openWindow('assets');
+        return true;
+      }
+
+      function rtpStage3OpenSafetyHoldPoint() {
+        const overlay = $('safetyStanddownOverlay');
+        if (overlay) overlay.classList.add('show');
+        else if (state.safetyStanddownActive) openOperationalEventModal({
+          title: 'Safety Hold Point Active',
+          label: 'SAFE',
+          tone: 'danger',
+          body: '<p>The Safety Department confirms that a hold point is still active. Please return to the active standdown screen before attempting any more operational uncertainty.</p>',
+          button: 'Acknowledge the Hold Point'
+        });
+        return true;
+      }
+
+      function rtpStage3PatchQueueAlertEvents() {
+        const patch = (id, updates) => {
+          const current = RTP_EVENTS[id] || { id, interactionType: RTP_EVENT_INTERACTION_TYPES.QUEUE_ALERT };
+          RTP_EVENTS[id] = {
+            migrationStatus: current.migrationStatus || 'stage3QueueAlertRouted',
+            copyPolicy: current.copyPolicy || 'noModalCopy',
+            triggerMode: current.triggerMode || 'stateAlert',
+            delivery: current.delivery || 'queueIcon',
+            ...current,
+            ...updates,
+            id,
+            interactionType: RTP_EVENT_INTERACTION_TYPES.QUEUE_ALERT
+          };
+        };
+        patch('queueAlert.hrGrouped', { source: 'HR', label: 'HR', action: 'openFirstStaffIssue', open: context => rtpStage3OpenFirstStaffIssue(context || {}) });
+        patch('queueAlert.asset.belt', { source: 'Mine Services', label: 'BELT', action: 'openAssets', open: context => rtpStage3OpenAssetAlert(context || {}) });
+        patch('queueAlert.asset.miner', { source: 'Maintenance', label: 'CM', action: 'openAssets', open: context => rtpStage3OpenAssetAlert(context || {}) });
+        patch('queueAlert.safety.activeHoldPoint', { source: 'Safety Department', label: 'SAFE', action: 'showSafetyHoldPoint', open: () => rtpStage3OpenSafetyHoldPoint() });
+        [
+          ['queueAlert.asset.conveyorTrip', 'BELT', 'Conveyor Electrical Trip'],
+          ['queueAlert.asset.conveyorBuried', 'BELT', 'Buried Belt / Tail End'],
+          ['queueAlert.asset.conveyorDrive', 'BELT', 'Conveyor Drive Fault'],
+          ['queueAlert.asset.conveyorMechanical', 'BELT', 'Conveyor Mechanical Fault']
+        ].forEach(([id, label, title]) => patch(id, { source: 'Mine Services', label, title, action: 'openAssets', open: context => rtpStage3OpenAssetAlert({ ...(context || {}), asset: 'belt' }) }));
+        patch('queueAlert.asset.miner1Broken', { source: 'Maintenance', label: 'CM1', title: '1stHOPE Broken', action: 'openAssets', open: context => rtpStage3OpenAssetAlert({ ...(context || {}), machineKey: 'miner1' }) });
+        patch('queueAlert.asset.miner2Broken', { source: 'Maintenance', label: 'CM2', title: '2ndHOPE Broken', action: 'openAssets', open: context => rtpStage3OpenAssetAlert({ ...(context || {}), machineKey: 'miner2' }) });
+        patch('queueAlert.event.genericQueued', { source: 'Operational Queue', label: 'EVT', title: 'Generic Queued Event', action: 'openQueuedEvent', open: context => {
+          if (context && context.queueEventId) { openQueuedEvent(context.queueEventId); return true; }
+          return false;
+        } });
+      }
+
+      rtpStage3PatchQueueAlertEvents();
+
+      const rtpStage3BaseMobileEventQueueItems = mobileEventQueueItems;
+      mobileEventQueueItems = function() {
+        const items = (rtpStage3BaseMobileEventQueueItems ? rtpStage3BaseMobileEventQueueItems() : []) || [];
+        const contextByKey = {};
+        const enriched = items.map(item => {
+          const meta = rtpStage3QueueAlertMetaForKey(item && item.key);
+          if (!meta) return item;
+          const cfg = rtpEventById(meta.eventId);
+          const next = {
+            ...item,
+            eventId: meta.eventId,
+            interactionType: RTP_EVENT_INTERACTION_TYPES.QUEUE_ALERT,
+            source: cfg && cfg.source ? cfg.source : item.source,
+            title: item.title || (cfg && cfg.title) || item.title,
+            label: item.label || (cfg && cfg.label) || item.label
+          };
+          contextByKey[String(item.key)] = { eventId: meta.eventId, context: meta.context || {}, originalItem: item };
+          return next;
+        });
+        state.rtpMobileEventQueueContext = contextByKey;
+        return enriched;
+      };
+
+      const rtpStage3BaseMobileEventQueueSignature = mobileEventQueueSignature;
+      mobileEventQueueSignature = function(items) {
+        return (items || []).map(i => [i.key, i.eventId || '', i.tone, i.label, i.icon, i.title, i.badge || ''].join('|')).join('~');
+      };
+
+      const rtpStage3BaseMobileEventQueueItemHtml = mobileEventQueueItemHtml;
+      mobileEventQueueItemHtml = function(item) {
+        const html = rtpStage3BaseMobileEventQueueItemHtml ? rtpStage3BaseMobileEventQueueItemHtml(item) : '';
+        if (!item || !item.eventId || !html) return html;
+        return html.replace('<button ', `<button data-rtp-event-id="${escapeHtml(item.eventId)}" `);
+      };
+
+      const rtpStage3BaseOpenMobileEventQueueItem = openMobileEventQueueItem;
+      openMobileEventQueueItem = function(key) {
+        if (!key) return;
+        const rawKey = String(key);
+        if (rawKey.startsWith('queue:')) return openQueuedEvent(rawKey.slice(6));
+        const map = state.rtpMobileEventQueueContext || {};
+        const mapped = map[rawKey] || rtpStage3QueueAlertMetaForKey(rawKey);
+        if (mapped && mapped.eventId && rtpEventById(mapped.eventId)) {
+          const handled = openEventById(mapped.eventId, mapped.context || {});
+          if (handled) return handled;
+        }
+        return rtpStage3BaseOpenMobileEventQueueItem(rawKey);
+      };
+
+      const rtpStage3BasePushQueueEvent = pushQueueEvent;
+      pushQueueEvent = function(ev = {}) {
+        let next = { ...(ev || {}) };
+        if (next.kind === 'beltComplaint' && !next.eventId && rtpEventById('decision.beltAvailabilityComplaint')) next.eventId = 'decision.beltAvailabilityComplaint';
+        if (next.eventId) {
+          const cfg = rtpEventById(next.eventId);
+          if (cfg) {
+            next = {
+              interactionType: cfg.interactionType,
+              source: cfg.source || next.source,
+              label: next.label || cfg.label || 'EVT',
+              icon: next.icon || cfg.icon || cfg.label || next.label || '!',
+              title: next.title || cfg.title || RTP_EVENT_CATEGORY_META[cfg.interactionType]?.label || 'Queued Event',
+              ...next
+            };
+          }
+        }
+        const id = rtpStage3BasePushQueueEvent(next);
+        updateMobileEventQueue(true);
+        return id;
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 3';
+      RTP_EVENT_REFACTOR_PASS_2.stage3 = 'Queue-alert routing metadata and explicit eventId mapping for HR, belt, miner, safety and queued event items.';
+
       document.addEventListener('click', function(e) {
         const btn = e.target.closest('[data-rtp-event-choice]');
         if (!btn) return;
@@ -26523,8 +26701,10 @@
         if (action === 'event2-shaft') { markShaftDeepeningAvailable(false); openEventById('gameMechanic.shaftDeepeningProposal'); return; }
         if (action === 'event2-drill-suspend') { ensureDrillingRestrictionState(); openEventById('gameMechanic.explorationDrillingSuspended'); return; }
         if (action === 'event2-drill-resume') { ensureDrillingRestrictionState(); state.exploration.drillingSuspended = true; openEventById('gameMechanic.explorationDrillingResumed'); return; }
-        if (action === 'event2-belt-alert') { openEventById('queueAlert.asset.belt'); return; }
-        if (action === 'event2-miner-alert') { openEventById('queueAlert.asset.miner'); return; }
+        if (action === 'event2-belt-alert' || action === 'event3-belt-alert') { openEventById('queueAlert.asset.belt'); return; }
+        if (action === 'event2-miner-alert' || action === 'event3-miner-alert') { openEventById('queueAlert.asset.miner'); return; }
+        if (action === 'event3-hr-alert') { openEventById('queueAlert.hrGrouped', { grouped: true }); return; }
+        if (action === 'event3-safety-alert') { openEventById('queueAlert.safety.activeHoldPoint'); return; }
         return rtpBaseDevActionForEventPass2(action);
       };
 
@@ -26534,7 +26714,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-event-refactor-pass2-dev-tools]')) return;
         const summary = rtpEventCategorySummary();
-        const html = `<section class="devToolCard" data-event-refactor-pass2-dev-tools><h3>Event System Refactor Pass 3 — Stage 2</h3><p>Category-led event tests. Current registry: HR ${summary.hrBubble || 0}, Info ${summary.informative || 0}, Decision ${summary.decision || 0}, Progression ${summary.progression || 0}, Game Mechanics ${summary.gameMechanic || 0}, Queue ${summary.queueAlert || 0}.</p><div class="devToolBtns"><button data-dev-action="event2-geology">Mechanic: Geology Model (4 options)</button><button data-dev-action="event2-hse">HSE Decision</button><button data-dev-action="event2-slt">SLT Decision</button><button data-dev-action="event2-role-ground">Progression: Ground</button><button data-dev-action="event2-shaft">Mechanic: Shaft</button><button data-dev-action="event2-drill-suspend">Mechanic: Suspend Drilling</button><button data-dev-action="event2-drill-resume">Mechanic: Resume Drilling</button><button data-dev-action="event2-belt-alert">Queue: Belt</button><button data-dev-action="event2-miner-alert">Queue: Miner</button></div></section>`;
+        const html = `<section class="devToolCard" data-event-refactor-pass2-dev-tools><h3>Event System Refactor Pass 3 — Stage 3</h3><p>Queue-alert routing tests. Current registry: HR ${summary.hrBubble || 0}, Info ${summary.informative || 0}, Decision ${summary.decision || 0}, Progression ${summary.progression || 0}, Game Mechanics ${summary.gameMechanic || 0}, Queue ${summary.queueAlert || 0}.</p><div class="devToolBtns"><button data-dev-action="event2-geology">Mechanic: Geology Model (4 options)</button><button data-dev-action="event2-hse">HSE Decision</button><button data-dev-action="event2-slt">SLT Decision</button><button data-dev-action="event2-role-ground">Progression: Ground</button><button data-dev-action="event2-shaft">Mechanic: Shaft</button><button data-dev-action="event2-drill-suspend">Mechanic: Suspend Drilling</button><button data-dev-action="event2-drill-resume">Mechanic: Resume Drilling</button><button data-dev-action="event3-hr-alert">Queue: HR</button><button data-dev-action="event3-belt-alert">Queue: Belt</button><button data-dev-action="event3-miner-alert">Queue: Miner</button><button data-dev-action="event3-safety-alert">Queue: Safety</button></div></section>`;
         const grid = body.querySelector('.devToolGrid');
         if (grid) grid.insertAdjacentHTML('beforeend', html);
         else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
@@ -26566,7 +26746,6 @@
       setTimeout(resize, 900);
       requestAnimationFrame(frame);
     })();
-    //comment
   </script>
 </body>
 </html>
