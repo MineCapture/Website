@@ -27035,8 +27035,247 @@
         else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
       };
 
-      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 4';
-      RTP_EVENT_REFACTOR_PASS_2.stage4 = 'Selected acknowledge-only informative events now use the generic informative renderer with verbatim copy and legacy fallback retained.';
+      /* Event System Refactor Pass 3 — Stage 5 progression migration.
+         Scope: selected unlock/onboarding/review/dependency modals now use the generic progression renderer.
+         Existing copy, button labels and side effects are preserved. High-risk progression routes remain legacy delegates. */
+      function rtpStage5PatchEvent(id, patch = {}) {
+        if (typeof rtpStage2MergeEvent === 'function') return rtpStage2MergeEvent(id, patch);
+        RTP_EVENTS[id] = { ...(RTP_EVENTS[id] || {}), ...patch, id };
+        return RTP_EVENTS[id];
+      }
+
+      function rtpStage5NoopOpen() { return undefined; }
+
+      function rtpStage5ConfigureRoleUnlock(key) {
+        const id = `progression.roleUnlock.${key}`;
+        rtpStage5PatchEvent(id, {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.PROGRESSION,
+          migrationStatus: 'configOwnedProgression',
+          copyPolicy: 'preserveVerbatimFromRoleIntroContent',
+          open: null,
+          beforeOpen: context => {
+            if (!state.roleIntroShown) state.roleIntroShown = {};
+            state.roleIntroShown[key] = true;
+            state.hiringTab = roleIntroKeyToTab(key);
+          },
+          content: context => {
+            const intro = roleIntroContent(key);
+            if (!intro) return { title: 'Role Unlock', bodyHtml: '<p>Role details unavailable.</p>', button: 'Continue' };
+            const nextKey = context.nextKey || null;
+            const btn = nextKey
+              ? `<button class="primary" data-open-role-intro="${escapeHtml(nextKey)}">Continue to Next Explanation</button>`
+              : `<button class="primary" data-window="hr">${escapeHtml(intro.button || 'Proceed to Recruitment')}</button>`;
+            return {
+              title: context.customTitle || intro.title,
+              image: intro.image,
+              character: intro.character,
+              department: intro.department,
+              imageText: 'A new department has arrived to define what success would have looked like if requested earlier.',
+              initials: intro.initials,
+              bodyHtml: intro.body,
+              nextActionHtml: btn,
+              windowClass: 'window medium',
+              closable: true
+            };
+          }
+        });
+      }
+
+      ['exploration', 'miningEngineering', 'groundControl', 'survey', 'ventilation'].forEach(rtpStage5ConfigureRoleUnlock);
+
+      rtpStage5PatchEvent('progression.roleUnlock', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.PROGRESSION,
+        migrationStatus: 'categoryRouterToConfigOwnedRoleUnlock',
+        open: context => openEventById(`progression.roleUnlock.${context.key || 'exploration'}`, context || {})
+      });
+
+      const rtpStage5BaseOpenRoleUnlockIntro = openRoleUnlockIntro;
+      openRoleUnlockIntro = function(key, customTitle = null, nextKey = null) {
+        if (!key || !roleIntroContent(key)) return false;
+        return openEventById(`progression.roleUnlock.${key}`, { key, customTitle, nextKey });
+      };
+
+      rtpStage5PatchEvent('progression.levelArrival', {
+        migrationStatus: 'configOwnedProgression',
+        copyPolicy: 'preserveVerbatimFromLevelArrivalDetails',
+        open: null,
+        content: () => {
+          const details = levelArrivalDetails();
+          return {
+            title: details.title,
+            image: 'assets/characters/geology-rock-lickers.png',
+            character: 'Geology Department',
+            department: 'Shaft Deepening',
+            imageText: 'The geology department has confirmed that down continues to be a valid direction.',
+            initials: 'SHAFT',
+            letterTitle: details.title,
+            body: details.body,
+            nextActionHtml: `<button class="primary" data-level-arrival-continue data-next-intro="${escapeHtml(details.next || '')}" data-next-intro-2="${escapeHtml(details.next2 || '')}">Continue Operational Escalation</button>`,
+            windowClass: 'window medium',
+            closable: false
+          };
+        }
+      });
+
+      const rtpStage5BaseOpenLevelArrivalModal = openLevelArrivalModal;
+      openLevelArrivalModal = function() {
+        return openEventById('progression.levelArrival');
+      };
+
+      rtpStage5PatchEvent('progression.annualFinanceNotice', {
+        migrationStatus: 'configOwnedProgression',
+        copyPolicy: 'preserveVerbatimFromOpenAnnualFinanceNotice',
+        open: null,
+        beforeOpen: context => {
+          pauseMusicForFormalModal();
+          const year = Number(context.year || state.year || 1);
+          context.year = year;
+          context.notice = state.lastFinanceNotice || applyAnnualFinanceReset(year);
+        },
+        content: context => {
+          const year = Number(context.year || state.year || 1);
+          const notice = context.notice || state.lastFinanceNotice || applyAnnualFinanceReset(year);
+          const carryText = notice.carryForward > 0
+            ? `Finance has allowed ${money(notice.carryForward)} to remain locally after demonstrating restraint.`
+            : notice.carryForward < 0
+              ? `Finance has applied a ${money(Math.abs(notice.carryForward))} confidence adjustment after last year’s position.`
+              : 'No carry-forward has been permitted because round numbers look more controlled.';
+          return {
+            title: 'Annual Budget Alignment',
+            image: 'assets/characters/mr-b-counter.png',
+            character: 'Mr B. Counter',
+            department: 'Department of Financial Prevention',
+            imageText: '“Following a detailed bean-counting exercise, Finance has concluded that the targets are ambitious, the budget is appropriate, and any gap between the two is a leadership opportunity.”',
+            initials: 'B',
+            bodyHtml: `<div class="rows">
+            <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Previous Closing Position</strong><span>Revenue recognised, normalised, celebrated briefly, and removed from your control.</span></div><span class="tag">${money(notice.priorCash || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#f59e0b"></div><div><strong>Finance Carry-forward</strong><span>${carryText}</span></div><span class="tag">${money(notice.carryForward || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#38bdf8"></div><div><strong>Opening Budget</strong><span>Mining revenue adds to this. Costs, wages, repairs, HR, exploration and equipment subtract from it.</span></div><span class="tag">${money(state.openingBudget || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#22c55e"></div><div><strong>Revenue Expectation</strong><span>Finance expects the ground to pay for the plan it was not consulted on.</span></div><span class="tag">${money(state.revenueTarget || 0)}</span></div>
+            <div class="row"><div class="avatarDot" style="background:#ef4444"></div><div><strong>Spend Limit</strong><span>Guidance only in early years; increasingly formal once optimism has scaled.</span></div><span class="tag">${money(state.spendLimit || 0)}</span></div>
+          </div><p>${escapeHtml(notice.note || '')}</p>`,
+            nextActionHtml: `<button class="primary" data-finance-continue>${financeContinueLabel(year)}</button>`,
+            windowClass: 'window medium',
+            closable: false
+          };
+        }
+      });
+
+      const rtpStage5BaseOpenAnnualFinanceNotice = openAnnualFinanceNotice;
+      openAnnualFinanceNotice = function(year) {
+        return openEventById('progression.annualFinanceNotice', { year });
+      };
+
+      rtpStage5PatchEvent('progression.midYearReview', {
+        migrationStatus: 'configOwnedProgression',
+        copyPolicy: 'preserveVerbatimFromTriggerMidYearReview',
+        open: null,
+        beforeOpen: context => {
+          const t = state.annualTargets;
+          const original = {
+            tonnes: t.tonnes,
+            grade: t.grade,
+            discoveredRows: t.discoveredRows || 0,
+            safetyMin: t.safetyMin || 0
+          };
+          let reason = '';
+          if (annualTonnes() > t.tonnes * 0.55) {
+            t.tonnes = Math.round(t.tonnes * 1.18);
+            t.grade = Math.max(t.grade, TARGET_GRADE + (state.year <= 1 ? 0.10 : 0.25));
+            reason = 'Production is ahead of plan, so the original plan has been reclassified as insufficiently ambitious.';
+          } else if (featureUnlocked('exploration')) {
+            t.discoveredRows = Math.max(t.discoveredRows || 0, 1);
+            reason = 'Sales and Marketing have announced a product stream requiring improved confidence in future supply. This could not have been anticipated, except by anyone aware R&D began three years ago.';
+          } else {
+            t.tonnes = Math.round(t.tonnes * 1.08);
+            reason = 'The bulk sample has generated enough confidence for the SLT to request a larger bulk sample while continuing to describe it as a trial.';
+          }
+          const revised = {
+            tonnes: t.tonnes,
+            grade: t.grade,
+            discoveredRows: t.discoveredRows || 0,
+            safetyMin: t.safetyMin || 0
+          };
+          context.originalHtml = `<h3>Original KPI</h3><p>${Math.round(original.tonnes).toLocaleString()}t at ${original.grade.toFixed(2)}% Goldilocks Grade<br>${original.discoveredRows} exploration rows<br>Safety floor ${original.safetyMin}</p>`;
+          context.revisedHtml = `<h3>Revised KPI</h3><p>${Math.round(revised.tonnes).toLocaleString()}t at ${revised.grade.toFixed(2)}% Goldilocks Grade<br>${revised.discoveredRows} exploration rows<br>Safety floor ${revised.safetyMin}</p>`;
+          context.reason = reason;
+          state.paused = true;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+          pauseMusicForFormalModal();
+        },
+        content: context => ({
+          title: 'Mid-Year Alignment Review',
+          image: 'assets/characters/slt-silhouette.png',
+          character: 'Superior Leadership Team',
+          department: 'Strategic Adjustment Without Accountability',
+          imageText: 'The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.',
+          initials: 'SLT',
+          bodyHtml: `<div class="letter"><h2>Mid-Year Alignment Review</h2><p><strong>Issued by the Superior Leadership Team.</strong></p><p>${context.reason}</p><div class="sltReviewBox"><div class="reviewPanel">${context.originalHtml}</div><div class="reviewPanel">${context.revisedHtml}</div></div><p>The original KPI remains correct. The revised KPI is also correct. Please align reality accordingly.</p><p class="sig">Superior Leadership Team<br>Strategic Adjustment Without Accountability</p></div>`,
+          nextActionHtml: '<button class="primary" data-close-formal-review>Accept Revised Reality</button>',
+          windowClass: 'window medium',
+          closable: false
+        })
+      });
+
+      const rtpStage5BaseTriggerMidYearReview = triggerMidYearReview;
+      triggerMidYearReview = function() {
+        return openEventById('progression.midYearReview');
+      };
+
+      rtpStage5PatchEvent('progression.rockDoctorBolterHold', {
+        migrationStatus: 'configOwnedProgression',
+        copyPolicy: 'preserveVerbatimFromOpenRockDoctorBolterHold',
+        open: null,
+        beforeOpen: () => {
+          state.rockDoctorHoldActive = true;
+          state.paused = true;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+        },
+        content: () => ({
+          title: 'Ground Control Hold Point',
+          image: 'assets/characters/rock-doctor.png',
+          character: 'Rock Doctor',
+          department: 'Legally Interested in the Roof',
+          imageText: '“I do not know how you have been getting away with this, but now that my name is attached to the ground conditions, we are going to monitor pillar condition and install support before everyone starts calling this predictable.”',
+          initials: 'RD',
+          bodyHtml: '<div class="letter"><h2>Production Hold — Rock Doctor Intervention</h2><p><strong>Requirement:</strong> purchase a bolter. Move the bolter through mined-out ground, face an adjacent pillar, then press <strong>BOLT</strong> on the HOPE remote.</p><p>Production remains paused until ground support equipment exists in more than a PowerPoint sense.</p><p class="sig">Rock Doctor<br>Legally Interested in the Roof</p></div>',
+          nextActionHtml: '<button class="primary" data-window="assets">Purchase Bolter</button>',
+          windowClass: 'window medium',
+          closable: false
+        })
+      });
+
+      const rtpStage5BaseOpenRockDoctorBolterHold = openRockDoctorBolterHold;
+      openRockDoctorBolterHold = function() {
+        return openEventById('progression.rockDoctorBolterHold');
+      };
+
+      const rtpStage5BaseDevAction = devAction;
+      devAction = function(action) {
+        if (!action) return;
+        if (action === 'event5-role-exploration') { openEventById('progression.roleUnlock.exploration', { key: 'exploration', customTitle: 'Dev: Exploration Intro' }); return; }
+        if (action === 'event5-role-engineering') { openEventById('progression.roleUnlock.miningEngineering', { key: 'miningEngineering', customTitle: 'Dev: Mining Engineer Intro' }); return; }
+        if (action === 'event5-role-ground') { openEventById('progression.roleUnlock.groundControl', { key: 'groundControl', customTitle: 'Dev: Ground Control Intro' }); return; }
+        if (action === 'event5-level-arrival') { openEventById('progression.levelArrival'); return; }
+        if (action === 'event5-finance-notice') { openEventById('progression.annualFinanceNotice', { year: state.year }); return; }
+        if (action === 'event5-midyear') { openEventById('progression.midYearReview'); return; }
+        if (action === 'event5-rock-hold') { openEventById('progression.rockDoctorBolterHold'); return; }
+        return rtpStage5BaseDevAction(action);
+      };
+
+      const rtpStage5BaseEnhanceDevTools = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage5BaseEnhanceDevTools();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-event-refactor-stage5-dev-tools]')) return;
+        const html = `<section class="devToolCard" data-event-refactor-stage5-dev-tools><h3>Event System Refactor Pass 3 — Stage 5</h3><p>Progression-renderer migration tests. These should preserve old copy, buttons and progression side effects.</p><div class="devToolBtns"><button data-dev-action="event5-role-exploration">Prog: Exploration Intro</button><button data-dev-action="event5-role-engineering">Prog: Mining Engineer Intro</button><button data-dev-action="event5-role-ground">Prog: Rock Doctor Intro</button><button data-dev-action="event5-level-arrival">Prog: Level Arrival</button><button data-dev-action="event5-finance-notice">Prog: Finance Notice</button><button data-dev-action="event5-midyear">Prog: Mid-Year Review</button><button data-dev-action="event5-rock-hold">Prog: Rock Doctor Hold</button></div></section>`;
+        const grid = body.querySelector('.devToolGrid');
+        if (grid) grid.insertAdjacentHTML('beforeend', html);
+        else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 5';
+      RTP_EVENT_REFACTOR_PASS_2.stage5 = 'Selected progression/onboarding/review/dependency modals now use the generic progression renderer with copy and side effects preserved.';
 
       window.RTP_EVENT_REFACTOR_PASS_2 = RTP_EVENT_REFACTOR_PASS_2;
       window.RTP_EVENT_INTERACTION_TYPES = RTP_EVENT_INTERACTION_TYPES;
