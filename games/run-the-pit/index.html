@@ -27586,40 +27586,68 @@
         });
       }
 
+      function rtpStage6ShiftManagerDecisionEventList() {
+        const keys = [
+          'shiftPlanOptimisation',
+          'handoverIntegrity',
+          'dailyTargetCascade',
+          'blameContinuity',
+          'meetingDiscipline'
+        ];
+        if (typeof pass23ShiftManagerByKey === 'function') {
+          return keys.map(key => pass23ShiftManagerByKey(key)).filter(Boolean);
+        }
+        if (Array.isArray(window.pass23ShiftManagerDecisionEvents)) {
+          return window.pass23ShiftManagerDecisionEvents.filter(Boolean);
+        }
+        return [];
+      }
+
       function rtpStage6PatchShiftManagerDecisions() {
-        const build = (ev, randomMode = false) => ({
+        // Pass 23 Shift Manager internals are intentionally closure-scoped in this build.
+        // Stage 6 therefore catalogues and routes these events through the existing legacy trigger
+        // instead of touching the closed-over modal/data functions directly.
+        const keys = [
+          ['shiftPlanOptimisation', 'Shift Plan Optimisation'],
+          ['handoverIntegrity', 'Handover Integrity Review'],
+          ['dailyTargetCascade', 'Daily Target Cascade'],
+          ['blameContinuity', 'Blame Continuity Plan'],
+          ['meetingDiscipline', 'Meeting Discipline Failure']
+        ];
+        const legacyOpen = (key = null) => {
+          if (typeof triggerShiftManagerEvent === 'function') {
+            triggerShiftManagerEvent(key || null);
+            return true;
+          }
+          console.warn('[RTP Event System] Shift Manager trigger is unavailable.');
+          return false;
+        };
+        rtpStage6MergeEvent('decision.shiftManager', {
           interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
-          useGenericRenderer: true,
-          migrationStatus: 'stage6GenericDecision',
-          copyPolicy: 'verbatimFromPass23Data',
+          useGenericRenderer: false,
+          migrationStatus: 'stage6LegacyDelegatedClosedScope',
+          copyPolicy: 'verbatimFromLegacyFunction',
           triggerMode: 'randomOrDev',
           delivery: 'modal',
           source: 'Shift Manager',
-          title: ev ? ev.title : 'Shift Manager Event',
+          title: 'Shift Manager Event',
           label: 'MGR',
-          character: context => (context.manager && context.manager.name) || (currentManager() || {}).name || 'Shift Manager',
-          department: 'Shift Management',
-          image: context => pass23ShiftManagerPortrait(context.manager || currentManager()),
-          imageText: 'The Shift Manager has identified an issue that can only be solved by creating a decision record.',
-          beforeOpen: context => {
-            const manager = currentManager && currentManager();
-            if (!manager) {
-              openMiniWindow('No Shift Manager', '<p>No Shift Manager is currently available to turn operational confusion into structured accountability.</p>', true);
-              return false;
-            }
-            const selected = randomMode ? randomItem(pass23ShiftManagerDecisionEvents) : (ev || pass23ShiftManagerByKey(context.key));
-            if (!selected) return false;
-            context.manager = manager;
-            context.shiftEvent = selected;
-            state.pass23ActiveShiftManagerEvent = selected.key;
-            return true;
-          },
-          content: context => ({ bodyHtml: `<p>${escapeHtml((context.shiftEvent.prompt || '').replace('{name}', context.manager.name))}</p><p><strong>Management response required.</strong></p>` }),
-          choices: context => (context.shiftEvent.options || []).map((opt, idx) => rtpStage6DecisionChoice(opt.key, opt.label, opt.hint, () => { resolvePass23ShiftManagerEvent(context.shiftEvent.key, opt.key); return { handled: true }; }, idx === 1 ? 'positive' : idx === 3 ? 'negative' : ''))
+          open: () => legacyOpen(null)
         });
-        rtpStage6MergeEvent('decision.shiftManager', { ...build(null, true), id: 'decision.shiftManager' });
-        (pass23ShiftManagerDecisionEvents || []).forEach(ev => {
-          rtpStage6MergeEvent(`decision.shiftManager.${ev.key}`, { ...build(ev, false), id: `decision.shiftManager.${ev.key}` });
+        keys.forEach(([key, title]) => {
+          rtpStage6MergeEvent(`decision.shiftManager.${key}`, {
+            interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+            useGenericRenderer: false,
+            migrationStatus: 'stage6LegacyDelegatedClosedScope',
+            copyPolicy: 'verbatimFromLegacyFunction',
+            triggerMode: 'randomOrDev',
+            delivery: 'modal',
+            source: 'Shift Manager',
+            title,
+            label: 'MGR',
+            legacyKey: key,
+            open: () => legacyOpen(key)
+          });
         });
       }
 
@@ -27684,18 +27712,8 @@
       const rtpStage6BaseOpenPass19UnionPayDemandEvent = openPass19UnionPayDemandEvent;
       openPass19UnionPayDemandEvent = function(force = false) { return openEventById('decision.unionPayDemand', { force }); };
 
-      const rtpStage6BaseOpenPass23ShiftManagerEvent = openPass23ShiftManagerEvent;
-      openPass23ShiftManagerEvent = function(key = null, force = false) {
-        if (key && rtpEventById(`decision.shiftManager.${key}`)) return openEventById(`decision.shiftManager.${key}`, { key, force });
-        return openEventById('decision.shiftManager', { key, force });
-      };
-
-      const rtpStage6BaseTriggerShiftManagerEvent = triggerShiftManagerEvent;
-      triggerShiftManagerEvent = function(key = null) {
-        if (key && rtpEventById(`decision.shiftManager.${key}`)) return openEventById(`decision.shiftManager.${key}`, { key, force: true });
-        if (!key || key === 'random' || key === 'pass23') return openEventById('decision.shiftManager');
-        return rtpStage6BaseTriggerShiftManagerEvent(key);
-      };
+      // Shift Manager opening remains on the existing pass23 trigger.
+      // Its modal/data functions are not global in this build, so Stage 6 does not wrap them directly.
 
       const rtpStage6BaseOpenQueuedEvent = openQueuedEvent;
       openQueuedEvent = function(id) {
@@ -27729,14 +27747,1396 @@
         rtpStage6BaseEnhanceDevTools();
         const body = $('modalBody');
         if (!body || body.querySelector('[data-event-refactor-stage6-dev-tools]')) return;
-        const html = `<section class="devToolCard" data-event-refactor-stage6-dev-tools><h3>Event System Refactor Pass 3 — Stage 6</h3><p>Generic decision-renderer tests. These should preserve old copy, four-option choices and existing resolver effects.</p><div class="devToolBtns"><button data-dev-action="event6-hse">Decision: HSE</button><button data-dev-action="event6-borc">Decision: BORC</button><button data-dev-action="event6-slt">Decision: SLT Visit</button><button data-dev-action="event6-accident">Decision: Crew Accident</button><button data-dev-action="event6-dispute">Decision: Employee Dispute</button><button data-dev-action="event6-union">Decision: Union Pay</button><button data-dev-action="event6-belt-complaint">Decision: Belt Complaint</button><button data-dev-action="event6-shift-random">Decision: Shift Manager</button><button data-dev-action="event6-shift-shiftPlanOptimisation">Shift: Plan</button><button data-dev-action="event6-shift-handoverIntegrity">Shift: Handover</button><button data-dev-action="event6-shift-dailyTargetCascade">Shift: Target</button><button data-dev-action="event6-shift-blameContinuity">Shift: Blame</button><button data-dev-action="event6-shift-meetingDiscipline">Shift: Meeting</button></div></section>`;
+        const html = `<section class="devToolCard" data-event-refactor-stage6-dev-tools><h3>Event System Refactor Pass 3 — Stage 6</h3><p>Generic decision-renderer tests. These preserve old copy, four-option choices and existing resolver effects. Shift Manager decisions remain on the legacy Shift Manager Events dev card for this stage.</p><div class="devToolBtns"><button data-dev-action="event6-hse">Decision: HSE</button><button data-dev-action="event6-borc">Decision: BORC</button><button data-dev-action="event6-slt">Decision: SLT Visit</button><button data-dev-action="event6-accident">Decision: Crew Accident</button><button data-dev-action="event6-dispute">Decision: Employee Dispute</button><button data-dev-action="event6-union">Decision: Union Pay</button><button data-dev-action="event6-belt-complaint">Decision: Belt Complaint</button></div></section>`;
         const grid = body.querySelector('.devToolGrid');
         if (grid) grid.insertAdjacentHTML('beforeend', html);
         else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
       };
 
-      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6';
-      RTP_EVENT_REFACTOR_PASS_2.stage6 = 'Selected four-option decision modals now use the generic decision renderer, preserving existing copy and delegating effects to existing resolvers.';
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6 Fix 2';
+      RTP_EVENT_REFACTOR_PASS_2.stage6 = 'Selected four-option decision modals now use the generic decision renderer where safe; closure-scoped Shift Manager decisions remain legacy-delegated with copy/effects preserved.';
+
+      /* Event System Refactor Pass 3 — Stage 6 Fix 3.
+         Fixes verified playtest regressions:
+         - belt complaint duplicated choices when generic decision renderer wrapped legacy body;
+         - Shift Manager Stage 6 dev buttons now use the existing legacy pass23 dev route rather than the registry wrapper. */
+      function rtpStage6Fix3BeltComplaintBodyOnly() {
+        return '<p>The crew have once again observed that if the belt ran when required, production targets would be easier to achieve.</p><p>This insight has been escalated to management for strategic consideration.</p>';
+      }
+
+      if (RTP_EVENTS['decision.beltAvailabilityComplaint']) {
+        RTP_EVENTS['decision.beltAvailabilityComplaint'] = {
+          ...RTP_EVENTS['decision.beltAvailabilityComplaint'],
+          content: () => ({ bodyHtml: rtpStage6Fix3BeltComplaintBodyOnly() }),
+          migrationStatus: 'stage6GenericDecisionFix3'
+        };
+      }
+
+      function rtpStage6Fix3OpenLegacyShiftManager(key = null) {
+        const legacyAction = key ? `shift-manager-${key}` : 'shift-manager-event';
+        if (typeof rtpStage6BaseDevAction === 'function') {
+          rtpStage6BaseDevAction(legacyAction);
+          return true;
+        }
+        if (typeof triggerShiftManagerEvent === 'function') {
+          triggerShiftManagerEvent(key || null);
+          return true;
+        }
+        console.warn('[RTP Event System] Shift Manager legacy route is unavailable.');
+        return false;
+      }
+
+      if (RTP_EVENTS['decision.shiftManager']) {
+        RTP_EVENTS['decision.shiftManager'] = {
+          ...RTP_EVENTS['decision.shiftManager'],
+          useGenericRenderer: false,
+          migrationStatus: 'stage6LegacyDevRouteFix3',
+          open: () => rtpStage6Fix3OpenLegacyShiftManager(null)
+        };
+      }
+      ['shiftPlanOptimisation', 'handoverIntegrity', 'dailyTargetCascade', 'blameContinuity', 'meetingDiscipline'].forEach(key => {
+        const id = `decision.shiftManager.${key}`;
+        if (RTP_EVENTS[id]) {
+          RTP_EVENTS[id] = {
+            ...RTP_EVENTS[id],
+            useGenericRenderer: false,
+            migrationStatus: 'stage6LegacyDevRouteFix3',
+            legacyKey: key,
+            open: () => rtpStage6Fix3OpenLegacyShiftManager(key)
+          };
+        }
+      });
+
+      const rtpStage6Fix3BaseOpenQueuedEvent = openQueuedEvent;
+      openQueuedEvent = function(id) {
+        const ev = (state.queueEvents || []).find(item => item && item.id === id);
+        if (ev && ev.eventId && String(ev.eventId).startsWith('decision.shiftManager')) {
+          const idx = state.queueEvents.findIndex(item => item && item.id === id);
+          if (idx >= 0) state.queueEvents.splice(idx, 1);
+          updateMobileEventQueue(true);
+          const key = String(ev.eventId).replace(/^decision\.shiftManager\.?/, '') || null;
+          return rtpStage6Fix3OpenLegacyShiftManager(key === 'decision.shiftManager' ? null : key);
+        }
+        return rtpStage6Fix3BaseOpenQueuedEvent(id);
+      };
+
+      const rtpStage6Fix3BaseDevAction = devAction;
+      devAction = function(action) {
+        if (action === 'event6-shift-random') { rtpStage6Fix3OpenLegacyShiftManager(null); return; }
+        if (action && action.startsWith('event6-shift-')) {
+          rtpStage6Fix3OpenLegacyShiftManager(action.replace('event6-shift-', ''));
+          return;
+        }
+        return rtpStage6Fix3BaseDevAction(action);
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6 Fix 3';
+      RTP_EVENT_REFACTOR_PASS_2.stage6Fix3 = 'Belt complaint body now separates prompt from choices; Shift Manager Stage 6 dev buttons delegate to the existing pass23 dev route.';
+
+
+      /* Event System Refactor Pass 3 — Stage 6 Fix 4.
+         Fixes remaining Shift Manager dev-test routing regressions by calling the legacy Pass 23
+         modal opener directly when it is visible in the current script scope. This avoids both the
+         generic decision renderer and any later dev-action wrapper ambiguity. */
+      function rtpStage6Fix4OpenLegacyShiftManager(key = null) {
+        const safeKey = key && key !== 'random' && key !== 'pass23' ? key : null;
+        if (typeof openPass23ShiftManagerEvent === 'function') {
+          return openPass23ShiftManagerEvent(safeKey, true);
+        }
+        if (typeof triggerShiftManagerEvent === 'function') {
+          return triggerShiftManagerEvent(safeKey);
+        }
+        if (typeof rtpStage6BaseDevAction === 'function') {
+          const legacyAction = safeKey ? `shift-manager-${safeKey}` : 'shift-manager-event';
+          rtpStage6BaseDevAction(legacyAction);
+          return true;
+        }
+        console.warn('[RTP Event System] Shift Manager legacy route is unavailable.');
+        return false;
+      }
+
+      if (RTP_EVENTS['decision.shiftManager']) {
+        RTP_EVENTS['decision.shiftManager'] = {
+          ...RTP_EVENTS['decision.shiftManager'],
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          useGenericRenderer: false,
+          migrationStatus: 'stage6LegacyDirectPass23RouteFix4',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          open: () => rtpStage6Fix4OpenLegacyShiftManager(null)
+        };
+      }
+      ['shiftPlanOptimisation', 'handoverIntegrity', 'dailyTargetCascade', 'blameContinuity', 'meetingDiscipline'].forEach(key => {
+        const id = `decision.shiftManager.${key}`;
+        RTP_EVENTS[id] = {
+          ...(RTP_EVENTS[id] || {}),
+          id,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          source: 'Shift Manager',
+          label: 'MGR',
+          triggerMode: 'devOrRandom',
+          delivery: 'modal',
+          useGenericRenderer: false,
+          migrationStatus: 'stage6LegacyDirectPass23RouteFix4',
+          copyPolicy: 'verbatimFromLegacyFunction',
+          legacyKey: key,
+          open: () => rtpStage6Fix4OpenLegacyShiftManager(key)
+        };
+      });
+
+      const rtpStage6Fix4BaseOpenQueuedEvent = openQueuedEvent;
+      openQueuedEvent = function(id) {
+        const ev = (state.queueEvents || []).find(item => item && item.id === id);
+        if (ev && ev.eventId && String(ev.eventId).startsWith('decision.shiftManager')) {
+          const idx = state.queueEvents.findIndex(item => item && item.id === id);
+          if (idx >= 0) state.queueEvents.splice(idx, 1);
+          updateMobileEventQueue(true);
+          const raw = String(ev.eventId);
+          const key = raw === 'decision.shiftManager' ? null : raw.replace(/^decision\.shiftManager\.?/, '');
+          return rtpStage6Fix4OpenLegacyShiftManager(key || null);
+        }
+        return rtpStage6Fix4BaseOpenQueuedEvent(id);
+      };
+
+      const rtpStage6Fix4BaseDevAction = devAction;
+      devAction = function(action) {
+        if (action === 'event6-shift-random' || action === 'shift-manager-event') {
+          rtpStage6Fix4OpenLegacyShiftManager(null);
+          return;
+        }
+        if (action && action.startsWith('event6-shift-')) {
+          rtpStage6Fix4OpenLegacyShiftManager(action.replace('event6-shift-', ''));
+          return;
+        }
+        if (action && action.startsWith('shift-manager-')) {
+          rtpStage6Fix4OpenLegacyShiftManager(action.replace('shift-manager-', ''));
+          return;
+        }
+        return rtpStage6Fix4BaseDevAction(action);
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6 Fix 4';
+      RTP_EVENT_REFACTOR_PASS_2.stage6Fix4 = 'Shift Manager dev-test buttons now call the legacy Pass 23 Shift Manager decision modal directly; generic/info fallback is bypassed.';
+
+
+      /* Event System Refactor Pass 3 — Stage 6 Fix 5.
+         The Stage 6 Shift Manager dev buttons are direct test buttons, not gameplay triggers.
+         They now use a capture-phase click handler so the old dev router and registry cannot
+         turn them into queue items or close-only informative modals. */
+      const RTP_STAGE6_FIX5_SHIFT_KEYS = [
+        'shiftPlanOptimisation',
+        'handoverIntegrity',
+        'dailyTargetCascade',
+        'blameContinuity',
+        'meetingDiscipline'
+      ];
+
+      function rtpStage6Fix5ResolveShiftKeyFromAction(action) {
+        if (action === 'event6-shift-random' || action === 'shift-manager-event') return null;
+        if (action && action.startsWith('event6-shift-')) return action.replace('event6-shift-', '') || null;
+        if (action && action.startsWith('shift-manager-')) return action.replace('shift-manager-', '') || null;
+        return undefined;
+      }
+
+      function rtpStage6Fix5ShiftManagerMissingNotice() {
+        openMiniWindow('No Shift Manager', '<p>No Shift Manager is currently available to turn operational confusion into structured accountability.</p>', true);
+        return true;
+      }
+
+      function rtpStage6Fix5OpenShiftManagerDecision(key = null) {
+        const safeKey = key && RTP_STAGE6_FIX5_SHIFT_KEYS.includes(key) ? key : null;
+        const manager = (typeof currentManager === 'function') ? currentManager() : null;
+        if (!manager) return rtpStage6Fix5ShiftManagerMissingNotice();
+
+        if (typeof pass23ShiftManagerByKey === 'function' && typeof randomItem === 'function' && Array.isArray(pass23ShiftManagerDecisionEvents)) {
+          const ev = safeKey ? pass23ShiftManagerByKey(safeKey) : randomItem(pass23ShiftManagerDecisionEvents);
+          if (!ev) return false;
+          state.pass23ActiveShiftManagerEvent = ev.key;
+          const portrait = (typeof pass23ShiftManagerPortrait === 'function')
+            ? pass23ShiftManagerPortrait(manager)
+            : ((manager && manager.portrait) || 'assets/characters/portraits/production_manager.png');
+          const buttons = (typeof pass23ShiftManagerButtons === 'function')
+            ? pass23ShiftManagerButtons(ev)
+            : `<div class="beltDecisionGrid">${(ev.options || []).map((opt, idx) => `<button class="eventChoiceBtn ${idx === 1 ? 'positive' : idx === 3 ? 'negative' : ''}" data-pass23-shift-manager-choice="${escapeHtml(opt.key)}" data-pass23-shift-manager-event="${escapeHtml(ev.key)}"><strong>${escapeHtml(opt.label)}</strong><span>${escapeHtml(opt.hint)}</span></button>`).join('')}</div>`;
+          const body = `${modalCharacterHtml(portrait, manager.name, 'Shift Management', 'The Shift Manager has identified an issue that can only be solved by creating a decision record.', 'MGR')}
+            <p>${escapeHtml(ev.prompt.replace('{name}', manager.name))}</p>
+            <p><strong>Management response required.</strong></p>
+            ${buttons}`;
+          showPreparedModal(ev.title, body, { closable: false, windowClass: 'window medium', images: [portrait] });
+          return true;
+        }
+
+        if (typeof openPass23ShiftManagerEvent === 'function') {
+          return openPass23ShiftManagerEvent(safeKey, true);
+        }
+
+        if (typeof triggerShiftManagerEvent === 'function') {
+          triggerShiftManagerEvent(safeKey);
+          return true;
+        }
+
+        console.warn('[RTP Event System] Shift Manager decision test route is unavailable.');
+        return false;
+      }
+
+      document.addEventListener('click', function rtpStage6Fix5ShiftManagerDevCapture(e) {
+        const btn = e.target && e.target.closest ? e.target.closest('[data-dev-action]') : null;
+        if (!btn) return;
+        const action = btn.getAttribute('data-dev-action') || '';
+        const key = rtpStage6Fix5ResolveShiftKeyFromAction(action);
+        if (key === undefined) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        startMusic();
+        rtpStage6Fix5OpenShiftManagerDecision(key);
+      }, true);
+
+      if (RTP_EVENTS['decision.shiftManager']) {
+        RTP_EVENTS['decision.shiftManager'] = {
+          ...RTP_EVENTS['decision.shiftManager'],
+          useGenericRenderer: false,
+          migrationStatus: 'stage6DirectCaptureDevRouteFix5',
+          open: () => rtpStage6Fix5OpenShiftManagerDecision(null)
+        };
+      }
+      RTP_STAGE6_FIX5_SHIFT_KEYS.forEach(key => {
+        const id = `decision.shiftManager.${key}`;
+        RTP_EVENTS[id] = {
+          ...(RTP_EVENTS[id] || {}),
+          id,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          source: 'Shift Manager',
+          label: 'MGR',
+          triggerMode: 'devOrRandom',
+          delivery: 'modal',
+          useGenericRenderer: false,
+          migrationStatus: 'stage6DirectCaptureDevRouteFix5',
+          copyPolicy: 'verbatimFromPass23DecisionList',
+          legacyKey: key,
+          open: () => rtpStage6Fix5OpenShiftManagerDecision(key)
+        };
+      });
+
+      const rtpStage6Fix5BaseOpenQueuedEvent = openQueuedEvent;
+      openQueuedEvent = function(id) {
+        const ev = (state.queueEvents || []).find(item => item && item.id === id);
+        if (ev && ev.eventId && String(ev.eventId).startsWith('decision.shiftManager')) {
+          const idx = state.queueEvents.findIndex(item => item && item.id === id);
+          if (idx >= 0) state.queueEvents.splice(idx, 1);
+          updateMobileEventQueue(true);
+          const raw = String(ev.eventId);
+          const key = raw === 'decision.shiftManager' ? null : raw.replace(/^decision\.shiftManager\.?/, '');
+          return rtpStage6Fix5OpenShiftManagerDecision(key || null);
+        }
+        return rtpStage6Fix5BaseOpenQueuedEvent(id);
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6 Fix 5';
+      RTP_EVENT_REFACTOR_PASS_2.stage6Fix5 = 'Stage 6 Shift Manager dev-test buttons now bypass the normal dev router with a capture-phase handler and open the Pass 23 four-option decision modal directly.';
+      window.rtpStage6Fix5OpenShiftManagerDecision = rtpStage6Fix5OpenShiftManagerDecision;
+
+
+      /* Event System Refactor Pass 3 — Stage 6 Fix 6.
+         Fix 5 proved the direct Shift Manager opener works from the console, so the remaining
+         problem is the Dev Tools button wiring. This patch binds those buttons at the element
+         level whenever the Dev Tools modal is rendered, instead of relying on the generic
+         document click route. */
+      function rtpStage6Fix6BindShiftManagerDevButtons(root = document) {
+        if (!root || typeof root.querySelectorAll !== 'function') return;
+        root.querySelectorAll('[data-dev-action="event6-shift-random"], [data-dev-action^="event6-shift-"]').forEach(btn => {
+          if (!btn || btn.dataset.stage6Fix6Bound === 'true') return;
+          btn.dataset.stage6Fix6Bound = 'true';
+          btn.addEventListener('click', function rtpStage6Fix6ButtonClick(e) {
+            const action = btn.getAttribute('data-dev-action') || '';
+            const key = (typeof rtpStage6Fix5ResolveShiftKeyFromAction === 'function')
+              ? rtpStage6Fix5ResolveShiftKeyFromAction(action)
+              : undefined;
+            if (key === undefined) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            if (typeof startMusic === 'function') startMusic();
+            rtpStage6Fix5OpenShiftManagerDecision(key);
+          }, { capture: false });
+        });
+      }
+
+      const rtpStage6Fix6BaseDevAction = devAction;
+      devAction = function(action) {
+        const key = (typeof rtpStage6Fix5ResolveShiftKeyFromAction === 'function')
+          ? rtpStage6Fix5ResolveShiftKeyFromAction(action)
+          : undefined;
+        if (key !== undefined) {
+          rtpStage6Fix5OpenShiftManagerDecision(key);
+          return;
+        }
+        return rtpStage6Fix6BaseDevAction(action);
+      };
+
+      const rtpStage6Fix6BaseEnhanceDevToolsForNewSystems = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage6Fix6BaseEnhanceDevToolsForNewSystems();
+        rtpStage6Fix6BindShiftManagerDevButtons(document);
+      };
+
+      const rtpStage6Fix6ButtonObserver = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes || []) {
+            if (node && node.nodeType === 1) rtpStage6Fix6BindShiftManagerDevButtons(node);
+          }
+        }
+      });
+      rtpStage6Fix6ButtonObserver.observe(document.body, { childList: true, subtree: true });
+      rtpStage6Fix6BindShiftManagerDevButtons(document);
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6 Fix 6';
+      RTP_EVENT_REFACTOR_PASS_2.stage6Fix6 = 'Shift Manager Stage 6 Dev Tools buttons are now bound directly at element level when the Dev Tools modal is rendered.';
+      window.rtpStage6Fix6BindShiftManagerDevButtons = rtpStage6Fix6BindShiftManagerDevButtons;
+
+
+      /* Event System Refactor Pass 3 — Stage 6 Fix 7.
+         The Shift Manager decision opener works from the console, so the remaining failure is
+         confined to the Stage 6 Dev Tools buttons. Replace only those Stage 6 Shift buttons
+         with direct buttons that do not use data-dev-action, the generic Dev Tools router, or
+         queue routing. */
+      function rtpStage6Fix7ShiftKeyFromDirectValue(value) {
+        const raw = value == null ? '' : String(value);
+        return raw ? raw : null;
+      }
+
+      function rtpStage6Fix7OpenShiftButtonValue(value) {
+        const key = rtpStage6Fix7ShiftKeyFromDirectValue(value);
+        if (typeof startMusic === 'function') {
+          try { startMusic(); } catch (err) { console.warn('[RTP Event System] Music start skipped during Shift Manager dev test.', err); }
+        }
+        if (typeof rtpStage6Fix5OpenShiftManagerDecision === 'function') {
+          return rtpStage6Fix5OpenShiftManagerDecision(key);
+        }
+        if (window && typeof window.rtpStage6Fix5OpenShiftManagerDecision === 'function') {
+          return window.rtpStage6Fix5OpenShiftManagerDecision(key);
+        }
+        console.warn('[RTP Event System] Shift Manager direct dev opener is unavailable.');
+        return false;
+      }
+
+      function rtpStage6Fix7ReplaceShiftManagerButtons(root = document) {
+        const scope = (root && typeof root.querySelectorAll === 'function') ? root : document;
+        const selector = '[data-event-refactor-stage6-dev-tools] [data-dev-action="event6-shift-random"], [data-event-refactor-stage6-dev-tools] [data-dev-action^="event6-shift-"]';
+        scope.querySelectorAll(selector).forEach(btn => {
+          const action = btn.getAttribute('data-dev-action') || '';
+          const key = (typeof rtpStage6Fix5ResolveShiftKeyFromAction === 'function')
+            ? rtpStage6Fix5ResolveShiftKeyFromAction(action)
+            : undefined;
+          if (key === undefined) return;
+          const replacement = document.createElement('button');
+          replacement.type = 'button';
+          replacement.textContent = btn.textContent || 'Shift Manager';
+          replacement.setAttribute('data-stage6-shift-direct', key || '');
+          replacement.onclick = function(e) {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            }
+            rtpStage6Fix7OpenShiftButtonValue(replacement.getAttribute('data-stage6-shift-direct'));
+            return false;
+          };
+          btn.replaceWith(replacement);
+        });
+      }
+
+      document.addEventListener('click', function rtpStage6Fix7DirectShiftClick(e) {
+        const btn = e.target && e.target.closest ? e.target.closest('[data-stage6-shift-direct]') : null;
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        rtpStage6Fix7OpenShiftButtonValue(btn.getAttribute('data-stage6-shift-direct'));
+      }, true);
+
+      const rtpStage6Fix7BaseEnhanceDevToolsForNewSystems = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage6Fix7BaseEnhanceDevToolsForNewSystems();
+        rtpStage6Fix7ReplaceShiftManagerButtons(document);
+        setTimeout(() => rtpStage6Fix7ReplaceShiftManagerButtons(document), 0);
+      };
+
+      const rtpStage6Fix7ButtonObserver = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes || []) {
+            if (node && node.nodeType === 1) rtpStage6Fix7ReplaceShiftManagerButtons(node);
+          }
+        }
+      });
+      rtpStage6Fix7ButtonObserver.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => rtpStage6Fix7ReplaceShiftManagerButtons(document), 0);
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6 Fix 7';
+      RTP_EVENT_REFACTOR_PASS_2.stage6Fix7 = 'Stage 6 Shift Manager Dev Tools buttons are now direct test buttons outside the data-dev-action router.';
+      window.rtpStage6Fix7ReplaceShiftManagerButtons = rtpStage6Fix7ReplaceShiftManagerButtons;
+      window.rtpStage6Fix7OpenShiftButtonValue = rtpStage6Fix7OpenShiftButtonValue;
+
+      /* Event System Refactor Pass 3 — Stage 6 Fix 8.
+         Shift Manager decisions are intentionally kept legacy-delegated in Stage 6.
+         The Stage 6-specific Shift test buttons are removed to avoid a false migration test path. */
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 6 Fix 8';
+      RTP_EVENT_REFACTOR_PASS_2.stage6Fix8 = 'Stage 6 decision migration excludes Shift Manager dev-test buttons; use the existing Shift Manager Events dev card for legacy Shift Manager tests.';
+
+
+      /* Event System Refactor Pass 3 — Stage 7.
+         HR bubble migration: centralise all staff issue templates into structured HR config,
+         while preserving the existing openStaffEvent/eventChoice rendering and effects. */
+      function rtpStage7CloneHrTemplate(template = {}) {
+        return {
+          ...template,
+          roles: Array.isArray(template.roles) ? template.roles.slice() : template.roles,
+          traits: Array.isArray(template.traits) ? template.traits.slice() : template.traits,
+          buttons: Array.isArray(template.buttons) ? template.buttons.map(btn => ({ ...btn })) : []
+        };
+      }
+
+      function rtpStage7BuildHrBubbleConfig() {
+        const config = {};
+        const sourceTemplates = Array.isArray(staffBubbleTemplates) ? staffBubbleTemplates : [];
+        sourceTemplates.forEach((template, index) => {
+          const type = String(template && template.type ? template.type : `hrTemplate${index + 1}`);
+          const eventId = `hr.${rtpStage2Slug(type)}`;
+          config[type] = {
+            id: eventId,
+            interactionType: RTP_EVENT_INTERACTION_TYPES.HR_BUBBLE,
+            source: 'Crew / HR',
+            label: 'HR',
+            triggerMode: 'randomStaffIssue',
+            delivery: 'staffBubbleOrGroupedQueue',
+            migrationStatus: 'stage7StructuredHrConfig',
+            copyPolicy: 'preserveVerbatimFromStaffBubbleTemplate',
+            templateKey: type,
+            title: template.title || type || 'Staff Issue',
+            icon: template.icon || '💬',
+            roles: Array.isArray(template.roles) ? template.roles.slice() : null,
+            traits: Array.isArray(template.traits) ? template.traits.slice() : null,
+            positive: !!template.positive,
+            optionCount: Array.isArray(template.buttons) ? template.buttons.length : 0,
+            template: rtpStage7CloneHrTemplate(template),
+            notes: 'Stage 7 structured HR config. Existing staff modal renderer and resolver still own copy display and effects.'
+          };
+        });
+        return config;
+      }
+
+      let RTP_HR_BUBBLE_EVENTS = rtpStage7BuildHrBubbleConfig();
+
+      function rtpStage7HrEventsList() {
+        return Object.values(RTP_HR_BUBBLE_EVENTS || {});
+      }
+
+      function rtpStage7HrEventForType(type) {
+        const key = String(type || '');
+        return (RTP_HR_BUBBLE_EVENTS && RTP_HR_BUBBLE_EVENTS[key]) || (RTP_HR_BUBBLE_EVENTS && RTP_HR_BUBBLE_EVENTS.morale) || null;
+      }
+
+      function rtpStage7HrTemplateForType(type) {
+        const ev = rtpStage7HrEventForType(type);
+        return ev && ev.template ? ev.template : null;
+      }
+
+      function rtpStage7RefreshHrRegistry() {
+        RTP_HR_BUBBLE_EVENTS = rtpStage7BuildHrBubbleConfig();
+        rtpStage7HrEventsList().forEach(ev => {
+          RTP_EVENTS[ev.id] = {
+            ...(RTP_EVENTS[ev.id] || {}),
+            ...ev,
+            open: context => openHrBubbleEvent(ev, context || {})
+          };
+        });
+        window.RTP_HR_BUBBLE_EVENTS = RTP_HR_BUBBLE_EVENTS;
+        return RTP_HR_BUBBLE_EVENTS;
+      }
+
+      rtpStage7RefreshHrRegistry();
+
+      const rtpStage7BaseStaffBubbleTemplate = staffBubbleTemplate;
+      staffBubbleTemplate = function(type) {
+        return rtpStage7HrTemplateForType(type) || rtpStage7BaseStaffBubbleTemplate(type);
+      };
+
+      const rtpStage7BaseChooseStaffBubbleTemplate = chooseStaffBubbleTemplate;
+      chooseStaffBubbleTemplate = function(staff) {
+        if (!staff) return rtpStage7HrTemplateForType('morale') || rtpStage7BaseChooseStaffBubbleTemplate(staff);
+        const templates = rtpStage7HrEventsList().map(ev => ev.template).filter(Boolean);
+        let weighted = [];
+        const morale = traitValue('morale');
+
+        for (const t of templates) {
+          if (t.roles && !t.roles.includes(staff.role)) continue;
+
+          let weight = 1;
+
+          if (t.positive) {
+            weight += Math.max(0, Math.floor((morale - 55) / 10));
+            if (morale < 45) weight = 0;
+          } else {
+            weight += Math.max(0, Math.floor((65 - morale) / 12));
+          }
+
+          if (t.traits && t.traits.some(term => String(staff.trait || '').includes(term))) weight += 5;
+          if (staff.role === 'fitter' && t.type === 'maintenance') weight += 3;
+          if (staff.role === 'electrician' && t.type === 'electrical') weight += 3;
+          if (staff.attendance <= 2 && (t.type === 'leave' || t.type === 'tired')) weight += 2;
+          if (staff.morale <= 2 && (t.type === 'pay' || t.type === 'morale')) weight += 2;
+          if (staff.skill <= 2 && (t.type === 'training' || t.type === 'tools')) weight += 1;
+
+          for (let i = 0; i < weight; i++) weighted.push(t);
+        }
+
+        if (!weighted.length) return rtpStage7HrTemplateForType('morale') || rtpStage7BaseChooseStaffBubbleTemplate(staff);
+        return weighted[Math.floor(Math.random() * weighted.length)];
+      };
+
+      function rtpStage7StaffMatchesTemplate(staff, template) {
+        if (!staff || !template) return false;
+        return !template.roles || template.roles.includes(staff.role);
+      }
+
+      function rtpStage7FindStaffForTemplate(template, role = null) {
+        const staffList = state.staff || [];
+        return staffList.find(s => (!role || s.role === role) && !s.bubble && rtpStage7StaffMatchesTemplate(s, template))
+          || staffList.find(s => (!role || s.role === role) && rtpStage7StaffMatchesTemplate(s, template))
+          || staffList.find(s => !s.bubble && rtpStage7StaffMatchesTemplate(s, template))
+          || staffList.find(s => rtpStage7StaffMatchesTemplate(s, template))
+          || null;
+      }
+
+      function rtpStage7AssignHrBubbleToStaff(staff, template, openNow = false) {
+        if (!staff || !template) return false;
+        staff.bubble = {
+          type: template.type,
+          icon: template.icon,
+          eventId: (rtpStage7HrEventForType(template.type) || {}).id || `hr.${rtpStage2Slug(template.type)}`
+        };
+        playGameSound('hr');
+        updatePanelCrewTiles(true);
+        if (openNow) openStaffEvent(staff.id);
+        return true;
+      }
+
+      function rtpStage7ForceHrBubble(type = null, role = null, openNow = true) {
+        if (!state.staff || !state.staff.length) {
+          openMiniWindow('Dev Tool', '<p>No crew has been selected yet. Complete recruitment first, or use a different debug tool.</p>', true);
+          return false;
+        }
+        const template = type ? rtpStage7HrTemplateForType(type) : chooseStaffBubbleTemplate((state.staff || []).find(s => !role || s.role === role) || (state.staff || [])[0]);
+        if (!template) {
+          openMiniWindow('Dev Tool', '<p>No matching HR event template was found.</p>', true);
+          return false;
+        }
+        const staff = rtpStage7FindStaffForTemplate(template, role);
+        if (!staff) {
+          openMiniWindow('Dev Tool', '<p>No suitable staff member is available for this HR event.</p>', true);
+          return false;
+        }
+        rtpStage7AssignHrBubbleToStaff(staff, template, openNow);
+        if (!openNow) showProductionComment(staff.name + ' has raised a staff engagement opportunity. Translation: there is now a bubble to click.', 'HR Debug', 5);
+        return true;
+      }
+
+      forceCrewBubble = function(type = null) {
+        return rtpStage7ForceHrBubble(type, null, false);
+      };
+
+      forceCrewBubbleForRole = function(role, type = null) {
+        return rtpStage7ForceHrBubble(type, role, true);
+      };
+
+      if (typeof pass21ForceHrBubble === 'function') {
+        pass21ForceHrBubble = function(type) {
+          return rtpStage7ForceHrBubble(type, null, true);
+        };
+      }
+
+      const rtpStage7BaseOpenHrBubbleEvent = openHrBubbleEvent;
+      openHrBubbleEvent = function(event, context = {}) {
+        if (context.staffId) return openStaffEvent(context.staffId);
+        if (context.staff && context.staff.id) return openStaffEvent(context.staff.id);
+        const templateKey = event && (event.templateKey || (event.template && event.template.type));
+        if (templateKey) return rtpStage7ForceHrBubble(templateKey, context.role || null, context.openNow !== false);
+        return rtpStage7BaseOpenHrBubbleEvent(event, context);
+      };
+
+      function rtpStage7HrSummary() {
+        const list = rtpStage7HrEventsList();
+        const two = list.filter(ev => ev.optionCount === 2).length;
+        const three = list.filter(ev => ev.optionCount === 3).length;
+        const four = list.filter(ev => ev.optionCount === 4).length;
+        return { total: list.length, two, three, four };
+      }
+
+      const rtpStage7BaseDevAction = devAction;
+      devAction = function(action) {
+        if (action === 'event7-hr-random') { rtpStage7ForceHrBubble(null, null, true); return; }
+        if (action === 'event7-hr-training') { rtpStage7ForceHrBubble('trainingRequest', null, true); return; }
+        if (action === 'event7-hr-supervisor') { rtpStage7ForceHrBubble('supervisorAircon', 'supervisor', true); return; }
+        if (action === 'event7-hr-pass21') { rtpStage7ForceHrBubble('notMyJob', null, true); return; }
+        if (action === 'event7-hr-low-tonnes') { rtpStage7ForceHrBubble('lowTonnageComplaint', 'miner', true); return; }
+        if (action === 'event7-hr-queue') {
+          const staff = (state.staff || []).find(s => s && s.bubble) || null;
+          if (staff) { openEventById('queueAlert.hrGrouped', { staffId: staff.id }); return; }
+          rtpStage7ForceHrBubble('morale', null, false);
+          openEventById('queueAlert.hrGrouped', {});
+          return;
+        }
+        return rtpStage7BaseDevAction(action);
+      };
+
+      const rtpStage7BaseEnhanceDevToolsForNewSystems = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage7BaseEnhanceDevToolsForNewSystems();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-event-refactor-stage7-dev-tools]')) return;
+        const summary = rtpStage7HrSummary();
+        body.insertAdjacentHTML('beforeend', `<section class="devToolCard" data-event-refactor-stage7-dev-tools><h3>Event System Refactor Pass 3 — Stage 7</h3><p>HR bubble config tests. Current HR registry: ${summary.total} templates (${summary.two} two-option, ${summary.three} three-option, ${summary.four} four-option). Existing staff modal rendering and HR effects are still preserved.</p><div class="devToolBtns"><button data-dev-action="event7-hr-random">HR Config: Random</button><button data-dev-action="event7-hr-training">HR Config: Training</button><button data-dev-action="event7-hr-supervisor">HR Config: Supervisor</button><button data-dev-action="event7-hr-pass21">HR Config: Pass21</button><button data-dev-action="event7-hr-low-tonnes">HR Config: Low Tonnes</button><button data-dev-action="event7-hr-queue">HR Config: Queue Icon</button></div></section>`);
+      };
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 7';
+      RTP_EVENT_REFACTOR_PASS_2.stage7 = 'HR bubble templates are centralised into RTP_HR_BUBBLE_EVENTS; existing staff bubble rendering, mobile grouped HR queue, option counts and resolver effects are preserved.';
+
+
+      /* Event System Refactor Pass 3 — Stage 8 game-mechanic migration.
+         Scope: migrate mechanic-changing events into the gameMechanic route while preserving existing copy and effects.
+         High-risk specialised mechanic systems such as safety hold-points, ground-control damage, and HOPE support remain legacy-delegated. */
+      function rtpStage8MergeEvent(id, patch = {}) {
+        const current = RTP_EVENTS[id] || {};
+        RTP_EVENTS[id] = { ...current, ...patch, id };
+        return RTP_EVENTS[id];
+      }
+
+      const rtpStage8BaseOpenGameMechanicEvent = openGameMechanicEvent;
+      openGameMechanicEvent = function(event, context = {}) {
+        if (!event) return false;
+        const enrichedContext = { ...(context || {}), event, eventId: event.id };
+        const choices = rtpNormalisedChoices(event, enrichedContext);
+        if (event.choiceRenderer === 'decisionStyle' || (event.mechanicMode === 'optional' && choices.length)) {
+          return openDecisionEvent(event, enrichedContext);
+        }
+        if (typeof event.prepare === 'function') {
+          const prepared = event.prepare(enrichedContext);
+          if (prepared === false) return false;
+          if (prepared && typeof prepared === 'object') Object.assign(enrichedContext, prepared);
+        }
+        if (typeof event.apply === 'function') {
+          const applied = event.apply(enrichedContext);
+          if (applied === false) return false;
+          if (applied && typeof applied === 'object') Object.assign(enrichedContext, applied);
+        }
+        if (typeof event.open === 'function') return event.open(enrichedContext);
+        const defaultButton = event.mechanicMode === 'optional' ? 'Review Mechanic' : 'Acknowledge Mechanic';
+        return rtpOpenSimpleModalForEvent(event, enrichedContext, event.button || defaultButton);
+      };
+
+      function rtpStage8ConfiguredGradeConstraintEvent(ev) {
+        return {
+          id: `gameMechanic.gradeConstraint.${rtpStage2Slug(ev && ev.title ? ev.title : 'constraint')}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+          mechanicMode: 'forced',
+          subtype: 'gradeAcceptanceRule',
+          source: ev && ev.source ? ev.source : 'Sales & Marketing / Plant / Quality',
+          label: 'SPEC',
+          migrationStatus: 'configuredGameMechanic',
+          copyPolicy: 'preserveVerbatim',
+          title: ev && ev.title ? ev.title : 'Grade Constraint',
+          image: ev && ev.image ? ev.image : 'assets/characters/quality-department.png',
+          character: ev && ev.character ? ev.character : 'Quality Department',
+          department: ev && ev.department ? ev.department : 'Specification Management',
+          tone: ev && ev.tone ? ev.tone : 'warning',
+          button: 'Accept Grade Constraint',
+          apply: context => {
+            if (!ev) return false;
+            state.gradeConstraintEventDoneThisYear = true;
+            state.gradeRestriction = {
+              type: ev.type,
+              title: ev.title,
+              source: ev.source,
+              label: ev.label,
+              minBand: ev.minBand,
+              expiresDay: state.day + ev.duration,
+              image: ev.image,
+              character: ev.character
+            };
+            context.gradeRestrictionLabel = gradeRestrictionShortLabel(state.gradeRestriction);
+            showProductionComment('Grade now matters because someone outside Production has remembered product specification.', 'Grade Control', 8);
+            return true;
+          },
+          content: context => ({
+            title: ev && ev.title ? ev.title : 'Grade Constraint',
+            image: ev && ev.image ? ev.image : 'assets/characters/quality-department.png',
+            character: ev && ev.character ? ev.character : 'Quality Department',
+            department: ev && ev.department ? ev.department : 'Specification Management',
+            label: 'SPEC',
+            tone: ev && ev.tone ? ev.tone : 'warning',
+            body: (ev && ev.body ? ev.body : '<p>A grade constraint has been applied.</p>') + `<p><strong>SLT Dashboard:</strong> active grade restriction shown as ${escapeHtml(context.gradeRestrictionLabel || gradeRestrictionShortLabel(state.gradeRestriction))}.</p>`,
+            button: 'Accept Grade Constraint'
+          })
+        };
+      }
+
+      function rtpStage8OpenConfiguredGradeConstraint(ev) {
+        if (!ev) return false;
+        return openGameMechanicEvent(rtpStage8ConfiguredGradeConstraintEvent(ev), { originalEvent: ev });
+      }
+
+      function rtpStage8FirstGradeConstraintEvent() {
+        const list = typeof gradeConstraintEvents === 'function' ? gradeConstraintEvents() : [];
+        return list[0] || null;
+      }
+
+      const rtpStage8BaseTriggerGeologyReinterpretationEvent = triggerGeologyReinterpretationEvent;
+      const rtpStage8GeologyDecision = RTP_EVENTS['decision.geologyModelReinterpretation'];
+      if (rtpStage8GeologyDecision) {
+        const geologyMechanic = {
+          ...rtpStage8GeologyDecision,
+          id: 'gameMechanic.geologyModelReinterpretation',
+          canonicalId: 'gameMechanic.geologyModelReinterpretation',
+          interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+          mechanicMode: 'optional',
+          subtype: 'modelRevision',
+          source: 'Geology Department',
+          label: 'GEO',
+          triggerMode: 'randomMechanicOffer',
+          delivery: 'modal',
+          migrationStatus: 'configuredGameMechanicDecisionStyle',
+          copyPolicy: 'preserveVerbatimWithApprovedFourthOption',
+          choiceRenderer: 'decisionStyle'
+        };
+        RTP_EVENTS['gameMechanic.geologyModelReinterpretation'] = geologyMechanic;
+        RTP_EVENTS['decision.geologyModelReinterpretation'] = {
+          ...geologyMechanic,
+          id: 'decision.geologyModelReinterpretation',
+          canonicalId: 'gameMechanic.geologyModelReinterpretation',
+          aliases: ['gameMechanic.geologyModelReinterpretation'],
+          migrationStatus: 'legacyAliasToGameMechanic'
+        };
+      }
+
+      triggerGeologyReinterpretationEvent = function(force = false) {
+        if (!force && !canTriggerGeologyReinterpretation()) return false;
+        const targets = geologyReinterpretationTargets();
+        if (!targets.length) return false;
+        state.pendingGeologyReinterpretation = {
+          id: 'geo_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+          cells: targets.map(b => ({ r: b.r, c: b.c })),
+          resolved: false
+        };
+        state.lastGeologyReinterpretationDay = state.day;
+        return openEventById('gameMechanic.geologyModelReinterpretation', { force: !!force });
+      };
+
+      rtpStage8MergeEvent('gameMechanic.explorationDrillingSuspended', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'forced',
+        subtype: 'mechanicSuspension',
+        source: 'SLT / Geology',
+        label: 'GEO',
+        migrationStatus: 'configuredGameMechanic',
+        copyPolicy: 'preserveVerbatim',
+        open: null,
+        apply: () => {
+          ensureDrillingRestrictionState();
+          state.exploration.drillingSuspended = true;
+          state.exploration.drillingSuspensionIssued = true;
+          state.exploration.drillingResumedIssued = false;
+          state.exploration.drillingResumeDay = state.day + 38;
+          adjustTrait('morale', -1);
+          return true;
+        },
+        content: {
+          title: 'Exploration Drilling Suspended',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Reserve Confidence Interruption',
+          label: 'GEO',
+          tone: 'warning',
+          body: `<p>The Superior Leadership Team have realised that the investor brochure mentions <strong>“exploration drilling”</strong>.</p><p>As savvy business leaders specialising in mining, they have determined that a mining company should be mining, not drilling.</p><p><strong>All drilling is suspended until further notice.</strong></p><p>The geologist lets out a familiar sigh. The drilling department are en-route to the pub as their contract pays them stand-down in the event of outage.</p><p><strong>Impact:</strong> exploration programmes are paused. Drillers still draw wages. -1 Morale.</p>`,
+          button: 'Suspend the Evidence'
+        }
+      });
+
+      rtpStage8MergeEvent('gameMechanic.explorationDrillingResumed', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'forced',
+        subtype: 'mechanicResumption',
+        source: 'SLT / Geology',
+        label: 'GEO',
+        migrationStatus: 'configuredGameMechanic',
+        copyPolicy: 'preserveVerbatim',
+        open: null,
+        apply: () => {
+          ensureDrillingRestrictionState();
+          state.exploration.drillingSuspended = false;
+          state.exploration.drillingResumedIssued = true;
+          adjustTrait('skill', 1);
+          return true;
+        },
+        content: {
+          title: 'Exploration Drilling Resumed',
+          image: 'assets/characters/geology-rock-lickers.png',
+          character: 'Geology Department',
+          department: 'Primary Colours and Reserve Inventory',
+          label: 'GEO',
+          tone: 'info',
+          body: `<p>The Superior Leadership Team demand to know why the Ore Reserve Inventory has gone down.</p><p>The geologist tries to explain using simplistic diagrams in basic primary colours, but little is being understood.</p><p><strong>Exploration Drilling can now be resumed.</strong></p><p><strong>Impact:</strong> drilling programmes restart. +1 Skill from having explained the same concept again.</p>`,
+          button: 'Resume the Holes'
+        }
+      });
+
+      rtpStage8MergeEvent('gameMechanic.gradeConstraint', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'forced',
+        subtype: 'gradeAcceptanceRule',
+        source: 'Sales & Marketing / Plant / Quality',
+        label: 'SPEC',
+        migrationStatus: 'configuredGameMechanicRouter',
+        copyPolicy: 'preserveVerbatim',
+        open: context => rtpStage8OpenConfiguredGradeConstraint((context && (context.originalEvent || context.gradeConstraintEvent)) || randomItem(gradeConstraintEvents()))
+      });
+
+      if (typeof gradeConstraintEvents === 'function') {
+        (gradeConstraintEvents() || []).forEach((ev, index) => {
+          const id = `gameMechanic.gradeConstraint.${rtpStage2Slug(ev.title || ('constraint' + index))}`;
+          rtpStage8MergeEvent(id, {
+            ...rtpStage8ConfiguredGradeConstraintEvent(ev),
+            id
+          });
+        });
+      }
+
+      rtpStage8MergeEvent('gameMechanic.powerOutage', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'forced',
+        subtype: 'temporaryOperatingConstraint',
+        source: 'Electrical / Maintenance',
+        label: 'PWR',
+        migrationStatus: 'configuredGameMechanic',
+        copyPolicy: 'preserveVerbatim',
+        open: null,
+        apply: context => {
+          if (!context.force) {
+            if (state.powerOutageDoneThisYear || powerOutageActive() || state.day - (state.lastPowerOutageDay || -999) < 55) return false;
+          }
+          state.powerOutageDoneThisYear = true;
+          state.lastPowerOutageDay = state.day;
+          const duration = 10 + Math.floor(Math.random() * 14);
+          context.duration = duration;
+          state.powerOutage = { active: true, startDay: state.day, expiresDay: state.day + duration };
+          adjustTrait('safety', -3);
+          adjustTrait('morale', -2);
+          return true;
+        },
+        content: context => ({
+          title: 'Power Outage — Lighting Circuit',
+          image: 'assets/characters/electrical-outage.png',
+          character: 'Electrical Department',
+          department: 'Selective Power Availability',
+          label: 'PWR',
+          tone: 'danger',
+          body: `<p>The underground lighting circuit has tripped.</p><p>Maintenance has confirmed that the machines still have power, which is reassuring from a production perspective and less reassuring from every other perspective.</p><p>Visibility has been reduced for approximately <strong>${context.duration || 10} days</strong>. Machines may continue operating in the dark because lights and consequences are apparently on different circuits.</p><p><strong>Impact:</strong> -3 Safety, -2 Morale. Use Assets to restore lighting early if an Electrician is available.</p>`,
+          button: 'Continue in Reduced Visibility'
+        })
+      });
+
+      rtpStage8MergeEvent('gameMechanic.heatVentilation', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'forced',
+        subtype: 'ventilationRequirement',
+        source: 'Ventilation Engineering',
+        label: 'VENT',
+        migrationStatus: 'configuredGameMechanic',
+        copyPolicy: 'preserveVerbatim',
+        open: null,
+        apply: context => {
+          if (state.depthIndex < 4) { state.depthIndex = 4; state.mineLevel = -1400; }
+          state.heatEventDoneThisYear = true;
+          const fan = !!(state.assets && state.assets.fanOwned);
+          const vent = ventilationEngineerOnCrew();
+          const penalty = fan && vent ? { morale: -1, productivity: -1, cost: 700, text: 'The ventilation system has achieved movement of air, which is being treated as progress.', tone: 'info' }
+            : fan ? { morale: -2, productivity: -2, cost: 1200, text: 'The desk fan is oscillating with confidence, but nobody qualified has confirmed whether the air is going anywhere useful.', tone: 'warning' }
+            : { morale: -5, productivity: -4, cost: 2600, text: 'The crew report that the deeper level now feels like working inside a policy failure with humidity.', tone: 'warning' };
+          context.penalty = penalty;
+          adjustTrait('morale', penalty.morale);
+          adjustTrait('productivity', penalty.productivity);
+          spend(scaledCost(penalty.cost), 'Heat and ventilation response');
+          return true;
+        },
+        content: context => {
+          const penalty = context.penalty || { morale: -5, productivity: -4, cost: 2600, text: 'The crew report that the deeper level now feels like working inside a policy failure with humidity.', tone: 'warning' };
+          return {
+            title: 'Heat Complaint — Ventilation Required',
+            image: 'assets/characters/ventilation-engineer.png',
+            character: 'Ventilation Engineering',
+            department: 'Air Movement Assurance',
+            label: 'VENT',
+            tone: penalty.tone,
+            body: `<p>Crew heat complaints have increased on ${currentLevelName()}.</p><p>${penalty.text}</p><p><strong>Impact:</strong> ${penalty.productivity} Productivity, ${penalty.morale} Morale, ${money(scaledCost(penalty.cost))} response cost.</p>`,
+            button: 'Return to Warmth Management'
+          };
+        }
+      });
+
+      rtpStage8MergeEvent('gameMechanic.surveyReconciliation', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'forced',
+        subtype: 'mapCorrection',
+        source: 'Survey',
+        label: 'SURV',
+        migrationStatus: 'configuredGameMechanic',
+        copyPolicy: 'preserveVerbatim',
+        open: null,
+        apply: context => {
+          if (!context.force && ((Number(state.year) || 1) < 2 || state.pass19SurveyReconciliationYear === state.year)) return false;
+          const block = pass19RestoreSurveyBlock(!!context.force);
+          if (!block) {
+            if (context.force) openMiniWindow('Survey Reconciliation Unavailable', '<p>No safe mined-out production block is available for Survey to restore. Mine at least one non-belt block, move machines off it, then retry.</p>', true);
+            return false;
+          }
+          context.block = block;
+          state.pass19SurveyReconciliationYear = state.year;
+          state.pass19SurveyReconciliationLastDay = state.day;
+          showProductionComment('Survey has restored a block to the mine plan. Mining has described this as geological gaslighting.', 'Survey', 6.5);
+          return true;
+        },
+        content: context => ({
+          title: 'Survey Reconciliation Error',
+          image: PASS19_ASSETS.survey,
+          character: 'Survey Department',
+          department: 'Quarterly Reality Alignment Check',
+          label: 'SURV',
+          tone: 'warning',
+          body: `<p>The Survey Department have completed their quarterly checks and identified a reconciliation error at <strong>${escapeHtml(gridRef(context.block))}</strong>.</p>
+          <p>Mining are adamant that they have already mined this block. Survey have provided definitive proof that they have not, or at least they will once the point cloud finally loads on their PC.</p>
+          <p>The block has therefore been restored to the mine plan in the interests of spatial accuracy, operational confusion, and making everyone’s numbers worse.</p>
+          <p><strong>Impact:</strong> one previously mined-out block has been restored. Historical production remains unchanged because correcting the report would involve Finance.</p>`,
+          button: 'Accept Updated Reality'
+        })
+      });
+
+      rtpStage8MergeEvent('gameMechanic.modelVersionConflict', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'forced',
+        subtype: 'modelConfidenceChange',
+        source: 'Technical Services',
+        label: 'GEO',
+        migrationStatus: 'configuredGameMechanic',
+        copyPolicy: 'preserveVerbatim',
+        open: null,
+        apply: context => {
+          if (!context.force && !pass21CanRunAnnualEvent('modelVersionConflict', 2)) return false;
+          pass21MarkAnnualEvent('modelVersionConflict');
+          const changed = pass21ApplyModelConflictToBlocks();
+          context.changed = changed;
+          adjustTrait('skill', -2);
+          state.pass21ModelVersionConflictUntil = state.day + 45;
+          return true;
+        },
+        content: context => ({
+          title: 'Technical Model Version Conflict',
+          image: PASS21_ASSETS.modelConflict,
+          character: 'Geology Department',
+          department: 'Model Governance and Filename Strategy',
+          label: 'GEO',
+          tone: 'warning',
+          body: `<p>Two versions of the geological model are currently active.</p><p>Geology says the correct one is the one with yesterday's date but today's filename. Mining Engineering says the other one is in the schedule. Survey says both are in the wrong folder.</p><p><strong>Impact:</strong> ${context.changed || 0} interpreted block${(context.changed || 0) === 1 ? '' : 's'} now have reduced model confidence, -2 Skill. Future grade reconciliation may be less emotionally supportive.</p>`,
+          button: 'Accept Version-Controlled Uncertainty'
+        })
+      });
+
+      rtpStage8MergeEvent('gameMechanic.shaftDeepeningProposal', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'optional',
+        subtype: 'progressionGate',
+        source: 'Geology Department',
+        label: 'SHAFT',
+        migrationStatus: 'gameMechanicLegacyDelegate',
+        copyPolicy: 'preserveVerbatim',
+        open: () => { openShaftDeepeningProposal(); return true; }
+      });
+
+      rtpStage8MergeEvent('progression.shaftDeepeningProposal', {
+        interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+        mechanicMode: 'optional',
+        subtype: 'progressionGate',
+        canonicalId: 'gameMechanic.shaftDeepeningProposal',
+        migrationStatus: 'legacyAliasToGameMechanic',
+        open: context => openEventById('gameMechanic.shaftDeepeningProposal', context || {})
+      });
+
+      ['gameMechanic.safetyHoldPoint', 'gameMechanic.safety.mandatoryStanddown', 'gameMechanic.groundControl.pillarDistress', 'gameMechanic.groundControl.criticalPillarRisk', 'gameMechanic.groundControl.pillarFailure', 'gameMechanic.groundControl.pillarBurst', 'gameMechanic.groundControl.machineRecovery', 'gameMechanic.seismicAftershocks', 'gameMechanic.hopeSupportUpdate'].forEach(id => {
+        if (RTP_EVENTS[id]) RTP_EVENTS[id].migrationStatus = RTP_EVENTS[id].migrationStatus || 'specialisedLegacyDelegate';
+      });
+
+      suspendExplorationDrilling = function() { return openEventById('gameMechanic.explorationDrillingSuspended'); };
+      resumeExplorationDrilling = function() { return openEventById('gameMechanic.explorationDrillingResumed'); };
+      applyGradeConstraintEvent = function(ev) { return openEventById('gameMechanic.gradeConstraint', { originalEvent: ev }); };
+      triggerPowerOutageEvent = function(force = false) { return openEventById('gameMechanic.powerOutage', { force: !!force }); };
+      forceHeatVentilationEvent = function() { return openEventById('gameMechanic.heatVentilation', { force: true }); };
+      openPass19SurveyReconciliationEvent = function(force = false) { return openEventById('gameMechanic.surveyReconciliation', { force: !!force }); };
+      openPass21ModelVersionConflictEvent = function(force = false) { return openEventById('gameMechanic.modelVersionConflict', { force: !!force }); };
+
+      function rtpStage8DevEnsureGeologyTargets() {
+        state.year = Math.max(2, Number(state.year) || 1);
+        state.lastGeologyReinterpretationDay = -999;
+        return true;
+      }
+
+      const rtpStage8BaseDevAction = devAction;
+      devAction = function(action) {
+        if (action === 'event8-geology') { rtpStage8DevEnsureGeologyTargets(); if (!triggerGeologyReinterpretationEvent(true)) showProductionComment('Dev trigger: no eligible explored, unmined blocks are available for reinterpretation.', 'Game Mechanic Events', 5); return; }
+        if (action === 'event8-shaft') { markShaftDeepeningAvailable(false); openEventById('gameMechanic.shaftDeepeningProposal'); return; }
+        if (action === 'event8-drill-suspend') { ensureDrillingRestrictionState(); openEventById('gameMechanic.explorationDrillingSuspended'); return; }
+        if (action === 'event8-drill-resume') { ensureDrillingRestrictionState(); state.exploration.drillingSuspended = true; openEventById('gameMechanic.explorationDrillingResumed'); return; }
+        if (action === 'event8-grade') { state.year = Math.max(2, Number(state.year) || 1); state.gradeConstraintEventDoneThisYear = false; state.gradeRestriction = null; openEventById('gameMechanic.gradeConstraint', { originalEvent: rtpStage8FirstGradeConstraintEvent() }); return; }
+        if (action === 'event8-power') { state.depthIndex = Math.max(1, Number(state.depthIndex) || 0); state.powerOutageDoneThisYear = false; state.powerOutage = null; openEventById('gameMechanic.powerOutage', { force: true }); return; }
+        if (action === 'event8-heat') { openEventById('gameMechanic.heatVentilation', { force: true }); return; }
+        if (action === 'event8-survey') { openEventById('gameMechanic.surveyReconciliation', { force: true }); return; }
+        if (action === 'event8-model') { state.year = Math.max(2, Number(state.year) || 1); openEventById('gameMechanic.modelVersionConflict', { force: true }); return; }
+        return rtpStage8BaseDevAction(action);
+      };
+
+      function rtpStage8GameMechanicSummary() {
+        const list = Object.values(RTP_EVENTS).filter(ev => ev && ev.interactionType === RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC);
+        return {
+          total: list.length,
+          configured: list.filter(ev => String(ev.migrationStatus || '').includes('configuredGameMechanic')).length,
+          optional: list.filter(ev => ev.mechanicMode === 'optional').length,
+          forced: list.filter(ev => ev.mechanicMode === 'forced').length
+        };
+      }
+
+      const rtpStage8BaseEnhanceDevToolsForNewSystems = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage8BaseEnhanceDevToolsForNewSystems();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-event-refactor-stage8-dev-tools]')) return;
+        const summary = rtpStage8GameMechanicSummary();
+        body.insertAdjacentHTML('beforeend', `<section class="devToolCard" data-event-refactor-stage8-dev-tools><h3>Event System Refactor Pass 3 — Stage 8</h3><p>Game-mechanic route tests. Current mechanics: ${summary.total} registered, ${summary.configured} configured, ${summary.optional} optional, ${summary.forced} forced. Safety hold-points, ground-control consequences and HOPE support remain specialised legacy delegates.</p><div class="devToolBtns"><button data-dev-action="event8-geology">Mechanic: Geology Model</button><button data-dev-action="event8-shaft">Mechanic: Shaft Deepening</button><button data-dev-action="event8-drill-suspend">Mechanic: Suspend Drilling</button><button data-dev-action="event8-drill-resume">Mechanic: Resume Drilling</button><button data-dev-action="event8-grade">Mechanic: Grade Constraint</button><button data-dev-action="event8-power">Mechanic: Power Outage</button><button data-dev-action="event8-heat">Mechanic: Heat/Ventilation</button><button data-dev-action="event8-survey">Mechanic: Survey Reconciliation</button><button data-dev-action="event8-model">Mechanic: Model Conflict</button></div></section>`);
+      };
+
+
+      /* Event System Refactor Pass 3 — Stage 9: category-aware event pressure engine.
+         This layer controls pacing around the already-migrated event routes without altering player-facing copy. */
+      const RTP_EVENT_PRESSURE_PROFILES = {
+        tutorial: {
+          key: 'tutorial', label: 'Year 1 Light', description: 'Light onboarding pressure for the first operating year on -1000.',
+          modalCooldownDays: 36, decisionCooldownDays: 72, informativeCooldownDays: 24, gameMechanicCooldownDays: 96,
+          normalEventCooldownDays: 16, normalQueueCap: 2, totalQueueCap: 4, hrCap: 2, hrBubbleCooldownDays: 38, departureCooldownDays: 130,
+          decisionChance: 0.52, informativeChance: 0.72, gameMechanicChance: 0.24, mixedChance: 0.48
+        },
+        year2: {
+          key: 'year2', label: 'Year 2 Moderate', description: 'Moderate commercial and corporate pressure once the bulk sample becomes a business plan.',
+          modalCooldownDays: 30, decisionCooldownDays: 56, informativeCooldownDays: 20, gameMechanicCooldownDays: 82,
+          normalEventCooldownDays: 13, normalQueueCap: 3, totalQueueCap: 5, hrCap: 3, hrBubbleCooldownDays: 31, departureCooldownDays: 108,
+          decisionChance: 0.72, informativeChance: 0.84, gameMechanicChance: 0.42, mixedChance: 0.64
+        },
+        shallowExpansion: {
+          key: 'shallowExpansion', label: '-1000 / -1100 Expansion', description: 'Higher technical dependency pressure while still avoiding modal pile-up.',
+          modalCooldownDays: 25, decisionCooldownDays: 46, informativeCooldownDays: 18, gameMechanicCooldownDays: 66,
+          normalEventCooldownDays: 11, normalQueueCap: 3, totalQueueCap: 5, hrCap: 3, hrBubbleCooldownDays: 27, departureCooldownDays: 96,
+          decisionChance: 0.84, informativeChance: 0.90, gameMechanicChance: 0.60, mixedChance: 0.74
+        },
+        deepening: {
+          key: 'deepening', label: '-1200 Deepening', description: 'Higher mechanic pressure from depth, grade, infrastructure and technical constraints.',
+          modalCooldownDays: 22, decisionCooldownDays: 38, informativeCooldownDays: 15, gameMechanicCooldownDays: 54,
+          normalEventCooldownDays: 9, normalQueueCap: 4, totalQueueCap: 6, hrCap: 4, hrBubbleCooldownDays: 23, departureCooldownDays: 84,
+          decisionChance: 0.94, informativeChance: 0.94, gameMechanicChance: 0.78, mixedChance: 0.84
+        },
+        deepMine: {
+          key: 'deepMine', label: 'Deep Mine High Pressure', description: 'Sustained late-game pressure with queue caps still preventing popup spam.',
+          modalCooldownDays: 20, decisionCooldownDays: 34, informativeCooldownDays: 14, gameMechanicCooldownDays: 48,
+          normalEventCooldownDays: 8, normalQueueCap: 4, totalQueueCap: 6, hrCap: 4, hrBubbleCooldownDays: 21, departureCooldownDays: 78,
+          decisionChance: 1.00, informativeChance: 0.96, gameMechanicChance: 0.88, mixedChance: 0.90
+        }
+      };
+
+      function rtpStage9PressurePhaseKey(year = state.year, depthIndex = state.depthIndex) {
+        const y = Math.max(1, Number(year) || 1);
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        if (depth === 0 && y <= 1) return 'tutorial';
+        if (depth === 0 && y <= 2) return 'year2';
+        if (depth <= 1) return 'shallowExpansion';
+        if (depth <= 2) return 'deepening';
+        return 'deepMine';
+      }
+
+      function rtpStage9EventPressureProfile(year = state.year, depthIndex = state.depthIndex) {
+        const key = rtpStage9PressurePhaseKey(year, depthIndex);
+        const profile = RTP_EVENT_PRESSURE_PROFILES[key] || RTP_EVENT_PRESSURE_PROFILES.tutorial;
+        return { ...profile, year: Math.max(1, Number(year) || 1), depthIndex: Math.max(0, Number(depthIndex) || 0) };
+      }
+
+      const rtpStage9BaseEventPacingProfile = eventPacingProfile;
+      eventPacingProfile = function() {
+        const profile = rtpStage9EventPressureProfile();
+        const legacy = typeof rtpStage9BaseEventPacingProfile === 'function' ? rtpStage9BaseEventPacingProfile() : {};
+        // Preserve any legacy fields while allowing the central pressure profile to control caps and cooldowns.
+        return { ...legacy, ...profile };
+      };
+
+      function rtpStage9CategoryKey(category) {
+        if (category === RTP_EVENT_INTERACTION_TYPES.DECISION) return 'decision';
+        if (category === RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC) return 'gameMechanic';
+        if (category === RTP_EVENT_INTERACTION_TYPES.HR_BUBBLE) return 'hrBubble';
+        if (category === RTP_EVENT_INTERACTION_TYPES.INFORMATIVE) return 'informative';
+        if (category === RTP_EVENT_INTERACTION_TYPES.PROGRESSION) return 'progression';
+        return String(category || 'mixed');
+      }
+
+      function rtpStage9ChanceForCategory(profile, category) {
+        const key = rtpStage9CategoryKey(category);
+        if (key === 'decision') return profile.decisionChance;
+        if (key === 'gameMechanic') return profile.gameMechanicChance;
+        if (key === 'informative') return profile.informativeChance;
+        if (key === 'mixed') return profile.mixedChance;
+        if (key === 'hrBubble') return 1;
+        return 1;
+      }
+
+      function rtpStage9CooldownForCategory(profile, category) {
+        const key = rtpStage9CategoryKey(category);
+        if (key === 'decision') return profile.decisionCooldownDays;
+        if (key === 'gameMechanic') return profile.gameMechanicCooldownDays;
+        if (key === 'informative') return profile.informativeCooldownDays;
+        if (key === 'mixed') return Math.round((profile.decisionCooldownDays + profile.informativeCooldownDays) / 2);
+        if (key === 'hrBubble') return profile.hrBubbleCooldownDays;
+        return profile.normalEventCooldownDays;
+      }
+
+      function rtpStage9State() {
+        state.rtpStage9Pressure = state.rtpStage9Pressure || { lastByCategory: {}, suppressed: {}, accepted: {} };
+        state.rtpStage9Pressure.lastByCategory = state.rtpStage9Pressure.lastByCategory || {};
+        state.rtpStage9Pressure.suppressed = state.rtpStage9Pressure.suppressed || {};
+        state.rtpStage9Pressure.accepted = state.rtpStage9Pressure.accepted || {};
+        return state.rtpStage9Pressure;
+      }
+
+      function rtpStage9NoteSuppressed(category, reason) {
+        const s = rtpStage9State();
+        const key = rtpStage9CategoryKey(category) + ':' + reason;
+        s.suppressed[key] = (s.suppressed[key] || 0) + 1;
+      }
+
+      function rtpStage9MarkAccepted(category) {
+        const s = rtpStage9State();
+        const key = rtpStage9CategoryKey(category);
+        s.lastByCategory[key] = state.day;
+        s.lastByCategory.normal = state.day;
+        s.accepted[key] = (s.accepted[key] || 0) + 1;
+      }
+
+      function rtpStage9PressureAllows(category, options = {}) {
+        if (options.force || options.critical) return true;
+        if (!state.running || state.paused || state.levelComplete || isModalOpen()) { rtpStage9NoteSuppressed(category, 'blockedState'); return false; }
+        const profile = rtpStage9EventPressureProfile();
+        const key = rtpStage9CategoryKey(category);
+        const s = rtpStage9State();
+
+        if (normalQueueCount() >= profile.normalQueueCap || totalQueueCount() >= profile.totalQueueCap) {
+          rtpStage9NoteSuppressed(category, 'queueCap');
+          return false;
+        }
+        if (key === 'hrBubble' && hrIssueCount() >= profile.hrCap) {
+          rtpStage9NoteSuppressed(category, 'hrCap');
+          return false;
+        }
+
+        const normalGap = state.day - (s.lastByCategory.normal ?? -999);
+        if (normalGap < profile.normalEventCooldownDays) {
+          rtpStage9NoteSuppressed(category, 'globalCooldown');
+          return false;
+        }
+
+        const categoryGap = state.day - (s.lastByCategory[key] ?? -999);
+        const categoryCooldown = rtpStage9CooldownForCategory(profile, category);
+        if (categoryGap < categoryCooldown) {
+          rtpStage9NoteSuppressed(category, 'categoryCooldown');
+          return false;
+        }
+
+        const chance = rtpStage9ChanceForCategory(profile, category);
+        if (typeof chance === 'number' && chance < 1 && Math.random() > chance) {
+          rtpStage9NoteSuppressed(category, 'phaseChance');
+          return false;
+        }
+        return true;
+      }
+
+      function rtpStage9RunMaybeEvent(category, label, runner) {
+        if (!rtpStage9PressureAllows(category)) return false;
+        const beforeQueue = (state.queueEvents || []).length;
+        const beforeModal = isModalOpen();
+        const result = runner();
+        const afterQueue = (state.queueEvents || []).length;
+        const afterModal = isModalOpen();
+        if (result || afterQueue > beforeQueue || (!beforeModal && afterModal)) rtpStage9MarkAccepted(category);
+        return result;
+      }
+
+      function rtpStage9WrapMaybeFunction(refName, category, label) {
+        try {
+          const current = eval(refName);
+          if (typeof current !== 'function' || current.rtpStage9Wrapped) return;
+          const wrapped = function(...args) {
+            return rtpStage9RunMaybeEvent(category, label || refName, () => current.apply(this, args));
+          };
+          wrapped.rtpStage9Wrapped = true;
+          eval(refName + ' = wrapped');
+        } catch (err) {
+          console.warn('[Run the Pit] Stage 9 could not wrap event pressure function:', refName, err);
+        }
+      }
+
+      rtpStage9WrapMaybeFunction('maybeHseInspectionEvent', RTP_EVENT_INTERACTION_TYPES.DECISION, 'HSE surprise inspection');
+      rtpStage9WrapMaybeFunction('maybeExternalAffairsEvent', RTP_EVENT_INTERACTION_TYPES.DECISION, 'External Affairs event');
+      rtpStage9WrapMaybeFunction('maybeCrewAccidentEvent', RTP_EVENT_INTERACTION_TYPES.DECISION, 'Crew accident event');
+      rtpStage9WrapMaybeFunction('maybeExternalTechnicalReviewEvent', RTP_EVENT_INTERACTION_TYPES.DECISION, 'External technical review');
+      rtpStage9WrapMaybeFunction('maybePass19SatiricalDecisionEvents', RTP_EVENT_INTERACTION_TYPES.DECISION, 'satirical decision events');
+      rtpStage9WrapMaybeFunction('maybeSkipFactorEvent', RTP_EVENT_INTERACTION_TYPES.INFORMATIVE, 'skip factor adjustment');
+      rtpStage9WrapMaybeFunction('maybePointlessMeetingEvent', RTP_EVENT_INTERACTION_TYPES.INFORMATIVE, 'meeting event');
+      rtpStage9WrapMaybeFunction('maybeGradeConstraintEvent', RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC, 'grade constraint');
+      rtpStage9WrapMaybeFunction('maybeHopeSupportEvent', RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC, 'HOPE support update');
+      rtpStage9WrapMaybeFunction('maybePowerOutageEvent', RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC, 'power outage');
+      rtpStage9WrapMaybeFunction('maybeHeatVentilationEvent', RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC, 'heat and ventilation');
+      rtpStage9WrapMaybeFunction('maybeDrillingRestrictionEvent', RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC, 'drilling restriction');
+      rtpStage9WrapMaybeFunction('maybePass21Events', 'mixed', 'pass21 mixed events');
+
+      function rtpStage9QueueDuplicateKey(ev = {}) {
+        const eventId = ev.eventId || ev.configuredEventId || ev.id;
+        if (eventId) return 'eventId:' + eventId;
+        const kind = String(ev.kind || '').trim();
+        const title = String(ev.title || '').trim();
+        if (kind || title) return `${kind}|${title}`;
+        return '';
+      }
+
+      const rtpStage9BasePushQueueEvent = pushQueueEvent;
+      pushQueueEvent = function(ev = {}) {
+        if (ev && !isCriticalEvent(ev)) {
+          const duplicateKey = rtpStage9QueueDuplicateKey(ev);
+          if (duplicateKey && (state.queueEvents || []).some(existing => rtpStage9QueueDuplicateKey(existing) === duplicateKey)) {
+            rtpStage9NoteSuppressed(ev.interactionType || ev.category || 'queueAlert', 'duplicateQueue');
+            return null;
+          }
+        }
+        return rtpStage9BasePushQueueEvent(ev);
+      };
+
+      const rtpStage9BaseMaybeGenerateStaffBubble = maybeGenerateStaffBubble;
+      maybeGenerateStaffBubble = function() {
+        const profile = rtpStage9EventPressureProfile();
+        if (hrIssueCount() >= profile.hrCap) { rtpStage9NoteSuppressed(RTP_EVENT_INTERACTION_TYPES.HR_BUBBLE, 'hrCap'); return false; }
+        return rtpStage9BaseMaybeGenerateStaffBubble();
+      };
+
+      function rtpStage9ReleaseOneDeferredEvent() {
+        state.deferredQueueEvents = state.deferredQueueEvents || [];
+        if (!state.deferredQueueEvents.length) {
+          openMiniWindow('Event Pressure Queue', '<p>No deferred events are currently waiting behind the queue cap.</p>', true);
+          return true;
+        }
+        const ev = state.deferredQueueEvents.shift();
+        pushQueueEvent({ ...ev, priority: ev.priority || 'normal' });
+        openMiniWindow('Event Pressure Queue', '<p>One deferred event has been released into the visible queue.</p>', true);
+        return true;
+      }
+
+      function rtpStage9PressureSummaryHtml() {
+        const p = rtpStage9EventPressureProfile();
+        const s = rtpStage9State();
+        const suppressed = Object.entries(s.suppressed || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const accepted = Object.entries(s.accepted || {}).sort((a, b) => b[1] - a[1]);
+        return `<p><strong>Current pressure phase:</strong> ${escapeHtml(p.label)}.</p>
+          <p>${escapeHtml(p.description)}</p>
+          <table class="miniTable"><tbody>
+            <tr><th>Modal cooldown</th><td>${p.modalCooldownDays} days</td></tr>
+            <tr><th>Decision cooldown</th><td>${p.decisionCooldownDays} days</td></tr>
+            <tr><th>Game-mechanic cooldown</th><td>${p.gameMechanicCooldownDays} days</td></tr>
+            <tr><th>Normal queue cap</th><td>${p.normalQueueCap}</td></tr>
+            <tr><th>Total queue cap</th><td>${p.totalQueueCap}</td></tr>
+            <tr><th>HR cap</th><td>${p.hrCap}</td></tr>
+            <tr><th>Deferred queue</th><td>${(state.deferredQueueEvents || []).length}</td></tr>
+          </tbody></table>
+          <p><strong>Accepted by category:</strong> ${accepted.length ? escapeHtml(accepted.map(([k, v]) => `${k}: ${v}`).join(' · ')) : 'none yet'}.</p>
+          <p><strong>Suppressed checks:</strong> ${suppressed.length ? escapeHtml(suppressed.map(([k, v]) => `${k}: ${v}`).join(' · ')) : 'none yet'}.</p>`;
+      }
+
+      function rtpStage9OpenPressureSummary() {
+        openMiniWindow('Event Pressure Engine', rtpStage9PressureSummaryHtml(), true);
+        return true;
+      }
+
+      function rtpStage9SetTestPhase(key) {
+        const p = RTP_EVENT_PRESSURE_PROFILES[key];
+        if (!p) return false;
+        if (key === 'tutorial') { state.year = 1; state.depthIndex = 0; state.mineLevel = -1000; }
+        if (key === 'year2') { state.year = Math.max(2, Number(state.year) || 1); state.depthIndex = 0; state.mineLevel = -1000; }
+        if (key === 'shallowExpansion') { state.year = Math.max(3, Number(state.year) || 1); state.depthIndex = Math.max(1, Number(state.depthIndex) || 0); state.mineLevel = -1100; }
+        if (key === 'deepening') { state.year = Math.max(4, Number(state.year) || 1); state.depthIndex = Math.max(2, Number(state.depthIndex) || 0); state.mineLevel = -1200; }
+        if (key === 'deepMine') { state.year = Math.max(5, Number(state.year) || 1); state.depthIndex = Math.max(3, Number(state.depthIndex) || 0); state.mineLevel = -1300; }
+        state.annualTargets = targetsForYear(state.year);
+        state.rtpStage9Pressure = { lastByCategory: {}, suppressed: {}, accepted: {} };
+        openMiniWindow('Event Pressure Phase Set', `<p>Pressure test phase set to <strong>${escapeHtml(p.label)}</strong>.</p><p>Cooldown counters have been reset for testing.</p>`, true);
+        return true;
+      }
+
+      const rtpStage9BaseDevAction = devAction;
+      devAction = function(action) {
+        if (action === 'event9-pressure-summary') { rtpStage9OpenPressureSummary(); return; }
+        if (action === 'event9-release-deferred') { rtpStage9ReleaseOneDeferredEvent(); return; }
+        if (action === 'event9-phase-tutorial') { rtpStage9SetTestPhase('tutorial'); return; }
+        if (action === 'event9-phase-year2') { rtpStage9SetTestPhase('year2'); return; }
+        if (action === 'event9-phase-1100') { rtpStage9SetTestPhase('shallowExpansion'); return; }
+        if (action === 'event9-phase-1200') { rtpStage9SetTestPhase('deepening'); return; }
+        if (action === 'event9-phase-deep') { rtpStage9SetTestPhase('deepMine'); return; }
+        return rtpStage9BaseDevAction(action);
+      };
+
+      const rtpStage9BaseEnhanceDevToolsForNewSystems = enhanceDevToolsForNewSystems;
+      enhanceDevToolsForNewSystems = function() {
+        rtpStage9BaseEnhanceDevToolsForNewSystems();
+        const body = $('modalBody');
+        if (!body || body.querySelector('[data-event-refactor-stage9-dev-tools]')) return;
+        const p = rtpStage9EventPressureProfile();
+        body.insertAdjacentHTML('beforeend', `<section class="devToolCard" data-event-refactor-stage9-dev-tools><h3>Event System Refactor Pass 3 — Stage 9</h3><p>Event pressure engine: current phase <strong>${escapeHtml(p.label)}</strong>. Random events now use category cooldowns, queue caps, HR caps and phase-weighted chance gates. Critical safety/ground events still bypass normal pressure limits.</p><div class="devToolBtns"><button data-dev-action="event9-pressure-summary">Pressure: Summary</button><button data-dev-action="event9-phase-tutorial">Pressure: Year 1 Light</button><button data-dev-action="event9-phase-year2">Pressure: Year 2 Moderate</button><button data-dev-action="event9-phase-1100">Pressure: -1100</button><button data-dev-action="event9-phase-1200">Pressure: -1200</button><button data-dev-action="event9-phase-deep">Pressure: Deep Mine</button><button data-dev-action="event9-release-deferred">Pressure: Release Deferred</button></div></section>`);
+      };
+
+      function rtpStage9PressureSummary() {
+        const p = rtpStage9EventPressureProfile();
+        const s = rtpStage9State();
+        return {
+          phase: p.key,
+          label: p.label,
+          year: p.year,
+          depthIndex: p.depthIndex,
+          modalCooldownDays: p.modalCooldownDays,
+          decisionCooldownDays: p.decisionCooldownDays,
+          gameMechanicCooldownDays: p.gameMechanicCooldownDays,
+          normalQueueCap: p.normalQueueCap,
+          totalQueueCap: p.totalQueueCap,
+          hrCap: p.hrCap,
+          deferredQueue: (state.deferredQueueEvents || []).length,
+          accepted: { ...(s.accepted || {}) },
+          suppressed: { ...(s.suppressed || {}) }
+        };
+      }
+
+      RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 9';
+      RTP_EVENT_REFACTOR_PASS_2.stage8 = 'Game-mechanic events now route through gameMechanic with forced/optional mechanicMode metadata. Selected mechanics are configured; safety hold-points, ground-control consequences and HOPE support remain specialised legacy delegates.';
+      RTP_EVENT_REFACTOR_PASS_2.stage9 = 'Event pressure engine now applies phase/year/depth profiles, category cooldowns, queue caps, HR caps and deferred-event controls while preserving critical safety/ground bypasses.';
+      window.rtpStage9PressureSummary = rtpStage9PressureSummary;
+      window.rtpStage9EventPressureProfile = rtpStage9EventPressureProfile;
+      window.RTP_EVENT_PRESSURE_PROFILES = RTP_EVENT_PRESSURE_PROFILES;
+      window.rtpStage8GameMechanicSummary = rtpStage8GameMechanicSummary;
+      window.rtpStage8OpenConfiguredGradeConstraint = rtpStage8OpenConfiguredGradeConstraint;
+      window.RTP_HR_BUBBLE_EVENTS = RTP_HR_BUBBLE_EVENTS;
+      window.rtpStage7HrSummary = rtpStage7HrSummary;
+      window.rtpStage7ForceHrBubble = rtpStage7ForceHrBubble;
 
       window.RTP_EVENT_REFACTOR_PASS_2 = RTP_EVENT_REFACTOR_PASS_2;
       window.RTP_EVENT_INTERACTION_TYPES = RTP_EVENT_INTERACTION_TYPES;
