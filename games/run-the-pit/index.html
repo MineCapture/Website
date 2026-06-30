@@ -25465,15 +25465,15 @@
       }
 
 
-      /* Event System Refactor Pass 3 — Stage 1 category model rename.
+      /* Event System Refactor Pass 3 — Stage 2 event catalogue registry.
          Categories are based on player interaction, not department/source.
          Existing player-facing copy is preserved by delegating legacy events until they are migrated verbatim.
          Production Manager comments intentionally remain outside this event system. */
       const RTP_EVENT_REFACTOR_PASS_2 = {
-        name: 'Event System Refactor Pass 3 — Stage 1',
+        name: 'Event System Refactor Pass 3 — Stage 2',
         date: '2026-06-29',
         categories: ['hrBubble', 'informative', 'decision', 'progression', 'gameMechanic', 'queueAlert'],
-        note: 'Source/department is metadata. Interaction type selects the renderer. GameMechanic replaces the earlier restrictive category.'
+        note: 'Source/department is metadata. Interaction type selects the renderer. Stage 2 catalogues current events with stable IDs while preserving legacy rendering.'
       };
 
       const RTP_EVENT_INTERACTION_TYPES = Object.freeze({
@@ -25943,6 +25943,429 @@
         }
       };
 
+      /* Event System Refactor Pass 3 — Stage 2 catalogue expansion.
+         This registers existing events with stable IDs and category metadata only.
+         Live player-facing rendering still delegates to the existing functions until each category is migrated verbatim. */
+      function rtpStage2Slug(raw, fallback = 'event') {
+        const text = String(raw || fallback).trim();
+        const slug = text
+          .replace(/&/g, ' and ')
+          .replace(/[^A-Za-z0-9]+/g, ' ')
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((part, idx) => idx === 0 ? part.charAt(0).toLowerCase() + part.slice(1) : part.charAt(0).toUpperCase() + part.slice(1))
+          .join('');
+        return slug || fallback;
+      }
+
+      function rtpStage2MergeEvent(id, patch = {}) {
+        const existing = RTP_EVENTS[id] || {};
+        RTP_EVENTS[id] = {
+          migrationStatus: 'cataloguedLegacy',
+          copyPolicy: 'preserveVerbatim',
+          ...existing,
+          ...patch,
+          id
+        };
+        return RTP_EVENTS[id];
+      }
+
+      function rtpStage2RegisterTemplateGroup(items, build) {
+        if (!Array.isArray(items)) return;
+        items.forEach((item, index) => {
+          try {
+            const entry = build(item, index);
+            if (entry && entry.id) rtpStage2MergeEvent(entry.id, entry);
+          } catch (err) {
+            console.warn('[RTP Event Catalogue Stage 2] Could not catalogue event', item, err);
+          }
+        });
+      }
+
+      function rtpStage2ApplyCatalogue() {
+        RTP_EVENT_REFACTOR_PASS_2.name = 'Event System Refactor Pass 3 — Stage 2';
+        RTP_EVENT_REFACTOR_PASS_2.catalogueScope = 'Stable event IDs and metadata for current source; legacy functions retain live rendering.';
+        RTP_EVENT_REFACTOR_PASS_2.copyPolicy = 'Preserve existing player-facing copy verbatim unless an approved fourth decision option is required.';
+
+        // Enrich existing pass2/stage1 entries with migration metadata.
+        Object.keys(RTP_EVENTS).forEach(id => {
+          rtpStage2MergeEvent(id, {
+            canonicalId: RTP_EVENTS[id].canonicalId || id,
+            migrationStatus: RTP_EVENTS[id].migrationStatus || (typeof RTP_EVENTS[id].open === 'function' ? 'legacyDelegate' : 'cataloguedLegacy'),
+            delivery: RTP_EVENTS[id].delivery || 'legacy',
+            triggerMode: RTP_EVENTS[id].triggerMode || 'legacy'
+          });
+        });
+
+        // HR bubble catalogue: staff-specific events attached to named staff.
+        rtpStage2RegisterTemplateGroup(typeof staffBubbleTemplates !== 'undefined' ? staffBubbleTemplates : [], (t) => ({
+          id: `hr.${rtpStage2Slug(t.type || t.title)}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.HR_BUBBLE,
+          source: 'Crew / HR',
+          label: 'HR',
+          triggerMode: 'randomStaffIssue',
+          delivery: 'staffBubbleOrGroupedQueue',
+          migrationStatus: 'cataloguedFromStaffBubbleTemplates',
+          templateKey: t.type || null,
+          roles: t.roles || null,
+          title: t.title || t.type || 'Staff Issue',
+          optionCount: Array.isArray(t.buttons) ? t.buttons.length : null,
+          notes: 'HR bubble events may have 2, 3 or 4 responses; the four-option rule applies only to decision modals.'
+        }));
+
+        // Informative trait/culture events.
+        rtpStage2RegisterTemplateGroup(typeof traitDriftEvents !== 'undefined' ? traitDriftEvents : [], (ev) => ({
+          id: `informative.traitDrift.${rtpStage2Slug(ev.key || ev.title)}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Operating Culture Monitor',
+          label: 'CULT',
+          triggerMode: 'randomDayTick',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedFromTraitDriftEvents',
+          title: ev.title || 'Operating Culture Event',
+          legacyKey: ev.key || null,
+          open: () => { applyTraitDriftEvent(ev.key || null); return true; }
+        }));
+
+        // Older Shift Manager informative events.
+        rtpStage2RegisterTemplateGroup(typeof shiftManagerEvents !== 'undefined' ? shiftManagerEvents : [], (ev) => ({
+          id: `informative.shiftManager.${rtpStage2Slug(ev.key || ev.title)}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Shift Manager',
+          label: 'MGR',
+          triggerMode: 'randomDayTick',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedFromShiftManagerEvents',
+          title: ev.title || 'Shift Manager Event',
+          legacyKey: ev.key || null,
+          open: () => { triggerShiftManagerEvent(ev.key || null); return true; }
+        }));
+
+        // Newer Shift Manager four-option decision events.
+        rtpStage2RegisterTemplateGroup(typeof pass23ShiftManagerDecisionEvents !== 'undefined' ? pass23ShiftManagerDecisionEvents : [], (ev) => ({
+          id: `decision.shiftManager.${rtpStage2Slug(ev.key || ev.title)}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.DECISION,
+          source: 'Shift Manager',
+          label: 'MGR',
+          triggerMode: 'randomManagerDecision',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedFromPass23ShiftManagerDecisionEvents',
+          title: ev.title || 'Shift Manager Decision',
+          legacyKey: ev.key || null,
+          optionCount: Array.isArray(ev.options) ? ev.options.length : null,
+          open: () => { openPass23ShiftManagerEvent(ev.key || null, true); return true; }
+        }));
+
+        // External Affairs: community/protest are decisions, government updates are informative.
+        rtpStage2RegisterTemplateGroup(typeof externalAffairsEventList === 'function' ? externalAffairsEventList() : [], (ev) => {
+          const isDecision = !ev.direct;
+          const type = isDecision ? RTP_EVENT_INTERACTION_TYPES.DECISION : RTP_EVENT_INTERACTION_TYPES.INFORMATIVE;
+          const prefix = isDecision ? 'decision.externalAffairs' : 'informative.externalAffairs';
+          return {
+            id: `${prefix}.${rtpStage2Slug(ev.kind || ev.title)}`,
+            interactionType: type,
+            source: 'External Affairs',
+            label: 'EXT',
+            triggerMode: 'randomAnnualExternalAffairs',
+            delivery: 'modal',
+            migrationStatus: 'cataloguedFromExternalAffairsEventList',
+            title: ev.title || 'External Affairs Event',
+            legacyKind: ev.kind || null,
+            optionCount: Array.isArray(ev.choices) ? ev.choices.length : 0,
+            notes: ev.direct ? 'Government legislation updates are informative, not gameMechanic.' : 'External Affairs choice event.'
+          };
+        });
+
+        // Engineering research and research lifecycle.
+        rtpStage2RegisterTemplateGroup(typeof engineeringResearchEvents === 'function' ? engineeringResearchEvents() : [], (ev, index) => ({
+          id: `informative.engineeringResearchNote.${rtpStage2Slug(ev.title || ('note' + index))}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mining Engineering',
+          label: 'ENG',
+          triggerMode: 'randomEngineeringNote',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedFromEngineeringResearchEvents',
+          title: ev.title || 'Mining Engineering Note'
+        }));
+        rtpStage2MergeEvent('informative.researchProjectProposal', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mining Engineering',
+          label: 'ENG',
+          triggerMode: 'playerResearchStart',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Mining Engineering Study',
+          notes: 'Research project proposal/start is informative; research unlock/introduction remains progression.'
+        });
+        rtpStage2MergeEvent('informative.researchOutcome.success', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mining Engineering',
+          label: 'ENG',
+          triggerMode: 'researchTimerComplete',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Research Useful, Somehow'
+        });
+        rtpStage2MergeEvent('informative.researchOutcome.harmful', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mining Engineering',
+          label: 'ENG',
+          triggerMode: 'researchTimerComplete',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Research Completed, Harmfully'
+        });
+        rtpStage2MergeEvent('informative.researchOutcome.inconclusive', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mining Engineering',
+          label: 'ENG',
+          triggerMode: 'researchTimerComplete',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Research Confirms Existing Practice'
+        });
+
+        // Acknowledge-only random/queued operational events.
+        rtpStage2RegisterTemplateGroup(typeof skipFactorEvents === 'function' ? skipFactorEvents() : [], (ev, index) => ({
+          id: `informative.skipFactor.${index + 1}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Shaft Maintenance / Finance',
+          label: 'SKIP',
+          triggerMode: 'lateYearRandom',
+          delivery: 'queuedOrModal',
+          migrationStatus: 'cataloguedFromSkipFactorEvents',
+          title: 'Shaft / Skip Reconciliation'
+        }));
+        rtpStage2RegisterTemplateGroup(typeof meetingEvents === 'function' ? meetingEvents() : [], (ev, index) => ({
+          id: `informative.pointlessMeeting.${rtpStage2Slug(ev.title || ('meeting' + index))}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Management Calendar',
+          label: 'MEET',
+          triggerMode: 'randomMeeting',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedFromMeetingEvents',
+          title: ev.title || 'Pointless Meeting'
+        }));
+        rtpStage2MergeEvent('informative.gasPocket', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mine Services / Geology',
+          label: 'GAS',
+          triggerMode: 'randomMiningEvent',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Gas Pocket Encountered',
+          open: () => { triggerGasPocketEvent(); return true; }
+        });
+        rtpStage2MergeEvent('informative.waterInflow', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Mine Services / Geology',
+          label: 'WATER',
+          triggerMode: 'randomMiningEvent',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Water Inflow',
+          open: () => { triggerWaterPocketEvent(); return true; }
+        });
+        rtpStage2MergeEvent('informative.faultDiscovery.primary', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Geology Department',
+          label: 'GEO',
+          triggerMode: 'explorationDiscovery',
+          delivery: 'queued',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Geological Fault Identified'
+        });
+        rtpStage2MergeEvent('informative.faultDiscovery.additional', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Geology Department',
+          label: 'GEO',
+          triggerMode: 'explorationDiscovery',
+          delivery: 'queued',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Additional Faulted Ground Identified'
+        });
+        rtpStage2MergeEvent('informative.explorationRowDiscovered', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Geology Department',
+          label: 'GEO',
+          triggerMode: 'explorationComplete',
+          delivery: 'floatingTextOrQueue',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Exploration Row Discovered'
+        });
+        rtpStage2MergeEvent('informative.gradeReconciliation', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'Survey / Geology',
+          label: 'GRADE',
+          triggerMode: 'miningReconciliation',
+          delivery: 'queued',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Grade Estimate Reconciled'
+        });
+        rtpStage2MergeEvent('informative.talentPipelineRefreshed', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+          source: 'S.H.A.F.T.',
+          label: 'HR',
+          triggerMode: 'recruitmentRefresh',
+          delivery: 'queuedOrModal',
+          migrationStatus: 'cataloguedLegacy',
+          title: 'Talent Pipeline Refreshed'
+        });
+        ['resignationNotice', 'voluntaryResignation', 'targetedTestingDismissal', 'learningTeamMisconduct', 'careerDevelopmentOutsideMining'].forEach(key => {
+          rtpStage2MergeEvent(`informative.staffDeparture.${key}`, {
+            interactionType: RTP_EVENT_INTERACTION_TYPES.INFORMATIVE,
+            source: 'HR',
+            label: 'HR',
+            triggerMode: 'staffDeparture',
+            delivery: 'queueOrModal',
+            migrationStatus: 'cataloguedLegacy',
+            title: rtpStage2Slug(key).replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase())
+          });
+        });
+
+        // Progression/onboarding/gameplay guidance events.
+        ['exploration', 'miningEngineering', 'groundControl', 'survey', 'ventilation'].forEach(key => {
+          rtpStage2MergeEvent(`progression.roleUnlock.${key}`, {
+            interactionType: RTP_EVENT_INTERACTION_TYPES.PROGRESSION,
+            source: 'S.H.A.F.T.',
+            label: 'ROLE',
+            triggerMode: 'featureUnlock',
+            delivery: 'modal',
+            migrationStatus: 'cataloguedLegacyDelegate',
+            title: `Role Unlock: ${key}`,
+            open: () => openRoleUnlockIntro(key)
+          });
+        });
+        [
+          ['progression.annualOperatingBrief', 'SLT', 'SLT', 'yearStart', 'Annual Operating Brief'],
+          ['progression.annualFinanceNotice', 'Finance', 'FIN', 'yearStart', 'Annual Finance Notice'],
+          ['progression.midYearReview', 'SLT', 'SLT', 'midYear', 'Mid-Year Review'],
+          ['progression.annualPerformanceReview', 'SLT', 'SLT', 'yearEnd', 'Annual Performance Review'],
+          ['progression.pleadCase', 'SLT / HR', 'PIP', 'yearEndBranch', 'Plead Case / PIP Review'],
+          ['progression.rockDoctorBolterHold', 'Rock Doctor', 'ROCK', 'dependencyGate', 'Rock Doctor Requires Bolter'],
+          ['progression.bolterNotAuthorised', 'Mining Engineering', 'BOLT', 'playerGuardrail', 'Bolter Not Yet Authorised'],
+          ['progression.bolterNotOwned', 'Mining Engineering', 'BOLT', 'playerGuardrail', 'Bolter Not Owned'],
+          ['progression.mineFanNotAuthorised', 'Ventilation Engineering', 'VENT', 'playerGuardrail', 'Mine Fan Not Yet Authorised'],
+          ['progression.secondMinerCommissioned', 'Fleet Strategy', '2H', 'assetUnlock', 'Second Miner Commissioned'],
+          ['progression.beltLineExtended', 'Mine Services', 'BELT', 'infrastructureProgress', 'Belt Line Extended']
+        ].forEach(([id, source, label, triggerMode, title]) => {
+          rtpStage2MergeEvent(id, {
+            interactionType: RTP_EVENT_INTERACTION_TYPES.PROGRESSION,
+            source,
+            label,
+            triggerMode,
+            delivery: 'modalOrMiniWindow',
+            migrationStatus: 'cataloguedLegacy',
+            title
+          });
+        });
+
+        // Game-mechanic events: forced/optional changes to rules, model, available mechanics or map state.
+        rtpStage2MergeEvent('gameMechanic.geologyModelReinterpretation', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+          mechanicMode: 'optional',
+          subtype: 'modelRevision',
+          source: 'Geology Department',
+          label: 'GEO',
+          triggerMode: 'randomMechanicOffer',
+          delivery: 'modal',
+          migrationStatus: 'legacyAliasToConfiguredDecision',
+          title: 'Geology Model Reinterpretation',
+          aliases: ['decision.geologyModelReinterpretation'],
+          open: context => openEventById('decision.geologyModelReinterpretation', context || {})
+        });
+        rtpStage2MergeEvent('gameMechanic.shaftDeepeningProposal', {
+          interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+          mechanicMode: 'optional',
+          subtype: 'progressionGate',
+          source: 'Geology Department',
+          label: 'SHAFT',
+          triggerMode: 'playerProgressionGate',
+          delivery: 'modal',
+          migrationStatus: 'legacyDelegate',
+          title: 'Shaft Deepening Proposal',
+          aliases: ['progression.shaftDeepeningProposal'],
+          open: () => { openShaftDeepeningProposal(); return true; }
+        });
+        rtpStage2RegisterTemplateGroup(typeof gradeConstraintEvents === 'function' ? gradeConstraintEvents() : [], (ev, index) => ({
+          id: `gameMechanic.gradeConstraint.${rtpStage2Slug(ev.title || ('constraint' + index))}`,
+          interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+          mechanicMode: 'forced',
+          subtype: 'gradeAcceptanceRule',
+          source: ev.source || 'Sales & Marketing / Plant / Quality',
+          label: 'SPEC',
+          triggerMode: 'randomMechanicChange',
+          delivery: 'modal',
+          migrationStatus: 'cataloguedFromGradeConstraintEvents',
+          title: ev.title || 'Grade Constraint',
+          open: () => applyGradeConstraintEvent(ev)
+        }));
+        [
+          ['gameMechanic.gradeRestrictionBlockNotice', 'forced', 'gradeAcceptanceRule', 'Sales & Marketing / Plant / Quality', 'SPEC', 'playerGuardrail', 'Block Not Accepted'],
+          ['gameMechanic.safety.mandatoryStanddown', 'forced', 'holdPoint', 'Safety Department', 'SAFE', 'scheduledSafety', 'Mandatory Safety Standdown'],
+          ['gameMechanic.groundControl.pillarDistress', 'forced', 'groundControl', 'Rock Doctor', 'ROCK', 'groundStateWarning', 'Pillar Distress Detected'],
+          ['gameMechanic.groundControl.criticalPillarRisk', 'forced', 'groundControl', 'Rock Doctor', 'ROCK', 'groundStateWarning', 'Critical Pillar Failure Risk'],
+          ['gameMechanic.groundControl.pillarFailure', 'forced', 'groundControl', 'Rock Doctor', 'ROCK', 'groundConsequence', 'Pillar Failure — Ground Sterilised'],
+          ['gameMechanic.groundControl.pillarBurst', 'forced', 'groundControl', 'Rock Doctor', 'ROCK', 'groundConsequence', 'Pillar Burst — Local Ground Damage'],
+          ['gameMechanic.groundControl.machineRecovery', 'forced', 'groundControl', 'Mine Services', 'REC', 'groundConsequence', 'Machine Recovered From Ground-Control Exclusion'],
+          ['gameMechanic.seismicAftershocks', 'forced', 'groundControl', 'Rock Doctor', 'ROCK', 'randomDepthEvent', 'Seismic Aftershocks'],
+          ['gameMechanic.hopeSupportUpdate', 'forced', 'machineBehaviour', 'HOPE Support', 'HOPE', 'randomMechanicChange', 'HOPE: It’s Our Strategy']
+        ].forEach(([id, mode, subtype, source, label, triggerMode, title]) => {
+          rtpStage2MergeEvent(id, {
+            interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+            mechanicMode: mode,
+            subtype,
+            source,
+            label,
+            triggerMode,
+            delivery: 'modalOrQueue',
+            migrationStatus: 'cataloguedLegacy',
+            title
+          });
+        });
+        const safetyPools = typeof safetyEvents === 'function' ? safetyEvents() : {};
+        ['negative', 'positive'].forEach(pool => {
+          rtpStage2RegisterTemplateGroup(Array.isArray(safetyPools[pool]) ? safetyPools[pool] : [], (ev, index) => ({
+            id: `gameMechanic.safety.${pool}.${index + 1}`,
+            interactionType: RTP_EVENT_INTERACTION_TYPES.GAME_MECHANIC,
+            mechanicMode: 'forced',
+            subtype: 'holdPoint',
+            source: ev.category || 'Safety Department',
+            label: 'SAFE',
+            triggerMode: 'randomSafetyHoldPoint',
+            delivery: 'modalHoldPoint',
+            migrationStatus: 'cataloguedFromSafetyEvents',
+            title: ev.title || 'Safety Standdown Alert'
+          }));
+        });
+
+        // Queue alerts and state-routing items.
+        [
+          ['queueAlert.asset.conveyorTrip', 'BELT', 'Conveyor Electrical Trip'],
+          ['queueAlert.asset.conveyorBuried', 'BELT', 'Buried Belt / Tail End'],
+          ['queueAlert.asset.conveyorDrive', 'BELT', 'Conveyor Drive Fault'],
+          ['queueAlert.asset.conveyorMechanical', 'BELT', 'Conveyor Mechanical Fault'],
+          ['queueAlert.asset.miner1Broken', 'CM1', '1stHOPE Broken'],
+          ['queueAlert.asset.miner2Broken', 'CM2', '2ndHOPE Broken'],
+          ['queueAlert.event.genericQueued', 'EVT', 'Generic Queued Event']
+        ].forEach(([id, label, title]) => {
+          rtpStage2MergeEvent(id, {
+            interactionType: RTP_EVENT_INTERACTION_TYPES.QUEUE_ALERT,
+            source: 'Operational Queue',
+            label,
+            triggerMode: 'stateAlert',
+            delivery: 'queueIcon',
+            migrationStatus: 'cataloguedLegacy',
+            title,
+            action: id.includes('asset') ? 'openAssets' : 'noop'
+          });
+        });
+      }
+
+      rtpStage2ApplyCatalogue();
+
+
       function rtpDecisionEventIds() {
         return Object.values(RTP_EVENTS).filter(ev => ev.interactionType === RTP_EVENT_INTERACTION_TYPES.DECISION).map(ev => ev.id);
       }
@@ -26097,7 +26520,7 @@
         if (action === 'event2-hse') { openEventById('decision.hseSurpriseInspection'); return; }
         if (action === 'event2-slt') { openEventById('decision.sltSiteVisit', { force: true }); return; }
         if (action === 'event2-role-ground') { openEventById('progression.roleUnlock', { key: 'groundControl', customTitle: 'Dev: Ground Control Intro' }); return; }
-        if (action === 'event2-shaft') { markShaftDeepeningAvailable(false); openEventById('progression.shaftDeepeningProposal'); return; }
+        if (action === 'event2-shaft') { markShaftDeepeningAvailable(false); openEventById('gameMechanic.shaftDeepeningProposal'); return; }
         if (action === 'event2-drill-suspend') { ensureDrillingRestrictionState(); openEventById('gameMechanic.explorationDrillingSuspended'); return; }
         if (action === 'event2-drill-resume') { ensureDrillingRestrictionState(); state.exploration.drillingSuspended = true; openEventById('gameMechanic.explorationDrillingResumed'); return; }
         if (action === 'event2-belt-alert') { openEventById('queueAlert.asset.belt'); return; }
@@ -26111,7 +26534,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-event-refactor-pass2-dev-tools]')) return;
         const summary = rtpEventCategorySummary();
-        const html = `<section class="devToolCard" data-event-refactor-pass2-dev-tools><h3>Event System Refactor Pass 3 — Stage 1</h3><p>Category-led event tests. Current registry: HR ${summary.hrBubble || 0}, Info ${summary.informative || 0}, Decision ${summary.decision || 0}, Progression ${summary.progression || 0}, Game Mechanics ${summary.gameMechanic || 0}, Queue ${summary.queueAlert || 0}.</p><div class="devToolBtns"><button data-dev-action="event2-geology">Geology Decision (4 options)</button><button data-dev-action="event2-hse">HSE Decision</button><button data-dev-action="event2-slt">SLT Decision</button><button data-dev-action="event2-role-ground">Progression: Ground</button><button data-dev-action="event2-shaft">Progression: Shaft</button><button data-dev-action="event2-drill-suspend">Mechanic: Suspend Drilling</button><button data-dev-action="event2-drill-resume">Mechanic: Resume Drilling</button><button data-dev-action="event2-belt-alert">Queue: Belt</button><button data-dev-action="event2-miner-alert">Queue: Miner</button></div></section>`;
+        const html = `<section class="devToolCard" data-event-refactor-pass2-dev-tools><h3>Event System Refactor Pass 3 — Stage 2</h3><p>Category-led event tests. Current registry: HR ${summary.hrBubble || 0}, Info ${summary.informative || 0}, Decision ${summary.decision || 0}, Progression ${summary.progression || 0}, Game Mechanics ${summary.gameMechanic || 0}, Queue ${summary.queueAlert || 0}.</p><div class="devToolBtns"><button data-dev-action="event2-geology">Mechanic: Geology Model (4 options)</button><button data-dev-action="event2-hse">HSE Decision</button><button data-dev-action="event2-slt">SLT Decision</button><button data-dev-action="event2-role-ground">Progression: Ground</button><button data-dev-action="event2-shaft">Mechanic: Shaft</button><button data-dev-action="event2-drill-suspend">Mechanic: Suspend Drilling</button><button data-dev-action="event2-drill-resume">Mechanic: Resume Drilling</button><button data-dev-action="event2-belt-alert">Queue: Belt</button><button data-dev-action="event2-miner-alert">Queue: Miner</button></div></section>`;
         const grid = body.querySelector('.devToolGrid');
         if (grid) grid.insertAdjacentHTML('beforeend', html);
         else body.insertAdjacentHTML('beforeend', `<div class="devToolGrid">${html}</div>`);
