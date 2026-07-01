@@ -5341,7 +5341,7 @@
 
   
 
-    /* Pass 8: research programme, hiring tabs and compact modal polish */
+    /* Research programme, hiring tabs and compact modal polish */
     .researchHeroTile {
       min-height: 148px;
       border-radius: 16px;
@@ -5645,7 +5645,7 @@
 
 
 
-    /* Pass 16: conservative phone remote fit fix. Keep safetyHoldRenderer toolbar structure; only stop arrow clipping. */
+    /* Conservative phone remote fit adjustment. Keep safetyHoldRenderer toolbar structure; only stop arrow clipping. */
     @media screen and (max-width: 920px), screen and (max-device-width: 920px), screen and (orientation: portrait) and (max-height: 1200px) {
       html.phoneLayout #game,
       body.phoneLayout #game {
@@ -17543,7 +17543,7 @@
       function drillingSuspensionNoticeHtml() {
   
 
-      // Pass 11: year-end actual-v-target review, Year 2 exploration cap, floating remote layout support and safety progress-bar hold.
+      // Year-end actual-v-target review, Year 2 exploration cap, floating remote layout support and safety progress-bar hold.
       function kpiReviewKpiActualText(key, target = activeAnnualTargets()) {
         const t = target || {};
         if (key === 'bulkSample' || key === 'productionDelivery') {
@@ -17708,7 +17708,7 @@
 
 
 
-      /* Pass 16: faulted ground, pillar visual/text cleanup, preventive ground KPI, BORC asset, and consistent low-tonnage event. */
+      /* Faulted ground, pillar visual/text cleanup, preventive ground KPI, BORC asset, and consistent low-tonnage event. */
       const BOLTER_OPERATIONAL_REVIEW_COMMITTEE_ASSET = 'assets/characters/borc.png';
       const PILLAR_SUPPORTED_ASSET = 'assets/images/pillar_supported.png';
 
@@ -18160,7 +18160,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-groundFaultSystem-dev-tools]')) return;
         body.insertAdjacentHTML('beforeend', `<div data-groundFaultSystem-dev-tools>
-          <section class="devToolCard"><h3>Pass 16 Geology / Ground</h3><p>Test faulted ground and pillar visual/text behaviour.</p><div class="devToolBtns"><button data-dev-action="force-fault-row">Force Faulted Row</button><button data-dev-action="low-tonnes-complaint">Low-Tonnage Complaint</button><button data-dev-action="pillar-deteriorate">Force Critical Pillar</button></div></section>
+          <section class="devToolCard"><h3>Geology / Ground Tools</h3><p>Test faulted ground and pillar visual/text behaviour.</p><div class="devToolBtns"><button data-dev-action="force-fault-row">Force Faulted Row</button><button data-dev-action="low-tonnes-complaint">Low-Tonnage Complaint</button><button data-dev-action="pillar-deteriorate">Force Critical Pillar</button></div></section>
         </div>`);
       };
 
@@ -19021,7 +19021,7 @@
       applyAnnualTargetUnlockGuards();
 
 
-      /* Pass 21: selected new decision, informative and HR bubble events, plus permanent Dev Tools grouping cleanup. */
+      /* Decision, informative and HR bubble event grouping cleanup. */
       const TECHNICAL_RESTRICTION_ASSETS = {
         externalLocal: 'assets/images/external_affairs_subsidence.png',
         sltVisit: 'assets/images/slt_site_visit.png',
@@ -20969,6 +20969,61 @@
       setManualPauseFlagForCurrentState();
 
 
+
+      /* Canonical production target helpers.
+         These are intentionally defined in the same lexical scope as the fixed KPI package resolver.
+         Earlier historical target passes defined similarly named helpers inside narrower override blocks,
+         which made Year 2+ KPI resolution fragile when the fixed package resolver was rebuilt later. */
+      function levelStartYearForDepth(depthIndex = state.depthIndex) {
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        if (depth <= 0) return 1;
+        return depth + 3;
+      }
+
+      function operatingYearAtDepth(year = state.year, depthIndex = state.depthIndex) {
+        const y = Math.max(1, Number(year) || 1);
+        return Math.max(1, y - levelStartYearForDepth(depthIndex) + 1);
+      }
+
+      function productionTargetModelForDepth(depthIndex = state.depthIndex) {
+        const depth = Math.max(0, Math.min(4, Number(depthIndex) || 0));
+        const model = PRODUCTION_TARGET_MODEL && PRODUCTION_TARGET_MODEL.depthTargets
+          ? PRODUCTION_TARGET_MODEL.depthTargets[depth]
+          : null;
+        return model || (PRODUCTION_TARGET_MODEL && PRODUCTION_TARGET_MODEL.depthTargets
+          ? PRODUCTION_TARGET_MODEL.depthTargets[4]
+          : null) || { tonnes: [TARGET_TONNES], annualStep: 0, grade: [TARGET_GRADE], secondMinerTonnes: [0], secondMinerStep: 0 };
+      }
+
+      function targetSequenceAmount(sequence, localYear, annualStep = 0) {
+        const values = Array.isArray(sequence) && sequence.length ? sequence : [TARGET_TONNES];
+        const index = Math.max(0, Number(localYear) - 1);
+        const base = Number(values[Math.min(index, values.length - 1)]) || TARGET_TONNES;
+        if (index < values.length) return base;
+        return base + (index - values.length + 1) * (Number(annualStep) || 0);
+      }
+
+      function forgivingProductionTonnes(year = state.year, depthIndex = state.depthIndex) {
+        const model = productionTargetModelForDepth(depthIndex);
+        const localYear = operatingYearAtDepth(year, depthIndex);
+        return Math.max(1000, Math.round(targetSequenceAmount(model.tonnes, localYear, model.annualStep || 0)));
+      }
+
+      function productionTargetGrade(year = state.year, depthIndex = state.depthIndex) {
+        const model = productionTargetModelForDepth(depthIndex);
+        const localYear = operatingYearAtDepth(year, depthIndex);
+        const grade = targetSequenceAmount(model.grade || [TARGET_GRADE], localYear, 0.05);
+        return Math.min(15.4, Math.max(TARGET_GRADE, Number(grade) || TARGET_GRADE));
+      }
+
+      function forgivingSecondMinerTonnes(year = state.year, depthIndex = state.depthIndex) {
+        const depth = Math.max(0, Number(depthIndex) || 0);
+        if (depth < 2) return 0;
+        const model = productionTargetModelForDepth(depthIndex);
+        const localYear = operatingYearAtDepth(year, depthIndex);
+        return Math.max(0, Math.round(targetSequenceAmount(model.secondMinerTonnes || [0], localYear, model.secondMinerStep || 0)));
+      }
+
       /* June 28 playtest build 3: fixed phase KPI packages and proactive pillar failure / sterilised ground. */
 
       function fixedKpiPackageForCurrentPhase(year = state.year, depthIndex = state.depthIndex) {
@@ -21993,7 +22048,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-eventPacingSystem-dev-tools]')) return;
         body.insertAdjacentHTML('beforeend', `<div data-eventPacingSystem-dev-tools>
-          <section class="devToolCard"><h3>Pass 4 Tuning</h3><p>Test row-activated pillar risk and event pacing/deferred event behaviour.</p><div class="devToolBtns"><button data-dev-action="row-activate-pillars">Activate Pillar Row</button><button data-dev-action="release-deferred-events">Release Deferred Events</button></div></section>
+          <section class="devToolCard"><h3>Event Pacing / Pillar Tuning</h3><p>Test row-activated pillar risk and event pacing/deferred event behaviour.</p><div class="devToolBtns"><button data-dev-action="row-activate-pillars">Activate Pillar Row</button><button data-dev-action="release-deferred-events">Release Deferred Events</button></div></section>
         </div>`);
       };
 
@@ -22572,7 +22627,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-sharedSafetyModal-dev-tools]')) return;
         body.insertAdjacentHTML('beforeend', `<div data-sharedSafetyModal-dev-tools>
-          <section class="devToolCard"><h3>Pass 5 Onboarding / Dependencies</h3><p>Test Year 3 depth KPI and staff dependency blocking.</p><div class="devToolBtns"><button data-dev-action="force-year3-depth-kpi">Year 3 Depth KPI</button></div></section>
+          <section class="devToolCard"><h3>Onboarding / Dependencies</h3><p>Test Year 3 depth KPI and staff dependency blocking.</p><div class="devToolBtns"><button data-dev-action="force-year3-depth-kpi">Year 3 Depth KPI</button></div></section>
         </div>`);
       };
 
@@ -22864,7 +22919,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-groundControlSystem-dev-tools]')) return;
         body.insertAdjacentHTML('beforeend', `<div data-groundControlSystem-dev-tools>
-          <section class="devToolCard"><h3>Pass 6 Events</h3><p>Test the new decision-result flow and staged ground-control unlock.</p><div class="devToolBtns"><button data-dev-action="external-trees">External Affairs Trees</button><button data-dev-action="unlock-ground-control">Unlock Ground Control</button></div></section>
+          <section class="devToolCard"><h3>Decision Flow / Ground Unlocks</h3><p>Test the new decision-result flow and staged ground-control unlock.</p><div class="devToolBtns"><button data-dev-action="external-trees">External Affairs Trees</button><button data-dev-action="unlock-ground-control">Unlock Ground Control</button></div></section>
         </div>`);
       };
 
@@ -23160,7 +23215,7 @@
         const body = $('modalBody');
         if (!body || body.querySelector('[data-tonnageScaleSystem-dev-tools]')) return;
         body.insertAdjacentHTML('beforeend', `<div data-tonnageScaleSystem-dev-tools>
-          <section class="devToolCard"><h3>Pass 7 Tuning</h3><p>Test late reconciliation, scaled HSE outcomes, and low-tonnage crew feedback.</p><div class="devToolBtns"><button data-dev-action="late-skip-factor">Late Skip Reconciliation</button><button data-dev-action="low-tonnes-complaint">Low-Tonnage Complaint</button></div></section>
+          <section class="devToolCard"><h3>Reconciliation / HSE / Tonnage Tuning</h3><p>Test late reconciliation, scaled HSE outcomes, and low-tonnage crew feedback.</p><div class="devToolBtns"><button data-dev-action="late-skip-factor">Late Skip Reconciliation</button><button data-dev-action="low-tonnes-complaint">Low-Tonnage Complaint</button></div></section>
         </div>`);
       };
 
@@ -23802,7 +23857,7 @@
 
 
 
-      // Pass 10: Safety Standdown countdown display fix.
+      // Safety Standdown countdown display correction.
       // Earlier fixes updated the first duplicated #safetyStanddownTimer in the DOM, which belongs to the old hidden overlay.
       // This updates every standdown timer/status/button instance so the visible shared-modal timer actually counts down.
       function safetyHoldRendererSafetyNodes(selector) {
@@ -23850,7 +23905,7 @@
 
 
 
-      // Pass 15: corrective final overrides for fixes that toolbarRemoteLayout accidentally allowed later JS to overwrite.
+      // Final toolbar remote safeguards for later layout overrides.
       // Keep the safetyHoldRenderer toolbar/remote layout, but reapply year-end actual-v-target rows and the Year 2 row-8 exploration cap at the final override point.
       function fixedKpiReviewKpiActualText(key, target = activeAnnualTargets()) {
         const t = target || {};
@@ -24019,7 +24074,7 @@
         }
         return result;
       };
-      /* Pass 19: new satirical decision/restriction modals — Union, employee dispute and Survey reconciliation. */
+      /* Satirical decision/restriction modals — Union, employee dispute and Survey reconciliation. */
       const SATIRICAL_DECISION_ASSETS = {
         union: 'assets/characters/s-cargill-union-rep.png',
         dispute: 'assets/images/employee_dispute.png',
@@ -24421,7 +24476,7 @@
       }, true);
 
 
-      /* Pass 21: selected new decision, informative and HR bubble events, plus permanent Dev Tools grouping cleanup. */
+      /* Decision, informative and HR bubble event grouping cleanup. */
       const TECHNICAL_RESTRICTION_ASSETS = {
         externalLocal: 'assets/images/external_affairs_subsidence.png',
         sltVisit: 'assets/images/slt_site_visit.png',
@@ -24963,7 +25018,7 @@
       }, true);
 
 
-      /* Pass 22: revenue sound, fault generation reliability, grade/level assets and level-transition pause cleanup. */
+      /* Revenue sound, fault generation reliability, grade/level assets and level-transition pause cleanup. */
       const LEVEL_PROGRESSION_ASSETS = {
         revenueSound: 'assets/audio/cha_ching.mp3',
         levelReached: 'assets/images/new_level_reached.png',
@@ -26125,7 +26180,7 @@
         RTP_EVENT_ARCHITECTURE.catalogueScope = 'Stable event IDs and metadata for current source; legacy functions retain live rendering.';
         RTP_EVENT_ARCHITECTURE.copyPolicy = 'Preserve existing player-facing copy verbatim unless an approved fourth decision option is required.';
 
-        // Enrich existing financeResearchSystem/stage1 entries with migration metadata.
+        // Enrich existing finance/research entries with migration metadata.
         Object.keys(RTP_EVENT_DEFINITIONS).forEach(id => {
           eventCatalogueMergeEvent(id, {
             canonicalId: RTP_EVENT_DEFINITIONS[id].canonicalId || id,
@@ -30169,6 +30224,702 @@
           }
           if (previousDevActionForEventArchitecture) return previousDevActionForEventArchitecture(action);
         };
+      })();
+
+      /* =====================================================
+         RTP PROGRESSION ARCHITECTURE — AUTHORITATIVE CONFIG
+         =====================================================
+         This block is the single active source of truth for year targets,
+         fixed KPI packages, level unlock rules, department unlock sequencing
+         and level-arrival modal flow. Older hard-coded progression functions
+         are deliberately bypassed through these stable generic entry points.
+      */
+      (function installProgressionArchitecture() {
+        const PROGRESSION_CONFIG_VERSION = 'progression-architecture-2026-07-01';
+
+        const GAME_PROGRESSION_CONFIG = {
+          planningTrait: BALANCE_TRAIT_ASSUMPTION,
+          defaultGrade: TARGET_GRADE,
+          depthLevels: {
+            0: {
+              depthIndex: 0,
+              levelName: '-1000 Level',
+              earliestYear: 1,
+              unlocks: ['exploration'],
+              character: {
+                image: 'assets/characters/slt-silhouette.png',
+                character: 'Superior Leadership Team',
+                department: 'Bulk Sample Governance',
+                imageText: 'This is only a trial until it becomes a target.',
+                label: 'SLT'
+              },
+              annualPlans: [
+                {
+                  localYear: 1,
+                  phaseKey: 'bulk-sample',
+                  phaseTitle: 'Year 1 KPI Notice — Bulk Sample',
+                  phaseTheme: 'Mine 10,000t at 14.0% Goldilocks Grade. This is the anchor year for the whole simulation: enough production to learn the loop, not enough bureaucracy to bury it.',
+                  kpiKeys: ['bulkSample'],
+                  tonnes: 10000,
+                  grade: 14.0,
+                  discoveredRows: 0,
+                  surplusTarget: 0,
+                  lomTargetTonnes: 0,
+                  safetyMin: 0,
+                  technicalHires: 0,
+                  maxPillarFailures: 99,
+                  beltExtensions: 0,
+                  secondMinerTonnes: 0,
+                  briefing: '<p>The first year is a controlled bulk sample, which means the target is small enough to be possible and large enough to be someone else\'s problem if missed.</p><p><strong>Objective:</strong> mine 10,000 tonnes at minimum 14.0% Goldilocks Grade.</p>'
+                },
+                {
+                  localYear: 2,
+                  phaseKey: 'reserve-confirmation',
+                  phaseTitle: 'Year 2 KPI Notice — Reserve Confirmation',
+                  phaseTheme: 'Exploration is introduced so Geology can confirm what the SLT has already implied. Targets assume a forgiving 65-productivity planning case, not perfect play.',
+                  kpiKeys: ['productionDelivery', 'exploration', 'surplus'],
+                  tonnes: 14000,
+                  grade: 14.0,
+                  discoveredRows: 2,
+                  surplusTarget: 0,
+                  lomTargetTonnes: 0,
+                  safetyMin: 0,
+                  technicalHires: 0,
+                  maxPillarFailures: 99,
+                  beltExtensions: 0,
+                  secondMinerTonnes: 0,
+                  afterFinanceAction: 'technicalHiring',
+                  financeContinueLabel: 'Proceed to hire Geologist and Drillers',
+                  character: {
+                    image: 'assets/characters/geology-rock-lickers.png',
+                    character: 'Geology Department',
+                    department: 'Reserve Confidence Through Retrospective Evidence',
+                    imageText: 'Exploration confirms what has already been promised.',
+                    label: 'GEO'
+                  },
+                  briefing: '<p>The first four rows are already interpreted. Additional rows now require a drill, a Geologist, and two Drillers so confidence can be converted into coloured evidence.</p><p><strong>New requirements:</strong> buy a drill, hire one Geologist and two Drillers, and unlock new rows.</p>'
+                },
+                {
+                  localYear: 3,
+                  phaseKey: 'depth-advancement',
+                  phaseTitle: 'Year 3 KPI Notice — Depth Advancement Programme',
+                  phaseTheme: 'The -1000 Level was the learning level. The organisation has now promised deeper mining and expects operational reality to catch up.',
+                  kpiKeys: ['productionDelivery', 'exploration', 'advance1100'],
+                  tonnes: 17000,
+                  grade: 14.0,
+                  discoveredRows: 3,
+                  surplusTarget: 0,
+                  lomTargetTonnes: 0,
+                  safetyMin: 0,
+                  technicalHires: 0,
+                  maxPillarFailures: 99,
+                  beltExtensions: 0,
+                  secondMinerTonnes: 0,
+                  afterFinanceAction: 'shaftDeepeningOrTargets',
+                  financeContinueLabel: 'Review Shaft Deepening Plan',
+                  briefing: '<p><strong>Strategic objective:</strong> complete enough drilling and approve shaft deepening to reach the <strong>-1100 Level</strong>.</p><p>Remaining at -1000 is permitted, but the KPI package will continue to ask why the tutorial level is being farmed.</p>'
+                },
+                {
+                  localYear: 4,
+                  phaseKey: 'overdue-depth-advancement',
+                  phaseTitle: 'Overdue -1100 Advancement Programme',
+                  phaseTheme: 'The operation is still on the training level. SLT has interpreted this as a leadership opportunity with consequences.',
+                  kpiKeys: ['productionDelivery', 'advance1100'],
+                  tonnes: 18500,
+                  grade: 14.0,
+                  discoveredRows: 3,
+                  surplusTarget: 0,
+                  lomTargetTonnes: 0,
+                  safetyMin: 0,
+                  technicalHires: 0,
+                  maxPillarFailures: 99,
+                  beltExtensions: 0,
+                  secondMinerTonnes: 0,
+                  afterFinanceAction: 'shaftDeepeningOrTargets',
+                  financeContinueLabel: 'Review Shaft Deepening Plan',
+                  repeatStep: 1000,
+                  briefing: '<p>The annual target is no longer the main point. The mine needs to progress to -1100 before the first level becomes a production cul-de-sac with better branding.</p>'
+                }
+              ]
+            },
+            1: {
+              depthIndex: 1,
+              levelName: '-1100 Level',
+              earliestYear: 3,
+              unlocks: ['technicalTeam'],
+              arrival: {
+                title: 'Welcome to the -1100 Level',
+                image: 'assets/images/new_level_reached.png',
+                character: 'New Level Reached',
+                department: 'Shaft Deepening Milestone',
+                label: 'LEVEL',
+                imageText: 'The mine has reached -1100. The consequences have been promoted accordingly.',
+                nextAction: 'roleIntro:miningEngineering',
+                body: '<p>Shaft deepening has reached the <strong>-1100 Level</strong>.</p><p>This level introduces Mining Engineering, research, and the first serious ground-control obligations. Pillars are no longer spare ore; they are the roof making a formal request to remain overhead.</p>'
+              },
+              character: {
+                image: 'assets/characters/mining-engineer-belt-study.png',
+                character: 'Mining Engineering Department',
+                department: 'Technical Capability',
+                imageText: 'Research converts concern into a programme.',
+                label: 'ENG'
+              },
+              annualPlans: [
+                {
+                  localYear: 1,
+                  phaseKey: 'mining-engineering',
+                  phaseTitle: '-1100 Level — Mining Engineering Programme',
+                  phaseTheme: 'Deeper mining introduces technical support, research and ground-control accountability before the plan can scale again.',
+                  kpiKeys: ['productionDelivery', 'technical', 'ground'],
+                  tonnes: 22000,
+                  grade: 14.1,
+                  technicalHires: 1,
+                  maxPillarFailures: 1,
+                  surplusTarget: 4000,
+                  afterFinanceAction: 'technicalHiring',
+                  financeContinueLabel: 'Proceed to Mining Engineering',
+                  briefing: '<p><strong>New department:</strong> Mining Engineering. Hire a Mining Engineer to unlock research projects that improve production, grade recovery, maintenance, belt reliability and ground-control practice.</p><p>Ground Control becomes more consequential once disturbed rows make pillar behaviour impossible to ignore.</p>'
+                },
+                {
+                  localYear: 2,
+                  phaseKey: 'ground-control',
+                  phaseTitle: '-1100 Level — Ground Control Reality',
+                  phaseTheme: 'The mine is now expected to produce while proving that the roof is not an optional stakeholder.',
+                  kpiKeys: ['productionDelivery', 'ground', 'technical'],
+                  tonnes: 24000,
+                  grade: 14.1,
+                  technicalHires: 2,
+                  maxPillarFailures: 1,
+                  surplusTarget: 6000,
+                  afterFinanceAction: 'technicalHiring',
+                  financeContinueLabel: 'Proceed to Technical Crew',
+                  repeatStep: 1500,
+                  briefing: '<p><strong>New requirement:</strong> keep ground failures under control while building enough technical capability to move deeper.</p><p>Support is a risk-control tool. The KPI is not “support everything”; the KPI is “do not let pillars become production commentary.”</p>'
+                }
+              ]
+            },
+            2: {
+              depthIndex: 2,
+              levelName: '-1200 Level',
+              earliestYear: 4,
+              unlocks: ['beltAdvancement', 'secondMiner'],
+              arrival: {
+                title: 'Welcome to the -1200 Level',
+                image: 'assets/images/new_level_reached.png',
+                character: 'New Level Reached',
+                department: 'Fleet Scale-Up',
+                label: 'LEVEL',
+                imageText: 'The mine has reached -1200. One HOPE was no longer enough to explain the target.',
+                nextAction: 'roleIntro:survey',
+                body: '<p>Shaft deepening has reached the <strong>-1200 Level</strong>.</p><p>This is the first proper fleet scale-up level. <strong>2ndHOPE</strong> is authorised, but the production target does not double instantly because two miners still share belts, people, routes, faults and attention.</p><p>Belt distance now matters visibly: miners working too far from the belt lose effective mining rate through travel time.</p>'
+              },
+              character: {
+                image: 'assets/characters/mining-engineer-belt-study.png',
+                character: 'Mine Services',
+                department: 'Fleet and Belt Scale-Up',
+                imageText: 'Distance is now a production mechanic.',
+                label: 'BELT'
+              },
+              annualPlans: [
+                {
+                  localYear: 1,
+                  phaseKey: 'fleet-commissioning',
+                  phaseTitle: '-1200 Level — Fleet Commissioning',
+                  phaseTheme: '2ndHOPE raises the ceiling, not the guarantee. First-year targets assume commissioning, travel losses, belt learning and the usual operational theatre.',
+                  kpiKeys: ['productionDelivery', 'fleet', 'belt'],
+                  tonnes: 30000,
+                  grade: 14.1,
+                  secondMinerTonnes: 7000,
+                  beltExtensions: 1,
+                  surplusTarget: 7000,
+                  afterFinanceAction: 'assetsSecondMiner',
+                  financeContinueLabel: 'Proceed to Fleet and Belt Controls',
+                  briefing: '<p><strong>New requirements:</strong> hire a Surveyor, advance the belt through mined-out centreline ground, and bring 2ndHOPE into useful production.</p><p>Targets ramp by roughly 50–80% over time rather than doubling immediately.</p>'
+                },
+                {
+                  localYear: 2,
+                  phaseKey: 'fleet-utilisation',
+                  phaseTitle: '-1200 Level — Fleet Utilisation',
+                  phaseTheme: 'The second miner is no longer a commissioning story. It is now expected to produce enough tonnes to justify its nameplate optimism.',
+                  kpiKeys: ['productionDelivery', 'fleet', 'belt'],
+                  tonnes: 35000,
+                  grade: 14.1,
+                  secondMinerTonnes: 11000,
+                  beltExtensions: 1,
+                  surplusTarget: 9000,
+                  afterFinanceAction: 'assetsSecondMiner',
+                  financeContinueLabel: 'Proceed to Fleet and Belt Controls',
+                  repeatStep: 2500,
+                  secondMinerRepeatStep: 1500,
+                  briefing: '<p>Fleet utilisation is now a normal operating expectation. Keeping 2ndHOPE idle is still technically a strategy, but only because all bad plans are strategies once named.</p>'
+                }
+              ]
+            },
+            3: {
+              depthIndex: 3,
+              levelName: '-1300 Level',
+              earliestYear: 5,
+              unlocks: ['gasWater'],
+              arrival: {
+                title: 'Welcome to the -1300 Level',
+                image: 'assets/images/new_level_reached.png',
+                character: 'Mine Environment',
+                department: 'Gas and Water',
+                label: 'ENV',
+                imageText: 'The mine has developed atmosphere and moisture.',
+                nextAction: 'resume',
+                body: '<p>Shaft deepening has reached the <strong>-1300 Level</strong>.</p><p>Gas pockets and water inflows can now affect production, safety, morale and asset condition. The risk is manageable in the same way all obvious risks become manageable once they are assigned to Production.</p>'
+              },
+              character: {
+                image: 'assets/characters/ventilation-warning.png',
+                character: 'Mine Environment',
+                department: 'Gas and Water',
+                imageText: 'The ground has retained several surprises.',
+                label: 'ENV'
+              },
+              annualPlans: [
+                {
+                  localYear: 1,
+                  phaseKey: 'gas-water',
+                  phaseTitle: '-1300 Level — Gas and Water',
+                  phaseTheme: 'Production now includes managing conditions that were previously footnotes in the risk register.',
+                  kpiKeys: ['productionDelivery', 'fleet', 'safety'],
+                  tonnes: 38000,
+                  grade: 14.2,
+                  secondMinerTonnes: 13000,
+                  safetyMin: 55,
+                  surplusTarget: 9000,
+                  afterFinanceAction: 'targets',
+                  financeContinueLabel: 'Review Gas and Water Risks',
+                  repeatStep: 3000,
+                  secondMinerRepeatStep: 1800,
+                  briefing: '<p><strong>New operating reality:</strong> gas and water may now damage equipment, interrupt work and create safety consequences that are hard to solve with a meeting.</p>'
+                }
+              ]
+            },
+            4: {
+              depthIndex: 4,
+              levelName: '-1400 Level',
+              earliestYear: 6,
+              unlocks: ['ventilation'],
+              arrival: {
+                title: 'Welcome to the -1400 Level',
+                image: 'assets/images/new_level_reached.png',
+                character: 'Ventilation Engineering',
+                department: 'Air Movement Assurance',
+                label: 'VENT',
+                imageText: 'The mine is now warm enough to require theory.',
+                nextAction: 'roleIntro:ventilation',
+                body: '<p>Shaft deepening has reached the <strong>-1400 Level</strong>.</p><p>Heat and ventilation are now strategic. Procurement has identified a mine fan near the winder as the preferred first-stage air movement solution.</p>'
+              },
+              character: {
+                image: 'assets/characters/ventilation-engineer.png',
+                character: 'Ventilation Engineering',
+                department: 'Air Movement Assurance',
+                imageText: 'Air has been moved somewhere.',
+                label: 'VENT'
+              },
+              annualPlans: [
+                {
+                  localYear: 1,
+                  phaseKey: 'ventilation',
+                  phaseTitle: '-1400 Level — Ventilation Readiness',
+                  phaseTheme: 'The mine has become deep enough that air movement needs both equipment and someone willing to sign the fan curve.',
+                  kpiKeys: ['productionDelivery', 'ventilation', 'safety'],
+                  tonnes: 45000,
+                  grade: 14.2,
+                  safetyMin: 60,
+                  ventilationActions: 1,
+                  surplusTarget: 11000,
+                  afterFinanceAction: 'technicalHiring',
+                  financeContinueLabel: 'Proceed to Ventilation Planning',
+                  repeatStep: 3500,
+                  briefing: '<p><strong>New requirements:</strong> hire a Ventilation Engineer and purchase a Mine Fan. The fan is small, oscillating, and officially part of the operating strategy.</p>'
+                }
+              ]
+            }
+          },
+          metrics: {
+            bulkSample: 'Bulk Sample',
+            productionDelivery: 'Production Delivery',
+            exploration: 'Exploration Drilling',
+            surplus: 'Operating Surplus',
+            lom: 'Ore Reserve Inventory',
+            technical: 'Technical Capability',
+            ground: 'Ground Stability',
+            fleet: '2ndHOPE Utilisation',
+            belt: 'Belt Advancement',
+            safety: 'Safety Floor',
+            ventilation: 'Ventilation Readiness',
+            sharePrice: 'Share Price',
+            advance1100: 'Advance to -1100 Level'
+          }
+        };
+
+        function progressionState() {
+          state.progression = state.progression || {};
+          state.progression.depthArrivalYears = state.progression.depthArrivalYears || { 0: 1 };
+          return state.progression;
+        }
+
+        function progressionDepth(depthIndex = state.depthIndex) {
+          return Math.max(0, Math.min(4, Number(depthIndex) || 0));
+        }
+
+        function progressionLevel(depthIndex = state.depthIndex) {
+          const depth = progressionDepth(depthIndex);
+          return GAME_PROGRESSION_CONFIG.depthLevels[depth] || GAME_PROGRESSION_CONFIG.depthLevels[4];
+        }
+
+        function progressionRecordDepthArrival(depthIndex = state.depthIndex, year = state.year) {
+          const depth = progressionDepth(depthIndex);
+          const s = progressionState();
+          if (!s.depthArrivalYears[depth]) s.depthArrivalYears[depth] = Math.max(1, Number(year) || 1);
+          return s.depthArrivalYears[depth];
+        }
+
+        function progressionDepthArrivalYear(depthIndex = state.depthIndex, year = state.year) {
+          const depth = progressionDepth(depthIndex);
+          if (depth === 0) return 1;
+          const s = progressionState();
+          if (s.depthArrivalYears[depth]) return Number(s.depthArrivalYears[depth]) || 1;
+          if (depth === progressionDepth(state.depthIndex)) return progressionRecordDepthArrival(depth, year);
+          return progressionLevel(depth).earliestYear || Math.max(1, Number(year) || 1);
+        }
+
+        function progressionLocalYear(year = state.year, depthIndex = state.depthIndex) {
+          const y = Math.max(1, Number(year) || 1);
+          const depth = progressionDepth(depthIndex);
+          if (depth === 0) return y;
+          return Math.max(1, y - progressionDepthArrivalYear(depth, y) + 1);
+        }
+
+        function progressionPlanTemplate(year = state.year, depthIndex = state.depthIndex) {
+          const level = progressionLevel(depthIndex);
+          const localYear = progressionLocalYear(year, depthIndex);
+          const plans = Array.isArray(level.annualPlans) && level.annualPlans.length ? level.annualPlans : [];
+          let template = plans.find(p => Number(p.localYear) === localYear) || plans[plans.length - 1] || GAME_PROGRESSION_CONFIG.depthLevels[0].annualPlans[0];
+          const repeatFrom = Math.max(1, Number(template.localYear) || 1);
+          const extraYears = Math.max(0, localYear - repeatFrom);
+          return { template, level, localYear, extraYears };
+        }
+
+        function cloneProgressionPlan(plan) {
+          const copy = { ...plan };
+          copy.kpiKeys = Array.isArray(plan.kpiKeys) ? plan.kpiKeys.slice() : ['productionDelivery'];
+          delete copy.briefing;
+          delete copy.character;
+          delete copy.afterFinanceAction;
+          delete copy.financeContinueLabel;
+          delete copy.repeatStep;
+          delete copy.secondMinerRepeatStep;
+          return copy;
+        }
+
+        function progressionTargetPackage(year = state.year, depthIndex = state.depthIndex) {
+          const y = Math.max(1, Number(year) || 1);
+          const depth = progressionDepth(depthIndex);
+          const { template, level, localYear, extraYears } = progressionPlanTemplate(y, depth);
+          const target = cloneProgressionPlan(template);
+          const repeatStep = Number(template.repeatStep) || Number(template.annualStep) || 0;
+          const secondStep = Number(template.secondMinerRepeatStep) || 0;
+          if (extraYears > 0 && repeatStep) target.tonnes = Math.round((Number(target.tonnes) || TARGET_TONNES) + repeatStep * extraYears);
+          if (extraYears > 0 && secondStep) target.secondMinerTonnes = Math.round((Number(target.secondMinerTonnes) || 0) + secondStep * extraYears);
+          target.progressionConfigVersion = PROGRESSION_CONFIG_VERSION;
+          target.year = y;
+          target.depthIndex = depth;
+          target.localYear = localYear;
+          target.levelName = level.levelName;
+          target.grade = Number(target.grade) || GAME_PROGRESSION_CONFIG.defaultGrade;
+          target.tonnes = Math.round(Number(target.tonnes) || TARGET_TONNES);
+          target.discoveredRows = Math.max(0, Math.round(Number(target.discoveredRows) || 0));
+          target.surplusTarget = Math.round(Number(target.surplusTarget) || 0);
+          target.lomTargetTonnes = Math.round(Number(target.lomTargetTonnes) || 0);
+          target.technicalHires = Math.max(0, Math.round(Number(target.technicalHires) || 0));
+          target.maxPillarFailures = typeof target.maxPillarFailures === 'number' ? target.maxPillarFailures : 99;
+          target.pillarSupports = 0;
+          target.beltExtensions = Math.max(0, Math.round(Number(target.beltExtensions) || 0));
+          target.secondMinerTonnes = Math.max(0, Math.round(Number(target.secondMinerTonnes) || 0));
+          target.safetyMin = Math.max(0, Math.round(Number(target.safetyMin) || 0));
+          target.ventilationActions = Math.max(0, Math.round(Number(target.ventilationActions) || 0));
+          target.sharePriceTarget = Math.max(0, Math.round(Number(target.sharePriceTarget) || 0));
+          return progressionSanitiseTarget(target, y, depth);
+        }
+
+        function progressionSanitiseTarget(target = {}, year = state.year, depthIndex = state.depthIndex) {
+          const depth = progressionDepth(depthIndex);
+          const t = { ...target };
+          t.kpiKeys = (Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : ['productionDelivery'])
+            .filter(Boolean)
+            .filter((key, index, arr) => arr.indexOf(key) === index);
+          if (depth < 2) {
+            t.kpiKeys = t.kpiKeys.filter(key => key !== 'fleet' && key !== 'belt');
+            t.secondMinerTonnes = 0;
+            t.beltExtensions = 0;
+          }
+          if (depth < 4) {
+            t.kpiKeys = t.kpiKeys.filter(key => key !== 'ventilation');
+            t.ventilationActions = 0;
+          }
+          if (!featureUnlocked('exploration') && depth === 0) {
+            t.kpiKeys = t.kpiKeys.filter(key => key !== 'exploration');
+            t.discoveredRows = 0;
+          }
+          if (t.kpiKeys.includes('ground')) {
+            t.pillarSupports = 0;
+            if (!(typeof t.maxPillarFailures === 'number' && t.maxPillarFailures < 99)) t.maxPillarFailures = 1;
+          } else {
+            t.maxPillarFailures = typeof t.maxPillarFailures === 'number' ? t.maxPillarFailures : 99;
+            t.pillarSupports = 0;
+          }
+          return t;
+        }
+
+        function progressionMetricLabel(key) {
+          return GAME_PROGRESSION_CONFIG.metrics[key] || String(key || '').replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+        }
+
+        function progressionYearStartHtml(year = state.year) {
+          const { template } = progressionPlanTemplate(year, state.depthIndex);
+          const plan = progressionTargetPackage(year, state.depthIndex);
+          const briefing = template.briefing || '<p>The annual targets continue to increase because the target has already appeared in a slide deck.</p>';
+          return `<div class="letter"><h2>${escapeHtml(plan.phaseTitle || 'Annual KPI Notice')}</h2><p>${escapeHtml(plan.phaseTheme || '')}</p>${briefing}<h3>Fixed KPI Package</h3>${targetSummaryWithValuesHtml(plan)}<p class="sig">Superior Leadership Team<br>Predictable Ambition, Adjustable Reality</p></div>`;
+        }
+
+        function progressionCharacterHtml(year = state.year) {
+          const { template, level } = progressionPlanTemplate(year, state.depthIndex);
+          const data = template.character || level.character || GAME_PROGRESSION_CONFIG.depthLevels[0].character;
+          return modalCharacterHtml(data.image, data.character, data.department, data.imageText, data.label);
+        }
+
+        function progressionFinanceContinueLabel(year = state.year) {
+          const { template } = progressionPlanTemplate(year, state.depthIndex);
+          return template.financeContinueLabel || 'Continue Operating Year';
+        }
+
+        function progressionAfterFinanceAction(year = state.year) {
+          const { template } = progressionPlanTemplate(year, state.depthIndex);
+          return template.afterFinanceAction || 'targets';
+        }
+
+        function progressionLevelArrivalDetails(depthIndex = state.depthIndex) {
+          const level = progressionLevel(depthIndex);
+          const arrival = level.arrival || {};
+          return {
+            title: arrival.title || ('Welcome to the ' + (level.levelName || currentLevelName())),
+            body: arrival.body || `<p>Shaft deepening has reached the <strong>${escapeHtml(level.levelName || currentLevelName())}</strong>.</p>`,
+            image: arrival.image || 'assets/images/new_level_reached.png',
+            character: arrival.character || 'New Level Reached',
+            department: arrival.department || 'Shaft Deepening Milestone',
+            label: arrival.label || 'LEVEL',
+            imageText: arrival.imageText || 'The mine has reached a new level.',
+            nextAction: arrival.nextAction || 'resume'
+          };
+        }
+
+        function progressionOpenAction(action, source = 'progression') {
+          const act = String(action || 'targets');
+          if (act.startsWith('roleIntro:')) {
+            const key = act.split(':')[1];
+            if (key) return openRoleUnlockIntro(key);
+          }
+          if (act === 'technicalHiring') {
+            state.hiringTab = 'technical';
+            openWindow('hr', false, progressionFinanceContinueLabel(state.year));
+            return true;
+          }
+          if (act === 'shaftDeepeningOrTargets') {
+            if (canApproveShaftDeepening()) openShaftDeepeningProposal();
+            else openWindow('targets', false, 'Depth Advancement Programme');
+            return true;
+          }
+          if (act === 'assetsSecondMiner') {
+            if (!surveyorOnCrew()) {
+              state.hiringTab = 'technical';
+              openWindow('hr', false, 'Hire Surveyor for Belt and Fleet Controls');
+            } else {
+              openWindow('assets', false, 'Fleet and Belt Controls');
+            }
+            return true;
+          }
+          if (act === 'assetsFan') {
+            openWindow('assets', false, 'Ventilation Planning');
+            return true;
+          }
+          if (act === 'research') {
+            openWindow('research', false, 'Mining Engineering Research');
+            return true;
+          }
+          if (act === 'resume') {
+            state.manualPaused = false;
+            state.paused = false;
+            if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+            const overlay = $('modalOverlay');
+            if (overlay) overlay.classList.remove('show');
+            return true;
+          }
+          openWindow('targets', false, 'Annual KPI Notice');
+          return true;
+        }
+
+        function progressionOpenLevelArrivalModal() {
+          progressionRecordDepthArrival(state.depthIndex, state.year);
+          const details = progressionLevelArrivalDetails(state.depthIndex);
+          state.progressionLevelArrivalActive = true;
+          state.progressionLevelArrivalNextAction = details.nextAction || 'resume';
+          state.paused = true;
+          if ($('pauseBtn')) $('pauseBtn').textContent = 'Resume';
+          if (typeof playLevelCompleteSound === 'function') {
+            try { playLevelCompleteSound(); } catch (err) {}
+          }
+          setModalClosable(false);
+          $('modalWindow').className = 'window medium';
+          $('modalTitle').textContent = details.title;
+          $('modalBody').innerHTML = `${modalCharacterHtml(details.image, details.character, details.department, details.imageText, details.label)}
+            <div class="letter"><h2>${escapeHtml(details.title)}</h2>${details.body}</div>
+            <div class="btnRow"><button class="primary" data-progression-level-arrival-continue>Continue Operational Escalation</button></div>`;
+          $('modalOverlay').classList.add('show');
+          return true;
+        }
+
+        function progressionFeatureUnlocked(name) {
+          const y = Number(state.year) || 1;
+          const depth = progressionDepth(state.depthIndex);
+          if (name === 'exploration') return y >= 2;
+          if (name === 'technicalTeam') return depth >= 1;
+          if (name === 'groundSupport') return depth >= 1 && !!state.groundControlUnlocked;
+          if (name === 'beltAdvancement') return depth >= 2;
+          if (name === 'secondMiner') return depth >= 2;
+          if (name === 'gasWater') return depth >= 3;
+          if (name === 'ventilation') return depth >= 4;
+          if (name === 'pillarSplitting') return false;
+          return true;
+        }
+
+        const previousFeatureUnlockedForProgression = typeof featureUnlocked === 'function' ? featureUnlocked : null;
+        featureUnlocked = function(name) {
+          if (['exploration', 'technicalTeam', 'groundSupport', 'beltAdvancement', 'secondMiner', 'gasWater', 'ventilation', 'pillarSplitting'].includes(name)) {
+            return progressionFeatureUnlocked(name);
+          }
+          return previousFeatureUnlockedForProgression ? previousFeatureUnlockedForProgression(name) : true;
+        };
+
+        targetsForYear = function(year = state.year) {
+          return progressionTargetPackage(year, state.depthIndex);
+        };
+
+        fixedKpiPackageForCurrentPhase = function(year = state.year, depthIndex = state.depthIndex) {
+          return progressionTargetPackage(year, depthIndex);
+        };
+
+        sanitiseFixedPhaseTargets = function(target = {}, year = state.year) {
+          return progressionSanitiseTarget(target, year, state.depthIndex);
+        };
+
+        activeAnnualTargets = function() {
+          const expected = progressionTargetPackage(state.year, state.depthIndex);
+          if (!state.annualTargets || state.annualTargets.progressionConfigVersion !== PROGRESSION_CONFIG_VERSION || state.annualTargets.year !== state.year || state.annualTargets.depthIndex !== progressionDepth(state.depthIndex)) {
+            state.annualTargets = expected;
+          } else {
+            state.annualTargets = progressionSanitiseTarget(state.annualTargets, state.year, state.depthIndex);
+          }
+          return state.annualTargets;
+        };
+
+        if (typeof applyAnnualTargetUnlockGuards === 'function') {
+          applyAnnualTargetUnlockGuards = function(target = state.annualTargets) {
+            return progressionSanitiseTarget(target || progressionTargetPackage(state.year, state.depthIndex), state.year, state.depthIndex);
+          };
+        }
+
+        focusKpiKeysForYear = function(year = state.year) {
+          return progressionTargetPackage(year, state.depthIndex).kpiKeys.slice();
+        };
+
+        const previousMetricLabelForProgression = typeof metricLabelForKey === 'function' ? metricLabelForKey : null;
+        metricLabelForKey = function(key) {
+          return GAME_PROGRESSION_CONFIG.metrics[key] || (previousMetricLabelForProgression ? previousMetricLabelForProgression(key) : progressionMetricLabel(key));
+        };
+
+        yearStartBriefingHtml = function(year = state.year) {
+          return progressionYearStartHtml(year);
+        };
+
+        yearStartCharacterHtml = function(year = state.year) {
+          return progressionCharacterHtml(year);
+        };
+
+        financeContinueLabel = function(year = state.year) {
+          return progressionFinanceContinueLabel(year);
+        };
+
+        levelArrivalDetails = function(depthIndex = state.depthIndex) {
+          const d = progressionLevelArrivalDetails(depthIndex);
+          // Preserve legacy fields used by old buttons without allowing them to drive flow.
+          return { ...d, next: '', next2: '' };
+        };
+
+        openLevelArrivalModal = function() {
+          return progressionOpenLevelArrivalModal();
+        };
+
+        forgivingProductionTonnes = function(year = state.year, depthIndex = state.depthIndex) {
+          return progressionTargetPackage(year, depthIndex).tonnes;
+        };
+
+        productionTargetGrade = function(year = state.year, depthIndex = state.depthIndex) {
+          return progressionTargetPackage(year, depthIndex).grade;
+        };
+
+        forgivingSecondMinerTonnes = function(year = state.year, depthIndex = state.depthIndex) {
+          return progressionTargetPackage(year, depthIndex).secondMinerTonnes || 0;
+        };
+
+        rebalanceProductionTarget = function(target, year = state.year, depthIndex = state.depthIndex, preserveEscalation = false) {
+          const base = progressionTargetPackage(year, depthIndex);
+          const t = { ...(target || {}), ...base };
+          if (preserveEscalation && target && Number(target.tonnes) > Number(base.tonnes)) t.tonnes = Number(target.tonnes);
+          return progressionSanitiseTarget(t, year, depthIndex);
+        };
+
+        document.addEventListener('click', function(e) {
+          const levelBtn = e.target.closest('[data-progression-level-arrival-continue], [data-level-arrival-continue]');
+          if (levelBtn && state.progressionLevelArrivalActive) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const action = state.progressionLevelArrivalNextAction || 'resume';
+            state.progressionLevelArrivalActive = false;
+            const overlay = $('modalOverlay');
+            if (overlay) overlay.classList.remove('show');
+            progressionOpenAction(action, 'level-arrival');
+            return;
+          }
+
+          const financeBtn = e.target.closest('[data-finance-continue]');
+          if (financeBtn) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            state.manualPaused = false;
+            state.paused = false;
+            if ($('pauseBtn')) $('pauseBtn').textContent = 'Pause';
+            if (typeof resumeMusicAfterFormalModal === 'function') resumeMusicAfterFormalModal();
+            const overlay = $('modalOverlay');
+            if (overlay) overlay.classList.remove('show');
+            progressionOpenAction(progressionAfterFinanceAction(state.year), 'annual-finance');
+          }
+        }, true);
+
+        progressionRecordDepthArrival(state.depthIndex, state.year);
+        state.annualTargets = progressionTargetPackage(state.year, state.depthIndex);
+
+        window.RTP_GAME_PROGRESSION_CONFIG = GAME_PROGRESSION_CONFIG;
+        window.getProgressionAnnualTarget = progressionTargetPackage;
+        window.getProgressionLevel = progressionLevel;
+        window.getProgressionLocalYear = progressionLocalYear;
+
+        if (typeof RTP_EVENT_ARCHITECTURE === 'object' && RTP_EVENT_ARCHITECTURE) {
+          RTP_EVENT_ARCHITECTURE.progressionArchitecture = 'Authoritative config installed for year KPIs, level unlocks, department unlocks and level-arrival flow.';
+        }
       })();
 
 
