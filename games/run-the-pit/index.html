@@ -29689,6 +29689,18 @@
          RTP_EVENT_DEFINITIONS with category/title/body/choices/effects metadata.
       */
       (function installCanonicalEventArchitecture(){
+        // Canonical lifecycle functions are installed late, inside the main game closure.
+        // Some lifecycle names are new public API entries and do not have older lexical
+        // declarations, so keep them local here and publish them through window below.
+        let canTriggerEvent;
+        let createEventInstance;
+        let triggerEvent;
+        let openEventInstance;
+        let completeEvent;
+        let applyEventEffects;
+        let startRestriction;
+        let endRestriction;
+
         const CATEGORY_ALIASES = Object.freeze({
           restrictive: 'restriction',
           queue: 'queueAlert'
