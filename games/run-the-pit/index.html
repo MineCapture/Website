@@ -30875,12 +30875,17 @@
           return progressionTargetPackage(year, depthIndex).secondMinerTonnes || 0;
         };
 
-        rebalanceProductionTarget = function(target, year = state.year, depthIndex = state.depthIndex, preserveEscalation = false) {
+        const progressionRebalanceProductionTarget = function(target, year = state.year, depthIndex = state.depthIndex, preserveEscalation = false) {
           const base = progressionTargetPackage(year, depthIndex);
           const t = { ...(target || {}), ...base };
           if (preserveEscalation && target && Number(target.tonnes) > Number(base.tonnes)) t.tonnes = Number(target.tonnes);
           return progressionSanitiseTarget(t, year, depthIndex);
         };
+
+        if (typeof rebalanceProductionTarget === 'function') {
+          rebalanceProductionTarget = progressionRebalanceProductionTarget;
+        }
+        window.rebalanceProductionTarget = progressionRebalanceProductionTarget;
 
         document.addEventListener('click', function(e) {
           const levelBtn = e.target.closest('[data-progression-level-arrival-continue], [data-level-arrival-continue]');
