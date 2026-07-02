@@ -5689,6 +5689,59 @@
       }
     }
 
+  
+
+    /* Onboarding guidance: first use of the HOPE mining remote */
+    .toolbarMachineRemote.hopeRemoteGuide {
+      z-index: 20;
+    }
+
+    .toolbarMachineRemote.hopeRemoteGuide .remoteShell {
+      position: relative;
+      animation: hopeRemoteGuidePulse 1.15s ease-in-out infinite;
+      box-shadow:
+        0 0 0 3px rgba(253,224,71,0.46),
+        0 0 24px rgba(253,224,71,0.50),
+        inset 0 2px 0 rgba(255,255,255,0.15);
+    }
+
+    .toolbarMachineRemote.hopeRemoteGuide::before {
+      content: 'Use this HOPE remote to start mining';
+      position: absolute;
+      left: 50%;
+      top: -42px;
+      transform: translateX(-50%);
+      min-width: 210px;
+      max-width: 280px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 2px solid rgba(253,224,71,0.92);
+      background: rgba(15,23,42,0.94);
+      color: #fef9c3;
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.38);
+      pointer-events: none;
+      z-index: 21;
+    }
+
+    @keyframes hopeRemoteGuidePulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.22); }
+    }
+
+    @media (max-width: 760px) {
+      .toolbarMachineRemote.hopeRemoteGuide::before,
+      body.phoneLayout .toolbarMachineRemote.hopeRemoteGuide::before {
+        top: -34px;
+        min-width: 160px;
+        max-width: 190px;
+        padding: 5px 7px;
+        font-size: 9px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -6329,7 +6382,7 @@
       const CREW_TRAIT_KEYS = ['productivity', 'skill', 'morale', 'safety'];
 
       const ROW_TONNES_BY_DEPTH = {
-        0: [2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800],
+        0: [2000, 2500, 3000, 3500, 4000, 4400, 4800, 5200, 5600, 6000, 6400, 6800, 7200, 7600, 8000],
         1: [2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000, 5200, 5400],
         2: [3200, 3600, 4000, 4400, 4600, 4800, 5000, 5200, 5400, 5600, 5800, 6000, 6200, 6400, 6600],
         3: [3700, 4100, 4500, 4900, 5200, 5500, 5800, 6100, 6400, 6700, 7000, 7300, 7600, 7900, 8200],
@@ -7140,6 +7193,33 @@
         const rowIndex = bottomUpRowIndex(row);
         const table = ROW_TONNES_BY_DEPTH[depth] || ROW_TONNES_BY_DEPTH[4];
         return table[Math.min(rowIndex, table.length - 1)];
+      }
+
+
+      function validateRuntimeBlockTonnes(source = 'runtime') {
+        const blocks = (state.blocks && state.blocks[MINE_ID]) || [];
+        const rows = [];
+        for (let r = 0; r < MINE_ROWS; r++) {
+          const rowBlocks = blocks.filter(b => b && b.r === r && !b.isPillar && b.status !== 'locked' && Number(b.tonnes) > 0);
+          if (!rowBlocks.length) continue;
+          const values = Array.from(new Set(rowBlocks.map(b => Number(b.tonnes) || 0))).sort((a, b) => a - b);
+          rows.push({
+            row: r,
+            bottomUpRow: bottomUpRowIndex(r),
+            expectedTonnesPerBlock: tonnesPerBlockForRow(r, state.depthIndex),
+            actualTonnesPerBlockValues: values,
+            blockCount: rowBlocks.length
+          });
+        }
+        const firstProductionRow = rows.find(row => row.bottomUpRow === 0) || null;
+        window.RTP_RUNTIME_TONNAGE_VALIDATION = {
+          source,
+          depthIndex: Number(state.depthIndex) || 0,
+          levelName: currentLevelName ? currentLevelName() : '',
+          firstProductionRow,
+          rows
+        };
+        return window.RTP_RUNTIME_TONNAGE_VALIDATION;
       }
 
 
@@ -12267,6 +12347,7 @@
       function resetMineForNewDepth() {
         state.minedBlockKeys = [];
         initBlocks();
+        validateRuntimeBlockTonnes('depth-reset');
         state.machine.q = MINE_ID;
         state.machine.r = START_ROW;
         state.machine.c = START_COL;
@@ -22632,7 +22713,7 @@
       };
 
 
-      /* Playtest pass 6: decision outcomes, balance, ground-control onboarding and safety hold fixes. */
+      /* Decision outcomes, ground-control onboarding and safety hold behaviour. */
       function groundControlSystemImmediateOutcomeModal(ev) {
         if (!ev) return;
         setModalClosable(true);
@@ -22729,20 +22810,6 @@
           return true;
         }
         return baseForceExternalAffairsEventForGroundControlSystem(kind);
-      };
-
-      // Lower block tonnage while preserving mining duration. A very efficient Year 1 should now land near 15kt, not far above it.
-      const TUTORIAL_BLOCK_TONNES_FACTOR = 0.34;
-      const baseInitBlocksForGroundControlSystem = initBlocks;
-      initBlocks = function() {
-        baseInitBlocksForGroundControlSystem();
-        const blocks = state.blocks && state.blocks[MINE_ID] ? state.blocks[MINE_ID] : [];
-        for (const b of blocks) {
-          if (!b || b.isPillar) continue;
-          const sourceTonnes = Number(b.groundControlSystemOriginalTonnes || b.tonnes || 0);
-          if (!b.groundControlSystemOriginalTonnes) b.groundControlSystemOriginalTonnes = sourceTonnes;
-          b.tonnes = Math.max(120, Math.round(sourceTonnes * TUTORIAL_BLOCK_TONNES_FACTOR));
-        }
       };
 
       const baseFixedKpiPackageForGroundControlSystem = fixedKpiPackageForCurrentPhase;
@@ -22930,9 +22997,7 @@
         return baseDevActionForGroundControlSystem(action);
       };
 
-      /* Playtest pass 7: late-year reconciliation, scaled event impacts, low-tonnage explanation, and Year 1 balance. */
-      const ROW_REBALANCE_BLOCK_TONNES_FACTOR = 0.43;
-
+      /* Event impact scaling and late-year reconciliation helpers. */
       function tonnageScaleSystemOperatingYearScale() {
         return Math.max(1, (Number(state.year) || 1) + (Number(state.depthIndex) || 0) * 0.45);
       }
@@ -22969,20 +23034,6 @@
         const value = Math.max(1, Math.round(Math.abs(raw) * factor * tonnageScaleSystemMagnitude(0.85, 1.20)));
         return raw < 0 ? -value : value;
       }
-
-      // Balance correction: groundControlSystem reduced block tonnes too far. Keep mining duration unchanged and lift tonnes part-way back.
-      const baseInitBlocksForTonnageScaleSystem = initBlocks;
-      initBlocks = function() {
-        baseInitBlocksForTonnageScaleSystem();
-        const blocks = state.blocks && state.blocks[MINE_ID] ? state.blocks[MINE_ID] : [];
-        for (const b of blocks) {
-          if (!b || b.isPillar) continue;
-          const sourceTonnes = Number(b.groundControlSystemOriginalTonnes || b.tonnageScaleSystemOriginalTonnes || b.tonnes || 0);
-          if (!b.groundControlSystemOriginalTonnes) b.groundControlSystemOriginalTonnes = sourceTonnes;
-          if (!b.tonnageScaleSystemOriginalTonnes) b.tonnageScaleSystemOriginalTonnes = sourceTonnes;
-          b.tonnes = Math.max(140, Math.round(sourceTonnes * ROW_REBALANCE_BLOCK_TONNES_FACTOR));
-        }
-      };
 
       // Later-year shaft / skip reconciliation: it now lands late enough to affect the year-end tension.
       maybeSkipFactorEvent = function() {
@@ -23587,38 +23638,8 @@
         $('modalOverlay').classList.add('show');
       };
 
-      // Tonnage balance: increase baseline and reward advancing into newly explored/higher rows.
-      const DEPTH_LEVEL_BASE_BLOCK_TONNES_FACTOR = 0.56;
-      function researchKpiSystemRowTonnesMultiplier(row) {
-        const forwardScore = clamp((MINE_ROWS - 1 - Number(row || 0)) / Math.max(1, MINE_ROWS - 1), 0, 1);
-        return clamp(0.92 + forwardScore * 0.30, 0.90, 1.24);
-      }
 
-      const baseInitBlocksForResearchKpiSystem = initBlocks;
-      initBlocks = function() {
-        baseInitBlocksForResearchKpiSystem();
-        const blocks = state.blocks && state.blocks[MINE_ID] ? state.blocks[MINE_ID] : [];
-        for (const b of blocks) {
-          if (!b || b.isPillar) continue;
-          const sourceTonnes = Number(b.groundControlSystemOriginalTonnes || b.tonnageScaleSystemOriginalTonnes || b.researchKpiSystemOriginalTonnes || b.tonnes || 0);
-          if (!b.researchKpiSystemOriginalTonnes) b.researchKpiSystemOriginalTonnes = sourceTonnes;
-          const rowMult = researchKpiSystemRowTonnesMultiplier(b.r);
-          b.tonnes = Math.max(180, Math.round(sourceTonnes * DEPTH_LEVEL_BASE_BLOCK_TONNES_FACTOR * rowMult));
-        }
-        for (let r = 0; r < MINE_ROWS; r++) {
-          const rowBlocks = blocks.filter(b => b && !b.isPillar && b.r === r && Number(b.tonnes) > 0);
-          if (!rowBlocks.length) continue;
-          const avg = rowBlocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0) / rowBlocks.length;
-          const rowTonnes = Math.max(180, Math.round(avg / 50) * 50);
-          rowBlocks.forEach(b => {
-            b.tonnes = rowTonnes;
-            b.rowTonnesNormalised = true;
-          });
-        }
-      };
-
-
-      /* Playtest pass 9: research trait context, compact HOPE remotes, HR badge routing, external-affairs images and safety countdown fix. */
+      /* Research trait context, compact HOPE remotes, HR badge routing, external-affairs images and safety countdown behaviour. */
 
       const RESEARCH_SYSTEM_ASSET = 'assets/images/research_programme.png';
       function mobileHrSafetyTraitCurrentBadge(opt) {
@@ -29411,6 +29432,7 @@
 
       applyResponsiveLayout();
       initBlocks();
+      validateRuntimeBlockTonnes('initial-load');
       bind();
       resize();
       setTimeout(resize, 250);
@@ -29514,7 +29536,7 @@
 
 
 
-      /* Event Architecture — Follow-up Reconciliations — playtest notes.
+      /* Event Architecture — Follow-up Reconciliations.
          1) Survey reconciliation copy now names the restored grid square.
          2) HOPE support acknowledgement button copy updated.
          3) Row tonnage labels now show tonnes per block, and row block tonnes are normalised.
@@ -29533,32 +29555,6 @@
           const g = typeof block.estimatedGrade === 'number' ? block.estimatedGrade : block.grade;
           if (typeof blockRevenue === 'function') return blockRevenue(Number(block.tonnes) || 0, Number(g) || 0);
           return 0;
-        }
-
-        function productionRebalanceNormaliseBlockTonnesByRow() {
-          const blocks = (state.blocks && state.blocks[MINE_ID]) || [];
-          for (let r = 0; r < MINE_ROWS; r++) {
-            const rowBlocks = blocks.filter(b => b && b.r === r && !b.isPillar && b.status !== 'locked' && Number(b.tonnes) > 0);
-            if (!rowBlocks.length) continue;
-            const avg = rowBlocks.reduce((sum, b) => sum + (Number(b.tonnes) || 0), 0) / rowBlocks.length;
-            const rowTonnes = Math.max(250, Math.round(avg / 50) * 50);
-            rowBlocks.forEach(b => {
-              if (b.status !== 'void' || b.surveyCorrectionRestored) {
-                b.tonnes = rowTonnes;
-                b.rowTonnesNormalised = true;
-              }
-            });
-          }
-        }
-
-        if (typeof initBlocks === 'function') {
-          const productionRebalanceInitBlocksBase = initBlocks;
-          initBlocks = function() {
-            const result = productionRebalanceInitBlocksBase.apply(this, arguments);
-            productionRebalanceNormaliseBlockTonnesByRow();
-            return result;
-          };
-          productionRebalanceNormaliseBlockTonnesByRow();
         }
 
         if (typeof rowReserveEstimate === 'function') {
@@ -30369,13 +30365,13 @@
                   localYear: 1,
                   phaseKey: 'mining-engineering',
                   phaseTitle: '-1100 Level — Mining Engineering Programme',
-                  phaseTheme: 'Deeper mining introduces technical support, research and ground-control accountability before the plan can scale again.',
+                  phaseTheme: 'The -1100 Level is the pillar-and-engineering learning level. Targets stay deliberately survivable while the player learns research, mine design and ground-control accountability.',
                   kpiKeys: ['productionDelivery', 'technical', 'ground'],
-                  tonnes: 22000,
+                  tonnes: 18000,
                   grade: 14.1,
                   technicalHires: 1,
                   maxPillarFailures: 1,
-                  surplusTarget: 4000,
+                  surplusTarget: 2500,
                   afterFinanceAction: 'technicalHiring',
                   financeContinueLabel: 'Proceed to Mining Engineering',
                   briefing: '<p><strong>New department:</strong> Mining Engineering. Hire a Mining Engineer to unlock research projects that improve production, grade recovery, maintenance, belt reliability and ground-control practice.</p><p>Ground Control becomes more consequential once disturbed rows make pillar behaviour impossible to ignore.</p>'
@@ -30384,13 +30380,13 @@
                   localYear: 2,
                   phaseKey: 'ground-control',
                   phaseTitle: '-1100 Level — Ground Control Reality',
-                  phaseTheme: 'The mine is now expected to produce while proving that the roof is not an optional stakeholder.',
+                  phaseTheme: 'The mine is now expected to keep producing while learning that the roof is not an optional stakeholder. Pressure increases, but the real fleet test is still waiting at -1200.',
                   kpiKeys: ['productionDelivery', 'ground', 'technical'],
-                  tonnes: 24000,
+                  tonnes: 21000,
                   grade: 14.1,
                   technicalHires: 2,
                   maxPillarFailures: 1,
-                  surplusTarget: 6000,
+                  surplusTarget: 4000,
                   afterFinanceAction: 'technicalHiring',
                   financeContinueLabel: 'Proceed to Technical Crew',
                   repeatStep: 1500,
@@ -30575,6 +30571,10 @@
           const depth = progressionDepth(depthIndex);
           const s = progressionState();
           if (!s.depthArrivalYears[depth]) s.depthArrivalYears[depth] = Math.max(1, Number(year) || 1);
+          s.depthFullOperatingYears = s.depthFullOperatingYears || { 0: 1 };
+          // Reaching a level mid-year is a transition/onboarding period.
+          // The first full annual KPI package for that level begins the following operating year.
+          if (depth > 0 && !s.depthFullOperatingYears[depth]) s.depthFullOperatingYears[depth] = Math.max(1, Number(year) || 1) + 1;
           return s.depthArrivalYears[depth];
         }
 
@@ -30591,7 +30591,10 @@
           const y = Math.max(1, Number(year) || 1);
           const depth = progressionDepth(depthIndex);
           if (depth === 0) return y;
-          return Math.max(1, y - progressionDepthArrivalYear(depth, y) + 1);
+          const s = progressionState();
+          s.depthFullOperatingYears = s.depthFullOperatingYears || { 0: 1 };
+          const fullStart = Number(s.depthFullOperatingYears[depth]) || progressionDepthArrivalYear(depth, y);
+          return Math.max(1, y - fullStart + 1);
         }
 
         function progressionPlanTemplate(year = state.year, depthIndex = state.depthIndex) {
@@ -30764,6 +30767,16 @@
 
         function progressionOpenLevelArrivalModal() {
           progressionRecordDepthArrival(state.depthIndex, state.year);
+          const currentDepth = progressionDepth(state.depthIndex);
+          state.progression = state.progression || {};
+          if (state.annualTargets && state.annualTargets.year === state.year && Number(state.annualTargets.depthIndex) !== currentDepth) {
+            state.progression.annualTargetHold = {
+              year: state.year,
+              fromDepth: Number(state.annualTargets.depthIndex) || 0,
+              toDepth: currentDepth,
+              reason: 'Depth reached mid-year; keep current annual KPI package until next annual review.'
+            };
+          }
           const details = progressionLevelArrivalDetails(state.depthIndex);
           state.progressionLevelArrivalActive = true;
           state.progressionLevelArrivalNextAction = details.nextAction || 'resume';
@@ -30805,6 +30818,10 @@
         };
 
         targetsForYear = function(year = state.year) {
+          const hold = state.progression && state.progression.annualTargetHold;
+          if (hold && Number(hold.year) === Number(year) && state.annualTargets && Number(state.annualTargets.year) === Number(year)) {
+            return state.annualTargets;
+          }
           return progressionTargetPackage(year, state.depthIndex);
         };
 
@@ -30817,6 +30834,10 @@
         };
 
         activeAnnualTargets = function() {
+          const hold = state.progression && state.progression.annualTargetHold;
+          if (hold && Number(hold.year) === Number(state.year) && state.annualTargets && Number(state.annualTargets.year) === Number(state.year)) {
+            return state.annualTargets;
+          }
           const expected = progressionTargetPackage(state.year, state.depthIndex);
           if (!state.annualTargets || state.annualTargets.progressionConfigVersion !== PROGRESSION_CONFIG_VERSION || state.annualTargets.year !== state.year || state.annualTargets.depthIndex !== progressionDepth(state.depthIndex)) {
             state.annualTargets = expected;
@@ -30889,10 +30910,12 @@
 
         document.addEventListener('click', function(e) {
           const levelBtn = e.target.closest('[data-progression-level-arrival-continue], [data-level-arrival-continue]');
-          if (levelBtn && state.progressionLevelArrivalActive) {
+          if (levelBtn) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            const action = state.progressionLevelArrivalNextAction || 'resume';
+            const depth = progressionDepth(state.depthIndex);
+            const fallbackAction = depth === 1 ? 'roleIntro:miningEngineering' : depth === 2 ? 'roleIntro:survey' : depth >= 4 ? 'roleIntro:ventilation' : 'resume';
+            const action = state.progressionLevelArrivalNextAction || fallbackAction;
             state.progressionLevelArrivalActive = false;
             const overlay = $('modalOverlay');
             if (overlay) overlay.classList.remove('show');
@@ -30918,6 +30941,9 @@
         state.annualTargets = progressionTargetPackage(state.year, state.depthIndex);
 
         window.RTP_GAME_PROGRESSION_CONFIG = GAME_PROGRESSION_CONFIG;
+        window.ROW_TONNES_BY_DEPTH = ROW_TONNES_BY_DEPTH;
+        window.tonnesPerBlockForRow = tonnesPerBlockForRow;
+        window.validateRuntimeBlockTonnes = validateRuntimeBlockTonnes;
         window.getProgressionAnnualTarget = progressionTargetPackage;
         window.getProgressionLevel = progressionLevel;
         window.getProgressionLocalYear = progressionLocalYear;
@@ -30925,6 +30951,63 @@
         if (typeof RTP_EVENT_ARCHITECTURE === 'object' && RTP_EVENT_ARCHITECTURE) {
           RTP_EVENT_ARCHITECTURE.progressionArchitecture = 'Authoritative config installed for year KPIs, level unlocks, department unlocks and level-arrival flow.';
         }
+      })();
+
+
+      /* =====================================================
+         RTP ONBOARDING + PROGRESSION FLOW HELPERS
+         =====================================================
+         Keeps onboarding guidance and depth-arrival flow in small, named helpers.
+      */
+      (function installOnboardingAndProgressionFlowHelpers() {
+        function dismissHopeRemoteGuide() {
+          state.onboarding = state.onboarding || {};
+          state.onboarding.hopeRemoteGuideDismissed = true;
+          const remote = $('minerRemote');
+          if (remote) remote.classList.remove('hopeRemoteGuide');
+        }
+
+        function showHopeRemoteGuide() {
+          state.onboarding = state.onboarding || {};
+          if (state.onboarding.hopeRemoteGuideDismissed) return false;
+          const remote = $('minerRemote');
+          if (!remote) return false;
+          remote.classList.add('hopeRemoteGuide');
+          return true;
+        }
+
+        const baseStartGameForHopeRemoteGuide = startGame;
+        startGame = function() {
+          const result = baseStartGameForHopeRemoteGuide();
+          if (state.running && showHopeRemoteGuide()) {
+            showProductionComment('The HOPE mining remote has been highlighted. Use the arrow controls to drive into the first centreline block and begin the bulk sample.', 'Production Guidance', 8.5);
+          }
+          return result;
+        };
+
+        const baseDriveMinerRemoteForHopeGuide = driveMinerRemote;
+        driveMinerRemote = function(dir) {
+          dismissHopeRemoteGuide();
+          return baseDriveMinerRemoteForHopeGuide(dir);
+        };
+
+        const baseStopMinerRemoteForHopeGuide = stopMinerRemote;
+        stopMinerRemote = function() {
+          dismissHopeRemoteGuide();
+          return baseStopMinerRemoteForHopeGuide();
+        };
+
+        const baseSwitchMinerRemoteForHopeGuide = switchMinerRemoteMachine;
+        switchMinerRemoteMachine = function() {
+          dismissHopeRemoteGuide();
+          return baseSwitchMinerRemoteForHopeGuide();
+        };
+
+
+        window.RTP_ONBOARDING_AND_PROGRESSION_FLOW = {
+          version: '2026-07-02-onboarding-progression-flow',
+          notes: 'HOPE remote onboarding guide and deterministic level-arrival routing helpers.'
+        };
       })();
 
 
