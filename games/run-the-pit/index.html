@@ -5742,6 +5742,1287 @@
       }
     }
 
+
+
+    /* Runtime consolidation fix: explicit HOPE remote onboarding arrow. */
+    .hopeRemoteGuideArrow {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -100%);
+      z-index: 120;
+      pointer-events: none;
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      width: min(300px, calc(100vw - 24px));
+      color: #1f1300;
+      filter: drop-shadow(0 12px 26px rgba(0,0,0,0.45));
+      animation: hopeRemoteArrowBob 0.85s ease-in-out infinite;
+    }
+
+    .hopeRemoteGuideArrow .hopeRemoteGuideText {
+      border: 3px solid rgba(253,224,71,0.98);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fef08a, #f59e0b);
+      color: #1f1300;
+      padding: 8px 12px;
+      font-weight: 900;
+      font-size: 13px;
+      text-align: center;
+      box-shadow: inset 0 1px rgba(255,255,255,0.32), 0 8px 18px rgba(0,0,0,0.32);
+    }
+
+    .hopeRemoteGuideArrow .hopeRemoteGuidePointer {
+      width: 0;
+      height: 0;
+      border-left: 22px solid transparent;
+      border-right: 22px solid transparent;
+      border-top: 34px solid #facc15;
+      position: relative;
+    }
+
+    .hopeRemoteGuideArrow .hopeRemoteGuidePointer::after {
+      content: '';
+      position: absolute;
+      left: -13px;
+      top: -33px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #1f1300;
+      opacity: 0.18;
+    }
+
+    .toolbarMachineRemote.hopeRemoteGuide .remoteShell {
+      outline: 4px solid rgba(253,224,71,0.92);
+      outline-offset: 4px;
+    }
+
+    @keyframes hopeRemoteArrowBob {
+      0%, 100% { margin-top: 0; }
+      50% { margin-top: -8px; }
+    }
+
+    @media (max-width: 760px) {
+      .hopeRemoteGuideArrow {
+        width: min(230px, calc(100vw - 18px));
+      }
+      .hopeRemoteGuideArrow .hopeRemoteGuideText {
+        font-size: 10px;
+        padding: 6px 9px;
+      }
+      .hopeRemoteGuideArrow .hopeRemoteGuidePointer {
+        border-left-width: 17px;
+        border-right-width: 17px;
+        border-top-width: 26px;
+      }
+    }
+
+
+    /* =====================================================
+       RTP REMOTE FOOTER LAYOUT CONSOLIDATION
+       =====================================================
+       Layout-only change. The mine canvas is reserved above the footer;
+       the HOPE remotes and menu buttons live inside the footer instead of
+       being squeezed into a clipped overlay/column.
+    */
+    :root {
+      --toolbar-h: 142px;
+      --remote-footer-pad-x: 22px;
+      --remote-footer-pad-y: 14px;
+    }
+
+    #game {
+      grid-template-rows: minmax(0, 1fr) var(--toolbar-h) !important;
+    }
+
+    #canvasWrap {
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    #bottomBar {
+      height: var(--toolbar-h) !important;
+      min-height: var(--toolbar-h) !important;
+      max-height: none !important;
+      display: grid !important;
+      grid-template-columns: minmax(180px, 1fr) auto minmax(320px, 1fr) !important;
+      grid-template-rows: minmax(0, 1fr) !important;
+      align-items: center !important;
+      align-content: center !important;
+      gap: 16px !important;
+      padding: var(--remote-footer-pad-y) var(--remote-footer-pad-x) calc(var(--remote-footer-pad-y) + env(safe-area-inset-bottom)) !important;
+      overflow: visible !important;
+      box-sizing: border-box !important;
+    }
+
+    #bottomBar .bottomBarSpacer {
+      display: block !important;
+      grid-column: 1 !important;
+      grid-row: 1 !important;
+      min-width: 0 !important;
+    }
+
+    #bottomBar .remoteDeck {
+      grid-column: 2 !important;
+      grid-row: 1 !important;
+      justify-self: center !important;
+      align-self: center !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 12px !important;
+      width: auto !important;
+      max-width: min(760px, 100%) !important;
+      min-width: 0 !important;
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      padding: 4px 4px 6px !important;
+      transform: none !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: thin;
+    }
+
+    #bottomBar .remoteDeck .toolbarMachineRemote,
+    html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+    body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote {
+      flex: 0 0 auto !important;
+      width: auto !important;
+      max-width: none !important;
+      display: grid !important;
+      grid-template-columns: 11px minmax(176px, 196px) 11px !important;
+      align-items: center !important;
+      justify-self: auto !important;
+      align-self: center !important;
+      transform: none !important;
+      overflow: visible !important;
+    }
+
+    #bottomBar .toolbarButtons {
+      grid-column: 3 !important;
+      grid-row: 1 !important;
+      justify-self: end !important;
+      align-self: center !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 8px !important;
+      width: auto !important;
+      max-width: min(760px, 100%) !important;
+      min-width: 0 !important;
+      overflow: visible !important;
+    }
+
+    #bottomBar .toolBtn {
+      flex: 0 0 auto !important;
+      min-height: 42px !important;
+      min-width: 66px !important;
+      padding: 8px 13px !important;
+      font-size: 13px !important;
+      line-height: 1.05 !important;
+      box-sizing: border-box !important;
+    }
+
+    .toolbarMachineRemote.hopeRemoteGuide::before {
+      display: none !important;
+    }
+
+    @media (max-width: 1120px) {
+      :root {
+        --toolbar-h: 166px;
+      }
+
+      #bottomBar {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(86px, auto) minmax(40px, auto) !important;
+        gap: 8px !important;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) !important;
+        overflow: hidden !important;
+      }
+
+      #bottomBar .bottomBarSpacer {
+        display: none !important;
+      }
+
+      #bottomBar .remoteDeck {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: stretch !important;
+        justify-content: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      #bottomBar .toolbarButtons {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        justify-self: stretch !important;
+        justify-content: center !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 0 2px 3px !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+    }
+
+    @media (max-width: 760px), screen and (max-device-width: 760px), screen and (orientation: portrait) and (max-height: 1200px) {
+      :root {
+        --toolbar-h: 190px;
+        --left-panel-w: calc(100vw - 12px);
+      }
+
+      html.phoneLayout #game,
+      body.phoneLayout #game,
+      #game {
+        height: 100dvh !important;
+        grid-template-rows: minmax(0, 1fr) var(--toolbar-h) !important;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar,
+      #bottomBar {
+        height: var(--toolbar-h) !important;
+        min-height: var(--toolbar-h) !important;
+        max-height: none !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(106px, auto) minmax(40px, auto) !important;
+        align-content: center !important;
+        align-items: center !important;
+        gap: 7px !important;
+        padding: 8px 8px calc(8px + env(safe-area-inset-bottom)) !important;
+        overflow: hidden !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck,
+      body.phoneLayout #bottomBar .remoteDeck,
+      #bottomBar .remoteDeck {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: stretch !important;
+        justify-content: flex-start !important;
+        align-self: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        gap: 8px !important;
+        padding: 2px 4px 5px !important;
+        transform: none !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      #bottomBar .remoteDeck .toolbarMachineRemote {
+        flex: 0 0 238px !important;
+        width: 238px !important;
+        max-width: 238px !important;
+        grid-template-columns: 1fr !important;
+        overflow: visible !important;
+      }
+
+      html.phoneLayout .toolbarMachineRemote .remoteHandle,
+      body.phoneLayout .toolbarMachineRemote .remoteHandle,
+      .toolbarMachineRemote .remoteHandle {
+        display: none !important;
+      }
+
+      html.phoneLayout .remoteShell,
+      body.phoneLayout .remoteShell,
+      .remoteShell {
+        padding: 5px 6px 6px !important;
+        border-radius: 14px !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+      }
+
+      html.phoneLayout .remoteTopRow,
+      body.phoneLayout .remoteTopRow,
+      .remoteTopRow {
+        margin-bottom: 4px !important;
+        gap: 5px !important;
+        min-height: 20px !important;
+      }
+
+      html.phoneLayout .remoteBrand,
+      body.phoneLayout .remoteBrand,
+      .remoteBrand {
+        font-size: 12px !important;
+        line-height: 1 !important;
+      }
+
+      html.phoneLayout .remoteMachineToggle,
+      body.phoneLayout .remoteMachineToggle,
+      .remoteMachineToggle,
+      html.phoneLayout .remoteStaticToggle,
+      body.phoneLayout .remoteStaticToggle,
+      .remoteStaticToggle {
+        min-height: 22px !important;
+        height: 22px !important;
+        padding: 2px 7px !important;
+        font-size: 9px !important;
+        line-height: 1 !important;
+      }
+
+      html.phoneLayout .remoteStatusPill,
+      body.phoneLayout .remoteStatusPill,
+      .remoteStatusPill {
+        min-width: 42px !important;
+        padding: 2px 5px !important;
+        font-size: 8px !important;
+        line-height: 1 !important;
+      }
+
+      html.phoneLayout .remotePlate,
+      body.phoneLayout .remotePlate,
+      .remotePlate {
+        grid-template-columns: minmax(0, 1fr) 94px !important;
+        gap: 5px !important;
+        padding: 4px !important;
+        border-radius: 11px !important;
+        align-items: center !important;
+      }
+
+      html.phoneLayout .remoteLeftCluster,
+      body.phoneLayout .remoteLeftCluster,
+      .remoteLeftCluster {
+        display: none !important;
+      }
+
+      html.phoneLayout .remoteDisplay,
+      body.phoneLayout .remoteDisplay,
+      .remoteDisplay {
+        padding: 6px 7px !important;
+        min-height: 51px !important;
+        box-sizing: border-box !important;
+      }
+
+      html.phoneLayout .remoteDisplayLabel,
+      body.phoneLayout .remoteDisplayLabel,
+      .remoteDisplayLabel {
+        display: block !important;
+        font-size: 8px !important;
+        line-height: 1.1 !important;
+        margin-bottom: 4px !important;
+      }
+
+      html.phoneLayout .remoteDisplayValue,
+      body.phoneLayout .remoteDisplayValue,
+      .remoteDisplayValue {
+        font-size: 15px !important;
+        line-height: 1.05 !important;
+      }
+
+      html.phoneLayout .remoteDisplaySub,
+      body.phoneLayout .remoteDisplaySub,
+      .remoteDisplaySub {
+        display: none !important;
+      }
+
+      html.phoneLayout .toolbarMachineControls,
+      body.phoneLayout .toolbarMachineControls,
+      .toolbarMachineControls {
+        display: grid !important;
+        grid-template-columns: repeat(3, 29px) !important;
+        grid-template-rows: repeat(3, 22px) !important;
+        gap: 4px !important;
+        width: auto !important;
+        justify-content: end !important;
+        align-self: center !important;
+        transform: none !important;
+      }
+
+      html.phoneLayout .machinePadBtn,
+      body.phoneLayout .machinePadBtn,
+      .machinePadBtn {
+        width: 29px !important;
+        height: 22px !important;
+        min-height: 22px !important;
+        padding: 0 !important;
+        border-radius: 7px !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+        display: grid !important;
+        place-items: center !important;
+        overflow: visible !important;
+      }
+
+      html.phoneLayout .machinePadStop,
+      body.phoneLayout .machinePadStop,
+      .machinePadStop {
+        font-size: 7px !important;
+        letter-spacing: 0 !important;
+      }
+
+      html.phoneLayout #bottomBar .toolbarButtons,
+      body.phoneLayout #bottomBar .toolbarButtons,
+      #bottomBar .toolbarButtons {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        justify-self: stretch !important;
+        align-self: center !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 0 2px 3px !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      html.phoneLayout #bottomBar .toolBtn,
+      body.phoneLayout #bottomBar .toolBtn,
+      #bottomBar .toolBtn {
+        flex: 0 0 auto !important;
+        min-width: 62px !important;
+        min-height: 36px !important;
+        padding: 6px 9px !important;
+        border-radius: 9px !important;
+        font-size: 10px !important;
+        line-height: 1.05 !important;
+      }
+
+      html.phoneLayout .mobileEventQueue,
+      body.phoneLayout .mobileEventQueue {
+        left: 6px !important;
+        right: 6px !important;
+        bottom: 6px !important;
+        width: auto !important;
+        max-width: none !important;
+        height: 46px !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      :root {
+        --toolbar-h: 188px;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      #bottomBar .remoteDeck .toolbarMachineRemote {
+        flex-basis: 226px !important;
+        width: 226px !important;
+        max-width: 226px !important;
+      }
+
+      html.phoneLayout .remotePlate,
+      body.phoneLayout .remotePlate,
+      .remotePlate {
+        grid-template-columns: minmax(0, 1fr) 88px !important;
+      }
+
+      html.phoneLayout .toolbarMachineControls,
+      body.phoneLayout .toolbarMachineControls,
+      .toolbarMachineControls {
+        grid-template-columns: repeat(3, 27px) !important;
+        grid-template-rows: repeat(3, 21px) !important;
+        gap: 3px !important;
+      }
+
+      html.phoneLayout .machinePadBtn,
+      body.phoneLayout .machinePadBtn,
+      .machinePadBtn {
+        width: 27px !important;
+        height: 21px !important;
+        min-height: 21px !important;
+      }
+    }
+
+    @media (max-width: 760px) and (orientation: landscape) {
+      :root {
+        --toolbar-h: 118px;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar,
+      #bottomBar {
+        grid-template-rows: minmax(0, 1fr) !important;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, auto) !important;
+        gap: 8px !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck,
+      body.phoneLayout #bottomBar .remoteDeck,
+      #bottomBar .remoteDeck {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+      }
+
+      html.phoneLayout #bottomBar .toolbarButtons,
+      body.phoneLayout #bottomBar .toolbarButtons,
+      #bottomBar .toolbarButtons {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        justify-content: flex-end !important;
+      }
+    }
+
+
+
+    /* =====================================================
+       RTP MOBILE REMOTE COMPACT CONTROL PAD
+       =====================================================
+       Mobile-only presentation. Desktop/tablet keeps the full decorative
+       remote/footer layout. Phone portrait gets one active machine control
+       pad with large tap targets and a separate bottom menu row.
+    */
+    @media screen and (max-width: 760px), screen and (max-device-width: 760px), screen and (orientation: portrait) and (max-height: 1200px) {
+      :root {
+        --toolbar-h: 206px;
+        --mobile-remote-pad-w: min(370px, calc(100vw - 18px));
+        --mobile-remote-btn-w: clamp(56px, 16vw, 66px);
+        --mobile-remote-btn-h: clamp(44px, 11.5vw, 54px);
+        --mobile-remote-btn-gap: 8px;
+      }
+
+      html.phoneLayout #game,
+      body.phoneLayout #game,
+      #game {
+        height: 100dvh !important;
+        grid-template-rows: minmax(0, 1fr) var(--toolbar-h) !important;
+      }
+
+      html.phoneLayout #canvasWrap,
+      body.phoneLayout #canvasWrap,
+      #canvasWrap {
+        min-height: 0 !important;
+        overflow: hidden !important;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar,
+      #bottomBar {
+        height: var(--toolbar-h) !important;
+        min-height: var(--toolbar-h) !important;
+        max-height: var(--toolbar-h) !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) 40px !important;
+        align-content: stretch !important;
+        align-items: stretch !important;
+        gap: 7px !important;
+        padding: 8px 8px calc(8px + env(safe-area-inset-bottom)) !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+      }
+
+      html.phoneLayout #bottomBar .bottomBarSpacer,
+      body.phoneLayout #bottomBar .bottomBarSpacer,
+      #bottomBar .bottomBarSpacer {
+        display: none !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck,
+      body.phoneLayout #bottomBar .remoteDeck,
+      #bottomBar .remoteDeck {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: stretch !important;
+        align-self: stretch !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+        justify-items: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        gap: 5px !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        transform: none !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck.multiMachine,
+      body.phoneLayout #bottomBar .remoteDeck.multiMachine,
+      #bottomBar .remoteDeck.multiMachine {
+        grid-template-rows: 28px minmax(0, 1fr) !important;
+      }
+
+      html.phoneLayout .mobileRemoteSelector,
+      body.phoneLayout .mobileRemoteSelector,
+      .mobileRemoteSelector {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        display: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        width: min(360px, calc(100vw - 18px)) !important;
+        max-width: calc(100vw - 18px) !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 0 1px 2px !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck.multiMachine .mobileRemoteSelector,
+      body.phoneLayout #bottomBar .remoteDeck.multiMachine .mobileRemoteSelector,
+      #bottomBar .remoteDeck.multiMachine .mobileRemoteSelector {
+        display: flex !important;
+      }
+
+      html.phoneLayout .mobileRemoteSelectBtn,
+      body.phoneLayout .mobileRemoteSelectBtn,
+      .mobileRemoteSelectBtn {
+        flex: 0 0 auto !important;
+        min-width: 78px !important;
+        min-height: 24px !important;
+        padding: 4px 9px !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(251,191,36,0.42) !important;
+        background: rgba(15,23,42,0.82) !important;
+        color: #fde68a !important;
+        font-size: 10px !important;
+        font-weight: 950 !important;
+        letter-spacing: 0.03em !important;
+        text-transform: uppercase !important;
+        box-shadow: inset 0 1px rgba(255,255,255,0.08) !important;
+      }
+
+      html.phoneLayout .mobileRemoteSelectBtn.active,
+      body.phoneLayout .mobileRemoteSelectBtn.active,
+      .mobileRemoteSelectBtn.active {
+        background: linear-gradient(180deg, #fbbf24, #b45309) !important;
+        color: #1f1300 !important;
+        border-color: rgba(254,243,199,0.86) !important;
+      }
+
+      html.phoneLayout .mobileRemoteSelectBtn:disabled,
+      body.phoneLayout .mobileRemoteSelectBtn:disabled,
+      .mobileRemoteSelectBtn:disabled {
+        display: none !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      #bottomBar .remoteDeck .toolbarMachineRemote {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        justify-self: center !important;
+        align-self: center !important;
+        width: var(--mobile-remote-pad-w) !important;
+        max-width: var(--mobile-remote-pad-w) !important;
+        min-width: 0 !important;
+        flex: none !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        transform: none !important;
+        overflow: visible !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck.multiMachine .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck.multiMachine .toolbarMachineRemote,
+      #bottomBar .remoteDeck.multiMachine .toolbarMachineRemote {
+        grid-row: 2 !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck.mobileShowsMiner #minerRemote,
+      body.phoneLayout #bottomBar .remoteDeck.mobileShowsMiner #minerRemote,
+      #bottomBar .remoteDeck.mobileShowsMiner #minerRemote,
+      html.phoneLayout #bottomBar .remoteDeck.mobileShowsBolter #bolterRemote,
+      body.phoneLayout #bottomBar .remoteDeck.mobileShowsBolter #bolterRemote,
+      #bottomBar .remoteDeck.mobileShowsBolter #bolterRemote {
+        display: grid !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck.mobileShowsMiner #bolterRemote,
+      body.phoneLayout #bottomBar .remoteDeck.mobileShowsMiner #bolterRemote,
+      #bottomBar .remoteDeck.mobileShowsMiner #bolterRemote,
+      html.phoneLayout #bottomBar .remoteDeck.mobileShowsBolter #minerRemote,
+      body.phoneLayout #bottomBar .remoteDeck.mobileShowsBolter #minerRemote,
+      #bottomBar .remoteDeck.mobileShowsBolter #minerRemote {
+        display: none !important;
+      }
+
+      html.phoneLayout .toolbarMachineRemote .remoteHandle,
+      body.phoneLayout .toolbarMachineRemote .remoteHandle,
+      .toolbarMachineRemote .remoteHandle,
+      html.phoneLayout .remoteLeftCluster,
+      body.phoneLayout .remoteLeftCluster,
+      .remoteLeftCluster,
+      html.phoneLayout .remoteDisplay,
+      body.phoneLayout .remoteDisplay,
+      .remoteDisplay {
+        display: none !important;
+      }
+
+      html.phoneLayout .remoteShell,
+      body.phoneLayout .remoteShell,
+      .remoteShell {
+        width: 100% !important;
+        padding: 8px 10px 10px !important;
+        border-radius: 17px !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        box-shadow: inset 0 2px 0 rgba(255,255,255,0.18), 0 7px 18px rgba(0,0,0,0.30) !important;
+      }
+
+      html.phoneLayout .toolbarMachineRemote .remoteShell::after,
+      body.phoneLayout .toolbarMachineRemote .remoteShell::after,
+      .toolbarMachineRemote .remoteShell::after {
+        display: none !important;
+        content: none !important;
+      }
+
+      html.phoneLayout .remoteTopRow,
+      body.phoneLayout .remoteTopRow,
+      .remoteTopRow {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-height: 26px !important;
+        margin: 0 0 8px !important;
+      }
+
+      html.phoneLayout .remoteBrand,
+      body.phoneLayout .remoteBrand,
+      .remoteBrand {
+        font-size: 13px !important;
+        line-height: 1 !important;
+        opacity: 0.72 !important;
+      }
+
+      html.phoneLayout .remoteMachineToggle,
+      body.phoneLayout .remoteMachineToggle,
+      .remoteMachineToggle,
+      html.phoneLayout .remoteStaticToggle,
+      body.phoneLayout .remoteStaticToggle,
+      .remoteStaticToggle {
+        justify-self: center !important;
+        min-width: 96px !important;
+        min-height: 25px !important;
+        height: 25px !important;
+        padding: 3px 10px !important;
+        border-radius: 999px !important;
+        font-size: 10px !important;
+        line-height: 1 !important;
+      }
+
+      html.phoneLayout .remoteStatusPill,
+      body.phoneLayout .remoteStatusPill,
+      .remoteStatusPill {
+        min-width: 58px !important;
+        min-height: 25px !important;
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+        line-height: 1 !important;
+      }
+
+      html.phoneLayout .remotePlate,
+      body.phoneLayout .remotePlate,
+      .remotePlate {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        justify-items: center !important;
+        align-items: center !important;
+        min-height: 122px !important;
+        padding: 7px !important;
+        border-radius: 15px !important;
+        background: linear-gradient(180deg, rgba(239,246,255,0.96), rgba(191,219,254,0.92)) !important;
+        box-shadow: inset 0 1px 2px rgba(15,23,42,0.22) !important;
+      }
+
+      html.phoneLayout .toolbarMachineControls,
+      body.phoneLayout .toolbarMachineControls,
+      .toolbarMachineControls {
+        display: grid !important;
+        grid-template-columns: repeat(3, var(--mobile-remote-btn-w)) !important;
+        grid-template-rows: repeat(3, var(--mobile-remote-btn-h)) !important;
+        gap: var(--mobile-remote-btn-gap) !important;
+        justify-content: center !important;
+        justify-items: center !important;
+        align-content: center !important;
+        align-items: center !important;
+        width: auto !important;
+        transform: none !important;
+      }
+
+      html.phoneLayout .machinePadSpacer,
+      body.phoneLayout .machinePadSpacer,
+      .machinePadSpacer {
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
+      html.phoneLayout .machinePadBtn,
+      body.phoneLayout .machinePadBtn,
+      .machinePadBtn {
+        width: var(--mobile-remote-btn-w) !important;
+        height: var(--mobile-remote-btn-h) !important;
+        min-height: var(--mobile-remote-btn-h) !important;
+        padding: 0 !important;
+        border-radius: 13px !important;
+        font-size: 24px !important;
+        line-height: 1 !important;
+        display: grid !important;
+        place-items: center !important;
+        overflow: visible !important;
+        box-shadow: inset 0 1px rgba(255,255,255,0.22), 0 5px 12px rgba(15,23,42,0.34) !important;
+      }
+
+      html.phoneLayout .machinePadStop,
+      body.phoneLayout .machinePadStop,
+      .machinePadStop {
+        font-size: 13px !important;
+        letter-spacing: 0.02em !important;
+      }
+
+      html.phoneLayout #bottomBar .toolbarButtons,
+      body.phoneLayout #bottomBar .toolbarButtons,
+      #bottomBar .toolbarButtons {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        justify-self: stretch !important;
+        align-self: center !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 7px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 0 2px 3px !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      html.phoneLayout #bottomBar .toolBtn,
+      body.phoneLayout #bottomBar .toolBtn,
+      #bottomBar .toolBtn {
+        flex: 0 0 auto !important;
+        min-width: 76px !important;
+        min-height: 36px !important;
+        padding: 6px 10px !important;
+        border-radius: 10px !important;
+        font-size: 10.5px !important;
+        line-height: 1.05 !important;
+      }
+
+      html.phoneLayout .hopeRemoteGuideArrow,
+      body.phoneLayout .hopeRemoteGuideArrow,
+      .hopeRemoteGuideArrow {
+        width: min(250px, calc(100vw - 18px)) !important;
+      }
+    }
+
+    @media screen and (max-width: 390px) {
+      :root {
+        --toolbar-h: 202px;
+        --mobile-remote-btn-w: clamp(52px, 15.5vw, 60px);
+        --mobile-remote-btn-h: clamp(42px, 11vw, 50px);
+        --mobile-remote-btn-gap: 7px;
+      }
+
+      html.phoneLayout .remotePlate,
+      body.phoneLayout .remotePlate,
+      .remotePlate {
+        min-height: 116px !important;
+      }
+
+      html.phoneLayout .remoteMachineToggle,
+      body.phoneLayout .remoteMachineToggle,
+      .remoteMachineToggle,
+      html.phoneLayout .remoteStaticToggle,
+      body.phoneLayout .remoteStaticToggle,
+      .remoteStaticToggle {
+        min-width: 86px !important;
+      }
+
+      html.phoneLayout #bottomBar .toolBtn,
+      body.phoneLayout #bottomBar .toolBtn,
+      #bottomBar .toolBtn {
+        min-width: 70px !important;
+      }
+    }
+
+
+
+    /* =====================================================
+       RTP MOBILE REMOTE PURE CONTROL PAD
+       -----------------------------------------------------
+       Final mobile-only override. Desktop/tablet retains the full
+       decorative remote. Phone portrait removes the desktop shell and
+       uses a compact, large-button control pad so the useful controls
+       occupy the footer rather than empty decorative space.
+    */
+    @media screen and (max-width: 760px), screen and (max-device-width: 760px), screen and (orientation: portrait) and (max-height: 1200px) {
+      :root {
+        --toolbar-h: 174px;
+        --mobile-pad-row-h: 124px;
+        --mobile-menu-row-h: 38px;
+        --mobile-control-w: min(350px, calc(100vw - 18px));
+        --mobile-control-col-side: clamp(68px, 20vw, 76px);
+        --mobile-control-col-mid: clamp(78px, 23vw, 88px);
+        --mobile-control-row-small: clamp(26px, 7.8vw, 30px);
+        --mobile-control-row-main: clamp(34px, 10vw, 40px);
+        --mobile-control-gap: 6px;
+      }
+
+      html.phoneLayout #game,
+      body.phoneLayout #game,
+      #game {
+        height: 100dvh !important;
+        grid-template-rows: minmax(0, 1fr) var(--toolbar-h) !important;
+        overflow: hidden !important;
+      }
+
+      html.phoneLayout #bottomBar,
+      body.phoneLayout #bottomBar,
+      #bottomBar {
+        height: var(--toolbar-h) !important;
+        min-height: var(--toolbar-h) !important;
+        max-height: var(--toolbar-h) !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: var(--mobile-pad-row-h) var(--mobile-menu-row-h) !important;
+        gap: 4px !important;
+        align-content: stretch !important;
+        align-items: stretch !important;
+        padding: 4px 8px calc(4px + env(safe-area-inset-bottom)) !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck,
+      body.phoneLayout #bottomBar .remoteDeck,
+      #bottomBar .remoteDeck {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: var(--mobile-pad-row-h) !important;
+        min-height: 0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+        justify-items: center !important;
+        align-items: center !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        transform: none !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck.multiMachine,
+      body.phoneLayout #bottomBar .remoteDeck.multiMachine,
+      #bottomBar .remoteDeck.multiMachine {
+        grid-template-rows: 24px minmax(0, 1fr) !important;
+        row-gap: 3px !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck .toolbarMachineRemote,
+      #bottomBar .remoteDeck .toolbarMachineRemote {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        width: var(--mobile-control-w) !important;
+        max-width: var(--mobile-control-w) !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        flex: none !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        align-items: stretch !important;
+        justify-items: stretch !important;
+        transform: none !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      html.phoneLayout #bottomBar .remoteDeck.multiMachine .toolbarMachineRemote,
+      body.phoneLayout #bottomBar .remoteDeck.multiMachine .toolbarMachineRemote,
+      #bottomBar .remoteDeck.multiMachine .toolbarMachineRemote {
+        grid-row: 2 !important;
+      }
+
+      html.phoneLayout .mobileRemoteSelector,
+      body.phoneLayout .mobileRemoteSelector,
+      .mobileRemoteSelector {
+        min-height: 22px !important;
+        height: 22px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      html.phoneLayout .mobileRemoteSelectBtn,
+      body.phoneLayout .mobileRemoteSelectBtn,
+      .mobileRemoteSelectBtn {
+        min-height: 22px !important;
+        height: 22px !important;
+        min-width: 72px !important;
+        padding: 2px 8px !important;
+        font-size: 9px !important;
+      }
+
+      html.phoneLayout .toolbarMachineRemote .remoteHandle,
+      body.phoneLayout .toolbarMachineRemote .remoteHandle,
+      .toolbarMachineRemote .remoteHandle,
+      html.phoneLayout .remoteBrand,
+      body.phoneLayout .remoteBrand,
+      .remoteBrand,
+      html.phoneLayout .remoteLeftCluster,
+      body.phoneLayout .remoteLeftCluster,
+      .remoteLeftCluster,
+      html.phoneLayout .remoteDisplay,
+      body.phoneLayout .remoteDisplay,
+      .remoteDisplay {
+        display: none !important;
+      }
+
+      html.phoneLayout .remoteShell,
+      body.phoneLayout .remoteShell,
+      .remoteShell {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 22px minmax(0, 1fr) !important;
+        gap: 2px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+      }
+
+      html.phoneLayout .toolbarMachineRemote .remoteShell::after,
+      body.phoneLayout .toolbarMachineRemote .remoteShell::after,
+      .toolbarMachineRemote .remoteShell::after {
+        display: none !important;
+        content: none !important;
+      }
+
+      html.phoneLayout .remoteTopRow,
+      body.phoneLayout .remoteTopRow,
+      .remoteTopRow {
+        grid-row: 1 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: min(270px, 100%) !important;
+        justify-self: center !important;
+        min-height: 22px !important;
+        height: 22px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+
+      html.phoneLayout .remoteMachineToggle,
+      body.phoneLayout .remoteMachineToggle,
+      .remoteMachineToggle,
+      html.phoneLayout .remoteStaticToggle,
+      body.phoneLayout .remoteStaticToggle,
+      .remoteStaticToggle,
+      html.phoneLayout .remoteStatusPill,
+      body.phoneLayout .remoteStatusPill,
+      .remoteStatusPill {
+        height: 22px !important;
+        min-height: 22px !important;
+        padding: 2px 9px !important;
+        border-radius: 999px !important;
+        font-size: 10px !important;
+        line-height: 1 !important;
+        letter-spacing: 0.04em !important;
+      }
+
+      html.phoneLayout .remoteMachineToggle,
+      body.phoneLayout .remoteMachineToggle,
+      .remoteMachineToggle,
+      html.phoneLayout .remoteStaticToggle,
+      body.phoneLayout .remoteStaticToggle,
+      .remoteStaticToggle {
+        justify-self: end !important;
+        min-width: 96px !important;
+        max-width: 128px !important;
+      }
+
+      html.phoneLayout .remoteStatusPill,
+      body.phoneLayout .remoteStatusPill,
+      .remoteStatusPill {
+        justify-self: start !important;
+        min-width: 64px !important;
+      }
+
+      html.phoneLayout .remotePlate,
+      body.phoneLayout .remotePlate,
+      .remotePlate {
+        grid-row: 2 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        justify-items: center !important;
+        align-items: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+      }
+
+      html.phoneLayout .toolbarMachineControls,
+      body.phoneLayout .toolbarMachineControls,
+      .toolbarMachineControls {
+        display: grid !important;
+        grid-template-columns: var(--mobile-control-col-side) var(--mobile-control-col-mid) var(--mobile-control-col-side) !important;
+        grid-template-rows: var(--mobile-control-row-small) var(--mobile-control-row-main) var(--mobile-control-row-small) !important;
+        gap: var(--mobile-control-gap) !important;
+        justify-content: center !important;
+        justify-items: center !important;
+        align-content: center !important;
+        align-items: center !important;
+        width: auto !important;
+        max-width: 100% !important;
+        height: auto !important;
+        transform: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      html.phoneLayout .machinePadSpacer,
+      body.phoneLayout .machinePadSpacer,
+      .machinePadSpacer {
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
+      html.phoneLayout .machinePadBtn,
+      body.phoneLayout .machinePadBtn,
+      .machinePadBtn {
+        width: var(--mobile-control-col-side) !important;
+        height: var(--mobile-control-row-main) !important;
+        min-height: var(--mobile-control-row-main) !important;
+        padding: 0 !important;
+        border-radius: 14px !important;
+        font-size: 24px !important;
+        line-height: 1 !important;
+        display: grid !important;
+        place-items: center !important;
+        overflow: visible !important;
+        box-shadow: inset 0 1px rgba(255,255,255,0.20), 0 4px 11px rgba(0,0,0,0.34) !important;
+      }
+
+      html.phoneLayout .machinePadBtn:nth-child(2),
+      body.phoneLayout .machinePadBtn:nth-child(2),
+      .machinePadBtn:nth-child(2),
+      html.phoneLayout .machinePadBtn:nth-child(8),
+      body.phoneLayout .machinePadBtn:nth-child(8),
+      .machinePadBtn:nth-child(8) {
+        width: calc(var(--mobile-control-col-mid) - 18px) !important;
+        height: var(--mobile-control-row-small) !important;
+        min-height: var(--mobile-control-row-small) !important;
+        border-radius: 13px !important;
+      }
+
+      html.phoneLayout .machinePadStop,
+      body.phoneLayout .machinePadStop,
+      .machinePadStop {
+        width: var(--mobile-control-col-mid) !important;
+        height: var(--mobile-control-row-main) !important;
+        min-height: var(--mobile-control-row-main) !important;
+        border-radius: 16px !important;
+        font-size: 13px !important;
+        letter-spacing: 0.02em !important;
+      }
+
+      html.phoneLayout #bottomBar .toolbarButtons,
+      body.phoneLayout #bottomBar .toolbarButtons,
+      #bottomBar .toolbarButtons {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        height: var(--mobile-menu-row-h) !important;
+        min-height: var(--mobile-menu-row-h) !important;
+        align-self: stretch !important;
+        justify-self: stretch !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 7px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 0 2px !important;
+        box-sizing: border-box !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      html.phoneLayout #bottomBar .toolBtn,
+      body.phoneLayout #bottomBar .toolBtn,
+      #bottomBar .toolBtn {
+        flex: 0 0 auto !important;
+        min-width: 76px !important;
+        min-height: 34px !important;
+        height: 34px !important;
+        padding: 5px 10px !important;
+        border-radius: 10px !important;
+        font-size: 10.5px !important;
+        line-height: 1.05 !important;
+      }
+
+      html.phoneLayout .mobileEventQueue,
+      body.phoneLayout .mobileEventQueue,
+      .mobileEventQueue {
+        bottom: calc(var(--toolbar-h) + 4px) !important;
+      }
+
+      html.phoneLayout .hopeRemoteGuideArrow,
+      body.phoneLayout .hopeRemoteGuideArrow,
+      .hopeRemoteGuideArrow {
+        bottom: calc(var(--toolbar-h) + 10px) !important;
+        width: min(230px, calc(100vw - 18px)) !important;
+      }
+    }
+
+    @media screen and (max-width: 390px) {
+      :root {
+        --toolbar-h: 168px;
+        --mobile-pad-row-h: 120px;
+        --mobile-menu-row-h: 36px;
+        --mobile-control-col-side: clamp(64px, 19vw, 72px);
+        --mobile-control-col-mid: clamp(76px, 23vw, 84px);
+        --mobile-control-row-small: clamp(25px, 7.5vw, 29px);
+        --mobile-control-row-main: clamp(33px, 9.8vw, 38px);
+        --mobile-control-gap: 5px;
+      }
+
+      html.phoneLayout #bottomBar .toolBtn,
+      body.phoneLayout #bottomBar .toolBtn,
+      #bottomBar .toolBtn {
+        min-width: 70px !important;
+      }
+    }
+
+
   </style>
 </head>
 <body>
@@ -6382,7 +7663,7 @@
       const CREW_TRAIT_KEYS = ['productivity', 'skill', 'morale', 'safety'];
 
       const ROW_TONNES_BY_DEPTH = {
-        0: [2000, 2500, 3000, 3500, 4000, 4400, 4800, 5200, 5600, 6000, 6400, 6800, 7200, 7600, 8000],
+        0: [1500, 2000, 2500, 3000, 3500, 3900, 4300, 4700, 5100, 5500, 5900, 6300, 6700, 7100, 7500],
         1: [2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000, 5200, 5400],
         2: [3200, 3600, 4000, 4400, 4600, 4800, 5000, 5200, 5400, 5600, 5800, 6000, 6200, 6400, 6600],
         3: [3700, 4100, 4500, 4900, 5200, 5500, 5800, 6100, 6400, 6700, 7000, 7300, 7600, 7900, 8200],
@@ -10573,7 +11854,7 @@
           }
 
           ctx.save();
-          ctx.fillStyle = gradeColour(block.grade);
+          ctx.fillStyle = block.isPillar ? (block.support ? '#475569' : '#6b7280') : gradeColour(block.grade);
           ctx.fillRect(r.x + 0.6, r.y + 0.6, r.w - 1.2, r.h - 1.2);
 
           if (block.isPillar) {
@@ -18301,6 +19582,19 @@
         const beltHead = beltHeadLabel();
         const beltNext = beltStatus.row === null ? 'No further row' : 'Grid ' + gridRefFor(beltStatus.row, beltColumn());
         const secondMinerHighlight = !!state.assetDepthSystemPromptSecondMinerPurchase && !state.assets.secondMinerOwned;
+        const secondMiner = state.machine2 || {};
+        const secondMinerCondition = Number(secondMiner.condition || 0);
+        const secondMinerStatus = secondMiner.status || 'idle';
+        const secondMinerConditionTag = secondMinerStatus === 'broken'
+          ? 'Broken'
+          : secondMinerStatus === 'maintenance'
+            ? 'Under repair'
+            : secondMinerCondition < 20
+              ? 'Critical'
+              : secondMinerCondition < 45
+                ? 'Worn'
+                : 'Operational';
+        const canCallSecondMinerFitter = !!(state.assets.secondMinerOwned && fitter && secondMinerStatus !== 'mining' && secondMinerStatus !== 'tramming' && secondMinerStatus !== 'maintenance' && secondMinerCondition < 100);
         const seismicActive = (state.assetDepthSystemSeismicActiveUntil || 0) > state.day;
         const seismicDays = Math.max(0, Math.ceil((state.assetDepthSystemSeismicActiveUntil || 0) - state.day));
         const hintCard = secondMinerHighlight ? `<div class="assetsHighlightCard"><h3>Scale-Up Recommendation</h3><p><strong>2ndHOPE is now available on the -1200 Level.</strong> Purchase the second continuous miner to unlock the new fleet scale-up loop and turn one belt complaint into several.</p><p>The button below has been highlighted for immediate organisational escalation.</p></div>` : '';
@@ -18325,6 +19619,8 @@
             <div class="crewRoleHeader"><h3>Fleet Expansion</h3><span>${secondMinerUnlocked() ? 'Available on -1200 Level' : 'Requires -1200 Level access'}</span></div>
             <div class="rows">
               <div class="row"><div class="avatarDot" style="background:${state.assets.secondMinerOwned ? '#22c55e' : '#64748b'}"></div><div><strong>Second Continuous Miner</strong><span>${state.assets.secondMinerOwned ? '2ndHOPE is active. More tonnes, more traffic, more reasons for a meeting.' : 'Adds production capacity from -1200, but increases fleet chaos and multiplies belt explanations.'}</span></div><span class="tag">${state.assets.secondMinerOwned ? 'Active' : money(scaledCost(SECOND_MINER_PURCHASE_COST))}</span></div>
+              ${state.assets.secondMinerOwned ? `<div class="row"><div class="avatarDot" style="background:${secondMinerStatus === 'broken' || secondMinerCondition < 45 ? '#ef4444' : secondMinerStatus === 'maintenance' ? '#38bdf8' : '#22c55e'}"></div><div><strong>2ndHOPE Condition</strong><span>${secondMinerCondition.toFixed(1)}% · ${secondMinerStatus}${secondMinerStatus === 'maintenance' ? ' · ' + Math.round(secondMiner.repairProgress || 0) + '% repair progress' : ''}</span></div><span class="tag">${secondMinerConditionTag}</span></div>
+              <div class="btnRow"><button class="primary" data-call-fitter-machine="miner2" ${canCallSecondMinerFitter ? '' : 'disabled'}>${secondMinerStatus === 'broken' ? 'Call Fitter for 2ndHOPE' : 'Call Fitter for 2ndHOPE Maintenance'} (${money(scaledCost(repairCost()))})</button></div>` : ''}
             </div>
             <div class="btnRow"><button class="primary ${secondMinerHighlight ? 'assetsActionPulse' : ''}" data-buy-second-miner ${!state.assets.secondMinerOwned && secondMinerUnlocked() ? '' : 'disabled'}>Authorise 2ndHOPE · ${money(scaledCost(SECOND_MINER_PURCHASE_COST))}</button></div>
           </section>
@@ -30231,326 +31527,365 @@
          are deliberately bypassed through these stable generic entry points.
       */
       (function installProgressionArchitecture() {
-        const PROGRESSION_CONFIG_VERSION = 'progression-architecture-2026-07-01';
+        const PROGRESSION_CONFIG_VERSION = 'progression-kpi-modal-text-targets-2026-07-04';
 
-        const GAME_PROGRESSION_CONFIG = {
-          planningTrait: BALANCE_TRAIT_ASSUMPTION,
-          defaultGrade: TARGET_GRADE,
-          depthLevels: {
-            0: {
-              depthIndex: 0,
-              levelName: '-1000 Level',
-              earliestYear: 1,
-              unlocks: ['exploration'],
-              character: {
-                image: 'assets/characters/slt-silhouette.png',
-                character: 'Superior Leadership Team',
-                department: 'Bulk Sample Governance',
-                imageText: 'This is only a trial until it becomes a target.',
-                label: 'SLT'
-              },
-              annualPlans: [
-                {
-                  localYear: 1,
-                  phaseKey: 'bulk-sample',
-                  phaseTitle: 'Year 1 KPI Notice — Bulk Sample',
-                  phaseTheme: 'Mine 10,000t at 14.0% Goldilocks Grade. This is the anchor year for the whole simulation: enough production to learn the loop, not enough bureaucracy to bury it.',
-                  kpiKeys: ['bulkSample'],
-                  tonnes: 10000,
-                  grade: 14.0,
-                  discoveredRows: 0,
-                  surplusTarget: 0,
-                  lomTargetTonnes: 0,
-                  safetyMin: 0,
-                  technicalHires: 0,
-                  maxPillarFailures: 99,
-                  beltExtensions: 0,
-                  secondMinerTonnes: 0,
-                  briefing: '<p>The first year is a controlled bulk sample, which means the target is small enough to be possible and large enough to be someone else\'s problem if missed.</p><p><strong>Objective:</strong> mine 10,000 tonnes at minimum 14.0% Goldilocks Grade.</p>'
-                },
-                {
-                  localYear: 2,
-                  phaseKey: 'reserve-confirmation',
-                  phaseTitle: 'Year 2 KPI Notice — Reserve Confirmation',
-                  phaseTheme: 'Exploration is introduced so Geology can confirm what the SLT has already implied. Targets assume a forgiving 65-productivity planning case, not perfect play.',
-                  kpiKeys: ['productionDelivery', 'exploration', 'surplus'],
-                  tonnes: 14000,
-                  grade: 14.0,
-                  discoveredRows: 2,
-                  surplusTarget: 0,
-                  lomTargetTonnes: 0,
-                  safetyMin: 0,
-                  technicalHires: 0,
-                  maxPillarFailures: 99,
-                  beltExtensions: 0,
-                  secondMinerTonnes: 0,
-                  afterFinanceAction: 'technicalHiring',
-                  financeContinueLabel: 'Proceed to hire Geologist and Drillers',
-                  character: {
-                    image: 'assets/characters/geology-rock-lickers.png',
-                    character: 'Geology Department',
-                    department: 'Reserve Confidence Through Retrospective Evidence',
-                    imageText: 'Exploration confirms what has already been promised.',
-                    label: 'GEO'
-                  },
-                  briefing: '<p>The first four rows are already interpreted. Additional rows now require a drill, a Geologist, and two Drillers so confidence can be converted into coloured evidence.</p><p><strong>New requirements:</strong> buy a drill, hire one Geologist and two Drillers, and unlock new rows.</p>'
-                },
-                {
-                  localYear: 3,
-                  phaseKey: 'depth-advancement',
-                  phaseTitle: 'Year 3 KPI Notice — Depth Advancement Programme',
-                  phaseTheme: 'The -1000 Level was the learning level. The organisation has now promised deeper mining and expects operational reality to catch up.',
-                  kpiKeys: ['productionDelivery', 'exploration', 'advance1100'],
-                  tonnes: 17000,
-                  grade: 14.0,
-                  discoveredRows: 3,
-                  surplusTarget: 0,
-                  lomTargetTonnes: 0,
-                  safetyMin: 0,
-                  technicalHires: 0,
-                  maxPillarFailures: 99,
-                  beltExtensions: 0,
-                  secondMinerTonnes: 0,
-                  afterFinanceAction: 'shaftDeepeningOrTargets',
-                  financeContinueLabel: 'Review Shaft Deepening Plan',
-                  briefing: '<p><strong>Strategic objective:</strong> complete enough drilling and approve shaft deepening to reach the <strong>-1100 Level</strong>.</p><p>Remaining at -1000 is permitted, but the KPI package will continue to ask why the tutorial level is being farmed.</p>'
-                },
-                {
-                  localYear: 4,
-                  phaseKey: 'overdue-depth-advancement',
-                  phaseTitle: 'Overdue -1100 Advancement Programme',
-                  phaseTheme: 'The operation is still on the training level. SLT has interpreted this as a leadership opportunity with consequences.',
-                  kpiKeys: ['productionDelivery', 'advance1100'],
-                  tonnes: 18500,
-                  grade: 14.0,
-                  discoveredRows: 3,
-                  surplusTarget: 0,
-                  lomTargetTonnes: 0,
-                  safetyMin: 0,
-                  technicalHires: 0,
-                  maxPillarFailures: 99,
-                  beltExtensions: 0,
-                  secondMinerTonnes: 0,
-                  afterFinanceAction: 'shaftDeepeningOrTargets',
-                  financeContinueLabel: 'Review Shaft Deepening Plan',
-                  repeatStep: 1000,
-                  briefing: '<p>The annual target is no longer the main point. The mine needs to progress to -1100 before the first level becomes a production cul-de-sac with better branding.</p>'
-                }
-              ]
-            },
-            1: {
-              depthIndex: 1,
-              levelName: '-1100 Level',
-              earliestYear: 3,
-              unlocks: ['technicalTeam'],
-              arrival: {
-                title: 'Welcome to the -1100 Level',
-                image: 'assets/images/new_level_reached.png',
-                character: 'New Level Reached',
-                department: 'Shaft Deepening Milestone',
-                label: 'LEVEL',
-                imageText: 'The mine has reached -1100. The consequences have been promoted accordingly.',
-                nextAction: 'roleIntro:miningEngineering',
-                body: '<p>Shaft deepening has reached the <strong>-1100 Level</strong>.</p><p>This level introduces Mining Engineering, research, and the first serious ground-control obligations. Pillars are no longer spare ore; they are the roof making a formal request to remain overhead.</p>'
-              },
-              character: {
-                image: 'assets/characters/mining-engineer-belt-study.png',
-                character: 'Mining Engineering Department',
-                department: 'Technical Capability',
-                imageText: 'Research converts concern into a programme.',
-                label: 'ENG'
-              },
-              annualPlans: [
-                {
-                  localYear: 1,
-                  phaseKey: 'mining-engineering',
-                  phaseTitle: '-1100 Level — Mining Engineering Programme',
-                  phaseTheme: 'The -1100 Level is the pillar-and-engineering learning level. Targets stay deliberately survivable while the player learns research, mine design and ground-control accountability.',
-                  kpiKeys: ['productionDelivery', 'technical', 'ground'],
-                  tonnes: 18000,
-                  grade: 14.1,
-                  technicalHires: 1,
-                  maxPillarFailures: 1,
-                  surplusTarget: 2500,
-                  afterFinanceAction: 'technicalHiring',
-                  financeContinueLabel: 'Proceed to Mining Engineering',
-                  briefing: '<p><strong>New department:</strong> Mining Engineering. Hire a Mining Engineer to unlock research projects that improve production, grade recovery, maintenance, belt reliability and ground-control practice.</p><p>Ground Control becomes more consequential once disturbed rows make pillar behaviour impossible to ignore.</p>'
-                },
-                {
-                  localYear: 2,
-                  phaseKey: 'ground-control',
-                  phaseTitle: '-1100 Level — Ground Control Reality',
-                  phaseTheme: 'The mine is now expected to keep producing while learning that the roof is not an optional stakeholder. Pressure increases, but the real fleet test is still waiting at -1200.',
-                  kpiKeys: ['productionDelivery', 'ground', 'technical'],
-                  tonnes: 21000,
-                  grade: 14.1,
-                  technicalHires: 2,
-                  maxPillarFailures: 1,
-                  surplusTarget: 4000,
-                  afterFinanceAction: 'technicalHiring',
-                  financeContinueLabel: 'Proceed to Technical Crew',
-                  repeatStep: 1500,
-                  briefing: '<p><strong>New requirement:</strong> keep ground failures under control while building enough technical capability to move deeper.</p><p>Support is a risk-control tool. The KPI is not “support everything”; the KPI is “do not let pillars become production commentary.”</p>'
-                }
-              ]
-            },
-            2: {
-              depthIndex: 2,
-              levelName: '-1200 Level',
-              earliestYear: 4,
-              unlocks: ['beltAdvancement', 'secondMiner'],
-              arrival: {
-                title: 'Welcome to the -1200 Level',
-                image: 'assets/images/new_level_reached.png',
-                character: 'New Level Reached',
-                department: 'Fleet Scale-Up',
-                label: 'LEVEL',
-                imageText: 'The mine has reached -1200. One HOPE was no longer enough to explain the target.',
-                nextAction: 'roleIntro:survey',
-                body: '<p>Shaft deepening has reached the <strong>-1200 Level</strong>.</p><p>This is the first proper fleet scale-up level. <strong>2ndHOPE</strong> is authorised, but the production target does not double instantly because two miners still share belts, people, routes, faults and attention.</p><p>Belt distance now matters visibly: miners working too far from the belt lose effective mining rate through travel time.</p>'
-              },
-              character: {
-                image: 'assets/characters/mining-engineer-belt-study.png',
-                character: 'Mine Services',
-                department: 'Fleet and Belt Scale-Up',
-                imageText: 'Distance is now a production mechanic.',
-                label: 'BELT'
-              },
-              annualPlans: [
-                {
-                  localYear: 1,
-                  phaseKey: 'fleet-commissioning',
-                  phaseTitle: '-1200 Level — Fleet Commissioning',
-                  phaseTheme: '2ndHOPE raises the ceiling, not the guarantee. First-year targets assume commissioning, travel losses, belt learning and the usual operational theatre.',
-                  kpiKeys: ['productionDelivery', 'fleet', 'belt'],
-                  tonnes: 30000,
-                  grade: 14.1,
-                  secondMinerTonnes: 7000,
-                  beltExtensions: 1,
-                  surplusTarget: 7000,
-                  afterFinanceAction: 'assetsSecondMiner',
-                  financeContinueLabel: 'Proceed to Fleet and Belt Controls',
-                  briefing: '<p><strong>New requirements:</strong> hire a Surveyor, advance the belt through mined-out centreline ground, and bring 2ndHOPE into useful production.</p><p>Targets ramp by roughly 50–80% over time rather than doubling immediately.</p>'
-                },
-                {
-                  localYear: 2,
-                  phaseKey: 'fleet-utilisation',
-                  phaseTitle: '-1200 Level — Fleet Utilisation',
-                  phaseTheme: 'The second miner is no longer a commissioning story. It is now expected to produce enough tonnes to justify its nameplate optimism.',
-                  kpiKeys: ['productionDelivery', 'fleet', 'belt'],
-                  tonnes: 35000,
-                  grade: 14.1,
-                  secondMinerTonnes: 11000,
-                  beltExtensions: 1,
-                  surplusTarget: 9000,
-                  afterFinanceAction: 'assetsSecondMiner',
-                  financeContinueLabel: 'Proceed to Fleet and Belt Controls',
-                  repeatStep: 2500,
-                  secondMinerRepeatStep: 1500,
-                  briefing: '<p>Fleet utilisation is now a normal operating expectation. Keeping 2ndHOPE idle is still technically a strategy, but only because all bad plans are strategies once named.</p>'
-                }
-              ]
-            },
-            3: {
-              depthIndex: 3,
-              levelName: '-1300 Level',
-              earliestYear: 5,
-              unlocks: ['gasWater'],
-              arrival: {
-                title: 'Welcome to the -1300 Level',
-                image: 'assets/images/new_level_reached.png',
-                character: 'Mine Environment',
-                department: 'Gas and Water',
-                label: 'ENV',
-                imageText: 'The mine has developed atmosphere and moisture.',
-                nextAction: 'resume',
-                body: '<p>Shaft deepening has reached the <strong>-1300 Level</strong>.</p><p>Gas pockets and water inflows can now affect production, safety, morale and asset condition. The risk is manageable in the same way all obvious risks become manageable once they are assigned to Production.</p>'
-              },
-              character: {
-                image: 'assets/characters/ventilation-warning.png',
-                character: 'Mine Environment',
-                department: 'Gas and Water',
-                imageText: 'The ground has retained several surprises.',
-                label: 'ENV'
-              },
-              annualPlans: [
-                {
-                  localYear: 1,
-                  phaseKey: 'gas-water',
-                  phaseTitle: '-1300 Level — Gas and Water',
-                  phaseTheme: 'Production now includes managing conditions that were previously footnotes in the risk register.',
-                  kpiKeys: ['productionDelivery', 'fleet', 'safety'],
-                  tonnes: 38000,
-                  grade: 14.2,
-                  secondMinerTonnes: 13000,
-                  safetyMin: 55,
-                  surplusTarget: 9000,
-                  afterFinanceAction: 'targets',
-                  financeContinueLabel: 'Review Gas and Water Risks',
-                  repeatStep: 3000,
-                  secondMinerRepeatStep: 1800,
-                  briefing: '<p><strong>New operating reality:</strong> gas and water may now damage equipment, interrupt work and create safety consequences that are hard to solve with a meeting.</p>'
-                }
-              ]
-            },
-            4: {
-              depthIndex: 4,
-              levelName: '-1400 Level',
-              earliestYear: 6,
-              unlocks: ['ventilation'],
-              arrival: {
-                title: 'Welcome to the -1400 Level',
-                image: 'assets/images/new_level_reached.png',
-                character: 'Ventilation Engineering',
-                department: 'Air Movement Assurance',
-                label: 'VENT',
-                imageText: 'The mine is now warm enough to require theory.',
-                nextAction: 'roleIntro:ventilation',
-                body: '<p>Shaft deepening has reached the <strong>-1400 Level</strong>.</p><p>Heat and ventilation are now strategic. Procurement has identified a mine fan near the winder as the preferred first-stage air movement solution.</p>'
-              },
-              character: {
-                image: 'assets/characters/ventilation-engineer.png',
-                character: 'Ventilation Engineering',
-                department: 'Air Movement Assurance',
-                imageText: 'Air has been moved somewhere.',
-                label: 'VENT'
-              },
-              annualPlans: [
-                {
-                  localYear: 1,
-                  phaseKey: 'ventilation',
-                  phaseTitle: '-1400 Level — Ventilation Readiness',
-                  phaseTheme: 'The mine has become deep enough that air movement needs both equipment and someone willing to sign the fan curve.',
-                  kpiKeys: ['productionDelivery', 'ventilation', 'safety'],
-                  tonnes: 45000,
-                  grade: 14.2,
-                  safetyMin: 60,
-                  ventilationActions: 1,
-                  surplusTarget: 11000,
-                  afterFinanceAction: 'technicalHiring',
-                  financeContinueLabel: 'Proceed to Ventilation Planning',
-                  repeatStep: 3500,
-                  briefing: '<p><strong>New requirements:</strong> hire a Ventilation Engineer and purchase a Mine Fan. The fan is small, oscillating, and officially part of the operating strategy.</p>'
-                }
-              ]
-            }
+
+const GAME_PROGRESSION_CONFIG = {
+  planningTrait: BALANCE_TRAIT_ASSUMPTION,
+  defaultGrade: TARGET_GRADE,
+  depthLevels: {
+    0: {
+      depthIndex: 0,
+      levelName: '-1000 Level',
+      earliestYear: 1,
+      unlocks: ['exploration'],
+      character: {
+        image: 'assets/characters/slt-silhouette.png',
+        character: 'Superior Leadership Team',
+        department: 'Bulk Sample Governance',
+        imageText: 'This is only a trial until it becomes a target.',
+        label: 'SLT'
+      },
+      annualPlans: [
+        {
+          localYear: 1,
+          phaseKey: 'bulk-sample',
+          phaseTitle: 'Year 1 KPI Notice — Bulk Sample',
+          phaseTheme: 'The operation is still officially a product trial, which means the target is simple, visible, and definitely not the beginning of full-scale mining until somebody needs it to be.',
+          kpiKeys: ['bulkSample'],
+          tonnes: 10000,
+          grade: 14.0,
+          revenueTarget: 60000,
+          discoveredRows: 0,
+          surplusTarget: 0,
+          lomTargetTonnes: 0,
+          safetyMin: 0,
+          technicalHires: 0,
+          maxPillarFailures: 99,
+          beltExtensions: 0,
+          secondMinerTonnes: 0,
+          briefing: `<p>The first year remains the original controlled bulk sample. The objective is deliberately simple: mine enough tonnes to prove the loop, maintain Goldilocks Grade, and avoid giving the Superior Leadership Team any reason to learn the word “geotechnical”.</p><p><strong>Objective:</strong> mine 10,000 tonnes at minimum 14.0% Goldilocks Grade.</p>`
+        },
+        {
+          localYear: 2,
+          phaseKey: 'reserve-confidence-retrospective-evidence',
+          phaseTitle: 'Year 2 KPI Notice — Reserve Confidence Through Retrospective Evidence',
+          phaseTheme: 'The successful bulk sample has been interpreted as proof that full-scale operational mining can be achieved without additional investment, research, infrastructure, or technical hesitation.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'exploration'],
+          tonnes: 14000,
+          grade: 14.0,
+          revenueTarget: 80000,
+          discoveredRows: 2,
+          surplusTarget: 0,
+          lomTargetTonnes: 0,
+          safetyMin: 0,
+          technicalHires: 0,
+          maxPillarFailures: 99,
+          beltExtensions: 0,
+          secondMinerTonnes: 0,
+          afterFinanceAction: 'technicalHiring',
+          financeContinueLabel: 'Proceed to hire Geologist and Drillers',
+          financeNote: 'Exploration enablement funding has been reluctantly attached to the reserve position already declared.',
+          character: {
+            image: 'assets/characters/geology-rock-lickers.png',
+            character: 'Geology Department',
+            department: 'Reserve Confidence Through Retrospective Evidence',
+            imageText: 'Exploration confirms what has already been promised.',
+            label: 'GEO'
           },
-          metrics: {
-            bulkSample: 'Bulk Sample',
-            productionDelivery: 'Production Delivery',
-            exploration: 'Exploration Drilling',
-            surplus: 'Operating Surplus',
-            lom: 'Ore Reserve Inventory',
-            technical: 'Technical Capability',
-            ground: 'Ground Stability',
-            fleet: '2ndHOPE Utilisation',
-            belt: 'Belt Advancement',
-            safety: 'Safety Floor',
-            ventilation: 'Ventilation Readiness',
-            sharePrice: 'Share Price',
-            advance1100: 'Advance to -1100 Level'
-          }
-        };
+          briefing: `<p>In Year 1, the Superior Leadership Team confirmed this was only a bulk sample. The bulk sample has now been declared a success, which the Board has interpreted as evidence that full-scale operational mining can be achieved without additional investment, research, infrastructure, or any unnecessary delay caused by technical concerns.</p><p>Due to business pressures, strategic opportunity, and several people already being briefed, the trial area must now support scalable mining.</p><p>Only the first four rows of the -1000 Level are already interpreted. The rest requires cash to be converted into drill core so Geology can confirm what has already been promised externally.</p><p><strong>New requirements:</strong> buy a drill, hire one Geologist and two named Drillers, and unlock new rows.</p>`
+        },
+        {
+          localYear: 3,
+          phaseKey: 'strategic-depth-before-technical-certainty',
+          phaseTitle: 'Year 3 KPI Notice — Strategic Depth Before Technical Certainty',
+          phaseTheme: 'The -1000 Level has provided enough confidence for the Superior Leadership Team to approve further confidence.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'exploration', 'technical', 'advance1100'],
+          tonnes: 17000,
+          grade: 14.0,
+          revenueTarget: 105000,
+          discoveredRows: 3,
+          surplusTarget: 2000,
+          lomTargetTonnes: 0,
+          safetyMin: 0,
+          technicalHires: 1,
+          maxPillarFailures: 99,
+          beltExtensions: 0,
+          secondMinerTonnes: 0,
+          afterFinanceAction: 'year3TechnicalAssurance',
+          financeContinueLabel: 'Begin Technical Assurance Study',
+          financeNote: 'Technical legitimacy funding covers the early cost of making previous decisions defensible.',
+          briefing: `<p>The -1000 Level has provided enough confidence for the Superior Leadership Team to approve further confidence.</p><p>The operation must now complete enough drilling, maintain enough cash discipline, and approve shaft deepening to reach the <strong>-1100 Level</strong>, where the technical questions created by this decision can be investigated properly.</p><p>The feasibility study remains incomplete, but in fairness, the conclusion is already known.</p><p><strong>New requirement:</strong> unlock Mining Engineering, hire a Mining Engineer, and begin converting retrospective technical assurance into research projects.</p>`
+        },
+        {
+          localYear: 4,
+          phaseKey: 'overdue-depth-advancement',
+          phaseTitle: 'Overdue KPI Notice — Depth Advancement Still Required',
+          phaseTheme: 'The operation is still on the training level. SLT has interpreted this as a leadership opportunity with consequences.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'advance1100'],
+          tonnes: 18500,
+          grade: 14.0,
+          revenueTarget: 115000,
+          revenueRepeatStep: 10000,
+          discoveredRows: 3,
+          surplusTarget: 3000,
+          surplusRepeatStep: 1000,
+          lomTargetTonnes: 0,
+          safetyMin: 0,
+          technicalHires: 0,
+          maxPillarFailures: 99,
+          beltExtensions: 0,
+          secondMinerTonnes: 0,
+          afterFinanceAction: 'shaftDeepeningOrTargets',
+          financeContinueLabel: 'Review Shaft Deepening Plan',
+          financeNote: 'Depth-advancement funding is now labelled urgent because the forecast assumed the mine had already moved.',
+          repeatStep: 1000,
+          briefing: `<p>The annual target is no longer the main point. The mine needs to progress to -1100 before the first level becomes a production cul-de-sac with better branding.</p><p>Remaining at -1000 is permitted, but the KPI package will continue to grow until operational reality catches up with the forecast.</p>`
+        }
+      ]
+    },
+    1: {
+      depthIndex: 1,
+      levelName: '-1100 Level',
+      earliestYear: 3,
+      unlocks: ['technicalTeam'],
+      arrival: {
+        title: 'Welcome to the -1100 Level',
+        image: 'assets/images/new_level_reached.png',
+        character: 'New Level Reached',
+        department: 'Shaft Deepening Milestone',
+        label: 'LEVEL',
+        imageText: 'The mine has reached the evidence gap.',
+        nextAction: 'resume',
+        body: `<p>Shaft deepening has reached the <strong>-1100 Level</strong>.</p><p>The mine has now advanced below the original trial area following a successful programme of mining, exploration, escalation, and not completing anything that a qualified person would describe as a feasibility study.</p><p>Mining Engineering should now be used to turn the technical questions created by deeper mining into research, design decisions, and more defensible explanations.</p>`
+      },
+      character: {
+        image: 'assets/characters/mining-engineer-belt-study.png',
+        character: 'Mining Engineering Department',
+        department: 'Technical Capability',
+        imageText: 'Research converts concern into a programme.',
+        label: 'ENG'
+      },
+      annualPlans: [
+        {
+          localYear: 1,
+          phaseKey: 'technical-assurance-after-commitment',
+          phaseTitle: '-1100 Level — Technical Assurance After Commitment',
+          phaseTheme: 'Mining and exploration have progressed beyond the evidence base. Mining Engineering is now required to retrofit technical confidence onto decisions already made.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'technical'],
+          tonnes: 18000,
+          grade: 14.1,
+          revenueTarget: 115000,
+          technicalHires: 1,
+          maxPillarFailures: 1,
+          surplusTarget: 2500,
+          afterFinanceAction: 'technicalHiring',
+          financeContinueLabel: 'Proceed to Mining Engineering',
+          financeNote: 'Technical assurance funding has been approved after the technical decision it was supposed to inform.',
+          briefing: `<p>The -1100 Level has now been reached, following a successful programme of mining, exploration, escalation, and not completing anything that a qualified person would describe as a feasibility study.</p><p>To support the continued transition from “trial mining” to “apparently this is a mine now”, the Superior Leadership Team has approved the creation of a Mining Engineering Department.</p><p>The department will provide mine design, production assumptions, research programmes, and the sort of technical confidence normally prepared before the capital decision.</p><p><strong>New requirement:</strong> hire a Mining Engineer to unlock research projects and begin converting operational concerns into controlled improvement initiatives.</p>`
+        },
+        {
+          localYear: 2,
+          phaseKey: 'ground-control-reality',
+          phaseTitle: '-1100 Level — Ground Control Reality',
+          phaseTheme: 'The roof and pillars are now stakeholders. The mine is expected to keep producing while discovering that extraction geometry has opinions.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'technical', 'ground'],
+          tonnes: 21000,
+          grade: 14.1,
+          revenueTarget: 145000,
+          revenueRepeatStep: 15000,
+          technicalHires: 2,
+          maxPillarFailures: 1,
+          surplusTarget: 4000,
+          surplusRepeatStep: 1500,
+          afterFinanceAction: 'technicalHiring',
+          financeContinueLabel: 'Proceed to Technical Crew',
+          financeNote: 'Ground-control funding recognises that the roof has not accepted the production profile.',
+          repeatStep: 1500,
+          briefing: `<p>Following the creation of the Mining Engineering Department, the operation has identified a previously underrepresented technical constraint: the ground above the mine.</p><p>Pillars, support standards, and extraction geometry are now considered part of the production system, rather than inconvenient shapes left behind by people lacking ambition.</p><p><strong>New requirement:</strong> manage pillar-related risk while maintaining production. A Rock Doctor may be required once disturbed ground begins expressing professional disagreement.</p>`
+        }
+      ]
+    },
+    2: {
+      depthIndex: 2,
+      levelName: '-1200 Level',
+      earliestYear: 4,
+      unlocks: ['beltAdvancement', 'secondMiner'],
+      arrival: {
+        title: 'Welcome to the -1200 Level',
+        image: 'assets/images/new_level_reached.png',
+        character: 'New Level Reached',
+        department: 'Fleet Scale-Up Milestone',
+        label: 'LEVEL',
+        imageText: 'One miner worked, therefore two miners must work better.',
+        nextAction: 'secondMinerUnlock',
+        body: `<p>Shaft deepening has reached the <strong>-1200 Level</strong>.</p><p>The successful use of 1stHOPE has been interpreted as evidence that a second machine will create a proportional increase in output, without creating a proportional increase in breakdowns, travel time, supervision, operator confusion, maintenance demand, or blame.</p><p>2ndHOPE is now available for authorisation through the Assets panel.</p>`
+      },
+      character: {
+        image: 'assets/characters/mining-engineer-belt-study.png',
+        character: 'Mine Services',
+        department: 'Fleet and Belt Scale-Up',
+        imageText: 'Distance is now a production mechanic.',
+        label: 'BELT'
+      },
+      annualPlans: [
+        {
+          localYear: 1,
+          phaseKey: 'fleet-commissioning',
+          phaseTitle: '-1200 Level — Fleet Commissioning',
+          phaseTheme: 'The second miner increases potential capacity, but the system around it is not yet ready to pretend constraints have disappeared.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'fleet', 'belt', 'ground'],
+          tonnes: 30000,
+          grade: 14.1,
+          revenueTarget: 210000,
+          secondMinerTonnes: 7000,
+          beltExtensions: 1,
+          maxPillarFailures: 1,
+          surplusTarget: 7000,
+          afterFinanceAction: 'assetsSecondMiner',
+          financeContinueLabel: 'Proceed to Fleet and Belt Controls',
+          financeNote: 'Fleet commissioning funding assumes two machines can share one operational reality without incident.',
+          briefing: `<p>With 2ndHOPE available, the operation has entered the fleet-commissioning phase.</p><p>The Superior Leadership Team expects increased production from two machines, while acknowledging that belts, surveys, travel distance, supervision, maintenance and human attention may continue behaving as if they are real constraints.</p><p><strong>New requirements:</strong> hire a Surveyor, advance the belt through mined-out centreline ground, and bring 2ndHOPE into useful production.</p><p>Targets do not double immediately. This has been described internally as restraint.</p>`
+        },
+        {
+          localYear: 2,
+          phaseKey: 'fleet-utilisation',
+          phaseTitle: '-1200 Level — Fleet Utilisation',
+          phaseTheme: '2ndHOPE is no longer a commissioning story. It is now expected to justify the procurement optimism.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'fleet', 'belt', 'ground'],
+          tonnes: 35000,
+          grade: 14.1,
+          revenueTarget: 260000,
+          revenueRepeatStep: 25000,
+          secondMinerTonnes: 11000,
+          beltExtensions: 1,
+          maxPillarFailures: 1,
+          surplusTarget: 9000,
+          surplusRepeatStep: 2500,
+          afterFinanceAction: 'assetsSecondMiner',
+          financeContinueLabel: 'Proceed to Fleet and Belt Controls',
+          financeNote: 'Fleet utilisation funding assumes nameplate capacity is real because the nameplate is extremely clear.',
+          repeatStep: 2500,
+          secondMinerRepeatStep: 1500,
+          briefing: `<p>The second miner has moved from commissioning opportunity to annual expectation.</p><p>The operation must now demonstrate that 2ndHOPE can contribute meaningful tonnes rather than existing as an expensive mobile explanation for why the belt is in the wrong place.</p><p>Fleet utilisation, belt discipline, ground stability, production delivery and operating surplus are now normal operating requirements.</p>`
+        }
+      ]
+    },
+    3: {
+      depthIndex: 3,
+      levelName: '-1300 Level',
+      earliestYear: 5,
+      unlocks: ['gasWater'],
+      arrival: {
+        title: 'Welcome to the -1300 Level',
+        image: 'assets/images/new_level_reached.png',
+        character: 'Mine Environment',
+        department: 'Gas and Water',
+        label: 'ENV',
+        imageText: 'The risk register has entered the mine in person.',
+        nextAction: 'resume',
+        body: `<p>Shaft deepening has reached the <strong>-1300 Level</strong>.</p><p>Several risks previously held in the register have now entered the mine in person. Gas pockets and water inflows can interrupt work, damage equipment, affect safety performance and generally behave as though mitigation plans require implementation rather than approval.</p><p>Production expectations remain high because the forecast model does not currently include a column for “the ground is leaking”.</p>`
+      },
+      character: {
+        image: 'assets/characters/ventilation-warning.png',
+        character: 'Mine Environment',
+        department: 'Gas and Water',
+        imageText: 'The ground has retained several surprises.',
+        label: 'ENV'
+      },
+      annualPlans: [
+        {
+          localYear: 1,
+          phaseKey: 'registered-risks-materialise',
+          phaseTitle: '-1300 Level — Materialisation of Registered Risks',
+          phaseTheme: 'Production now includes managing conditions that were previously footnotes in the risk register.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'fleet', 'belt', 'ground', 'safety'],
+          tonnes: 46000,
+          grade: 14.2,
+          revenueTarget: 360000,
+          revenueRepeatStep: 45000,
+          secondMinerTonnes: 17000,
+          beltExtensions: 1,
+          maxPillarFailures: 1,
+          safetyMin: 58,
+          surplusTarget: 11000,
+          surplusRepeatStep: 3000,
+          afterFinanceAction: 'targets',
+          financeContinueLabel: 'Review Gas and Water Risks',
+          financeNote: 'Environmental funding recognises that the ground has started submitting invoices directly.',
+          repeatStep: 5000,
+          secondMinerRepeatStep: 2500,
+          briefing: `<p>The -1300 Level has confirmed that several risks previously held in the register have now entered the mine in person.</p><p>Gas and water may interrupt work, damage equipment, affect safety performance, and generally behave as though mitigation plans require implementation rather than approval.</p><p>Production expectations remain high because the forecast model does not currently include a column for “the ground is leaking”.</p>`
+        }
+      ]
+    },
+    4: {
+      depthIndex: 4,
+      levelName: '-1400 Level',
+      earliestYear: 6,
+      unlocks: ['ventilation'],
+      arrival: {
+        title: 'Welcome to the -1400 Level',
+        image: 'assets/images/new_level_reached.png',
+        character: 'Ventilation Engineering',
+        department: 'Air Movement Assurance',
+        label: 'VENT',
+        imageText: 'Air movement is now a deliverable.',
+        nextAction: 'roleIntro:ventilation',
+        body: `<p>Shaft deepening has reached the <strong>-1400 Level</strong>.</p><p>The mine is now deep enough that air movement needs equipment, technical ownership, and someone willing to sign the fan curve.</p><p>Ventilation Engineering is now required because breathable air has stopped being an assumption and become an operating dependency.</p>`
+      },
+      character: {
+        image: 'assets/characters/ventilation-engineer.png',
+        character: 'Ventilation Engineering',
+        department: 'Air Movement Assurance',
+        imageText: 'Air has been moved somewhere.',
+        label: 'VENT'
+      },
+      annualPlans: [
+        {
+          localYear: 1,
+          phaseKey: 'ventilation-readiness',
+          phaseTitle: '-1400 Level — Ventilation Readiness and Other Discoveries',
+          phaseTheme: 'The mine is now deep enough that air movement is no longer implied.',
+          kpiKeys: ['productionDelivery', 'revenue', 'surplus', 'fleet', 'belt', 'ground', 'safety', 'ventilation'],
+          tonnes: 62000,
+          grade: 14.25,
+          revenueTarget: 450000,
+          revenueRepeatStep: 55000,
+          secondMinerTonnes: 26000,
+          beltExtensions: 1,
+          maxPillarFailures: 1,
+          safetyMin: 65,
+          ventilationActions: 1,
+          surplusTarget: 16000,
+          surplusRepeatStep: 4000,
+          afterFinanceAction: 'technicalHiring',
+          financeContinueLabel: 'Proceed to Ventilation Planning',
+          financeNote: 'Deep operating funding assumes air, heat, support, fleets and finance can all be solved before year end.',
+          repeatStep: 6500,
+          secondMinerRepeatStep: 3000,
+          briefing: `<p>The -1400 Level has introduced a new operational dependency: breathable air continuing to arrive in useful locations.</p><p>The Superior Leadership Team has approved the Ventilation Engineering function after concluding that air movement is more difficult at depth than in the meeting room where the original production profile was agreed.</p><p><strong>New requirements:</strong> hire a Ventilation Engineer and install a Mine Fan. Continued production must now be balanced against support density, fleet reliability, gas, water, belt distance and the atmosphere’s willingness to participate.</p>`
+        }
+      ]
+    }
+  },
+  metrics: {
+    bulkSample: 'Bulk Sample',
+    productionDelivery: 'Production Delivery',
+    revenue: 'Revenue Target',
+    exploration: 'Exploration Drilling',
+    surplus: 'Operating Surplus',
+    lom: 'Ore Reserve Inventory',
+    technical: 'Technical Capability',
+    ground: 'Ground Stability',
+    fleet: '2ndHOPE Utilisation',
+    belt: 'Belt Advancement',
+    safety: 'Safety Floor',
+    ventilation: 'Ventilation Readiness',
+    sharePrice: 'Share Price',
+    advance1100: 'Advance to -1100 Level'
+  }
+};
 
         function progressionState() {
           state.progression = state.progression || {};
@@ -30616,6 +31951,9 @@
           delete copy.financeContinueLabel;
           delete copy.repeatStep;
           delete copy.secondMinerRepeatStep;
+          delete copy.revenueRepeatStep;
+          delete copy.surplusRepeatStep;
+          delete copy.safetyRepeatStep;
           return copy;
         }
 
@@ -30626,8 +31964,14 @@
           const target = cloneProgressionPlan(template);
           const repeatStep = Number(template.repeatStep) || Number(template.annualStep) || 0;
           const secondStep = Number(template.secondMinerRepeatStep) || 0;
+          const revenueStep = Number(template.revenueRepeatStep) || 0;
+          const surplusStep = Number(template.surplusRepeatStep) || 0;
+          const safetyStep = Number(template.safetyRepeatStep) || 0;
           if (extraYears > 0 && repeatStep) target.tonnes = Math.round((Number(target.tonnes) || TARGET_TONNES) + repeatStep * extraYears);
           if (extraYears > 0 && secondStep) target.secondMinerTonnes = Math.round((Number(target.secondMinerTonnes) || 0) + secondStep * extraYears);
+          if (extraYears > 0 && revenueStep) target.revenueTarget = Math.round((Number(target.revenueTarget) || 0) + revenueStep * extraYears);
+          if (extraYears > 0 && surplusStep) target.surplusTarget = Math.round((Number(target.surplusTarget) || 0) + surplusStep * extraYears);
+          if (extraYears > 0 && safetyStep) target.safetyMin = Math.min(85, Math.round((Number(target.safetyMin) || 0) + safetyStep * extraYears));
           target.progressionConfigVersion = PROGRESSION_CONFIG_VERSION;
           target.year = y;
           target.depthIndex = depth;
@@ -30636,6 +31980,7 @@
           target.grade = Number(target.grade) || GAME_PROGRESSION_CONFIG.defaultGrade;
           target.tonnes = Math.round(Number(target.tonnes) || TARGET_TONNES);
           target.discoveredRows = Math.max(0, Math.round(Number(target.discoveredRows) || 0));
+          target.revenueTarget = Math.max(0, Math.round(Number(target.revenueTarget) || 0));
           target.surplusTarget = Math.round(Number(target.surplusTarget) || 0);
           target.lomTargetTonnes = Math.round(Number(target.lomTargetTonnes) || 0);
           target.technicalHires = Math.max(0, Math.round(Number(target.technicalHires) || 0));
@@ -30682,11 +32027,28 @@
           return GAME_PROGRESSION_CONFIG.metrics[key] || String(key || '').replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
         }
 
+        function progressionKpiGroupTitle(key) {
+          if (['bulkSample', 'productionDelivery', 'revenue', 'surplus'].includes(key)) return 'Commercial Expectations';
+          return 'Operational Expectations';
+        }
+
+        function progressionTargetSummaryWithValuesHtml(target = activeAnnualTargets()) {
+          const t = target || {};
+          const keys = Array.isArray(t.kpiKeys) && t.kpiKeys.length ? t.kpiKeys : focusKpiKeysForYear(state.year);
+          const groups = keys.reduce((acc, key) => {
+            const title = progressionKpiGroupTitle(key);
+            acc[title] = acc[title] || [];
+            acc[title].push(key);
+            return acc;
+          }, {});
+          return Object.keys(groups).map(title => `<h3>${escapeHtml(title)}</h3><ul>${groups[title].map(key => `<li><strong>${escapeHtml(metricLabelForKey(key))}:</strong> ${escapeHtml(formatMetricTargetValue(key, t))}</li>`).join('')}</ul>`).join('');
+        }
+
         function progressionYearStartHtml(year = state.year) {
           const { template } = progressionPlanTemplate(year, state.depthIndex);
           const plan = progressionTargetPackage(year, state.depthIndex);
           const briefing = template.briefing || '<p>The annual targets continue to increase because the target has already appeared in a slide deck.</p>';
-          return `<div class="letter"><h2>${escapeHtml(plan.phaseTitle || 'Annual KPI Notice')}</h2><p>${escapeHtml(plan.phaseTheme || '')}</p>${briefing}<h3>Fixed KPI Package</h3>${targetSummaryWithValuesHtml(plan)}<p class="sig">Superior Leadership Team<br>Predictable Ambition, Adjustable Reality</p></div>`;
+          return `<div class="letter"><h2>${escapeHtml(plan.phaseTitle || 'Annual KPI Notice')}</h2><p>${escapeHtml(plan.phaseTheme || '')}</p>${briefing}<h3>Annual KPI Package</h3>${progressionTargetSummaryWithValuesHtml(plan)}<p class="sig">Superior Leadership Team<br>${escapeHtml(template.signature || 'Predictable Ambition, Adjustable Reality')}</p></div>`;
         }
 
         function progressionCharacterHtml(year = state.year) {
@@ -30726,9 +32088,33 @@
             const key = act.split(':')[1];
             if (key) return openRoleUnlockIntro(key);
           }
+          if (act === 'secondMinerUnlock') {
+            state.assetDepthSystemPromptSecondMinerPurchase = true;
+            state.assetDepthSystemAssetsTab = 'mining';
+            setModalClosable(false);
+            $('modalWindow').className = 'window medium';
+            $('modalTitle').textContent = '2ndHOPE Authorised';
+            $('modalBody').innerHTML = `${modalCharacterHtml('assets/images/new_level_reached.png', '2ndHOPE Procurement Opportunity', 'Fleet Scale-Up', 'A second machine is now available. Finance has asked whether the first one is definitely being used properly.', '2H')}
+              <div class="letter"><h2>2ndHOPE Unlocked</h2>
+                <p>The -1200 Level has been approved for fleet expansion.</p>
+                <p>The successful use of 1stHOPE has been interpreted as evidence that a second machine will create a proportional increase in output, without creating a proportional increase in breakdowns, travel time, supervision, operator confusion, maintenance demand, or blame.</p>
+                <p>2ndHOPE is now available for authorisation through the Assets panel. Finance has highlighted the button because a highlighted button is cheaper than a commissioning plan.</p></div>
+              <div class="btnRow"><button class="primary assetsActionPulse" data-second-miner-unlock-assets>Open Assets: Authorise Second Miner</button></div>`;
+            $('modalOverlay').classList.add('show');
+            return true;
+          }
           if (act === 'technicalHiring') {
             state.hiringTab = 'technical';
             openWindow('hr', false, progressionFinanceContinueLabel(state.year));
+            return true;
+          }
+          if (act === 'year3TechnicalAssurance') {
+            state.hiringTab = 'technical';
+            state.progressionHireFocusRole = 'miningEngineer';
+            if (!miningEngineerOnCrew()) {
+              return openRoleUnlockIntro('miningEngineering', 'Mining Engineering Department Unlock');
+            }
+            openWindow('research', false, 'Mining Engineering Research');
             return true;
           }
           if (act === 'shaftDeepeningOrTargets') {
@@ -30799,7 +32185,7 @@
           const y = Number(state.year) || 1;
           const depth = progressionDepth(state.depthIndex);
           if (name === 'exploration') return y >= 2;
-          if (name === 'technicalTeam') return depth >= 1;
+          if (name === 'technicalTeam') return y >= 3 || depth >= 1;
           if (name === 'groundSupport') return depth >= 1 && !!state.groundControlUnlocked;
           if (name === 'beltAdvancement') return depth >= 2;
           if (name === 'secondMiner') return depth >= 2;
@@ -30861,6 +32247,82 @@
         metricLabelForKey = function(key) {
           return GAME_PROGRESSION_CONFIG.metrics[key] || (previousMetricLabelForProgression ? previousMetricLabelForProgression(key) : progressionMetricLabel(key));
         };
+
+const previousFormatMetricTargetValueForProgression = typeof formatMetricTargetValue === 'function' ? formatMetricTargetValue : null;
+formatMetricTargetValue = function(key, target = activeAnnualTargets()) {
+  const t = target || {};
+  if (key === 'revenue') return `${money(t.revenueTarget || state.revenueTarget || 0)} revenue target`;
+  if (key === 'surplus') return `${money(t.surplusTarget || 0)} minimum Operating Surplus`;
+  return previousFormatMetricTargetValueForProgression ? previousFormatMetricTargetValueForProgression(key, t) : metricLabelForKey(key);
+};
+
+const previousFocusedMetricCardForProgression = typeof focusedMetricCard === 'function' ? focusedMetricCard : null;
+focusedMetricCard = function(key, target = activeAnnualTargets()) {
+  const t = target || {};
+  if (key === 'revenue') {
+    const targetRevenue = t.revenueTarget || state.revenueTarget || 0;
+    const status = progressKpiStatus(state.revenue || 0, targetRevenue || 0);
+    return { key, title: metricLabelForKey(key), status, html: kpiCardHtml('Revenue Target', `${money(state.revenue || 0)} / ${money(targetRevenue)}`, pct(state.revenue || 0, targetRevenue || 1), status, 'SLT has discovered that some tonnes are worth more than other tonnes.') };
+  }
+  return previousFocusedMetricCardForProgression ? previousFocusedMetricCardForProgression(key, t) : { key, title: metricLabelForKey(key), status: 'onTrack', html: '' };
+};
+
+const previousFixedKpiStrictPassedForProgression = typeof fixedKpiStrictPassed === 'function' ? fixedKpiStrictPassed : null;
+fixedKpiStrictPassed = function(key, target = activeAnnualTargets()) {
+  const t = target || {};
+  if (key === 'revenue') return (Number(state.revenue) || 0) >= (Number(t.revenueTarget || state.revenueTarget) || 0);
+  return previousFixedKpiStrictPassedForProgression ? previousFixedKpiStrictPassedForProgression(key, t) : true;
+};
+
+if (typeof fixedKpiReviewKpiActualText === 'function') {
+  const previousFixedKpiReviewKpiActualTextForProgression = fixedKpiReviewKpiActualText;
+  fixedKpiReviewKpiActualText = function(key, target = activeAnnualTargets()) {
+    const t = target || {};
+    if (key === 'revenue') return `${money(state.revenue || 0)} / ${money(t.revenueTarget || state.revenueTarget || 0)} revenue`;
+    return previousFixedKpiReviewKpiActualTextForProgression(key, t);
+  };
+}
+
+targetSummaryWithValuesHtml = function(target = activeAnnualTargets()) {
+  return progressionTargetSummaryWithValuesHtml(target);
+};
+targetSummaryHtml = function(target = activeAnnualTargets()) {
+  return progressionTargetSummaryWithValuesHtml(target);
+};
+
+focusedKpiRows = function() {
+  const target = activeAnnualTargets();
+  const keys = Array.isArray(target.kpiKeys) && target.kpiKeys.length ? target.kpiKeys : focusKpiKeysForYear(state.year);
+  return keys.filter(key => key !== 'pillarSupport' && key !== 'pillarSupports').map(key => focusedMetricCard(key, target));
+};
+progressiveKpiRows = function() { return focusedKpiRows().map(({ key, title, status }) => ({ key, title, status })); };
+annualKpiStatusList = function() {
+  const target = activeAnnualTargets();
+  const keys = Array.isArray(target.kpiKeys) && target.kpiKeys.length ? target.kpiKeys : focusKpiKeysForYear(state.year);
+  return keys.filter(key => key !== 'pillarSupport' && key !== 'pillarSupports').map(key => {
+    const card = focusedMetricCard(key, target);
+    let status = card && card.status ? card.status : (fixedKpiStrictPassed(key, target) ? 'onTrack' : 'failing');
+    if (dayOfYear() >= YEAR_LENGTH_DAYS || state.yearReviewDue) status = fixedKpiStrictPassed(key, target) ? 'onTrack' : 'failing';
+    return { key, title: metricLabelForKey(key), status };
+  });
+};
+annualTargetPassed = function() {
+  const target = activeAnnualTargets();
+  const keys = Array.isArray(target.kpiKeys) && target.kpiKeys.length ? target.kpiKeys : focusKpiKeysForYear(state.year);
+  return keys.filter(key => key !== 'pillarSupport' && key !== 'pillarSupports').every(key => fixedKpiStrictPassed(key, target));
+};
+
+if (typeof financePlanForYear === 'function') {
+  const previousFinancePlanForProgression = financePlanForYear;
+  financePlanForYear = function(year, priorCash = 0) {
+    const plan = previousFinancePlanForProgression(year, priorCash) || {};
+    const target = progressionTargetPackage(year, state.depthIndex);
+    const { template } = progressionPlanTemplate(year, state.depthIndex);
+    if (target.revenueTarget) plan.revenueTarget = target.revenueTarget;
+    if (template && template.financeNote) plan.note = template.financeNote;
+    return plan;
+  };
+}
 
         yearStartBriefingHtml = function(year = state.year) {
           return progressionYearStartHtml(year);
@@ -30940,6 +32402,24 @@
         progressionRecordDepthArrival(state.depthIndex, state.year);
         state.annualTargets = progressionTargetPackage(state.year, state.depthIndex);
 
+        window.RTP_KPI_PACKAGE_VALIDATION = Object.keys(GAME_PROGRESSION_CONFIG.depthLevels).reduce((acc, depthKey) => {
+          const level = GAME_PROGRESSION_CONFIG.depthLevels[depthKey];
+          acc[level.levelName] = (level.annualPlans || []).map(plan => ({
+            localYear: plan.localYear,
+            phaseTitle: plan.phaseTitle,
+            kpiKeys: (plan.kpiKeys || []).slice(),
+            tonnes: plan.tonnes,
+            grade: plan.grade,
+            revenueTarget: plan.revenueTarget || 0,
+            surplusTarget: plan.surplusTarget || 0,
+            secondMinerTonnes: plan.secondMinerTonnes || 0,
+            beltExtensions: plan.beltExtensions || 0,
+            maxPillarFailures: typeof plan.maxPillarFailures === 'number' ? plan.maxPillarFailures : null,
+            safetyMin: plan.safetyMin || 0,
+            ventilationActions: plan.ventilationActions || 0
+          }));
+          return acc;
+        }, {});
         window.RTP_GAME_PROGRESSION_CONFIG = GAME_PROGRESSION_CONFIG;
         window.ROW_TONNES_BY_DEPTH = ROW_TONNES_BY_DEPTH;
         window.tonnesPerBlockForRow = tonnesPerBlockForRow;
@@ -31007,6 +32487,611 @@
         window.RTP_ONBOARDING_AND_PROGRESSION_FLOW = {
           version: '2026-07-02-onboarding-progression-flow',
           notes: 'HOPE remote onboarding guide and deterministic level-arrival routing helpers.'
+        };
+      })();
+
+
+      /* =====================================================
+         RTP RUNTIME CONSOLIDATION FIX 1
+         =====================================================
+         Fixes two verified runtime issues without adding patch-stack logic:
+         1) the opening HOPE remote guide is now a fixed-position animated arrow
+            so it is not clipped by the bottom toolbar;
+         2) the -1100 arrival flow is made deterministic:
+            level reached -> Mining Engineering unlock -> hire Mining Engineer -> research.
+      */
+      (function installRuntimeConsolidationFixes() {
+        const HOPE_REMOTE_ARROW_ID = 'hopeRemoteGuideArrow';
+
+        function positionHopeRemoteGuideArrow() {
+          const arrow = document.getElementById(HOPE_REMOTE_ARROW_ID);
+          const remote = $('minerRemote');
+          if (!arrow || !remote) return false;
+          const rect = remote.getBoundingClientRect();
+          if (!rect.width || !rect.height) return false;
+          arrow.style.left = (rect.left + rect.width / 2) + 'px';
+          arrow.style.top = Math.max(72, rect.top - 10) + 'px';
+          return true;
+        }
+
+        function showHopeRemoteGuideArrow() {
+          const remote = $('minerRemote');
+          if (!remote) return false;
+          remote.classList.add('hopeRemoteGuide');
+          let arrow = document.getElementById(HOPE_REMOTE_ARROW_ID);
+          if (!arrow) {
+            arrow = document.createElement('div');
+            arrow.id = HOPE_REMOTE_ARROW_ID;
+            arrow.className = 'hopeRemoteGuideArrow';
+            arrow.innerHTML = '<div class="hopeRemoteGuideText">Use this HOPE remote to start mining</div><div class="hopeRemoteGuidePointer"></div>';
+            document.body.appendChild(arrow);
+          }
+          positionHopeRemoteGuideArrow();
+          requestAnimationFrame(positionHopeRemoteGuideArrow);
+          setTimeout(positionHopeRemoteGuideArrow, 80);
+          setTimeout(positionHopeRemoteGuideArrow, 250);
+          return true;
+        }
+
+        function dismissHopeRemoteGuideArrow() {
+          const remote = $('minerRemote');
+          if (remote) remote.classList.remove('hopeRemoteGuide');
+          const arrow = document.getElementById(HOPE_REMOTE_ARROW_ID);
+          if (arrow && arrow.parentNode) arrow.parentNode.removeChild(arrow);
+          state.onboarding = state.onboarding || {};
+          state.onboarding.hopeRemoteGuideDismissed = true;
+        }
+
+        const baseStartGameForRuntimeGuideArrow = startGame;
+        startGame = function() {
+          const result = baseStartGameForRuntimeGuideArrow();
+          state.onboarding = state.onboarding || {};
+          if (state.running && !state.onboarding.hopeRemoteGuideDismissed) {
+            showHopeRemoteGuideArrow();
+          }
+          return result;
+        };
+
+        const baseDriveMinerRemoteForRuntimeGuideArrow = driveMinerRemote;
+        driveMinerRemote = function(dir) {
+          dismissHopeRemoteGuideArrow();
+          return baseDriveMinerRemoteForRuntimeGuideArrow(dir);
+        };
+
+        const baseStopMinerRemoteForRuntimeGuideArrow = stopMinerRemote;
+        stopMinerRemote = function() {
+          dismissHopeRemoteGuideArrow();
+          return baseStopMinerRemoteForRuntimeGuideArrow();
+        };
+
+        if (typeof switchMinerRemoteMachine === 'function') {
+          const baseSwitchMinerRemoteForRuntimeGuideArrow = switchMinerRemoteMachine;
+          switchMinerRemoteMachine = function() {
+            dismissHopeRemoteGuideArrow();
+            return baseSwitchMinerRemoteForRuntimeGuideArrow();
+          };
+        }
+
+        window.addEventListener('resize', positionHopeRemoteGuideArrow);
+        window.addEventListener('orientationchange', function() { setTimeout(positionHopeRemoteGuideArrow, 120); });
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', positionHopeRemoteGuideArrow);
+          window.visualViewport.addEventListener('scroll', positionHopeRemoteGuideArrow);
+        }
+
+        const baseOpenLevelArrivalModalForEngineeringFlow = openLevelArrivalModal;
+        openLevelArrivalModal = function() {
+          const depth = Number(state.depthIndex) || 0;
+          if (depth === 1 && !miningEngineerOnCrew()) {
+            state.progressionHireFocusRole = 'miningEngineer';
+            state.roleIntroShown = state.roleIntroShown || {};
+            state.roleIntroShown.groundControl = !!state.roleIntroShown.groundControl;
+          }
+          return baseOpenLevelArrivalModalForEngineeringFlow();
+        };
+
+        const baseMaybeOpenRoleIntroBeforeHrForEngineeringFlow = maybeOpenRoleIntroBeforeHr;
+        maybeOpenRoleIntroBeforeHr = function(customTitle = null) {
+          if (state.progressionHireFocusRole === 'miningEngineer') return false;
+          return baseMaybeOpenRoleIntroBeforeHrForEngineeringFlow(customTitle);
+        };
+
+        const baseHireForEngineeringFlow = hire;
+        hire = function(id) {
+          const candidate = (state.candidates || []).find(c => c && c.id === id) || null;
+          const intendedRole = candidate ? candidate.role : '';
+          const beforeMiningEngineerCount = staffGroup('miningEngineer').length;
+          const result = baseHireForEngineeringFlow(id);
+          const afterMiningEngineerCount = staffGroup('miningEngineer').length;
+          if (intendedRole === 'miningEngineer' && afterMiningEngineerCount > beforeMiningEngineerCount) {
+            state.progressionHireFocusRole = '';
+            state.roleIntroShown = state.roleIntroShown || {};
+            state.roleIntroShown.miningEngineering = true;
+            setTimeout(() => {
+              openWindow('research', false, 'Mining Engineering Research');
+              showProductionComment('Mining Engineering is now on site. Research has unlocked: budget can now be converted into controlled optimism.', 'Mining Engineering', 7);
+            }, 0);
+          }
+          return result;
+        };
+
+        const baseOpenRoleUnlockIntroForEngineeringFlow = openRoleUnlockIntro;
+        openRoleUnlockIntro = function(key, customTitle = null, nextKey = null) {
+          if (key === 'miningEngineering') {
+            state.progressionHireFocusRole = 'miningEngineer';
+            nextKey = null;
+          }
+          if (key === 'groundControl') {
+            // Ground Control belongs to the later pillar-row disturbance flow, not initial -1100 arrival.
+            state.progressionHireFocusRole = state.progressionHireFocusRole === 'miningEngineer' ? 'miningEngineer' : state.progressionHireFocusRole;
+          }
+          return baseOpenRoleUnlockIntroForEngineeringFlow(key, customTitle, nextKey);
+        };
+
+
+
+        /* Mobile-only compact remote presentation.
+           Adds selector tabs when more than one machine is owned and shows
+           only the selected machine remote on phone portrait. Gameplay button
+           handlers remain the existing miner/bolter handlers. */
+        const MOBILE_REMOTE_SELECTOR_ID = 'mobileRemoteSelector';
+
+        function isPhoneRemoteLayoutActive() {
+          return !!(document.body && document.body.classList && document.body.classList.contains('phoneLayout'));
+        }
+
+        function mobileRemoteDeck() {
+          return document.querySelector('#bottomBar .remoteDeck');
+        }
+
+        function ensureMobileRemoteSelector() {
+          const deck = mobileRemoteDeck();
+          if (!deck) return null;
+          let selector = document.getElementById(MOBILE_REMOTE_SELECTOR_ID);
+          if (!selector) {
+            selector = document.createElement('div');
+            selector.id = MOBILE_REMOTE_SELECTOR_ID;
+            selector.className = 'mobileRemoteSelector';
+            selector.setAttribute('aria-label', 'Select machine remote');
+            selector.innerHTML = [
+              '<button type="button" class="mobileRemoteSelectBtn" data-mobile-remote-select="miner1">1stHOPE</button>',
+              '<button type="button" class="mobileRemoteSelectBtn" data-mobile-remote-select="miner2">2ndHOPE</button>',
+              '<button type="button" class="mobileRemoteSelectBtn" data-mobile-remote-select="bolter">Bolter</button>'
+            ].join('');
+            deck.insertBefore(selector, deck.firstChild);
+          }
+          return selector;
+        }
+
+        function selectedMobileRemoteKey() {
+          const secondOwned = !!(state.assets && state.assets.secondMinerOwned);
+          const bolterOwned = !!(state.assets && state.assets.bolterOwned);
+          if (state.activeMachine === 'bolter' && bolterOwned) return 'bolter';
+          if (state.activeMachine === 'miner2' && secondOwned) return 'miner2';
+          return 'miner1';
+        }
+
+        function selectMobileRemote(key) {
+          const secondOwned = !!(state.assets && state.assets.secondMinerOwned);
+          const bolterOwned = !!(state.assets && state.assets.bolterOwned);
+          if (key === 'miner2' && !secondOwned) {
+            showProductionComment('2ndHOPE is not owned yet. The second miner remains a future management problem.', 'Fleet Control', 3.6);
+            return;
+          }
+          if (key === 'bolter' && !bolterOwned) {
+            showProductionComment('The bolter is not owned yet. Ground control remains theoretical until procurement intervenes.', 'Ground Control', 3.6);
+            return;
+          }
+          state.activeMachine = key === 'bolter' ? 'bolter' : key;
+          updateMachinePadHud();
+        }
+
+        function updateMobileRemotePresentation() {
+          const deck = mobileRemoteDeck();
+          if (!deck) return false;
+          ensureMobileRemoteSelector();
+          const secondOwned = !!(state.assets && state.assets.secondMinerOwned);
+          const bolterOwned = !!(state.assets && state.assets.bolterOwned);
+          const selectedKey = selectedMobileRemoteKey();
+          const showBolter = selectedKey === 'bolter';
+          deck.classList.toggle('mobileShowsBolter', showBolter);
+          deck.classList.toggle('mobileShowsMiner', !showBolter);
+          deck.classList.toggle('multiMachine', secondOwned || bolterOwned);
+          deck.querySelectorAll('[data-mobile-remote-select]').forEach(btn => {
+            const key = btn.getAttribute('data-mobile-remote-select');
+            const owned = key === 'miner1' || (key === 'miner2' && secondOwned) || (key === 'bolter' && bolterOwned);
+            btn.disabled = !owned;
+            btn.classList.toggle('active', key === selectedKey);
+            btn.setAttribute('aria-pressed', key === selectedKey ? 'true' : 'false');
+          });
+          if (typeof positionHopeRemoteGuideArrow === 'function') {
+            requestAnimationFrame(positionHopeRemoteGuideArrow);
+          }
+          return true;
+        }
+
+        document.addEventListener('click', function(e) {
+          const selectBtn = e.target.closest('[data-mobile-remote-select]');
+          if (!selectBtn) return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (state.manualPaused) {
+            showProductionComment('Game paused. Remote selection is held until time resumes.', 'Pause', 3);
+            return;
+          }
+          selectMobileRemote(selectBtn.getAttribute('data-mobile-remote-select'));
+        }, true);
+
+        if (typeof updateMachinePadHud === 'function') {
+          const baseUpdateMachinePadHudForMobileRemotePresentation = updateMachinePadHud;
+          updateMachinePadHud = function() {
+            const result = baseUpdateMachinePadHudForMobileRemotePresentation();
+            updateMobileRemotePresentation();
+            return result;
+          };
+        }
+
+        window.addEventListener('resize', updateMobileRemotePresentation);
+        window.addEventListener('orientationchange', function() { setTimeout(updateMobileRemotePresentation, 120); });
+        updateMobileRemotePresentation();
+        setTimeout(updateMobileRemotePresentation, 120);
+
+
+
+        /* =====================================================
+           RTP DEPTH PROGRESSION PRESSURE CONSOLIDATION
+           -----------------------------------------------------
+           Focused implementation of the July playtest notes:
+           - 1.5kt starting blocks on -1000;
+           - deterministic pillar density by depth, symmetric around column E;
+           - 2ndHOPE unlock handoff to highlighted Assets action;
+           - machine-agnostic fitter action for 2ndHOPE;
+           - event coverage audit for Dev Tools.
+        */
+        function recomputeOreBlockValuesForDepth(block) {
+          if (!block) return;
+          const depth = Math.max(0, Number(state.depthIndex) || 0);
+          const idx = block.r * MINE_COLS + block.c + 8843 + depth * 1379;
+          const centralLobe = block.r >= LOCKED_ROWS - 1 && block.r <= LOCKED_ROWS + 5 && block.c >= START_COL - 1 && block.c <= START_COL + 1;
+          const leftLobe = block.r >= LOCKED_ROWS + 2 && block.r <= LOCKED_ROWS + 7 && block.c >= 1 && block.c <= Math.max(1, START_COL - 2);
+          const rightLobe = block.r >= LOCKED_ROWS + 3 && block.r <= LOCKED_ROWS + 8 && block.c >= Math.min(MINE_COLS - 2, START_COL + 2) && block.c <= MINE_COLS - 2;
+          const sweetSpot = centralLobe || leftLobe || rightLobe;
+          const lowerDilution = block.r > MINE_ROWS - 5;
+          let actualGrade = 12.1 + seeded(idx) * 3.55 + depth * 0.16;
+          if (sweetSpot) actualGrade += 0.85;
+          if (lowerDilution) actualGrade -= 0.25;
+          block.tonnes = tonnesPerBlockForRow(block.r, depth);
+          block.actualGrade = actualGrade;
+          block.estimatedGrade = block.status === 'locked' ? null : actualGrade;
+          block.grade = block.status === 'locked' ? 0 : actualGrade;
+          block.gradeConfidence = block.status === 'locked' ? 0 : 1;
+          block.gasPocket = depth >= 3 && block.status !== 'locked' && seeded(idx + 71) > 0.925;
+          block.waterPocket = depth >= 3 && block.status !== 'locked' && seeded(idx + 83) > 0.955;
+        }
+
+        const PILLAR_PATTERN_BY_DEPTH = {
+          0: { rowStart: null, rowFrequency: 0, rowPatterns: [] },
+          1: { rowStart: 2, rowFrequency: 3, rowPatterns: [['C', 'G']] },
+          2: { rowStart: 2, rowFrequency: 2, rowPatterns: [['C', 'G']] },
+          3: { rowStart: 2, rowFrequency: 3, rowPatterns: [['B', 'D', 'F', 'H'], ['A', 'C', 'G', 'I']] },
+          4: { rowStart: 2, rowFrequency: 2, rowPatterns: [['B', 'D', 'F', 'H'], ['A', 'C', 'G', 'I']] }
+        };
+
+        function columnLetterForIndex(col) {
+          return String.fromCharCode(65 + Number(col || 0));
+        }
+
+        function columnIndexForLetter(letter) {
+          const code = String(letter || '').trim().toUpperCase().charCodeAt(0);
+          return Number.isFinite(code) ? code - 65 : -1;
+        }
+
+        function pillarPatternForDepth(depthIndex = state.depthIndex) {
+          const depth = Math.max(0, Math.min(4, Number(depthIndex) || 0));
+          return PILLAR_PATTERN_BY_DEPTH[depth] || PILLAR_PATTERN_BY_DEPTH[4];
+        }
+
+        function pillarColumnsForDisplayedRow(displayedRow, depthIndex = state.depthIndex) {
+          const cfg = pillarPatternForDepth(depthIndex);
+          const row = Math.max(1, Number(displayedRow) || 1);
+          if (!cfg || !cfg.rowFrequency || !Array.isArray(cfg.rowPatterns) || !cfg.rowPatterns.length) return [];
+          const rowStart = Math.max(1, Number(cfg.rowStart) || 1);
+          if (row < rowStart) return [];
+          if ((row - rowStart) % cfg.rowFrequency !== 0) return [];
+
+          const pillarRowIndex = Math.floor((row - rowStart) / cfg.rowFrequency);
+          const pattern = cfg.rowPatterns[pillarRowIndex % cfg.rowPatterns.length] || [];
+          const used = new Set();
+          const columns = [];
+
+          for (const rawLetter of pattern) {
+            const letter = String(rawLetter || '').trim().toUpperCase();
+            const col = columnIndexForLetter(letter);
+            if (letter === columnLetterForIndex(START_COL)) continue;
+            if (col < 0 || col >= MINE_COLS) continue;
+
+            // Keep the 3x3 clear-zone rule: no adjacent pillar columns on the same pillar row.
+            // A/I edge pillars are allowed because the off-grid side does not contain another pillar.
+            const touchesExistingPillar = Array.from(used).some(existingCol => Math.abs(existingCol - col) <= 1);
+            if (touchesExistingPillar) continue;
+            used.add(col);
+            columns.push(letter);
+          }
+          return columns;
+        }
+
+        function pillarOffsetsForDisplayedRow(displayedRow, depthIndex = state.depthIndex) {
+          return Array.from(new Set(
+            pillarColumnsForDisplayedRow(displayedRow, depthIndex)
+              .map(letter => Math.abs(columnIndexForLetter(letter) - START_COL))
+          )).sort((a, b) => a - b);
+        }
+
+        isPillarCell = function(r, c) {
+          const depth = Math.max(0, Number(state.depthIndex) || 0);
+          if (depth < 1) return false;
+          if (r < 0 || r >= MINE_ROWS) return false;
+          if (c < 0 || c >= MINE_COLS) return false;
+          if (c === START_COL) return false;
+          const displayedRow = MINE_ROWS - r;
+          const letter = columnLetterForIndex(c);
+          return pillarColumnsForDisplayedRow(displayedRow, depth).includes(letter);
+        };
+
+        function applyDepthPillarConfiguration(source = 'runtime') {
+          const blocks = (state.blocks && state.blocks[MINE_ID]) || [];
+          for (const block of blocks) {
+            if (!block || block.status === 'void' || block.status === 'rubble' || block.status === 'damaged') continue;
+            const shouldBePillar = !!(block.status !== 'locked' && isPillarCell(block.r, block.c));
+            if (shouldBePillar) {
+              block.isPillar = true;
+              block.tonnes = 0;
+              block.grade = 0;
+              block.actualGrade = 0;
+              block.estimatedGrade = null;
+              block.gradeConfidence = 1;
+              block.gasPocket = false;
+              block.waterPocket = false;
+              block.pillarState = block.pillarState || 'stable';
+            } else {
+              const wasPillar = !!block.isPillar;
+              block.isPillar = false;
+              block.support = false;
+              block.pillarState = null;
+              if (wasPillar || !(Number(block.tonnes) > 0)) recomputeOreBlockValuesForDepth(block);
+            }
+          }
+          const pillarsByDisplayedRow = blocks.reduce((acc, b) => {
+            if (b && b.isPillar) {
+              const row = String(MINE_ROWS - b.r);
+              acc[row] = acc[row] || [];
+              acc[row].push(columnLetterForIndex(b.c));
+              acc[row].sort();
+            }
+            return acc;
+          }, {});
+          window.RTP_PILLAR_DENSITY_VALIDATION = {
+            source,
+            depthIndex: Number(state.depthIndex) || 0,
+            levelName: currentLevelName ? currentLevelName() : '',
+            pattern: pillarPatternForDepth(state.depthIndex),
+            pillarsByDisplayedRow,
+            expectedRows: Array.from({ length: MINE_ROWS }, (_, i) => i + 1)
+              .map(row => ({ row, columns: pillarColumnsForDisplayedRow(row, state.depthIndex) }))
+              .filter(row => row.columns.length)
+          };
+          return window.RTP_PILLAR_DENSITY_VALIDATION;
+        }
+
+        const baseInitBlocksForDepthPillarConsolidation = initBlocks;
+        initBlocks = function() {
+          const result = baseInitBlocksForDepthPillarConsolidation();
+          applyDepthPillarConfiguration('initBlocks');
+          validateRuntimeBlockTonnes('initBlocks');
+          return result;
+        };
+        ROW_TONNES_BY_DEPTH[0] = [1500, 2000, 2500, 3000, 3500, 3900, 4300, 4700, 5100, 5500, 5900, 6300, 6700, 7100, 7500];
+        applyDepthPillarConfiguration('install');
+        validateRuntimeBlockTonnes('install');
+
+        document.addEventListener('click', function(e) {
+          const secondMinerAssetBtn = e.target.closest('[data-second-miner-unlock-assets]');
+          if (secondMinerAssetBtn) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            state.assetDepthSystemPromptSecondMinerPurchase = true;
+            state.assetDepthSystemAssetsTab = 'mining';
+            state.secondMinerUnlockSeen = true;
+            const overlay = $('modalOverlay');
+            if (overlay) overlay.classList.remove('show');
+            openWindow('assets', false, 'Authorise Second Miner');
+            return;
+          }
+
+          const fitterBtn = e.target.closest('[data-call-fitter-machine]');
+          if (fitterBtn) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const key = fitterBtn.getAttribute('data-call-fitter-machine');
+            const miner = minerStateForKey(key);
+            runWithMinerContext(miner, () => startRepair());
+            return;
+          }
+        }, true);
+
+        function eventAuditReport() {
+          const registry = window.RTP_EVENT_DEFINITIONS || {};
+          const rows = Object.keys(registry).sort().map(id => {
+            const ev = registry[id] || {};
+            let eligibility = { ok: false, reason: 'canTriggerEventUnavailable' };
+            if (typeof window.canTriggerEvent === 'function') {
+              try { eligibility = window.canTriggerEvent(id, { audit: true }); }
+              catch (err) { eligibility = { ok: false, reason: err && err.message ? err.message : 'auditError' }; }
+            }
+            const history = state.eventSystem && Array.isArray(state.eventSystem.history) ? state.eventSystem.history : [];
+            const fired = history.filter(h => h && (h.eventId === id || h.id === id)).length;
+            const queued = (state.queueEvents || []).filter(q => q && q.eventId === id).length;
+            return {
+              id,
+              title: ev.title || ev.summary || id,
+              category: ev.category || 'unknown',
+              delivery: ev.delivery || 'legacy',
+              migrationStatus: ev.migrationStatus || 'unspecified',
+              eligible: !!eligibility.ok,
+              blockedReason: eligibility.ok ? '' : (eligibility.reason || 'blocked'),
+              fired,
+              queued
+            };
+          });
+          const summary = rows.reduce((acc, row) => {
+            acc.total += 1;
+            acc.eligible += row.eligible ? 1 : 0;
+            acc.byCategory[row.category] = (acc.byCategory[row.category] || 0) + 1;
+            acc.blocked[row.blockedReason || 'none'] = (acc.blocked[row.blockedReason || 'none'] || 0) + (row.eligible ? 0 : 1);
+            return acc;
+          }, { total: 0, eligible: 0, byCategory: {}, blocked: {} });
+          return { generatedAt: { year: state.year, day: Math.round(state.day || 0), depthIndex: state.depthIndex }, summary, rows };
+        }
+
+        function openEventAuditModal() {
+          const report = eventAuditReport();
+          const rowsHtml = report.rows.map(row => `<tr><td>${escapeHtml(row.id)}</td><td>${escapeHtml(row.category)}</td><td>${row.eligible ? 'Yes' : 'No'}</td><td>${escapeHtml(row.blockedReason || '')}</td><td>${row.fired}</td><td>${row.queued}</td><td>${escapeHtml(row.migrationStatus)}</td></tr>`).join('');
+          const cats = Object.entries(report.summary.byCategory).map(([k,v]) => `${escapeHtml(k)}: ${v}`).join(' · ');
+          setModalClosable(true);
+          $('modalWindow').className = 'window large';
+          $('modalTitle').textContent = 'Event Coverage Audit';
+          $('modalBody').innerHTML = `<div class="letter"><h2>Event Coverage Audit</h2><p><strong>${report.summary.eligible} / ${report.summary.total}</strong> configured events are eligible in the current state.</p><p>${cats || 'No event categories found.'}</p><p>This is a developer audit only. It does not rebalance event weights.</p></div><div style="overflow:auto;max-height:52vh"><table class="dataTable"><thead><tr><th>Event</th><th>Category</th><th>Eligible</th><th>Blocked</th><th>Fired</th><th>Queued</th><th>Status</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+          $('modalOverlay').classList.add('show');
+        }
+
+        const baseDevActionForEventAudit = devAction;
+        devAction = function(action) {
+          if (action === 'event-audit-report') { openEventAuditModal(); return; }
+          return baseDevActionForEventAudit(action);
+        };
+
+        const baseEnhanceDevToolsForEventAudit = enhanceDevToolsForNewSystems;
+        enhanceDevToolsForNewSystems = function() {
+          baseEnhanceDevToolsForEventAudit();
+          const body = $('modalBody');
+          if (!body || body.querySelector('[data-event-audit-dev-tools]')) return;
+          body.insertAdjacentHTML('beforeend', `<section class="devToolCard" data-event-audit-dev-tools><h3>Event Coverage Audit</h3><p>List configured events, current eligibility, blocked reasons and basic fired/queued counts.</p><div class="devToolBtns"><button data-dev-action="event-audit-report">Audit Events</button></div></section>`);
+        };
+
+        window.RTP_DEPTH_PROGRESSION_PRESSURE = {
+          version: '2026-07-04-pillar-row2-fix',
+          rowTonnesDepth0: ROW_TONNES_BY_DEPTH[0].slice(),
+          PILLAR_PATTERN_BY_DEPTH,
+          pillarPatternForDepth,
+          pillarColumnsForDisplayedRow,
+          pillarOffsetsForDisplayedRow,
+          applyDepthPillarConfiguration,
+          eventAuditReport
+        };
+        window.RTP_RUNTIME_CONSOLIDATION_FIX_1 = {
+          version: '2026-07-04-runtime-consolidation-fix-1',
+          hopeRemoteArrow: true,
+          miningEngineeringArrivalFlow: 'year3KpiNotice -> miningEngineeringIntro -> hireMiningEngineer -> research',
+          groundControlFlow: 'first disturbed pillar row -> Rock Doctor unlock -> hire Rock Doctor -> bolter'
+        };
+      })();
+
+
+      /* =====================================================
+         RTP DEV TOOL + YEAR 3 ENGINEERING FLOW FIX
+         =====================================================
+         Keeps normal gameplay scoring unchanged, but makes the developer
+         "Finish Year: Successful" action deterministic and moves the Mining
+         Engineering unlock to the Year 3 technical-assurance KPI flow.
+      */
+      (function installDevYearEndAndEngineeringFlowFix() {
+        const FIX_VERSION = '2026-07-04-dev-year-end-engineering-flow';
+
+        const baseFixedKpiStrictPassedForDevForcedSuccess = fixedKpiStrictPassed;
+        fixedKpiStrictPassed = function(key, target = activeAnnualTargets()) {
+          if (state.devForcedSuccessfulReviewYear === state.year) return true;
+          return baseFixedKpiStrictPassedForDevForcedSuccess(key, target);
+        };
+
+        const baseAnnualTargetPassedForDevForcedSuccess = annualTargetPassed;
+        annualTargetPassed = function() {
+          if (state.devForcedSuccessfulReviewYear === state.year) return true;
+          return baseAnnualTargetPassedForDevForcedSuccess();
+        };
+
+        const baseAdvanceToNextYearForDevForcedSuccess = advanceToNextYear;
+        advanceToNextYear = function() {
+          state.devForcedSuccessfulReviewYear = 0;
+          return baseAdvanceToNextYearForDevForcedSuccess();
+        };
+
+        function addTechnicalRoleIfMissing(role) {
+          if (!role) return false;
+          if ((state.staff || []).some(s => s && s.role === role)) return true;
+          const candidate = (technicalCrewPool || []).find(c => c && c.role === role);
+          if (!candidate) return false;
+          state.staff.push({ ...candidate, bubble: null });
+          state.technicalHiresThisYear = Math.max(Number(state.technicalHiresThisYear) || 0, Number(activeAnnualTargets().technicalHires) || 0);
+          state.shiftCrewRenderSignature = '';
+          if (typeof updatePanelCrewTiles === 'function') updatePanelCrewTiles(true);
+          return true;
+        }
+
+        function satisfyVisibleDevKpiState(target) {
+          const t = target || activeAnnualTargets();
+          const keys = Array.isArray(t.kpiKeys) ? t.kpiKeys : [];
+
+          const requiredTonnes = Number(t.tonnes) || TARGET_TONNES;
+          const currentTonnes = annualTonnes();
+          if (currentTonnes < requiredTonnes) {
+            const needed = requiredTonnes - currentTonnes;
+            state.tonnes += needed;
+            state.k2oTonnes += needed * Math.max(Number(t.grade) || TARGET_GRADE, TARGET_GRADE);
+          }
+          const finalTonnes = Math.max(1, annualTonnes());
+          const requiredK2o = finalTonnes * (Math.max(Number(t.grade) || TARGET_GRADE, TARGET_GRADE) + 0.01);
+          const currentK2o = Math.max(0, Number(state.k2oTonnes || 0) - Number(state.yearStartK2oTonnes || 0));
+          if (currentK2o < requiredK2o) state.k2oTonnes += (requiredK2o - currentK2o);
+
+          if (keys.includes('revenue')) state.revenue = Math.max(Number(state.revenue) || 0, Number(t.revenueTarget) || 0);
+          if (keys.includes('surplus')) state.cash = Math.max(Number(state.cash) || 0, Number(t.surplusTarget) || 0);
+          if (keys.includes('exploration') && state.exploration) state.exploration.discoveredRowsThisYear = Math.max(Number(state.exploration.discoveredRowsThisYear) || 0, Number(t.discoveredRows) || 0);
+          if (keys.includes('technical')) {
+            const required = Number(t.technicalHires) || 0;
+            if (required >= 1) addTechnicalRoleIfMissing('miningEngineer');
+            if (required >= 2) addTechnicalRoleIfMissing('rockDoctor');
+          }
+          if (keys.includes('fleet')) {
+            state.assets = state.assets || {};
+            state.assets.secondMinerOwned = true;
+            if (typeof syncMinerAliases === 'function') syncMinerAliases();
+            state.secondMinerTonnesThisYear = Math.max(Number(state.secondMinerTonnesThisYear) || 0, Number(t.secondMinerTonnes) || 0);
+          }
+          if (keys.includes('belt')) state.beltExtensionsThisYear = Math.max(Number(state.beltExtensionsThisYear) || 0, Number(t.beltExtensions) || 0);
+          if (keys.includes('ground')) state.yearStartPillarFailures = Number(state.pillarFailures) || 0;
+          if (keys.includes('safety')) adjustTrait('safety', Math.max(0, (Number(t.safetyMin) || 0) - traitValue('safety')) + 1);
+          if (keys.includes('ventilation')) {
+            state.assets = state.assets || {};
+            state.assets.fanOwned = true;
+            addTechnicalRoleIfMissing('ventilationEngineer');
+          }
+        }
+
+        forceYearSuccessDev = function() {
+          const target = activeAnnualTargets();
+          satisfyVisibleDevKpiState(target);
+          state.devForcedSuccessfulReviewYear = state.year;
+          state.needsImprovementStreak = 0;
+          state.pipActive = false;
+          state.yearReviewDue = true;
+          triggerYearEndReview();
+        };
+
+        window.RTP_DEV_YEAR_END_AND_ENGINEERING_FLOW_FIX = {
+          version: FIX_VERSION,
+          devSuccessfulYearEnd: 'forced successful review now bypasses hidden unmet KPI state and marks all review rows on track',
+          miningEngineeringUnlock: 'Year 3 annual finance continue opens Mining Engineering unlock, then HR hiring, then research after Mining Engineer hire',
+          level1100Arrival: 'Welcome modal only; Rock Doctor remains tied to disturbed pillar-row flow'
         };
       })();
 
