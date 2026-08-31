@@ -1,0 +1,2358 @@
+{
+  "version": "8.3",
+  "exportedAt": "2026-08-31T17:45:48.400Z",
+  "drills": [
+    {
+      "id": "1v1_continous_6923",
+      "name": "1v1 Continous",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Defending",
+      "secondaryTags": [],
+      "gkInvolvement": "none",
+      "typicalDuration": null,
+      "setup": "1v1. Defender swaps when they make a tackle or force wide.",
+      "rules": "Attacker must beat defender and dribble over the line. Then next attacker goes immediately.",
+      "coaching": [],
+      "variations": "successful attacker could have a shot on goal",
+      "diagram": {
+        "area": "blank",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "zone",
+            "x": 12.810615539550781,
+            "y": 22.07478904724121,
+            "x2": 45.13872146606445,
+            "y2": 82.62967681884766
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 28.492158889770508,
+            "y": 50.0603141784668
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 29.215923309326172,
+            "y": 84.80096435546875
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 28.974668502807617,
+            "y": 18.938480377197266
+          },
+          {
+            "t": "ball",
+            "x": 29.215923309326172,
+            "y": 79.97587585449219
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 31.145959854125977,
+            "y": 79.25211334228516,
+            "x2": 33.55850601196289,
+            "y2": 22.55729866027832
+          },
+          {
+            "t": "label",
+            "x": 48.27503204345703,
+            "y": 44.02894973754883,
+            "l": "1v1"
+          },
+          {
+            "t": "ball",
+            "x": 27.527141571044922,
+            "y": 22.316043853759766
+          },
+          {
+            "t": "goal",
+            "x": 30.904705047607422,
+            "y": 2.2919180393218994
+          },
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 30.90470314025879,
+            "y": 7.358262538909912
+          },
+          {
+            "t": "label",
+            "x": 44.173702239990234,
+            "y": 13.389626502990723,
+            "l": "Shot on goal if keeper"
+          }
+        ]
+      }
+    },
+    {
+      "id": "2v1_to_2v1_shooting_0993",
+      "name": "2v1 to 2v1 shooting",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Attacking",
+      "secondaryTags": [
+        "Circle Entry",
+        "Shooting"
+      ],
+      "gkInvolvement": "involved",
+      "typicalDuration": 10,
+      "setup": "2 boxes 23 to top D and top D to penalty spot. 2 defenders.",
+      "rules": "Attackers start on 23. 2v1 in the first area. Upon D entry can shoot in area 2 or progress to area 3. hit / slap in area 2, push/flick/deflect in area 3.",
+      "coaching": [],
+      "variations": "",
+      "diagram": {
+        "area": "right23",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "small",
+        "objects": [
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 49.55356979370117,
+            "y": 3.062914544797919
+          },
+          {
+            "t": "zone",
+            "x": 41.39030456542969,
+            "y": 26.415931701660156,
+            "x2": 56.823978424072266,
+            "y2": 41.59450149536133
+          },
+          {
+            "t": "zone",
+            "x": 41.39030456542969,
+            "y": 27.053686141967773,
+            "x2": 56.95153045654297,
+            "y2": 10.982258796691895
+          },
+          {
+            "t": "cone",
+            "x": 41.39030456542969,
+            "y": 10.854707717895508
+          },
+          {
+            "t": "cone",
+            "x": 56.823978424072266,
+            "y": 11.237360954284668
+          },
+          {
+            "t": "cone",
+            "x": 41.51785659790039,
+            "y": 25.90572738647461
+          },
+          {
+            "t": "cone",
+            "x": 56.69643020629883,
+            "y": 26.288381576538086
+          },
+          {
+            "t": "cone",
+            "x": 41.26275634765625,
+            "y": 40.956748962402344
+          },
+          {
+            "t": "cone",
+            "x": 56.568878173828125,
+            "y": 41.33940124511719
+          },
+          {
+            "t": "ball",
+            "x": 46.23724365234375,
+            "y": 44.14552307128906
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 42.538265228271484,
+            "y": 46.18634033203125
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 54.783164978027344,
+            "y": 45.29348373413086
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 48.66071319580078,
+            "y": 33.94144058227539
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 49.29846954345703,
+            "y": 19.145523071289062
+          },
+          {
+            "t": "label",
+            "x": 49.170921325683594,
+            "y": 39.17103576660156,
+            "l": "2v1"
+          },
+          {
+            "t": "label",
+            "x": 49.681121826171875,
+            "y": 24.120014190673828,
+            "l": "2v1"
+          },
+          {
+            "t": "label",
+            "x": 49.426021575927734,
+            "y": 15.956748008728027,
+            "l": "Hit / Slap"
+          },
+          {
+            "t": "label",
+            "x": 50.44642639160156,
+            "y": 7.538381099700928,
+            "l": "Push / flick / deflection"
+          }
+        ]
+      }
+    },
+    {
+      "id": "3_man_receive_in_the_middle_6893",
+      "name": "3-Man Receive in the Middle",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Passing & Receiving",
+      "secondaryTags": [
+        "Movement",
+        "Passing",
+        "Receiving"
+      ],
+      "gkInvolvement": "none",
+      "typicalDuration": 10,
+      "setup": "Groups of 3 in a straight line with one ball. One player starts in the middle between the two outside players.",
+      "rules": "The middle player leads toward the player with the ball, receives on the move, turns strongly around the cone and passes to the opposite outside player. They immediately lead again to receive the return pass and repeat continuously.",
+      "coaching": [
+        "Keep the intensity and ball pace high.",
+        "Receive on the move and take the first touch into the turn.",
+        "Turn strongly around the cone and accelerate out of it.",
+        "The middle player should be working hard enough to feel fatigued."
+      ],
+      "variations": "After passing, the middle player leads wide away from the ball before cutting back inside to receive.",
+      "diagram": {
+        "area": "blank",
+        "orientation": "lr",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 11.423401832580566,
+            "y": 26.85162925720215
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 85.53678894042969,
+            "y": 26.27261734008789
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 47.466827392578125,
+            "y": 26.85162925720215
+          },
+          {
+            "t": "cone",
+            "x": 47.901084899902344,
+            "y": 20.482507705688477
+          },
+          {
+            "t": "cone",
+            "x": 47.75633239746094,
+            "y": 33.655006408691406
+          },
+          {
+            "t": "ball",
+            "x": 16.48974609375,
+            "y": 27.57539176940918
+          },
+          {
+            "t": "label",
+            "x": 24.88540267944336,
+            "y": 37.418575286865234,
+            "l": "Turn strong round cone"
+          },
+          {
+            "t": "label",
+            "x": 71.88264083862305,
+            "y": 15.291534900665283,
+            "l": "lead across to recieve"
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 18.431121826171875,
+            "y": 27.73596954345703,
+            "x2": 42.92091751098633,
+            "y2": 27.225765228271484
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 43.55867385864258,
+            "y": 29.776784896850586,
+            "x2": 44.57908248901367,
+            "y2": 37.9400520324707
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 49.80867385864258,
+            "y": 39.725765228271484,
+            "x2": 82.20663452148438,
+            "y2": 29.394132614135742
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 49.80867385864258,
+            "y": 40.10841751098633,
+            "x2": 54.91071319580078,
+            "y2": 15.363520622253418
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 53.507652282714844,
+            "y": 14.470663070678711,
+            "x2": 17.538265228271484,
+            "y2": 25.822704315185547
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 82.0790786743164,
+            "y": 25.950254440307617,
+            "x2": 62.181121826171875,
+            "y2": 25.950254440307617
+          }
+        ]
+      }
+    },
+    {
+      "id": "3v2_baseline_pullbacks_5025",
+      "name": "3v2 Baseline Pullbacks",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Passing & Receiving",
+      "secondaryTags": [
+        "Circle Entry",
+        "Baseline",
+        "Shooting"
+      ],
+      "gkInvolvement": "involved",
+      "typicalDuration": 10,
+      "setup": "GK in goal, 2–3 defenders and the remaining players as attackers. Balls start at the top of the D.",
+      "rules": "Start each repetition by transferring the ball immediately to a wide attacker. The wide attacker drives toward the baseline under pressure. Two supporting attackers arrive in the circle to create either a penalty-spot deflection or a pullback toward the top of the D. Defenders should engage realistically, delay the attack and protect the dangerous passing lanes.",
+      "coaching": [
+        "Attack the baseline with pace and purpose.",
+        "Wide attacker: get your eyes up before the final pass.",
+        "One attacker arrives around the penalty spot while another holds higher for the pullback.",
+        "Arrive late into the scoring area rather than standing still waiting for the ball.",
+        "Defenders: delay, communicate and protect the most dangerous passing lane."
+      ],
+      "variations": "Add or remove attackers and defenders to change the level of pressure. Alternate the side of the initial pass.",
+      "diagram": {
+        "area": "rightD",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 6.951530933380127,
+            "y": 9.252054691314697
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 94.06887817382812,
+            "y": 4.915319919586182
+          },
+          {
+            "t": "ball",
+            "x": 41.77295780181885,
+            "y": 36.29287147521973
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 31.18622398376465,
+            "y": 7.976544380187988
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 76.46683502197266,
+            "y": 8.486748695373535
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 41.900508880615234,
+            "y": 39.48164749145508
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 60.14030456542969,
+            "y": 39.73674774169922
+          },
+          {
+            "t": "zone",
+            "x": 13.073979377746582,
+            "y": 0.9612381458282471,
+            "x2": 37.94643020629883,
+            "y2": 7.211238384246826
+          },
+          {
+            "t": "zone",
+            "x": 61.79846954345703,
+            "y": 0.8336871266365051,
+            "x2": 86.03316497802734,
+            "y2": 6.701034069061279
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 50.318878173828125,
+            "y": 16.650012969970703
+          },
+          {
+            "t": "label",
+            "x": 17.538264989852905,
+            "y": 30.42552375793457,
+            "l": "3v2"
+          },
+          {
+            "t": "arrow",
+            "x": 40.11479568481445,
+            "y": 36.292869567871094,
+            "x2": 8.99234676361084,
+            "y2": 12.695932388305664
+          },
+          {
+            "t": "label",
+            "x": 85.26786041259766,
+            "y": 29.405115127563477,
+            "l": "Alternate Sides"
+          },
+          {
+            "t": "label",
+            "x": 85.90560913085938,
+            "y": 32.46634101867676,
+            "l": "Swap roles"
+          },
+          {
+            "t": "arrow",
+            "x": 32.206634521484375,
+            "y": 4.277564525604248,
+            "x2": 42.793365478515625,
+            "y2": 28.512258529663086
+          },
+          {
+            "t": "arrow",
+            "x": 32.716835021972656,
+            "y": 3.7673606872558594,
+            "x2": 51.08418273925781,
+            "y2": 12.44083023071289
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 8.99234676361084,
+            "y": 8.231646537780762,
+            "x2": 27.35969352722168,
+            "y2": 3.894911527633667
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 59.375,
+            "y": 37.31327819824219,
+            "x2": 58.099491119384766,
+            "y2": 24.303075790405273
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 43.94132614135742,
+            "y": 37.31327819824219,
+            "x2": 44.706634521484375,
+            "y2": 26.216341018676758
+          }
+        ]
+      }
+    },
+    {
+      "id": "aerial_technique_4045",
+      "name": "Aerial Technique",
+      "suitableFor": [
+        "Technique Lab"
+      ],
+      "primaryFocus": "Technique",
+      "secondaryTags": [
+        "Aerials"
+      ],
+      "gkInvolvement": "none",
+      "typicalDuration": null,
+      "setup": "Work in pairs across the width of the pitch. Start relatively close together and increase the distance gradually.",
+      "rules": "Player 1 throws an aerial that should reach Player 2 without bouncing. If Player 2 receives it cleanly, they move further away before the next repetition. Continue building distance only while technique and control remain good.",
+      "coaching": [
+        "Prioritise clean technique over maximum distance.",
+        "Stay balanced through the release and keep the action smooth rather than forced.",
+        "Receiver: judge the flight early, get underneath the ball and cushion the first touch.",
+        "Only increase the distance when both the throw and the receive are controlled."
+      ],
+      "variations": "Change the receiving angle, add a short movement before receiving, or progress to aerials under light passive pressure.",
+      "diagram": {
+        "area": "full",
+        "orientation": "lr",
+        "markings": {
+          "sidelines": true,
+          "baselines": true,
+          "halfway": true,
+          "left23": false,
+          "right23": false,
+          "leftD": false,
+          "rightD": false,
+          "leftSpot": false,
+          "rightSpot": false,
+          "leftGoal": false,
+          "rightGoal": false
+        },
+        "objectScale": "small",
+        "objects": [
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 29.23634058432715,
+            "y": 2.60750263559827
+          },
+          {
+            "t": "ball",
+            "x": 29.272958755493164,
+            "y": 5.942030991193241
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 29.272958755493164,
+            "y": 15.451048851013184
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 29.272958755493164,
+            "y": 27.823497772216797
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 29.01785659790039,
+            "y": 42.619415283203125
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 28.762754440307617,
+            "y": 57.925537109375
+          },
+          {
+            "t": "arrow",
+            "x": 35.5229606628418,
+            "y": 6.2673749923706055,
+            "x2": 36.033164978027344,
+            "y2": 58.56329345703125
+          },
+          {
+            "t": "label",
+            "x": 68.94132614135742,
+            "y": 7.287783145904541,
+            "l": "Aerial ball to receiving player"
+          },
+          {
+            "t": "label",
+            "x": 74.04336547851562,
+            "y": 19.022476196289062,
+            "l": "If trapped without a bounce step back"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bulldog_3871",
+      "name": "Bulldog",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Possession",
+      "secondaryTags": [],
+      "gkInvolvement": "optional",
+      "typicalDuration": 5,
+      "setup": "Bull dog. If you're tackled you become a defender. Last Man standing",
+      "rules": "bulldog. To stay in attackers must cross the line. defenders can tackle, hit ball away / out of the area to eliminate. GK are defenders OR can be free men to pass / bounce off",
+      "coaching": [],
+      "variations": "",
+      "diagram": {
+        "area": "right23",
+        "orientation": "tb",
+        "markings": {
+          "sidelines": true,
+          "baselines": true,
+          "halfway": false,
+          "left23": false,
+          "right23": true,
+          "leftD": false,
+          "rightD": false,
+          "leftSpot": false,
+          "rightSpot": false,
+          "leftGoal": false,
+          "rightGoal": false
+        },
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 97.10237884521484,
+            "y": 3.4383301734924316
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 96.97360229492188,
+            "y": 10.650177955627441
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 96.97360229492188,
+            "y": 17.86202621459961
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 96.97360229492188,
+            "y": 27.134403228759766
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 96.84481811523438,
+            "y": 35.63407897949219
+          },
+          {
+            "t": "ball",
+            "x": 93.36767578125,
+            "y": 36.02042770385742
+          },
+          {
+            "t": "ball",
+            "x": 93.4964599609375,
+            "y": 27.778316497802734
+          },
+          {
+            "t": "ball",
+            "x": 93.4964599609375,
+            "y": 17.990808486938477
+          },
+          {
+            "t": "ball",
+            "x": 93.4964599609375,
+            "y": 11.809225082397461
+          },
+          {
+            "t": "ball",
+            "x": 93.4964599609375,
+            "y": 4.597377300262451
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 45.84674835205078,
+            "y": 19.40742301940918
+          },
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 41.98325729370117,
+            "y": 28.422231674194336
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 90.14810180664062,
+            "y": 5.112509250640869,
+            "x2": 47.134578704833984,
+            "y2": 4.339811325073242
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 89.24662017822266,
+            "y": 36.92190933227539,
+            "x2": 35.54410934448242,
+            "y2": 36.14921188354492
+          }
+        ]
+      }
+    },
+    {
+      "id": "deflections_8004",
+      "name": "Deflections",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Shooting / Finishing",
+      "secondaryTags": [
+        "Shooting",
+        "Finishing"
+      ],
+      "gkInvolvement": "involved",
+      "typicalDuration": 10,
+      "setup": "Players around D with Balls. 2 attackers/deflectors",
+      "rules": "1 deflector calls a name to play ball in then attacks the P Spot / post area. Ball played hard across. 2nd deflector arrive ready for rebound/follow up",
+      "coaching": [],
+      "variations": "",
+      "diagram": {
+        "area": "left23",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 49.839019775390625,
+            "y": 49.22068786621094
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 77.1410140991211,
+            "y": 39.30439758300781
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 70.83065032958984,
+            "y": 29.388105392456055
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 58.72504806518555,
+            "y": 24.365570068359375
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 42.88473892211914,
+            "y": 24.107999801635742
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 32.32453155517578,
+            "y": 27.58514404296875
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 25.499032974243164,
+            "y": 34.0242919921875
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 20.60527801513672,
+            "y": 43.167884826660156
+          },
+          {
+            "t": "ball",
+            "x": 73.66387939453125,
+            "y": 40.463443756103516
+          },
+          {
+            "t": "ball",
+            "x": 69.1564712524414,
+            "y": 32.22133255004883
+          },
+          {
+            "t": "ball",
+            "x": 58.33869934082031,
+            "y": 27.713926315307617
+          },
+          {
+            "t": "ball",
+            "x": 43.271087646484375,
+            "y": 28.10027503967285
+          },
+          {
+            "t": "ball",
+            "x": 34.38505935668945,
+            "y": 30.804718017578125
+          },
+          {
+            "t": "ball",
+            "x": 28.847393035888672,
+            "y": 35.69847106933594
+          },
+          {
+            "t": "ball",
+            "x": 26.1429500579834,
+            "y": 42.91032028198242
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 32.06696701049805,
+            "y": 34.539424896240234,
+            "x2": 40.1802978515625,
+            "y2": 40.205875396728516
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 68.38377380371094,
+            "y": 33.766727447509766,
+            "x2": 61.17192459106445,
+            "y2": 40.72100830078125
+          },
+          {
+            "t": "label",
+            "x": 69.1564712524414,
+            "y": 49.220685958862305,
+            "l": "2nd Attacker Rebounds"
+          },
+          {
+            "t": "label",
+            "x": 51.51319885253906,
+            "y": 18.956682205200195,
+            "l": "Ball Pace!"
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 54.86155700683594,
+            "y": 33.509159088134766
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 44.68770217895508,
+            "y": 33.509159088134766
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 45.20283508300781,
+            "y": 36.471168518066406,
+            "x2": 46.361881256103516,
+            "y2": 45.87232971191406
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 55.50547409057617,
+            "y": 36.599952697753906,
+            "x2": 53.4449462890625,
+            "y2": 45.099632263183594
+          }
+        ]
+      }
+    },
+    {
+      "id": "golden_goal_winner_stays_on_6400",
+      "name": "Golden Goal – Winner Stays On",
+      "suitableFor": [
+        "Large / Team Drill"
+      ],
+      "primaryFocus": "Game / Competitive",
+      "secondaryTags": [
+        "Competition"
+      ],
+      "gkInvolvement": "involved",
+      "typicalDuration": 20,
+      "setup": "Use 2 goals and ideally 2 goalkeepers. Split the group into 3 or 4 balanced teams. Two teams play while the others wait ready to enter immediately.",
+      "rules": "Two teams play at one time. The first goal wins. The winning team stays on and immediately attacks the opposite goal while the next waiting team enters. Restart quickly with a new ball whenever needed. If no goal is scored after 2–3 minutes, rotate teams to keep everyone involved.",
+      "coaching": [
+        "Keep the intensity high and restart immediately.",
+        "React quickly when possession changes.",
+        "Move the ball early and support the player in possession.",
+        "Defend with urgency as soon as the ball is lost."
+      ],
+      "variations": "Cap a team at 2–3 consecutive wins before they rotate off. If only one goalkeeper is available, use a small goal or target at the opposite end.",
+      "diagram": {
+        "area": "full",
+        "orientation": "lr",
+        "markings": {
+          "sidelines": true,
+          "baselines": true,
+          "halfway": false,
+          "left23": false,
+          "right23": false,
+          "leftD": true,
+          "rightD": true,
+          "leftSpot": true,
+          "rightSpot": true,
+          "leftGoal": true,
+          "rightGoal": true
+        },
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 3.507652997970581,
+            "y": 29.991865158081055
+          },
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 95.34439086914062,
+            "y": 30.246967315673828
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 21.23724365234375,
+            "y": 23.104110717773438
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 21.619897842407227,
+            "y": 35.98676300048828
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 36.92601776123047,
+            "y": 13.665334701538086
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 38.07398223876953,
+            "y": 28.971458435058594
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 36.79846954345703,
+            "y": 48.48676300048828
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 51.59438705444336,
+            "y": 28.333702087402344
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 60.14030456542969,
+            "y": 28.20615005493164
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 69.70663452148438,
+            "y": 12.644926071166992
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 70.98213958740234,
+            "y": 28.333702087402344
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 71.49234771728516,
+            "y": 50.01737594604492
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 83.60969543457031,
+            "y": 23.48676300048828
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 84.24745178222656,
+            "y": 35.09390640258789
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 36.670921325683594,
+            "y": 2.568395495414734
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 42.92091751098633,
+            "y": 2.185742497444153
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 49.17091751098633,
+            "y": 1.8030894994735718
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 55.676021575927734,
+            "y": 1.4204365015029907
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 62.181121826171875,
+            "y": 1.675538420677185
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 39.73214340209961,
+            "y": 59.32859802246094
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 46.23724365234375,
+            "y": 59.2010498046875
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 52.61479568481445,
+            "y": 59.2010498046875
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 58.86479568481445,
+            "y": 59.2010498046875
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 66.26275634765625,
+            "y": 59.0734977722168
+          },
+          {
+            "t": "zone",
+            "x": 33.354591369628906,
+            "y": 55.50206756591797,
+            "x2": 73.53316497802734,
+            "y2": 60.17505470459518
+          },
+          {
+            "t": "zone",
+            "x": 31.8239803314209,
+            "y": 0.4000282287597656,
+            "x2": 68.30357360839844,
+            "y2": 6.2673749923706055
+          },
+          {
+            "t": "ball",
+            "x": 55.676021575927734,
+            "y": 26.930641174316406
+          },
+          {
+            "t": "ball",
+            "x": 68.04846954345703,
+            "y": 4.864314079284668
+          },
+          {
+            "t": "ball",
+            "x": 69.83418273925781,
+            "y": 58.43574142456055
+          },
+          {
+            "t": "label",
+            "x": 82.97193908691406,
+            "y": 3.971456527709961,
+            "l": "play new balls in"
+          }
+        ]
+      }
+    },
+    {
+      "id": "left_wing_d_entry_and_defense_1659",
+      "name": "Left Wing D Entry and Defense",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Passing & Receiving",
+      "secondaryTags": [
+        "Circle Entry",
+        "Baseline",
+        "Defending"
+      ],
+      "gkInvolvement": "none",
+      "typicalDuration": null,
+      "setup": "3v2. Defenders aim is to pin attackers in on strong side and funnel them to the GK /near post",
+      "rules": "Attackers play a through ball to left wing to commence. Defenders need to set up zonally, defend the P spot and top D. Funnel attacker to corner or baseline. trust the GK on the near post. Attackers focus on moving defenders and slipping ball to top D or for a deflection around P spot.",
+      "coaching": [],
+      "variations": "",
+      "diagram": {
+        "area": "leftD",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "small",
+        "objects": [
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 50.06377410888672,
+            "y": 43.29181900636439
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 64.85969161987305,
+            "y": 3.177112066252823
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 49.17091369628906,
+            "y": 2.7819096494226034
+          },
+          {
+            "t": "ball",
+            "x": 64.73214340209961,
+            "y": 5.707142956646704
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 50.446434020996094,
+            "y": 15.076557908341393
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 59.11989974975586,
+            "y": 23.762353721872007
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 82.0790786743164,
+            "y": 3.8949108123779297
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 83.3545913696289,
+            "y": 6.318380832672119,
+            "x2": 95.8545913696289,
+            "y2": 38.33368682861328
+          },
+          {
+            "t": "zone",
+            "x": 65.8801040649414,
+            "y": 17.41532039642334,
+            "x2": 97.38520812988281,
+            "y2": 43.94593048095703
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 65.49745178222656,
+            "y": 6.956136226654053,
+            "x2": 84.50254821777344,
+            "y2": 25.323482513427734
+          },
+          {
+            "t": "label",
+            "x": 92.79337310791016,
+            "y": 12.695932388305664,
+            "l": "Leading Run"
+          },
+          {
+            "t": "label",
+            "x": 72.38520050048828,
+            "y": 7.721442222595215,
+            "l": "Through Ball"
+          },
+          {
+            "t": "label",
+            "x": 68.43111801147461,
+            "y": 35.91021919250488,
+            "l": "Defenders Pin Attackers in"
+          }
+        ]
+      }
+    },
+    {
+      "id": "match_no_rules_7819",
+      "name": "Match – No Conditions",
+      "suitableFor": [
+        "Game"
+      ],
+      "primaryFocus": "Game / Competitive",
+      "secondaryTags": [
+        "Competition"
+      ],
+      "gkInvolvement": "optional",
+      "typicalDuration": null,
+      "setup": "Split into two balanced teams and play a normal match.",
+      "rules": "Normal hockey with no added conditions. Keep stoppages and coaching interventions to a minimum so the players can simply play.",
+      "coaching": [
+        "Play with intensity and enjoy the game.",
+        "Move the ball quickly and support the player in possession.",
+        "React immediately to turnovers."
+      ],
+      "variations": "Adjust team sizes and pitch area to suit attendance. Use rolling substitutes if numbers are high.",
+      "diagram": {
+        "area": "full",
+        "orientation": "lr",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 16.51785659790039,
+            "y": 17.491865158081055
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 16.51785659790039,
+            "y": 28.716354370117188
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 15.752551078796387,
+            "y": 40.3234977722168
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 43.1760196685791,
+            "y": 3.7163548469543457
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 44.579084396362305,
+            "y": 56.90513229370117
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 31.058673858642578,
+            "y": 28.843904495239258
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 36.79846954345703,
+            "y": 14.685742378234863
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 35.39540481567383,
+            "y": 44.1500244140625
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 47.0025520324707,
+            "y": 22.72145652770996
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 46.23724365234375,
+            "y": 35.22146034240723
+          },
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 3.7627551555633545,
+            "y": 30.3745174407959
+          },
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 97.8954086303711,
+            "y": 29.481660842895508
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 85.77806091308594,
+            "y": 16.726558685302734
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 84.75765228271484,
+            "y": 30.5020694732666
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 85.90560913085938,
+            "y": 42.10921096801758
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 58.737239837646484,
+            "y": 56.65003204345703
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 57.58928298950195,
+            "y": 4.2265589237213135
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 71.36479187011719,
+            "y": 29.354110717773438
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 66.6454086303711,
+            "y": 15.833702087402344
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 66.9005126953125,
+            "y": 46.06329345703125
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 54.52806091308594,
+            "y": 22.9765567779541
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 54.4005126953125,
+            "y": 35.22145652770996
+          },
+          {
+            "t": "ball",
+            "x": 49.93622589111328,
+            "y": 28.97145652770996
+          }
+        ]
+      }
+    },
+    {
+      "id": "retain_the_ball_under_pressure_4999",
+      "name": "Retain the Ball Under Pressure",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Possession",
+      "secondaryTags": [
+        "Possession",
+        "Defending",
+        "Competition"
+      ],
+      "gkInvolvement": "none",
+      "typicalDuration": 10,
+      "setup": "Groups of 4 with one ball inside a marked area. One player starts as the attacker with the others acting as defenders in sequence.",
+      "rules": "A defender passes the ball into the attacker and can then engage. The attacker must protect and retain the ball, ideally winning a foul or surviving.  A defender scores 1 point for winning the ball cleanly and retaining possession or forcing a sideline. Simply slapping the ball away is a draw. A foul gives 1 point to the attacker. Rotate the active defender regularly.",
+      "coaching": [
+        "Attacker: keep the ball in a strong position and use your body intelligently.",
+        "Stay composed under pressure and recognise when to protect rather than force an escape.",
+        "Defenders: do not dive in.",
+        "Work together to control the attacker toward a weaker position before attempting the tackle."
+      ],
+      "variations": "Give the attacker an outlet player, start with two attackers, or reduce the space to increase pressure.",
+      "diagram": {
+        "area": "full",
+        "orientation": "lr",
+        "markings": {
+          "sidelines": true,
+          "baselines": true,
+          "halfway": false,
+          "left23": false,
+          "right23": false,
+          "leftD": false,
+          "rightD": false,
+          "leftSpot": false,
+          "rightSpot": false,
+          "leftGoal": false,
+          "rightGoal": false
+        },
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 48.47566223144531,
+            "y": 31.720746994018555
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 48.911190032958984,
+            "y": 11.105891227722168
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 73.1554183959961,
+            "y": 31.430397033691406
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 47.894962310791016,
+            "y": 54.80358123779297
+          },
+          {
+            "t": "zone",
+            "x": 30.619131088256836,
+            "y": 17.058067321777344,
+            "x2": 67.05806732177734,
+            "y2": 47.98035430908203
+          },
+          {
+            "t": "ball",
+            "x": 48.91118621826172,
+            "y": 16.04184341430664
+          },
+          {
+            "t": "arrow",
+            "x": 48.6208381652832,
+            "y": 18.21946907043457,
+            "x2": 48.6208381652832,
+            "y2": 27.220321655273438
+          },
+          {
+            "t": "label",
+            "x": 64.29974365234375,
+            "y": 6.75063943862915,
+            "l": "Ball played in to Start "
+          },
+          {
+            "t": "label",
+            "x": 76.34927368164062,
+            "y": 56.83603286743164,
+            "l": "New defender every 10 seconds"
+          },
+          {
+            "t": "label",
+            "x": 17.408203125,
+            "y": 3.556788682937622,
+            "l": "Clean tackle = 1 point"
+          },
+          {
+            "t": "label",
+            "x": 11.746375560760498,
+            "y": 9.21861457824707,
+            "l": "Foul = 1 Point"
+          }
+        ]
+      }
+    },
+    {
+      "id": "short_corner_training_6810",
+      "name": "Short Corner Training",
+      "suitableFor": [
+        "Penalty Corner"
+      ],
+      "primaryFocus": "Set Pieces",
+      "secondaryTags": [
+        "Penalty Corner",
+        "Defending",
+        "Finishing"
+      ],
+      "gkInvolvement": "involved",
+      "typicalDuration": 15,
+      "setup": "Use the nominated penalty-corner group and rehearse the club's three standard attacking routines.",
+      "rules": "1 – Straight strike or drag flick.\n2 – Slip right for a right-post deflection from the drag-flick/first-shot position.\n3 – Return to the injector, who then plays a hard ball through the penalty-spot corridor for a deflection or far-post touch.",
+      "coaching": [
+        "Prioritise a consistent injection and trap before adding variation.",
+        "Keep the initial setup and body language as similar as possible across all three routines.",
+        "Straight option: execute quickly and accurately.",
+        "Right-post option: time the deflection run late and attack the ball.",
+        "Injector return: play the return ball hard and flat through the scoring area."
+      ],
+      "variations": "Add live runners once the attacking execution is reliable. Use a tennis ball for high-speed repetitions where appropriate.",
+      "diagram": {
+        "area": "rightD",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "ball",
+            "x": 48.53316307067871,
+            "y": 35.655115842819214
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 22.002552032470703,
+            "y": -0.06838101893663406
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 53.1250114440918,
+            "y": 35.272464752197266
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 48.533172607421875,
+            "y": 39.354095458984375
+          },
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 50.19132614135742,
+            "y": 1.9816462993621826
+          },
+          {
+            "t": "arrow",
+            "x": 49.29846954345703,
+            "y": 33.741851806640625,
+            "x2": 49.426021575927734,
+            "y2": 6.063279151916504
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 82.07908630371094,
+            "y": 20.2214412689209
+          },
+          {
+            "t": "label",
+            "x": 50.829078674316406,
+            "y": 32.21123695373535,
+            "l": "1"
+          },
+          {
+            "t": "label",
+            "x": 58.482147216796875,
+            "y": 4.787768125534058,
+            "l": "2"
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 81.82398223876953,
+            "y": 19.966341018676758,
+            "x2": 54.400508880615234,
+            "y2": 3.512258529663086
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 81.69642639160156,
+            "y": 20.22144317626953,
+            "x2": 54.52806091308594,
+            "y2": 15.757156372070312
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 47.76784896850586,
+            "y": 14.609200954437256
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 47.0025691986084,
+            "y": 7.59389591217041
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 24.29846954345703,
+            "y": 26.854095458984375
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 46.61989974975586,
+            "y": 34.37960433959961,
+            "x2": 27.99744987487793,
+            "y2": 27.87450408935547
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 26.211734771728516,
+            "y": 25.323482513427734,
+            "x2": 45.47193908691406,
+            "y2": 11.930625915527344
+          }
+        ]
+      }
+    },
+    {
+      "id": "shots_under_pressure_5761",
+      "name": "Shots Under Pressure",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Passing & Receiving",
+      "secondaryTags": [
+        "Receiving",
+        "Shooting",
+        "Defending"
+      ],
+      "gkInvolvement": "involved",
+      "typicalDuration": 10,
+      "setup": "2 attackers and defenders in the D. Receive ball and get shot off under pressure",
+      "rules": "Ball played in at pace from outside D. Attacker needs to lead and receive. Defender to challenge for the ball and force player wide, a mistake or onto the keeper.",
+      "coaching": [
+        "Quick shot if possible. First touch and Body Position is vital."
+      ],
+      "variations": "",
+      "diagram": {
+        "area": "rightD",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 31.680618286132812,
+            "y": 23.157888412475586
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 71.73213195800781,
+            "y": 22.90032196044922
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 71.98968505859375,
+            "y": 16.71873664855957
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 31.809402465820312,
+            "y": 16.976304054260254
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 36.831939697265625,
+            "y": 38.869415283203125
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 64.90663146972656,
+            "y": 40.15724182128906
+          },
+          {
+            "t": "ball",
+            "x": 40.30908203125,
+            "y": 36.93766784667969
+          },
+          {
+            "t": "ball",
+            "x": 61.68705368041992,
+            "y": 38.225502014160156
+          },
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 49.967803955078125,
+            "y": 2.295041561126709
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 60.399227142333984,
+            "y": 37.32401657104492,
+            "x2": 37.347068786621094,
+            "y2": 26.119895935058594
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 33.99871063232422,
+            "y": 24.31693458557129,
+            "x2": 36.96072006225586,
+            "y2": 25.991113662719727
+          },
+          {
+            "t": "label",
+            "x": 25.11268424987793,
+            "y": 28.309207916259766,
+            "l": "Lead for the ball"
+          },
+          {
+            "t": "label",
+            "x": 49.96780776977539,
+            "y": 20.06709575653076,
+            "l": "Shoot"
+          },
+          {
+            "t": "zone",
+            "x": 40.051513671875,
+            "y": 14.40064525604248,
+            "x2": 60.399227142333984,
+            "y2": 23.93058681488037
+          }
+        ]
+      }
+    },
+    {
+      "id": "standard_warmup_2379",
+      "name": "Standard Warm-Up",
+      "suitableFor": [
+        "Routine Warm-up"
+      ],
+      "primaryFocus": "Passing & Receiving",
+      "secondaryTags": [],
+      "gkInvolvement": "involved",
+      "typicalDuration": 15,
+      "setup": "Use the same progression before training and matches so the group becomes familiar with the routine.",
+      "rules": "1. Two laps of the pitch.\n2. 5 minutes: two-line passing drill in groups of 4–5. Pass and follow your pass. Receive with the first touch to the right. Progress to pop aerials, then step out to slaps.\n3. 5 minutes: 4v4 or 5v5 possession.\n4. 5 minutes: Blasty Box.",
+      "coaching": [
+        "High intensity and good ball pace from the start.",
+        "Use the routine to switch on physically and mentally.",
+        "Keep players moving and avoid unnecessary standing around."
+      ],
+      "variations": "GK can join the two-line drill and receive with the feet. Strikers can warm up the GK during the possession block. Blasty Box can be replaced with another high-tempo game such as 3v2.",
+      "diagram": {
+        "area": "rightHalf",
+        "orientation": "tb",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "p",
+            "team": "N",
+            "l": "N",
+            "x": 49.699310302734375,
+            "y": 1.503454327583313
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 42.88364791870117,
+            "y": 26.160106658935547
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 42.683189392089844,
+            "y": 38.187740325927734
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 58.720035552978516,
+            "y": 38.98958206176758
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 58.720035552978516,
+            "y": 25.759185791015625
+          },
+          {
+            "t": "zone",
+            "x": 79.1670150756836,
+            "y": 1.503454327583313,
+            "x2": 99.01261138916016,
+            "y2": 37.987281799316406
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 81.37207794189453,
+            "y": 4.7108235359191895
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 96.80754852294922,
+            "y": 5.1117448806762695
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 88.98958587646484,
+            "y": 10.724640846252441
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 82.37438201904297,
+            "y": 17.139379501342773
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 95.00340270996094,
+            "y": 16.53799819946289
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 82.57484436035156,
+            "y": 35.9826774597168
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 96.80754852294922,
+            "y": 35.18083190917969
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 81.97346496582031,
+            "y": 24.355960845947266
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 88.98958587646484,
+            "y": 29.968856811523438
+          },
+          {
+            "t": "p",
+            "team": "D",
+            "l": "R",
+            "x": 97.40892791748047,
+            "y": 24.95734214782715
+          },
+          {
+            "t": "ball",
+            "x": 89.1900405883789,
+            "y": 21.34905242919922
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 65.33523559570312,
+            "y": 68.85820770263672
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 91.39511108398438,
+            "y": 68.85820770263672
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 98.6116943359375,
+            "y": 68.85820770263672
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 57.51727294921875,
+            "y": 68.45729064941406
+          },
+          {
+            "t": "ball",
+            "x": 46.69240188598633,
+            "y": 35.7822151184082
+          },
+          {
+            "t": "ball",
+            "x": 70.34674835205078,
+            "y": 69.4595947265625
+          },
+          {
+            "t": "arrow",
+            "x": 72.55181884765625,
+            "y": 69.86051177978516,
+            "x2": 85.98267364501953,
+            "y2": 69.86051177978516
+          }
+        ]
+      }
+    },
+    {
+      "id": "technique_v_drag_and_3d_6306",
+      "name": "Technique - V Drag and 3D",
+      "suitableFor": [
+        "Station"
+      ],
+      "primaryFocus": "Technique",
+      "secondaryTags": [],
+      "gkInvolvement": "none",
+      "typicalDuration": 10,
+      "setup": "6 cones. minimum 3 people",
+      "rules": "V drag into a pass, follow your pass. 3D skill into a pass.",
+      "coaching": [],
+      "variations": "",
+      "diagram": {
+        "area": "blank",
+        "orientation": "lr",
+        "markings": null,
+        "objectScale": "medium",
+        "objects": [
+          {
+            "t": "cone",
+            "x": 68.20265197753906,
+            "y": 35.39204025268555
+          },
+          {
+            "t": "cone",
+            "x": 64.00481796264648,
+            "y": 39.155609130859375
+          },
+          {
+            "t": "cone",
+            "x": 59.51749038696289,
+            "y": 42.62967872619629
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 86.29673767089844,
+            "y": 29.312421798706055
+          },
+          {
+            "t": "ball",
+            "x": 81.95417022705078,
+            "y": 32.6417350769043
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 24.63208770751953,
+            "y": 26.99638032913208
+          },
+          {
+            "t": "cone",
+            "x": 48.661033630371094,
+            "y": 11.507840156555176
+          },
+          {
+            "t": "cone",
+            "x": 45.04221725463867,
+            "y": 15.560917854309082
+          },
+          {
+            "t": "cone",
+            "x": 41.568153381347656,
+            "y": 19.03498363494873
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 82.38842010498047,
+            "y": 35.97105026245117,
+            "x2": 67.18938446044922,
+            "y2": 45.379974365234375
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 68.63690948486328,
+            "y": 42.9191780090332,
+            "x2": 72.54523468017578,
+            "y2": 32.20747756958008
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 70.95295715332031,
+            "y": 31.917972564697266,
+            "x2": 34.33051681518555,
+            "y2": 29.457178115844727
+          },
+          {
+            "t": "arrow",
+            "kind": "run",
+            "x": 28.974668502807617,
+            "y": 24.10132598876953,
+            "x2": 39.83112335205078,
+            "y2": 13.679131507873535
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 43.015682220458984,
+            "y": 12.955368041992188,
+            "x2": 49.38479995727539,
+            "y2": 15.560917854309082
+          },
+          {
+            "t": "arrow",
+            "kind": "pass",
+            "x": 51.411338806152344,
+            "y": 17.44270133972168,
+            "x2": 79.92761993408203,
+            "y2": 27.864896774291992
+          },
+          {
+            "t": "p",
+            "team": "A",
+            "l": "Y",
+            "x": 92.95536804199219,
+            "y": 29.16767120361328
+          },
+          {
+            "t": "label",
+            "x": 79.0591049194336,
+            "y": 48.99879455566406,
+            "l": "V Drag into Pass"
+          },
+          {
+            "t": "label",
+            "x": 36.3570556640625,
+            "y": 9.770808219909668,
+            "l": "3D into Pass"
+          }
+        ]
+      }
+    }
+  ],
+  "sessions": [
+    {
+      "id": "s_1787400968762",
+      "title": "Stokesley Training",
+      "date": "2026-08-25",
+      "themes": [],
+      "notes": "",
+      "status": "committed",
+      "framework": {
+        "warmup": "standard_warmup_2379",
+        "station1": "3_man_receive_in_the_middle_6893",
+        "station2": "3v2_baseline_pullbacks_5025",
+        "station3": "retain_the_ball_under_pressure_4999",
+        "pc": "short_corner_training_6810",
+        "technique": "aerial_technique_4045",
+        "large": "golden_goal_winner_stays_on_6400",
+        "game": "match_no_rules_7819"
+      },
+      "createdAt": "2026-08-22T12:16:08.762Z",
+      "updatedAt": "2026-08-22T13:39:36.496Z",
+      "committedAt": "2026-08-22T13:39:36.496Z",
+      "startTime": "19:05",
+      "finishTime": "21:00",
+      "activities": [
+        {
+          "id": "a_1788177749275_tjc8",
+          "type": "warmup",
+          "title": "Warm-up",
+          "duration": 15,
+          "note": "",
+          "drillId": "standard_warmup_2379"
+        },
+        {
+          "id": "a_1788177749275_4hy5",
+          "type": "drill",
+          "title": "Drill",
+          "duration": 12,
+          "note": "",
+          "drillId": "3_man_receive_in_the_middle_6893"
+        },
+        {
+          "id": "a_1788177749275_yyvs",
+          "type": "drill",
+          "title": "Drill",
+          "duration": 12,
+          "note": "",
+          "drillId": "3v2_baseline_pullbacks_5025"
+        },
+        {
+          "id": "a_1788177749275_8ye8",
+          "type": "drill",
+          "title": "Drill",
+          "duration": 12,
+          "note": "",
+          "drillId": "retain_the_ball_under_pressure_4999"
+        },
+        {
+          "id": "a_1788177749275_7thn",
+          "type": "penalty",
+          "title": "Penalty Corners",
+          "duration": 15,
+          "note": "",
+          "drillId": "short_corner_training_6810",
+          "parallelDrillId": "aerial_technique_4045"
+        },
+        {
+          "id": "a_1788177749275_vowc",
+          "type": "drill",
+          "title": "Drill",
+          "duration": 20,
+          "note": "",
+          "drillId": "golden_goal_winner_stays_on_6400"
+        },
+        {
+          "id": "a_1788177749275_7wnu",
+          "type": "game",
+          "title": "Match",
+          "duration": 30,
+          "note": "",
+          "drillId": "match_no_rules_7819"
+        }
+      ]
+    },
+    {
+      "id": "s_1788177767043",
+      "title": "1st Sep Stokesley Training",
+      "date": "2026-09-01",
+      "startTime": "19:05",
+      "finishTime": "21:00",
+      "themes": [],
+      "notes": "",
+      "status": "draft",
+      "activities": [
+        {
+          "id": "a_1788177767043_ifhr",
+          "type": "warmup",
+          "title": "Warm-up",
+          "duration": 15,
+          "note": "",
+          "drillId": "standard_warmup_2379"
+        },
+        {
+          "id": "a_1788181754924_txw2",
+          "type": "drill",
+          "title": "Bulldog",
+          "duration": 10,
+          "note": "",
+          "drillId": "bulldog_3871"
+        },
+        {
+          "id": "a_1788190002958_6ovk",
+          "type": "drill",
+          "title": "1v1 Plus GK",
+          "duration": 10,
+          "note": "",
+          "drillId": "1v1_continous_6923"
+        },
+        {
+          "id": "a_1788179096858_97hn",
+          "type": "drill",
+          "title": "Group A",
+          "duration": 10,
+          "note": "",
+          "drillId": "2v1_to_2v1_shooting_0993"
+        },
+        {
+          "id": "a_1788179123125_8ren",
+          "type": "drill",
+          "title": "Group B",
+          "duration": 10,
+          "note": "",
+          "drillId": "shots_under_pressure_5761"
+        },
+        {
+          "id": "a_1788177767043_ekjr",
+          "type": "penalty",
+          "title": "Penalty Corners",
+          "duration": 15,
+          "note": "",
+          "drillId": "short_corner_training_6810",
+          "parallelDrillId": "technique_v_drag_and_3d_6306"
+        },
+        {
+          "id": "a_1788180097773_n0b4",
+          "type": "drill",
+          "title": "Golden Goal",
+          "duration": 15,
+          "note": "",
+          "drillId": "golden_goal_winner_stays_on_6400"
+        },
+        {
+          "id": "a_1788190368478_sdvc",
+          "type": "drill",
+          "title": "Deflections",
+          "duration": 10,
+          "note": "",
+          "drillId": "deflections_8004"
+        },
+        {
+          "id": "a_1788177767043_vm41",
+          "type": "game",
+          "title": "Match",
+          "duration": 20,
+          "note": "",
+          "drillId": "match_no_rules_7819"
+        }
+      ],
+      "createdAt": "2026-08-31T12:02:47.043Z",
+      "updatedAt": "2026-08-31T17:45:35.127Z",
+      "committedAt": null
+    }
+  ],
+  "ratings": []
+}
