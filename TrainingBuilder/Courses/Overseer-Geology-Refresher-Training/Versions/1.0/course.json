@@ -1,0 +1,421 @@
+{
+  "schemaVersion": 5,
+  "course": {
+    "id": "course-a1f3b6a3-7b75-46ef-a24f-5b3c5db0e3d1",
+    "title": "Overseer Geology Refresher Training",
+    "description": "Geology refresher training for production overseers",
+    "objectives": [],
+    "version": "1.0",
+    "defaultPassMark": 80,
+    "modules": [
+      {
+        "id": "module-0c6374c1-cd52-4e44-b491-04baf0e4181a",
+        "title": "Mining Geology",
+        "description": "An introduction to geology relevant to mining",
+        "objectives": [],
+        "completionMode": "assessment_required",
+        "expectedMinutes": 0,
+        "steps": [
+          {
+            "id": "step-45a404e8-e015-4762-ac2a-0b3d9214f7a6",
+            "type": "image-text",
+            "title": "Geology Introduction",
+            "html": "<ul><li>Geology is the study of the earth and rock forming processes</li><li>Rocks are made of different minerals depending on where and how they are formed&nbsp;</li><li>Sedimentary rocks are formed by mineral particles being deposited and pressed into layers (strata)</li><li>Examples of sedimentary rocks are sandstone, mudstone and limestone</li></ul><div><br></div><div><b>Mining Relevance</b></div><div><ul><li>Some minerals are valuable or have special properties (Polyhalite), others are waste, reduce the grade or can cause problems (Salt)</li><li>The minerals that the rocks are made of, and how they are cemented together <b>determines the rocks strength</b></li><li>Rock strength determines how easy the rock is to mine and how <b>strong and stable</b> the mining roof and sidewalls are</li></ul></div><div><b><br></b></div>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "sandstone.png",
+                "caption": "Rivers and beaches create sandstone",
+                "alt": "",
+                "id": "asset-893b2d48-5417-4a04-b272-d2acd9fc1f60",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "mudstone.png",
+                "caption": "lakes and deep seas create mudstones",
+                "alt": "",
+                "id": "asset-114aa1ca-2682-4f29-83ca-95a673d29162",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "limestone.png",
+                "caption": "Tropical reefs and warm seas create limestone",
+                "alt": "",
+                "id": "asset-3e7915d2-181f-4f2c-adf8-d5485b041977",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-9a728f9c-b5b4-4b3e-ad27-8049bcd0d059",
+            "type": "image-text",
+            "title": "Evaporites",
+            "html": "<ul><li>Salt, Polyhalite and Potash are Sedimentary rocks called <b>Evaporites.</b></li><li>Evaporites form in hot and dry climates where sea water is evaporated and salts crystalise</li><li>75m of seawater must be evaporated to create 1m of Rock Salt (Halite)</li></ul><div><br></div><div><b>Mining Relevance</b></div><div><ul><li>Evaporites are made of crystals. Larger crystals are harder to cement together which makes the rock weaker</li><li>Evaporites can form in layers, which can act as planes of weakness and failure</li></ul></div>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "evaporites.png",
+                "caption": "Salt crystals accumulating from the evaporating sea water",
+                "alt": "",
+                "id": "asset-eb36ccf8-94e8-4544-9b20-462139a82b3d",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-7cf994a4-dc29-4165-9d3c-9ff3e1fba32f",
+            "type": "image-text",
+            "title": "Geological Structures",
+            "html": "<ul><li>Rocks can also have structures which can effect their strength and behaviour when mined</li><li><b>Faults&nbsp;</b>&nbsp;can reduce rock strength and allow oils or gases to enter the mine through fractures.</li><li>Faults can also offset the seam creating steep dips</li><li>Layers of rock are called <b>Beds or Bedding Planes. </b>Each layer/bed is discontinuity (break)&nbsp; which can act as a plane of weakness or failure.</li><li>When rocks are compressed, they can buckle and <b>Fold</b></li></ul>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "bedding.jpg",
+                "caption": "Alternating layers/beds of two different rocks",
+                "alt": "",
+                "id": "asset-ee5699d9-ea32-4642-98c5-3b1b568891c0",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "faulting.jpg",
+                "caption": "2 Faults which have displaced the black layers",
+                "alt": "",
+                "id": "asset-181515c3-0140-439f-807a-80ba80aff5c7",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "folding.jpg",
+                "caption": "This rock has been squeezed causing it to bend and fold",
+                "alt": "",
+                "id": "asset-bf60d645-0fc4-4629-a42a-5c3d659d970a",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-45249061-920f-4371-a21c-84325eb5a118",
+            "type": "media",
+            "title": "Faults",
+            "html": "Lets see how faulting can deform the geological layers",
+            "images": [],
+            "mediaType": "video",
+            "sourceType": "youtube",
+            "src": "https://www.youtube.com/watch?v=C_sevz1vR-w",
+            "requireComplete": false,
+            "playbackRequirement": "optional",
+            "completionAcknowledgementText": "I confirm that I have watched/listened to this media."
+          },
+          {
+            "id": "step-8e608fe6-010f-4080-9eea-645f4351ba41",
+            "type": "image-text",
+            "title": "Boulby Mine Structures",
+            "html": "<ul><li>Boulby Mine has examples of both <b>Faulting</b> and <b>Folding</b></li><li>Potash was commonly folded creating thicker and thinner seams with high dips</li><li>There are major faults in the mine which have caused us to have to mine up significant gradients (North 1 Fault in Salt) or released oil into the roads (2000 Salt)</li></ul>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "potash-folding.jpg",
+                "caption": "folding of potash and salt layers at boulby",
+                "alt": "",
+                "id": "asset-2b0c8a27-a17c-4684-9739-596802f8ad7f",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "boulby-faults.png",
+                "caption": "fault steps in the boulby halite",
+                "alt": "",
+                "id": "asset-3ded72ac-9196-4bcb-b836-c240a5136531",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "2000-salt-oil.png",
+                "caption": "Yellow oil from 2000 Salt when mining through the Runswick Bay Fault",
+                "alt": "",
+                "id": "asset-5dc99f75-f754-47b9-a0ba-aec4f7170df7",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          }
+        ],
+        "assessment": {
+          "passMark": 80,
+          "retryRule": "unlimited",
+          "shuffleQuestions": false,
+          "shuffleAnswers": false,
+          "questions": []
+        },
+        "assessmentEnabled": true
+      },
+      {
+        "id": "module-27452a5a-0473-46d2-80f8-1b239ebe80ab",
+        "title": "Polyhalite Geology",
+        "description": "The geology of the polyhalite seam and the hazards that can be present",
+        "objectives": [],
+        "completionMode": "assessment_required",
+        "expectedMinutes": 0,
+        "steps": [
+          {
+            "id": "step-6281c729-8eb5-4aa1-b785-6c9540af3e11",
+            "type": "image-text",
+            "title": "Overview",
+            "html": "<p class=\"MsoNormal\" style=\"margin-top:0cm;margin-right:0cm;margin-bottom:1.1pt;\nmargin-left:.5pt;line-height:112%\"><span style=\"font-size: 1rem;\">There are 2 operating levels of the mine currently -\nPolyhalite and Salt.&nbsp;</span></p><p class=\"MsoNormal\" style=\"margin-top:0cm;margin-right:0cm;margin-bottom:1.1pt;\nmargin-left:.5pt;line-height:112%\"><br><span style=\"font-size: 1rem;\">The diagram below shows the position of the different rock\nunits at the mine and the mine infrastructure.</span><br><span style=\"font-size: 1rem;\">It also shows the potential major hazards associated\nwith the geology of these areas.&nbsp;</span></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "mine-geology-section.jpg",
+                "caption": "Section showing the different mining levels, rock layers and associated hazards",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-ba60c1d8-ef88-4eb2-9653-20a4388f55ff"
+              },
+              {
+                "sourceType": "internal",
+                "ref": "mining-levels-table.png",
+                "caption": "The different mining levels and associated hazards",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-f0662113-7f9e-4960-bc6a-4d844068d834"
+              }
+            ]
+          },
+          {
+            "id": "step-8d0115b8-7351-4cd6-9ba3-3ba6b6581a20",
+            "type": "image-text",
+            "title": "Polyhalite Overview",
+            "html": "<p></p><ul><li>The current mining area for Polyhalite is called&nbsp;<i style=\"font-weight: bold;\">Discovery </i>also referred to as<i style=\"font-weight: bold;\">&nbsp;</i>&nbsp;(Zone 1).&nbsp;<span style=\"font-size: 1rem;\">Below is the generalised structure of the geology of Zone 1.&nbsp;</span></li><li><span style=\"font-size: 1rem;\">The\npolyhalite seam is around 15m thick but varies across Zone 1.&nbsp;&nbsp;</span></li><li>The Polyhalite seam has been characterised into 3 layers termed P1, P2 and P3, with P1 at the top and P3 at the bottom</li><li>The rock immediately above Polyhalite is <b>Salt</b></li><li>the rocks below Polyhalite are<b> Anhydrite</b> then <b>Dolomite</b></li></ul><div><br></div><p></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "zone1-log.png",
+                "caption": "Schematic cross-section through the Zone 1 Polyhalite Geology",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-35dcbf3f-b3c0-4250-91f4-66b81390473d"
+              },
+              {
+                "sourceType": "internal",
+                "ref": "poly-level-section.png",
+                "caption": "The Polyhalite Mining Level",
+                "alt": "",
+                "id": "asset-8a5a01da-b73a-4836-bff5-1e267dbc55ef",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-1f10f022-41a1-4bc3-bfad-85b57290e000",
+            "type": "image-text",
+            "title": "Polyhalite P3",
+            "html": "<p></p><ul><li><span style=\"font-size: 1rem;\">The lower</span><b style=\"font-size: 1rem;\"> P3 Polyhalite is the highest grade</b><span style=\"font-size: 1rem;\">. The target mining horizon is typically </span><b style=\"font-size: 1rem;\">3-5m</b><span style=\"font-size: 1rem;\">\nabove the base of seam</span></li><li><span style=\"font-size: 1rem;\">Polyhalite is<b> finely layered</b> with darker and lighter bands</span></li><li>P2 has more salt bands which get thicker the higher up you go, until the ultimate roof of the polyhalite is Salt.</li><li>P1 is around 1m thick and is not relevant to mining.</li></ul><div><b><u>Hazards</u></b><br><ul><li>The layers in polyhalite can<b> delaminate </b>when vertical stress is reduced or <b>shear</b> when horizontal stress increases</li><li>Polyhalite contains <b>H2S gas</b> within its crystals. When the rock is broken this gas is released</li><li>The more rock that is broken simultaneously, the more gas is released.</li><li>Other minerals such as Glauberite have more space between crystals allowing them to hold more volumes of H2S</li></ul></div><p></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "polyhalite-p3.jpg",
+                "caption": "High grade P3 Polyhalite",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-5d956be9-83c4-4bf0-8025-12b1ed3a65fb"
+              }
+            ]
+          },
+          {
+            "id": "step-4cd5f4aa-86cb-4b3b-8ce2-61b5e1320186",
+            "type": "image-text",
+            "title": "Polyhalite P2",
+            "html": "<p></p><div><ul><li>P2 Polyhalite is above the P3 and has more salt bands with increasing thickness</li><li>Mining higher in the seam <b>increases the amount of halite (salt)</b> that is present which <b>reduces the quality</b> of the ore&nbsp;</li></ul><div><b><u>Hazards</u></b><br><ul><li>Salt is weaker than Polyhalite so <b>&nbsp;reduces the strength</b> of the roof beam and pillars</li><li>The salt bands often have a <b>clay/shale margin</b> above and below the salt. This can form a plane of weakness which can result in <b>delamination, shear</b>&nbsp;and roof issues (ripping).&nbsp;</li></ul></div></div><p></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "polyhalite-p2-1.jpg",
+                "caption": "P2 Polyhalite with intermixed salt",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-cb46c2dc-03c4-4eee-bf93-faa3009c8ebb"
+              },
+              {
+                "sourceType": "internal",
+                "ref": "polyhalite-p2-2.jpg",
+                "caption": "P2 Polyhalite with multiple salt bands",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-5780ef1c-0505-40b9-b78c-e60d13201b62"
+              },
+              {
+                "sourceType": "internal",
+                "ref": "poly-shale-delamination1.jpg",
+                "caption": "Delamination on shale parting during mining.",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-5415db3a-e84a-46b9-afec-a53d7bdea4a2"
+              },
+              {
+                "sourceType": "internal",
+                "ref": "poly-shale-delamination2.jpg",
+                "caption": "smooth and humpy surface of shale parting",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-131bf3d5-b20c-4d23-8075-7d883dbe80ff"
+              }
+            ]
+          },
+          {
+            "id": "step-ebbf1446-d54b-41f7-ab60-903bde96e442",
+            "type": "image-text",
+            "title": "Polyhalite Base of Seam",
+            "html": "<p></p><ul><li>The base of the Polyhalite seam is the 'Footwall' <b>Anhydrite</b></li><li>Anhydrite is <b>stronger</b> and <b>harder to mine</b> than Polyhalite and will <b>reduce the quality</b> of the ore</li><li>The base of seam is variable and can step up or down sharply</li></ul><div><br></div><b><u>Hazards</u></b><br><ul><li>Beneath the Anhydrite is a rock called the Kirkham Abbey <b>Dolomite</b></li><li>In local areas of the mine, this Dolomite is fractured and can store&nbsp;<b>Methane Gas</b>.&nbsp;</li><li>Mining closer to the base of seam may increase the likelihood of this gas being released&nbsp;</li></ul><br><span style=\"font-size: 1rem;\">Other factors also influence gas release:</span><br><ol><li>Whether there are <b>fractures present</b> and if these fractures contain gas</li><li>Whether the mining <b>intersects</b> these fractures by mining or drilling into them</li><li>The extent of <b>mining induced fracturing</b> in the floor. Retreat mining, particularly stubs which increase the span (width), reduces the vertical stress in the floor allowing it to relax and fracture</li><li>The presence of geological structures such as <b>faults</b></li></ol><p></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "base-of-seam-contact.png",
+                "caption": "Base of seam 'Footwall Ahydrite' contact with the P3 Polyhalite",
+                "alt": "",
+                "displaySize": "large",
+                "enlargeable": true,
+                "id": "asset-5fc2a329-4045-420c-9b78-8da6f96763ad"
+              },
+              {
+                "sourceType": "internal",
+                "ref": "poly-anhydrite-contact-core.png",
+                "caption": "The contact between polyhalite (smooth) and anhydrite (very small crystals)",
+                "alt": "",
+                "id": "asset-4d821d75-1415-4025-917b-930e81be53fe",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "anhydrite-uplift.png",
+                "caption": "Section view showing the base of seam stepping up 4m infront of the mining",
+                "alt": "",
+                "id": "asset-2513149c-0b85-44aa-b846-36caf230f573",
+                "displaySize": "large",
+                "enlargeable": false
+              },
+              {
+                "sourceType": "internal",
+                "ref": "polyhalite-gas-mechanism.png",
+                "caption": "Mechanism for Methane Gas release in Polyhalite",
+                "alt": "",
+                "id": "asset-3b6cf7f4-8050-4b58-96f6-207815c26a94",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          }
+        ],
+        "assessment": {
+          "passMark": 80,
+          "retryRule": "unlimited",
+          "shuffleQuestions": false,
+          "shuffleAnswers": true,
+          "questions": [
+            {
+              "id": "q-db3df74b-ba30-436d-a066-f035f2289357",
+              "type": "mcq",
+              "text": "What is the Target Mining Horizon in Polyhalite?",
+              "choices": [
+                "P1",
+                "P2",
+                "P3",
+                "P4"
+              ],
+              "correct": [
+                2
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true,
+                "id": "asset-43511ceb-ed69-4999-ac91-67e49ce01bce"
+              }
+            },
+            {
+              "id": "q-157cd705-a307-4727-8885-40631350ebd7",
+              "type": "mcq",
+              "text": "How far above base of seam in normal Polyhalite mining?",
+              "choices": [
+                "1-2m",
+                "3-8m",
+                "3-5m",
+                "6-10m"
+              ],
+              "correct": [
+                2
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true,
+                "id": "asset-86f64527-99eb-4e6f-a8c4-96bc03e5c32d"
+              }
+            },
+            {
+              "id": "q-8008d37e-fe09-49eb-af04-e73291aa4bcf",
+              "type": "mcq",
+              "text": "In general, what happens as you mine HIGHER up in the polyhalite seam?",
+              "choices": [
+                "The amount of salt increases and the roof strength increases",
+                "The amount of anhydrite increases and roof strength decreases",
+                "The amount of salt increases and roof strength decreases",
+                "The amount of anhydrite increases and roof strength increases"
+              ],
+              "correct": [
+                2
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true,
+                "id": "asset-90a01d26-1935-4cac-aa83-a330d03a375f"
+              }
+            }
+          ]
+        },
+        "assessmentEnabled": true
+      }
+    ],
+    "folderName": "Geology-Overseers-Refresher-Training",
+    "status": "draft",
+    "courseNumber": "",
+    "coursePassMark": 80
+  }
+}
