@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "courses": [
+    {
+      "folder": "Overseer-Geology-Refresher-Training",
+      "courseFile": "Versions/1.0/course.json"
+    }
+  ]
+}
