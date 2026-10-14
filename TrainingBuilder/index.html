@@ -21,14 +21,15 @@
       <button id="exportBtn" class="secondary">Export course.json</button>
       <label class="button secondary file-button">Import JSON<input id="importInput" type="file" accept="application/json,.json" hidden></label>
       <button id="recordsBtn" class="secondary">Local records</button>
-      <button id="availableTrainingBtn" class="secondary">Available training</button>
-      <button id="previewBtn" class="secondary">Preview</button>
-      <button id="runCourseBtn" class="accent">Run as trainee</button>
+      <button id="availableTrainingBtn" class="secondary">Deployed training</button>
+      <button id="previewBtn" class="secondary">Preview draft</button>
+      <button id="runCourseBtn" class="accent">Run draft as trainee</button>
     </div>
   </header>
 
   <main>
     <section id="builderView" class="view active">
+      <div class="delivery-mode-banner"><strong>Editing local draft</strong><span><b>Preview draft</b> and <b>Run draft as trainee</b> use the course currently saved in this browser. <b>Deployed training</b> loads published course files from <code>Courses/courses.json</code>.</span></div>
       <div class="builder-grid">
         <aside class="panel course-panel">
           <div class="panel-heading">
@@ -142,7 +143,7 @@
   <div id="availableTrainingModal" class="modal-backdrop" hidden>
     <div class="modal-card wide">
       <div class="modal-header">
-        <div><div class="eyebrow">Published course files</div><h2>Available training</h2></div>
+        <div><div class="eyebrow">Published course files</div><h2>Deployed training</h2></div>
         <button id="closeAvailableTrainingBtn" class="secondary small">Close</button>
       </div>
       <p class="muted">These courses are loaded from <code>Courses/courses.json</code> and their deployed <code>course.json</code> files.</p>

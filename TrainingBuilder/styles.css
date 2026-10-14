@@ -94,3 +94,13 @@ body.player-mode .player-card>.step-text,body.player-mode .player-card>.scenario
 #courseFolder:not([readonly]){background:#fff}#courseFolder[readonly]{background:#f3f5f7;color:#4b5563}
 @media(max-width:700px){.input-action-row{grid-template-columns:1fr}.asset-reference-card>summary{align-items:flex-start}.asset-summary-main strong{max-width:15rem}}
 .asset-summary-actions{display:flex;align-items:center;gap:.55rem;flex:0 0 auto}.asset-summary-actions .summary-meta{white-space:nowrap}
+
+
+/* V1.13 draft/deployed clarity and assessment question ordering */
+.delivery-mode-banner{margin:.75rem 1rem 0;padding:.7rem .9rem;border:1px solid #b9cdf8;background:#f4f7ff;border-radius:10px;display:flex;align-items:center;gap:1rem;font-size:.86rem;color:#31425f}
+.delivery-mode-banner strong{white-space:nowrap;color:#173c8f}
+.q-summary-left,.q-summary-actions{display:flex;align-items:center;gap:.65rem;min-width:0}
+.q-summary-left{flex:1}.q-summary-title{min-width:0;overflow:hidden;text-overflow:ellipsis}.q-summary-actions{justify-content:flex-end}
+.question-drag{cursor:grab;user-select:none;font-size:1rem;color:var(--muted)}.question-drag:active{cursor:grabbing}.question-card.dragging{opacity:.55}
+.question-card summary .icon-btn{padding:.2rem .42rem;min-width:30px}
+@media(max-width:900px){.delivery-mode-banner{margin:.5rem .65rem 0;align-items:flex-start;flex-direction:column;gap:.25rem}.q-summary-actions{gap:.35rem}.summary-meta{display:none}}
