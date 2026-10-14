@@ -434,7 +434,7 @@ function bindImageEnlargers(container,assets,title='Image',group='image'){
 function renderSimpleChoices(w,s){w.innerHTML='';s.choices.forEach((ch,i)=>{const r=document.createElement('div');r.className='choice-row';r.innerHTML=`<input type="radio" name="correct-${s.id}" ${Number(s.correctIndex)===i?'checked':''}><input type="text" value="${esc(ch)}"><button class="icon-btn" ${s.choices.length<=2?'disabled':''}>×</button>`;r.children[0].onchange=()=>{s.correctIndex=i;markChanged();};r.children[1].oninput=e=>{s.choices[i]=e.target.value;markChanged();};r.children[2].onclick=()=>{s.choices.splice(i,1);if(s.correctIndex>=s.choices.length)s.correctIndex=0;renderSimpleChoices(w,s);markChanged();};w.appendChild(r);});}
 function renderImageReferences(w,images,onChange){
   w.innerHTML=''; (images||[]).forEach((raw,i)=>{
-    const a=normaliseAsset(raw); images[i]=a; const url=assetUrl(a); const d=document.createElement('details'); d.className='asset-reference-card'; d.dataset.assetId=a.id; d.dataset.index=i; d.draggable=true; d.open=state.openImages.has(a.id);
+    const a=normaliseAsset(raw); images[i]=a; const url=assetUrl(a); const d=document.createElement('details'); d.className='asset-reference-card'; d.dataset.assetId=a.id; d.dataset.index=i; d.open=state.openImages.has(a.id);
     const label=(a.ref||a.caption||`Image ${i+1}`).split('/').pop();
     d.innerHTML=`<summary><span class="asset-summary-main"><span class="drag" title="Drag to reorder">☰</span><span><strong>${esc(label||`Image ${i+1}`)}</strong><span class="asset-summary-sub">${esc(imageSizeLabel(a.displaySize))}${a.enlargeable?' · enlargeable':''}</span></span></span><span class="asset-summary-actions"><span class="summary-meta asset-expand-label">${d.open?'Close ▴':'Edit ▾'}</span><span class="mini-actions"><button type="button" class="icon-btn asset-up" title="Move up">↑</button><button type="button" class="icon-btn asset-down" title="Move down">↓</button></span></span></summary><div class="asset-reference-body"><div class="row-2"><label>Source<select class="asset-source"><option value="internal" ${a.sourceType==='internal'?'selected':''}>Course image (Media folder)</option><option value="sharepoint" ${a.sourceType==='sharepoint'?'selected':''}>SharePoint URL</option><option value="web" ${a.sourceType==='web'?'selected':''}>Other web URL</option></select></label><label>Image reference<input class="asset-ref" value="${esc(a.sourceType==='legacy'?'':a.ref)}" placeholder="${a.sourceType==='internal'?'example.jpg':'https://...'}"></label></div><div class="muted">${a.sourceType==='legacy'?'Legacy embedded image: replace it with a reference.':resourceHint(a.sourceType)}</div><div class="row-2"><label>Caption<input class="asset-caption" value="${esc(a.caption)}"></label><label>Alt text<input class="asset-alt" value="${esc(a.alt)}"></label></div><div class="row-2 compact-row"><label>Display size<select class="asset-size"><option value="small" ${a.displaySize==='small'?'selected':''}>Small</option><option value="medium" ${a.displaySize==='medium'?'selected':''}>Medium</option><option value="large" ${a.displaySize==='large'?'selected':''}>Large</option><option value="full" ${a.displaySize==='full'?'selected':''}>Full width</option></select></label><label><span class="checkbox-label"><input class="asset-enlarge" type="checkbox" ${a.enlargeable?'checked':''}> Click to enlarge in trainee view</span></label></div>${url?`<img class="question-image-preview" src="${esc(url)}" alt="${esc(a.alt)}">`:''}<div class="inline-actions"><button type="button" class="secondary small asset-test">Test / open image</button><button type="button" class="secondary small asset-remove">Remove</button></div></div>`;
     d.ontoggle=()=>{if(d.open)state.openImages.add(a.id);else state.openImages.delete(a.id);const x=d.querySelector('.asset-expand-label');if(x)x.textContent=d.open?'Close ▴':'Edit ▾';};
@@ -444,12 +444,24 @@ function renderImageReferences(w,images,onChange){
     d.querySelector('.asset-alt').oninput=e=>{a.alt=e.target.value;markChanged();};
     d.querySelector('.asset-size').onchange=e=>{a.displaySize=e.target.value;d.querySelector('.asset-summary-sub').textContent=`${imageSizeLabel(a.displaySize)}${a.enlargeable?' · enlargeable':''}`;markChanged();};
     d.querySelector('.asset-enlarge').onchange=e=>{a.enlargeable=e.target.checked;d.querySelector('.asset-summary-sub').textContent=`${imageSizeLabel(a.displaySize)}${a.enlargeable?' · enlargeable':''}`;markChanged();};
-    d.querySelector('.asset-test').onclick=()=>openExternalResource(a.ref,'image',a.sourceType);
-    d.querySelector('.asset-remove').onclick=()=>{state.openImages.delete(a.id);images.splice(i,1);onChange();};
-    const move=(to,e)=>{e.preventDefault();e.stopPropagation();if(to<0||to>=images.length)return;const [x]=images.splice(i,1);images.splice(to,0,x);state.openImages.delete(a.id);onChange();markChanged();};
-    d.querySelector('.asset-up').onclick=e=>move(i-1,e); d.querySelector('.asset-down').onclick=e=>move(i+1,e);
-    d.querySelector('.asset-up').disabled=i===0; d.querySelector('.asset-down').disabled=i===images.length-1;
-    addDragHandlers(d,images,()=>{state.openImages.clear();onChange();markChanged();});
+    const testBtn=d.querySelector('.asset-test');
+    const removeBtn=d.querySelector('.asset-remove');
+    const upBtn=d.querySelector('.asset-up');
+    const downBtn=d.querySelector('.asset-down');
+    const dragHandle=d.querySelector('.drag');
+    testBtn.onclick=e=>{e.preventDefault();e.stopPropagation();openExternalResource(a.ref,'image',a.sourceType);};
+    removeBtn.onclick=e=>{e.preventDefault();e.stopPropagation();state.openImages.delete(a.id);images.splice(i,1);markChanged();onChange();toast('Image reference removed');};
+    const move=(to,e)=>{e.preventDefault();e.stopPropagation();if(to<0||to>=images.length)return;const [x]=images.splice(i,1);images.splice(to,0,x);state.openImages.delete(a.id);markChanged();onChange();};
+    upBtn.onclick=e=>move(i-1,e); downBtn.onclick=e=>move(i+1,e);
+    [upBtn,downBtn].forEach(btn=>{btn.onpointerdown=e=>e.stopPropagation();});
+    upBtn.disabled=i===0; downBtn.disabled=i===images.length-1;
+    dragHandle.draggable=true;
+    dragHandle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();});
+    dragHandle.addEventListener('pointerdown',e=>e.stopPropagation());
+    dragHandle.addEventListener('dragstart',e=>{e.stopPropagation();e.dataTransfer.setData('text/plain',String(i));d.classList.add('dragging');});
+    dragHandle.addEventListener('dragend',()=>d.classList.remove('dragging'));
+    d.addEventListener('dragover',e=>e.preventDefault());
+    d.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();const from=Number(e.dataTransfer.getData('text/plain'));if(Number.isNaN(from)||from===i)return;const [moved]=images.splice(from,1);images.splice(i,0,moved);state.openImages.clear();markChanged();onChange();});
     w.appendChild(d);
   });
 }
