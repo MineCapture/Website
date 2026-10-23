@@ -1,6 +1,10 @@
 Attribute VB_Name = "modTSASectionCADOverlay"
 Option Explicit
 
+Private Const TSA_APP_SUPABASE_URL As String = "https://YOUR-PROJECT.supabase.co"
+Private Const TSA_APP_PUBLISHABLE_KEY As String = "YOUR-PUBLISHABLE-KEY"
+Private Const TSA_APP_OUTPUT_FOLDER As String = "C:\Temp"
+
 ' TSA CAD overlay exporter + Supabase upload - Stage 2.1 (single module).
 ' Requires JsonConverter.bas (VBA-JSON).
 ' IMPORTANT: active UCS in the section drawing must map UCS X=chainage, Y=elevation.
@@ -156,6 +160,14 @@ Private Sub TSA_ExportCADEntity(ByVal ent As AcadEntity, ByRef out As Collection
             -CDbl(basePt(0)), -CDbl(basePt(1)), -CDbl(basePt(2))))
         previousBlock = mBlockHandle
         mBlockHandle = br.Handle
+        'XCPosition is a section-plane block whose local Y is section elevation.
+        'The generic WCS/OCS transform incorrectly makes its line horizontal.
+        'Export this known block using the section-space anchor and live attributes.
+        If StrComp(CStr(br.EffectiveName), "XCPosition", vbTextCompare) = 0 Then
+            TSA_ExportXCPosition br, blockDef, childXf, out, exportLayer
+            mBlockHandle = previousBlock
+            Exit Sub
+        End If
         For Each child In blockDef
             If child.ObjectName <> "AcDbAttributeDefinition" Then
                 TSA_ExportCADEntity child, out, exportLayer, childXf, depth + 1
@@ -512,6 +524,114 @@ Private Sub TSA_MatchHatchCircles(ByRef out As Collection, ByVal layerName As St
                      "Unmatched solid hatch; cannot safely reconstruct its boundary."
         End If
     Next h
+End Sub
+
+
+' ===== XCPosition cross-cut blocks =====
+' The CAD diagnostic confirms that XCPosition contains a section-plane
+' 41.8651-unit centreline (local X=0, Y=0..41.8651) and two live attributes:
+' ROADNAME and CHAINAGE. Generic block expansion rotates its section-plane
+' vertical into a horizontal WCS curve. Work in CHAINAGE_ELEVATION here.
+Private Sub TSA_ExportXCPosition(ByVal br As AcadBlockReference, _
+    ByVal blockDef As AcadBlock, ByVal childXf As Variant, _
+    ByRef out As Collection, ByVal exportLayer As String)
+    Dim child As AcadEntity, coords As Variant, p0 As Collection
+    Dim centreX As Double, centreY As Double, localY As Double
+    Dim lineLength As Double, sy As Double, row As Object, geom As Collection
+    Dim attrs As Variant, att As Variant, tag As String, value As String
+    Dim nameValue As String, chainValue As String, centreHandle As String
+    Dim baseY As Double, y0 As Double, y1 As Double
+
+    lineLength = 0#
+    centreHandle = br.Handle
+    For Each child In blockDef
+        If child.ObjectName = "AcDbPolyline" Then
+            coords = child.Coordinates
+            If UBound(coords) >= 3 Then
+                lineLength = Abs(CDbl(coords(3)) - CDbl(coords(1)))
+                localY = CDbl(coords(1))
+                Set p0 = TSA_Point(TSA_XYZ(CDbl(coords(0)), localY, _
+                    TSA_EntityElevation(child)), childXf)
+                centreHandle = child.Handle
+                Exit For
+            End If
+        End If
+    Next child
+    If lineLength <= 0# Then
+        TSA_Warn exportLayer, br.Handle, "XCPosition", "No centreline geometry in XCPosition definition."
+        Exit Sub
+    End If
+    centreX = CDbl(p0(1))
+    centreY = CDbl(p0(2))
+    sy = br.YScaleFactor
+    If sy = 0# Then sy = 1#
+    y0 = centreY: y1 = centreY + lineLength * sy
+
+    Set row = TSA_Dict()
+    row.Add "handle", CStr(centreHandle)
+    row.Add "parentBlockHandle", CStr(br.Handle)
+    row.Add "blockName", "XCPosition"
+    row.Add "layer", exportLayer
+    row.Add "originalLayer", CStr(child.Layer)
+    row.Add "colour", "#0000FF"
+    row.Add "linetype", "ByLayer"
+    row.Add "lineweight", -1
+    row.Add "type", "POLYLINE"
+    Set geom = New Collection
+    geom.Add TSA_XCPoint(centreX, y0)
+    geom.Add TSA_XCPoint(centreX, y1)
+    row.Add "points", geom
+    row.Add "closed", False
+    out.Add row
+
+    nameValue = "": chainValue = ""
+    If br.HasAttributes Then
+        attrs = br.GetAttributes
+        For Each att In attrs
+            tag = UCase$(Trim$(CStr(att.TagString)))
+            value = CStr(att.TextString)
+            If tag = "ROADNAME" Then nameValue = value
+            If tag = "CHAINAGE" Then chainValue = value
+        Next att
+    End If
+    'Position labels near the upper end, matching their definition's offsets:
+    'ROADNAME (0.199428,39.8997); CHAINAGE (0.140983,37.1914).
+    If Len(nameValue) > 0 Then _
+        TSA_AppendXCText out, exportLayer, br.Handle, "ROADNAME", nameValue, _
+            centreX + 0.199428, centreY + 39.8997 * sy
+    If Len(chainValue) > 0 Then _
+        TSA_AppendXCText out, exportLayer, br.Handle, "CHAINAGE", chainValue, _
+            centreX + 0.140983, centreY + 37.1914 * sy
+End Sub
+
+Private Function TSA_XCPoint(ByVal x As Double, ByVal y As Double) As Collection
+    Dim pt As Collection
+    Set pt = New Collection
+    pt.Add x
+    pt.Add y
+    Set TSA_XCPoint = pt
+End Function
+
+Private Sub TSA_AppendXCText(ByRef out As Collection, ByVal exportLayer As String, _
+    ByVal parentHandle As String, ByVal tag As String, ByVal value As String, _
+    ByVal x As Double, ByVal y As Double)
+    Dim row As Object
+    Set row = TSA_Dict()
+    row.Add "handle", parentHandle & ":" & tag
+    row.Add "parentBlockHandle", parentHandle
+    row.Add "blockName", "XCPosition"
+    row.Add "attributeTag", tag
+    row.Add "layer", exportLayer
+    row.Add "originalLayer", "Planning"
+    row.Add "colour", "#0000FF"
+    row.Add "linetype", "ByLayer"
+    row.Add "lineweight", -1
+    row.Add "type", "TEXT"
+    row.Add "text", value
+    row.Add "height", 2#
+    row.Add "rotation", 0#
+    row.Add "position", TSA_XCPoint(x, y)
+    out.Add row
 End Sub
 
 ' ===== Geometry and block transforms =====
@@ -1044,9 +1164,6 @@ End Function
 ' PALETTE ENTRY POINT: customise resolver and connection constants.
 ' Use a single AutoLISP palette command TSAOVLAPP, provided alongside.
 ' =============================================================
-Private Const TSA_APP_SUPABASE_URL As String = "https://YOUR-PROJECT.supabase.co"
-Private Const TSA_APP_PUBLISHABLE_KEY As String = "YOUR-PUBLISHABLE-KEY"
-Private Const TSA_APP_OUTPUT_FOLDER As String = "C:\Temp"
 
 ' Roadway ID is held in the AutoLISP variable secrid after XSTART.
 ' LISP cannot be read directly as a VBA global, so TSAOVLAPP temporarily
