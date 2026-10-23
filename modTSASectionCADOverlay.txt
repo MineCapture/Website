@@ -450,8 +450,46 @@ TextError:
     Resume AfterText
 End Sub
 
+Private Function TSA_HatchCircleBoundaryHandles(ByVal hatchEntity As AcadEntity) As Object
+    ' Associative AutoCAD hatches retain references to their boundary objects.
+    ' Match these by entity HANDLE rather than guessing from a WCS bounding box.
+    ' Non-associative hatches may not expose any boundary objects; return empty.
+    Dim found As Object, hatchObj As Object, loopItems As Variant
+    Dim item As Variant, k As Long, loopCount As Long, h As String
+    Set found = CreateObject("Scripting.Dictionary")
+    found.CompareMode = vbTextCompare
+    On Error GoTo Done
+    Set hatchObj = hatchEntity
+    loopCount = CLng(hatchObj.NumberOfLoops)
+    For k = 0 To loopCount - 1
+        loopItems = Empty
+        On Error Resume Next
+        hatchObj.GetLoopAt k, loopItems
+        If Err.Number <> 0 Then
+            Err.Clear
+            On Error GoTo Done
+            GoTo NextLoop
+        End If
+        On Error GoTo Done
+        If IsArray(loopItems) Then
+            For Each item In loopItems
+                On Error Resume Next
+                If StrComp(CStr(item.ObjectName), "AcDbCircle", vbTextCompare) = 0 Then
+                    h = CStr(item.Handle)
+                    If Not found.Exists(h) Then found.Add h, True
+                End If
+                Err.Clear
+                On Error GoTo Done
+            Next item
+        End If
+NextLoop:
+    Next k
+Done:
+    Set TSA_HatchCircleBoundaryHandles = found
+End Function
+
 Private Sub TSA_CaptureHatch(ByVal ent As AcadEntity, ByVal layerName As String, ByVal xf As Variant)
-    Dim hatch As Object, lo As Variant, hi As Variant, p As Variant, q As Variant
+    Dim hatch As Object, lo As Variant, hi As Variant
     Dim pat As String
     pat = CStr(ent.PatternName)
     If StrComp(pat, "SOLID", vbTextCompare) <> 0 Then
@@ -464,6 +502,7 @@ Private Sub TSA_CaptureHatch(ByVal ent As AcadEntity, ByVal layerName As String,
     hatch.Add "min", TSA_Point(lo, xf)
     hatch.Add "max", TSA_Point(hi, xf)
     hatch.Add "consumed", False
+    hatch.Add "circleBoundaryHandles", TSA_HatchCircleBoundaryHandles(ent)
     mHatches.Add hatch
     Exit Sub
 CannotRead:
@@ -471,53 +510,70 @@ CannotRead:
 End Sub
 
 Private Sub TSA_MatchHatchCircles(ByRef out As Collection, ByVal layerName As String)
-    Dim c As Variant, h As Variant
+    Dim c As Variant, h As Variant, boundary As Object
     Dim ctr As Collection, lower As Collection, upper As Collection
     Dim radius As Double, diameter As Double, dx As Double, dy As Double
-    Dim cX As Double, cY As Double
-    Dim matched As Boolean
+    Dim cX As Double, cY As Double, matched As Boolean
+    Dim cHandle As String
 
-    'The stored centre/min/max properties are Collection objects (1-based).
-    'Use Set; assigning them to Variants without Set raises runtime error 450.
     For Each c In mCircles
         matched = False
+        cHandle = CStr(c("handle"))
         If TSA_IsBoreholeLayer(layerName) Then c("colour") = "#000000"
-        If Not c.Exists("centre") Or Not c.Exists("radius") Then
-            TSA_Warn layerName, CStr(c("handle")), "CIRCLE", "Circle missing centre/radius; hatch match skipped."
-        Else
-            Set ctr = c("centre")
-            If ctr.Count >= 2 Then
-                radius = CDbl(c("radius"))
-                diameter = radius * 2#
-                For Each h In mHatches
-                    If h("consumed") = False Then
-                        Set lower = h("min")
-                        Set upper = h("max")
-                        If lower.Count >= 2 And upper.Count >= 2 Then
-                            dx = Abs(CDbl(upper(1)) - CDbl(lower(1)))
-                            dy = Abs(CDbl(upper(2)) - CDbl(lower(2)))
-                            cX = (CDbl(lower(1)) + CDbl(upper(1))) / 2#
-                            cY = (CDbl(lower(2)) + CDbl(upper(2))) / 2#
-                            If Abs(dx - diameter) < TSA_CIRCLE_MATCH_TOLERANCE And _
-                               Abs(dy - diameter) < TSA_CIRCLE_MATCH_TOLERANCE And _
-                               Abs(cX - CDbl(ctr(1))) < TSA_CIRCLE_MATCH_TOLERANCE And _
-                               Abs(cY - CDbl(ctr(2))) < TSA_CIRCLE_MATCH_TOLERANCE Then
-                                c("fill") = CStr(h("colour"))
-                                h("consumed") = True
-                                matched = True
-                                Exit For
+
+        'First try an exact match using AutoCAD's associative hatch boundary.
+        'This avoids the false mismatches caused by rotated/3D WCS bounding boxes.
+        For Each h In mHatches
+            If h("consumed") = False Then
+                Set boundary = h("circleBoundaryHandles")
+                If boundary.Exists(cHandle) Then
+                    c("fill") = CStr(h("colour"))
+                    h("consumed") = True
+                    matched = True
+                    Exit For
+                End If
+            End If
+        Next h
+
+        'Fallback for non-associative hatches: original strict dimension/centre match.
+        'Do not assign a fill just because a hatch happens to be nearby.
+        If Not matched Then
+            If Not c.Exists("centre") Or Not c.Exists("radius") Then
+                TSA_Warn layerName, cHandle, "CIRCLE", "Circle missing centre/radius; hatch match skipped."
+            Else
+                Set ctr = c("centre")
+                If ctr.Count >= 2 Then
+                    radius = CDbl(c("radius"))
+                    diameter = radius * 2#
+                    For Each h In mHatches
+                        If h("consumed") = False Then
+                            Set lower = h("min")
+                            Set upper = h("max")
+                            If lower.Count >= 2 And upper.Count >= 2 Then
+                                dx = Abs(CDbl(upper(1)) - CDbl(lower(1)))
+                                dy = Abs(CDbl(upper(2)) - CDbl(lower(2)))
+                                cX = (CDbl(lower(1)) + CDbl(upper(1))) / 2#
+                                cY = (CDbl(lower(2)) + CDbl(upper(2))) / 2#
+                                If Abs(dx - diameter) < TSA_CIRCLE_MATCH_TOLERANCE And _
+                                   Abs(dy - diameter) < TSA_CIRCLE_MATCH_TOLERANCE And _
+                                   Abs(cX - CDbl(ctr(1))) < TSA_CIRCLE_MATCH_TOLERANCE And _
+                                   Abs(cY - CDbl(ctr(2))) < TSA_CIRCLE_MATCH_TOLERANCE Then
+                                    c("fill") = CStr(h("colour"))
+                                    h("consumed") = True
+                                    matched = True
+                                    Exit For
+                                End If
                             End If
                         End If
-                    End If
-                Next h
+                    Next h
+                End If
             End If
         End If
         If TSA_IsBoreholeLayer(layerName) And Not matched Then
-            TSA_Warn layerName, CStr(c("handle")), "AcDbCircle", _
+            TSA_Warn layerName, cHandle, "AcDbCircle", _
                 "No matching solid hatch: circle exported black-outlined with no fill."
         End If
     Next c
-
     For Each h In mHatches
         If h("consumed") = False Then
             TSA_Warn layerName, CStr(h("handle")), "AcDbHatch", _
@@ -1042,7 +1098,7 @@ Public Sub TSA_UploadCADOverlayJSON( _
     If Right$(supabaseUrl, 1) = "/" Then supabaseUrl = Left$(supabaseUrl, Len(supabaseUrl) - 1)
     endpoint = supabaseUrl & "/rest/v1/GEO_SectionCADOverlays?on_conflict=RdID%2ClayerName"
     Set request = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-    request.setTimeouts 15000, 15000, 30000, 120000
+    request.setTimeouts 15000, 30000, 120000, 240000
     request.Open "POST", endpoint, False
     request.setRequestHeader "apikey", publishableKey
     request.setRequestHeader "Authorization", "Bearer " & accessToken
