@@ -156,7 +156,7 @@
           "passMark": 80,
           "retryRule": "unlimited",
           "shuffleQuestions": false,
-          "shuffleAnswers": false,
+          "shuffleAnswers": true,
           "questions": [
             {
               "id": "q-99629b4c-7a4e-493b-bd1b-748e415f3ce8",
@@ -444,6 +444,56 @@
           "shuffleAnswers": true,
           "questions": [
             {
+              "id": "q-df0a1274-ae75-460f-9eb5-11b7e5860b77",
+              "type": "mcq",
+              "text": "What rock is the ultimate roof beam in Polyhalite, and what Hazard can it present?",
+              "choices": [
+                "Anhydrite, roof is stronger",
+                "Salt, roof is weaker",
+                "Potash, roof is weaker",
+                "Dolomite, roof is weaker"
+              ],
+              "correct": [
+                1
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-198f1f37-e206-40e4-bbb0-1c7b3ebd2931",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-4e2f3525-313b-4f0e-aa4f-7721f605fa61",
+              "type": "mcq",
+              "text": "Which rocks are present below the Polyhalite and what Hazard can it present?",
+              "choices": [
+                "Anhydrite and Dolomite, Gas Risk",
+                "Anhydrite and Bunter, Gas and Water inrush risk",
+                "Salt and Dolomite, ground control risk",
+                "Glauberite and Anhydrite, water inrush risk"
+              ],
+              "correct": [
+                0
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-f08e9c35-5848-4e78-b2bc-46f4aa5fcf6c",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
               "id": "q-db3df74b-ba30-436d-a066-f035f2289357",
               "type": "mcq",
               "text": "What is the Target Mining Horizon in Polyhalite?",
@@ -471,7 +521,7 @@
             {
               "id": "q-157cd705-a307-4727-8885-40631350ebd7",
               "type": "mcq",
-              "text": "How far above base of seam in normal Polyhalite mining?",
+              "text": "In general, what distance above base of seam gives the highest grade and is the target mining horizon for Polyhalite?",
               "choices": [
                 "1-2m",
                 "3-8m",
@@ -517,14 +567,909 @@
                 "enlargeable": true,
                 "id": "asset-90a01d26-1935-4cac-aa83-a330d03a375f"
               }
+            },
+            {
+              "id": "q-bc092e08-0f33-495d-85ec-9f168eb753c5",
+              "type": "mcq",
+              "text": "In general, what happens as you mine LOWER in the polyhalite seam?",
+              "choices": [
+                "Halite increases reducing ore quality and making cutting easier",
+                "Anhydrite increasing improving ore quality",
+                "Anhydrite increases reducing ore quality and making cutting more difficult",
+                "There is a bigger chance of faults and roof issues."
+              ],
+              "correct": [
+                2
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-cc7cbae7-53f2-4571-83c2-be03f1f957d0",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
             }
           ]
         },
         "assessmentEnabled": true,
         "assessmentConfigured": true
+      },
+      {
+        "id": "module-4b189657-91ae-40b2-bbe6-a483634bddfc",
+        "title": "Salt Geology",
+        "description": "The geology of the Boulby Salt and the hazards that can be present",
+        "objectives": [],
+        "completionMode": "assessment_required",
+        "assessmentEnabled": true,
+        "assessmentConfigured": true,
+        "expectedMinutes": 0,
+        "steps": [
+          {
+            "id": "step-bee1bffb-5b2f-4f83-ab7c-ac8fc2d76295",
+            "type": "image-text",
+            "title": "Overview",
+            "html": "<ul><li>Salt mining takes place in the Boulby Halites (Salt). There are 9 different layers of boulby halite</li><li>Immediately above the salt is the Boulby Potash, then Marl and eventually the Bunter Sandstone</li><li>The potash and marl can present a <b>ground control </b>(weaker) and <b>gas risk</b></li><li>The Bunter Sandstone can present a <b>water inrush risk</b> if significant faults are present, or through over mining creating fractures.</li><li>Below the Boulby Salts is the Billingham Main <b>Anhydrite</b> which can present a <b>gas risk</b></li></ul><div></div><div><br></div>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "salt-level-section.png",
+                "caption": "The position of the Boulby Salt Mining Level relative to surrounding rocks.",
+                "alt": "",
+                "id": "asset-9c714790-8cf1-4c01-81ba-057826671452",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "marl-roof-fall.jpg",
+                "caption": "Weaker marl roof fall in unbolted mining pass.",
+                "alt": "",
+                "id": "asset-bb8b53d6-ff90-412d-bdd6-f753846c935d",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "potash-gas-blow.png",
+                "caption": "Methane and nitrogen gas blow in potash",
+                "alt": "",
+                "id": "asset-32714146-e541-4aee-9a4d-c0e7acc6ad6c",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "bunter-inflow.jpg",
+                "caption": "inflow of water from the Bunter Sandstone from mining induced fracturing",
+                "alt": "",
+                "id": "asset-dbaa5263-794f-436e-88bf-ed2e5c7735bf",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-c243e836-082b-4dc5-b805-6a71df889215",
+            "type": "image-text",
+            "title": "Polygons",
+            "html": "<ul><li><span style=\"font-size: 1rem;\">Salt mining tries to stay around <b>10m</b> below the base of the Boulby Potash</span></li><li><span style=\"font-size: 1rem;\">Salt mining must stop if it gets within <b>2m </b>of the Potash due to the roof becoming weak and requiring additional supports</span></li></ul><div><br></div><ul><li><span style=\"font-size: 1rem;\">The target mining horizon for Salt&nbsp; is the BH5 called </span><b style=\"font-size: 1rem;\">Polygons</b><span style=\"font-size: 1rem;\">&nbsp;</span></li><li>The Polygons are located around <b>10-15m</b> below the Boulby Potash</li><li>The Polygons are the <b>cleanest </b>and <b>highest grade salt </b>and are <b>geotechnically stable</b> compared to other salts&nbsp;</li><li><b>Large crystals</b> and increased <b>shale/clay</b> content makes the salt <b>weaker</b></li></ul><div><br></div><ul><li>Mining higher in the Boulby Halites increases the amount of <b>potash enrichment</b> in the Salts</li><li>Mining lower in the Boulby Halites increases the amount of <b>anhydrite and shale</b> content in the Salt&nbsp;<b>reducing its quality</b></li></ul><div></div><div><br></div>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "polygons.jpg",
+                "caption": "Example of the polygon structure in the central overseers.",
+                "alt": "",
+                "id": "asset-84893baf-d7bf-4def-bcbc-253775441777",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "death-valley-polygons.jpg",
+                "caption": "Modern day example of polygon structure in death valley",
+                "alt": "",
+                "id": "asset-e105c6a8-9986-403d-8e95-54e117e8e58a",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          }
+        ],
+        "assessment": {
+          "passMark": 80,
+          "retryRule": "unlimited",
+          "shuffleQuestions": false,
+          "shuffleAnswers": true,
+          "questions": [
+            {
+              "id": "q-c903c9ee-a55a-4031-b849-62edb93eed72",
+              "type": "mcq",
+              "text": "When mining in Salt, what are the rocks above you and what hazards can they pose?",
+              "choices": [
+                "Anhydrite and Shale, weaker roof beam and harder mining",
+                "Potash, Marl and Bunter Sandstone - Fall of ground, gas risk and water inrush",
+                "Potash, Marl and Dolomite. Fall of ground, gas risk and water inrush",
+                "Potash Marl and Salt, fall of ground and gas risk."
+              ],
+              "correct": [
+                1
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-21dfe045-09c5-4756-8a15-a7a5062ccf11",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-9a4b6298-8b3f-4349-873c-6ac44b0389c9",
+              "type": "mcq",
+              "text": "When mining in Salt, what rock is immediately below you and what hazard can it pose?",
+              "choices": [
+                "Dolomite, gas risk",
+                "Potash, gas risk",
+                "Anhydrite, gas risk",
+                "Glauberite, poor quality."
+              ],
+              "correct": [
+                2
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-83e7e252-61fb-45e3-80ee-757440ab2770",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-c33736ef-3d45-4d28-a6bc-a9baf884410b",
+              "type": "mcq",
+              "text": "Why are the Polygons the target mining horizon for salt?",
+              "choices": [
+                "Larger and stronger crystals. Clean salt quality",
+                "Cleanest salt quality, strong and stable ground condition, 10-15m below potash",
+                "Large salt crystals that are easiest to cut and mine, polygon pattern is easy to see and recognise",
+                "2m below Potash so quick to ramp up into Potash panels. Higher anhydrite content improves salt quality"
+              ],
+              "correct": [
+                1
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-47d5a0e0-728e-4bec-9379-2155d8c0a227",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-b905d36c-5424-46ef-8d68-ef4fd1aedc70",
+              "type": "mcq",
+              "text": "How far away from Base of Potash do we try to stay when salt mining and how close do we need to be before salt mining must stop?",
+              "choices": [
+                "Around 10m away. Mining must stop when the roof is 2m away from the base of potash",
+                "Around 20m away. Mining must stop when the roof is 2m away from the base of potash",
+                "Around 3-5m away Mining must stop when the roof is 2m away from the base of potash",
+                "Around 10m away. Mining must stop when the roof is 3-5m away from the base of potash"
+              ],
+              "correct": [
+                0
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-90f9c591-8d7f-47fb-9030-8e961464705e",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "module-c9ca1d7c-4e56-43df-bbff-f29ce1c5f5c5",
+        "title": "Exploration Drilling",
+        "description": "The purpose and hazards of exploration drilling and their relationship with mining operations",
+        "objectives": [],
+        "completionMode": "assessment_required",
+        "assessmentEnabled": true,
+        "assessmentConfigured": true,
+        "expectedMinutes": 0,
+        "steps": [
+          {
+            "id": "step-5aa4aefc-7a77-4ee7-8f7f-cfcd90c26c2e",
+            "type": "image-text",
+            "title": "Exploration Drilling 1",
+            "html": "<p>The\npurpose of exploration drilling is to <b>identify potential hazards</b> and\nto <b>find</b>&nbsp;<b>new areas to mine</b>.&nbsp;</p><p>Exploration drilling produces\ndrill core which is examined, documented and sampled by geologists. Exploration\ndrilling provides information\nincluding:</p>\n\n<p></p><ul><li>Geology\nand seam characteristics&nbsp;</li><li>Seam\nThickness&nbsp;</li><li>Seam\nGrade and Quality&nbsp;</li><li>Base\nand Top of Seam Elevations&nbsp;</li><li>Seam\nGradient&nbsp;</li><li>Geological\nHazards (Faults, gas, hydrocarbons)&nbsp;</li><li>Areas\nof thin seam or no seam&nbsp;</li></ul><p>This\ninformation is used for <b>mine\nplanning and safety</b></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "exploration-drilling.jpg",
+                "caption": "An exploration or 'long hole' drill rig",
+                "alt": "",
+                "id": "asset-7ed3dc6f-4c01-44cf-bb11-cdc6d2e482f3",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-d1369d65-16f5-49d4-9344-160d4ff7a421",
+            "type": "image-text",
+            "title": "Exploration Drilling 2",
+            "html": "<p><ul><li>Exploration\ndrilling can be sub-horizonal\nor sub-vertical.&nbsp;</li><li>Horizonal drilling can explore\nlaterally in front by distances of up to 3 km whereas vertical drilling is\ntypically around 150-200m.</li><li>Exploration boreholes are shown on mine plans as coloured lines. The hole name is shown as text at the end of hole position.</li><li><b>Blue lines</b> are <b>Polyhalite</b> holes, <b>Brown</b> lines are <b>Potash holes.</b></li></ul></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "polyhalite-holes-plan.png",
+                "caption": "Blue lines representing the location of polyhalite boreholes",
+                "alt": "",
+                "id": "asset-d1742c09-9ffc-4a48-a485-21ce57dba749",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "potash-holes-plan.png",
+                "caption": "Brown lines representing the location of potash boreholes",
+                "alt": "",
+                "id": "asset-fbcffa4c-8d1c-4cbb-a6d6-aa00d4ec4055",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-41df86d3-8e0f-43fa-8e90-444d500ae7a3",
+            "type": "image-text",
+            "title": "Exploration Drilling 3",
+            "html": "<p>A\ndrill bay is made up of 3\ncomponents:</p>\n\n<p></p><ul><li>The\nwidened / fanned out drilling bay&nbsp;</li><li>The\nSump&nbsp;</li><li>The\nCore stub&nbsp; &nbsp; &nbsp;&nbsp;</li></ul><div><p><br></p><p>Drill\nbays are designed to facilitate productive drilling\nand it is vital that they are mined to plan.</p>\n\n<p></p>\n\n<p>Drilling\nuses a concentrated brine to lubricate the bit and return the core. The main\ndrill bay floor is mined upwards to allow drilling brine to flow down into\nthe milled out\nsump where it can be pumped back into the drill hole.</p><p><br></p><p><ul><li><b>Never</b>\nadd or dispose of nuisance water into an active drill-bay sump without approval\nfrom the drilling manager.&nbsp;</li><li>Adding fresh water to the brine can dilute it and\nresult in leaching of the hole walls.&nbsp;</li><li>If the hole is leached at the face this\ncan compromise the seal forcing the hole to be abandoned potentially losing\nmonths of work.</li></ul></p><p><br></p></div><div><br></div>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "drill-bay.png",
+                "caption": "standard layout for an exploration drill bay",
+                "alt": "",
+                "id": "asset-f259f556-4ace-4ef6-8a1a-22a252d9ecea",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "id": "asset-90557897-e4cf-43f6-989e-8d7034c4cc36",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-9be19128-06cc-4c28-b821-51d6254b217b",
+            "type": "image-text",
+            "title": "Drilling Hazards 1",
+            "html": "<p>Exploration\ndrilling involves breaking of ground into unknown areas or areas suspected to\nbe hazardous. These areas can host hazards such as brines, gases and oils.</p>\n\n<p></p>\n\n<p>The\nmajor hazards&nbsp; associated with drilling\nare <b>inrush\nand outburst</b></p><p><b><br></b></p>\n\n<p></p>\n\n<p>These\nhazards are mitigated\nby:</p><p><ul><li>Avoiding\ndrilling potentially hazardous areas if possible&nbsp;</li><li>Drilling\nthrough a standpipe which is sealed into the face with specialist cemented and\npressure tested to 2000psi&nbsp;</li><li>Drilling\nthrough a blow-out preventer (BOP) to prevent rod string and brine from being\nejected from the hole under pressure&nbsp;</li><li>Having\na shear-ram which can be operated in the event of an emergency to cut the rod\nstring and seal the hole.&nbsp;</li><li>Equipment\nis linked to methane detector and automatic cut-out.&nbsp;</li><li>Having\nadequate ventilation to dilute gas occurrences&nbsp;</li><li>Preferably\nsiting drill bays in return roadways&nbsp;</li><li>Using\nhandheld XRF to identify the base of polyhalite seam and minimise drilling into\nthe base of seam&nbsp;</li><li>A\nmethane drainage line which can be used to drain methane to outbye areas (top\nof drift).&nbsp; &nbsp; &nbsp;&nbsp;</li></ul></p><p><br></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "shear-ram.jpg",
+                "caption": "Shear ram in position on drill hole collar",
+                "alt": "",
+                "id": "asset-76991c82-3ab5-43c1-bdd1-546110fafe1e",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "shear-ram2.jpg",
+                "caption": "Shear ram is operated from the accumulated located in fresh air at the bay entrance",
+                "alt": "",
+                "id": "asset-676d6d62-ef02-40fe-be05-c40fa40e39e3",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "gas-line.jpg",
+                "caption": "Drill bay gas line which can be used to drain gas from a borehole into the returns",
+                "alt": "",
+                "id": "asset-7f4090b6-47e2-4ca3-b58a-543cfd547f99",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-e2181493-e9a5-4226-8076-77e41a1a4e14",
+            "type": "image-text",
+            "title": "Drilling Hazards 2",
+            "html": "<p></p><ul><li>Each\ndrill bay is equipped with a <b>methane drainage line. </b>This is a sealed network of\npipes which runs outbye to the top of the drift in poly, or outbye of 17XC on 2000 Salt. In the event of\nmethane inflow, the gas line can be connected to the back of the drill rods and\nthe gas drained out.</li><li>The\ngas is drained outbye to the top of the drift where it is put back into the\ngeneral body of air. At the top of the drift the volume of air is substantially\nlarger than the returns of the drill bay giving it greater ability to dilute\nthe methane down to safe levels.</li><li>Never damage or interfere\nwith the gas line without approval. If you discover a defect to the gas line\nsuch as damage or split pipes <b>report\nit</b> immediately to the drill bay and\nCRO.</li><li>A number of exploration boreholes have encountered methane gas, one of which - P003 was\nunder significant pressure and volumes.</li><li>Holes\nwhich encounter methane may still remain\na hazard even after plugging or drainage.</li><li>Holes\nwhich have encountered gas will be shown on the mining plan as a <b>green precautionary zone</b>. Additional\ncontrol measures may be required to mine in these areas.</li><li>Boreholes which are intersected in the mining faces should be <b>recorded on the Stat Report </b>and<b> reported to the Geology department</b></li></ul><p></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "precautionary-borehole.png",
+                "caption": "plan showing a borehole which is a precautionary zone (green)",
+                "alt": "",
+                "id": "asset-3efe8e31-71f1-4e5b-9d70-07eddb83265d",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-e28d47a9-f81f-4156-8cb7-1284ab708346",
+            "type": "content",
+            "title": "Exploration Drilling & Mining",
+            "html": "<p>It\nis important to know the location of active drill bays in relation to the panel\nor area you are in charge of.\n</p>\n\n<p></p>\n\n<p><u>Things\nto consider\ninclude:</u></p>\n\n<p></p>\n\n•Is\nthe drill bay part of your inspection?\n\n<p></p>\n\n•How\ndoes the drill bay ventilation system relate to your ventilation circuit?\n\n<p></p>\n\n•How\nmany people are in a drill bay and how often are they working in there?\n\n<p></p>\n\n•Do\nyou require OxyK\nself rescuers to enter and where are they located?\n\n<p></p>\n\n•If\nmethane was encountered while mining, how would this impact the drill bay and\nvice versa?\n\n•\n\n•Where\nis drill bay and drill bay fans powered from?\n\n<p></p>\n\n•Do\nyou share the same egress to a safe haven?\n\n<p></p>\n\n•Where\nis the methane drainage line located and what is it’s\ncondition?&nbsp; &nbsp; &nbsp;&nbsp;",
+            "images": []
+          },
+          {
+            "id": "step-c6d17817-ebff-4b21-afc5-7ef80c9d35c9",
+            "type": "image-text",
+            "title": "Exploration Drilling Outputs",
+            "html": "<p><ul><li>Exploration Drilling information allows us to estimate the grade and tonnes in the ground (Mineral Resources) and design future mining areas (Ore Reserves)</li><li>It also identifies areas to avoid with the mining due to low grade, steep seam dip or hazards.</li></ul></p><p><br></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "base-of-seam-contours.png",
+                "caption": "Plan showing the elevation of the base of polyhalite seam from exploration drilling",
+                "alt": "",
+                "id": "asset-daa85091-9554-46e8-8fc0-d7388ad3c1fe",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          }
+        ],
+        "assessment": {
+          "passMark": 80,
+          "retryRule": "unlimited",
+          "shuffleQuestions": false,
+          "shuffleAnswers": true,
+          "questions": [
+            {
+              "id": "q-15e3c900-cb2d-463e-80c7-ac528f56d487",
+              "type": "multi",
+              "text": "What are the purposes of Exploration Drilling?",
+              "choices": [
+                "Find new areas to mine",
+                "It's required by the mining regulations",
+                "Identify potential hazards",
+                "Assess quality and thickness of the seam",
+                "Improve ground stability"
+              ],
+              "correct": [
+                0,
+                2,
+                3
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-9cd97983-9b18-4de9-b111-1f9e744e6a90",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-5624b0b0-dd0d-446c-a914-7aa8755a8023",
+              "type": "mcq",
+              "text": "What are the major hazards that Exploration Drilling can create?",
+              "choices": [
+                "Storage of Explosives",
+                "Ground Control",
+                "Inrush & Outburst",
+                "Mass Transport of Men and Materials"
+              ],
+              "correct": [
+                2
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-2298349e-0efe-46a3-8325-fe053052396f",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-249f8d83-0eb5-4ebe-91a9-60c7847eafbc",
+              "type": "multi",
+              "text": "What control measures does exploration drilling have against the major hazards",
+              "choices": [
+                "Gas detection and automatic trips",
+                "Only drilling on day shift",
+                "only drilling with a geologist present underground",
+                "Drilling through a standpipe pressure rated to 2000 psi",
+                "Shear ram which can be operated to seal the hole in the event of gas",
+                "Adequate ventilation in the drill bay to dilute gases",
+                "Methane drainage line",
+                "only drilling into areas which have already been mined",
+                "managers scheme of works is in place at all times"
+              ],
+              "correct": [
+                0,
+                4,
+                3,
+                5,
+                6
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-f56f9d90-1a21-4f00-908e-1504809b553d",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-d89e26d4-7404-4b02-b018-7be69c0b87af",
+              "type": "multi",
+              "text": "What may you need to consider as an overseer in relation to exploration drilling operations?",
+              "choices": [
+                "When is the drill bay operational and how many people are typically in there",
+                "how does the drill bay ventilation interact with your panel ventilation circuit",
+                "What time do the drillers stop for bait",
+                "Does the drill bay share your egress route",
+                "The location of drill bays relative to your area of operation",
+                "how many drill rods are in the bay",
+                "the date of the last drill bit change"
+              ],
+              "correct": [
+                0,
+                1,
+                3,
+                4
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-c99c157b-f804-48d3-8a81-c32b74c790d4",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-4e441602-e709-4625-bf2e-8effca99d6a4",
+              "type": "truefalse",
+              "text": "True or False - A drill bay sump is a good place to put nuisance fresh water?",
+              "choices": [
+                "True",
+                "False"
+              ],
+              "correct": [
+                1
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-146fa673-814b-4b6e-96d2-098e4d0995e0",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "module-a7a89070-35c2-4557-aed8-9e9f8a21221d",
+        "title": "Geological Data - Plans and Sections",
+        "description": "Understanding mining plans and geology sections",
+        "objectives": [],
+        "completionMode": "assessment_required",
+        "assessmentEnabled": true,
+        "assessmentConfigured": true,
+        "expectedMinutes": 0,
+        "steps": [
+          {
+            "id": "step-9c79b5d1-e0ce-40c5-bbe9-c85ce7382b49",
+            "type": "image-text",
+            "title": "Geological Assessment & Authorised Mining Plans",
+            "html": "<ul><li>Before an area can be mined, an <b>Authorised Plan</b> must be issued</li><li>A plan can only be authorised when each technical department has considered the design and any <b>potential risks</b></li><li>A <b>geological assessment</b> is completed to consider the available geological information with respect to <b>safety, quality(grade) and mining(gradient)</b> risks.</li><li>If an area is deemed to be of increased risk of inrush, this is called a <b>precautionary zone&nbsp;</b>&nbsp;and is shown as a <b>green</b>&nbsp;outline</li><li>To mine within a precautionary zone, a <b>managers scheme of work </b>must be in place with additional control measures to mitigate the increased risk.</li></ul>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "geological-assessment-matrix.png",
+                "caption": "Example geological assessment matrix",
+                "alt": "",
+                "id": "asset-f534f261-a2d1-4d91-bc3c-77c877da1f98",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-562310ed-5f46-4f07-9304-4f9194dfcca5",
+            "type": "image-text",
+            "title": "Authorised Plans",
+            "html": "<ul><li>An authorised plan contains the signatures of the relevant responsible persons</li><li>Only the authorised plan can be used for mining operations</li><li>The authorised plan <b>cannot be altered</b> by hand using pen or pencil. Any changes to the plan must be undertaken digitally by the survey department.</li><li>This is because no single person at the mine holds all the information around conditions and risk. Any change must be re-considered by all relevant departments.</li></ul>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "authorised-plan.png",
+                "caption": "An example of an Authorised plan with signature box",
+                "alt": "",
+                "id": "asset-3d64f449-6f18-4369-b1be-982c1509d4e0",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "pen-altered-plan.png",
+                "caption": "Example of prohibited hand drawn alteration to an authorised plan",
+                "alt": "",
+                "id": "asset-c6408f05-b595-40da-9a9d-5650bb340221",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-ad871639-2c5a-4663-80e8-0d41bee6272b",
+            "type": "image-text",
+            "title": "Geological Sections",
+            "html": "<span style=\"font-size: 1rem;\">Geology sections are available for all roads in the mine</span><br><span style=\"font-size: 1rem;\">Sections are updated by recording:</span><div><ul><li><span style=\"font-size: 1rem;\">&nbsp;the changes in height of the datum line</span></li><li><span style=\"font-size: 1rem;\">the distance of the roof above the datum line</span></li><li><span style=\"font-size: 1rem;\">the total floor-roof height</span></li><li><span style=\"font-size: 1rem;\">The position, angle and readings of probe hole drilling</span></li><li>Base of seam estimate interpreted from the probing results</li></ul><div><br></div></div><div>In the example image, the following features are numbered:</div><div><ol><li>Roof and floor position (thick black lines)</li><li>Existing downhole with probe readings</li><li>existing s/c hole with readings</li><li>interpreted base of seam / anhydrite position from probe readings</li><li>planned future mining</li><li>planned future drilling</li><li>Estimated intersection position of Exploration (LHD) boreholes.</li><li>Estimated geological surfaces derived from exploration boreholes. purple = top of P3 Polyhalite, green/blue = base of seam.</li></ol></div>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "geol-section-example.png",
+                "caption": "Geology Section Example",
+                "alt": "",
+                "id": "asset-f6bc3b86-db29-4d91-bf25-4c18e1d6c822",
+                "displaySize": "medium",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "datum-line,jpg",
+                "caption": "Datum line with chainage in 1m increments",
+                "alt": "",
+                "id": "asset-b5b4e7a0-ce30-425f-8aaf-c5e4b16be458",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            ]
+          }
+        ],
+        "assessment": {
+          "passMark": 80,
+          "retryRule": "unlimited",
+          "shuffleQuestions": false,
+          "shuffleAnswers": true,
+          "questions": [
+            {
+              "id": "q-9c2a611b-7e66-4544-bfc5-114d4d08a575",
+              "type": "mcq",
+              "text": "What should you NEVER do with an authorised plan?",
+              "choices": [
+                "Print off a copy",
+                "make a hand drawn alteration to the plan",
+                "keep a copy at the meeting station",
+                "request a change to the mining layout"
+              ],
+              "correct": [
+                1
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-21de745f-3a1d-44b0-ab02-75f59f0c313d",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-24773069-a435-426d-aae6-611e7ebe1bb1",
+              "type": "mcq",
+              "text": "You are an overseer on a polyhalite panel which is retreat mining in B road, section 8. The shift manager gives you the new sequence plan shown in the image and informs you that the next stub in sequence is R11. What should you do?",
+              "choices": [
+                "Do not mine R11 and seek guidance from the Survey Department",
+                "Mine R11 but only as a half pass",
+                "Do not mine R11, it is approaching the orange line which indicates bad grade",
+                "Only mine R11 and R12. R13 is opposite a cross-cut junction"
+              ],
+              "correct": [
+                0
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-7fb3185b-04af-49a0-8e4a-557d6f95042a",
+                "sourceType": "internal",
+                "ref": "authorised-plan-assessment1",
+                "caption": "",
+                "alt": "Sequence Plan",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-13303816-bd8b-41cd-ba61-675213c524d9",
+              "type": "mcq",
+              "text": "You are the overseer on a polyhalite panel. You check the sequence plan and see that the next sequences are 12 and 13 as shown by the black arrows. What action should you take?",
+              "choices": [
+                "Mine sequence 12 and bolt up, then mine 13",
+                "Mine sequence 12 and 13 then bolt up",
+                "Mine sequence 12 but not sequence 13",
+                "Do not mine sequence 12 or 13"
+              ],
+              "correct": [
+                2
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "Has sequence 13 been drawn digitally or by hand?",
+              "image": {
+                "id": "asset-4f2e89ed-f4dc-4fbd-bf23-f28d13af8123",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "sequence plan, arrows indicate the sequences 12 and 13 in the question",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            },
+            {
+              "id": "q-92457dba-9c17-43e8-ac79-5696e7d4471d",
+              "type": "multi",
+              "text": "Which information may be shown on a geological section?",
+              "choices": [
+                "Roof and floor profile",
+                "Probe holes and their readings",
+                "geological surfaces such as base of seam",
+                "Latest vent survey and airflow readings",
+                "Intersection position of Exploration boreholes",
+                "Raspberry shake seismic events",
+                "Centrelines for crosscuts, stop positions and precautionary zones",
+                "Latest risk assessment and method statement"
+              ],
+              "correct": [
+                0,
+                1,
+                2,
+                4,
+                6
+              ],
+              "feedbackCorrect": "",
+              "feedbackIncorrect": "",
+              "image": {
+                "id": "asset-65d01bfe-27e5-4f70-a9c7-f6ffbd1e35fe",
+                "sourceType": "internal",
+                "ref": "",
+                "caption": "",
+                "alt": "",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "module-3c9f6a65-97d7-41be-8b68-72b60b05c3c5",
+        "title": "Geology & Rock Mechanics",
+        "description": "An overview of the relationship between Geology and Rock Mechanics",
+        "objectives": [],
+        "completionMode": "assessment_required",
+        "assessmentEnabled": true,
+        "assessmentConfigured": true,
+        "expectedMinutes": 0,
+        "steps": [
+          {
+            "id": "step-62672272-eeaa-4bc5-91b0-afa8e1d628f0",
+            "type": "image-text",
+            "title": "Rock Stress - 1",
+            "html": "<p></p><ul><li><b>Stress\n</b>is the term which describes the forces acting upon a rock.</li><li>Stress\ncan be in 3 forms – <b>tension,\ncompression and shear</b></li><li>Tensile\nstress is when material is being pulled apart under extension. Rocks are\nweakest when under tension.</li><li>Compression\nstress is when a rock is squished. Rocks are strong under compression up to a\nfailure point.</li><li>Shear\nstress is when rocks slide past each other. When forces act upon surfaces at\nlow angles or when compressional forces\nor rock strengths are un-even, shear can occur.</li></ul><p></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "tension-compression-shear.png",
+                "caption": "",
+                "alt": "",
+                "id": "asset-6ec4d5fb-08d3-4181-af5a-937c711d371c",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-2fa377c9-cf2e-4ab1-98b6-7ef2e186a306",
+            "type": "image-text",
+            "title": "Rock Stress - 2",
+            "html": "<p><ul><li>Rock\nstress occurs in 3 dimensions.&nbsp;</li><li>Forces can result due to the weight of overlying\nrock – overburden and tectonic / regional stress.</li><li>Boulby\nis a <b>deep,\nhigh stress</b> environment.&nbsp;</li><li>The main force is <b>compressional and vertical</b> due\nto overlying rocks.&nbsp;</li><li>The horizontal stresses are mainly a result of confinement.\nThe forces\nare <b>broadly equal </b>with vertical being slightly\ngreater.</li></ul></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "stress-directions.png",
+                "caption": "",
+                "alt": "",
+                "id": "asset-7e8b8aa8-39e3-4867-b1ed-87f8ea5e5a97",
+                "displaySize": "medium",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-1207246c-7fca-4707-b6cb-e2f37b836952",
+            "type": "image-text",
+            "title": "Rock Stress - 3",
+            "html": "<p><ul><li>Stress\n<b>concentrates</b>\nin the <b>pillars</b> and in the roof-pillar <b>corners.</b></li><li>The roof\nbeam is <b>destressed</b> in the vertical sense as the weight sits on the pillars. This allows the roof to <b>relax</b>&nbsp;</li><li>geological layers in the roof can open and become detached as discontinuities, or <b>sheared</b> by horizontal stress.</li></ul></p>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "stress-redistribution.png",
+                "caption": "Model representations of how vertical stress is redistributed around the mining heading and concentrated in the pillars",
+                "alt": "",
+                "id": "asset-55a216bc-80fc-41a7-bed2-2c0ddff861b0",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "vertical-pillar-stress.png",
+                "caption": "Pillar taking vertical load. Fractures open perpendicular to stress direction. 'Apple coring' starting to show",
+                "alt": "",
+                "id": "asset-927f9f5b-2805-45ef-9786-87001618f3e1",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "horizontal-roof-stress",
+                "caption": "Roof /lip is vertically de-stressed, horizontal stress is increased, promoting fractures to open perpendicular to the horizontal stress.",
+                "alt": "",
+                "id": "asset-c901bc95-ba69-477a-8f67-4ec51fb13699",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-e681a954-8a2b-4c87-ad46-ceae0286188e",
+            "type": "media",
+            "title": "Rock Strain - 1",
+            "html": "<p></p><ul><li>When\nrocks are put under stress they can begin to <b>deform</b>. This deformation is called\n<b>strain</b></li><li><b>Elastic</b>\ndeformation returns\nto their original shape when the force is removed – think\nabout stretching and then releasing an elastic band - it returns to its original shape when the force is removed</li><li><b>Plastic</b> deformation are deformed irreversibly,\nwhen the stress is removed\nthey remain in the deformed shape – think about squeezing plasticine.</li></ul><div><br></div><div>Rock Engineers conduct tests on samples to see how they respond to increasing stress.</div><div><br></div><div>Lets look at how a Polyhalite pillar might behave as stress is progressively increased:</div><div><br></div><p></p>",
+            "images": [],
+            "mediaType": "video",
+            "sourceType": "youtube",
+            "src": "https://youtu.be/Lpexpn6pNZU",
+            "requireComplete": true,
+            "playbackRequirement": "open",
+            "completionAcknowledgementText": "I confirm that I have watched/listened to this media."
+          },
+          {
+            "id": "step-c0910c2b-255d-43df-9787-0f824a5c7e61",
+            "type": "media",
+            "title": "Rock Strain - 2",
+            "html": "<ul><li>The mineral composition of a rock controls its strength.&nbsp;</li><li>Rocks made of strong minerals and with no structures or weaknesses in them can tolerate a lot of stress.</li><li>Uniform, strong rocks may <b>not show any signs</b> of stress loading, spalling or failure.</li><li>Once the stress exceeds the rocks strength the pillar can fail suddenly and catastrophically called a <b style=\"font-size: 1rem;\">rock burst</b></li><li>This is why the RED department install stress cells. This lets them monitor the stress conditions of pillars which might not show any signs of loading or failure</li></ul><div><div><br></div><div>Lets have a look at how a pillar like this might fail</div><div><div><br></div></div></div>",
+            "images": [],
+            "mediaType": "video",
+            "sourceType": "youtube",
+            "src": "https://youtu.be/yN9nrUIYmZw?t=70",
+            "requireComplete": true,
+            "playbackRequirement": "open",
+            "completionAcknowledgementText": "I confirm that I have watched/listened to this media."
+          },
+          {
+            "id": "step-3e3ed7a6-5b7b-4335-95f9-5a88986d8e1d",
+            "type": "media",
+            "title": "Rock Strain - 3",
+            "html": "<ul><li>&nbsp;Geological structures such as layering can change how a rock fails and control its ultimate strength</li></ul><div>Lets have a look at how a rock with <b>vertically aligned layers</b>, fails differently to the previous uniform pillar.<br><div><br></div></div>",
+            "images": [],
+            "mediaType": "video",
+            "sourceType": "youtube",
+            "src": "https://www.youtube.com/watch?v=mLnEsm-Ty6g&t=75s",
+            "requireComplete": false,
+            "playbackRequirement": "optional",
+            "completionAcknowledgementText": "I confirm that I have watched/listened to this media."
+          },
+          {
+            "id": "step-34f0be67-d237-4501-b1ce-0898c1ddd5a4",
+            "type": "image-text",
+            "title": "Plastic Deformation",
+            "html": "<ul><li>Different rocks respond and deform differently based on their properties</li><li>Potash and Salt can progressively deform by squeezing and creep</li><li>Think about tell tale movements, chocks and roadway closure</li></ul>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "chocks.jpg",
+                "caption": "Roof lowering and closure in salt",
+                "alt": "",
+                "id": "asset-d4cae83e-4f90-4809-b138-5def0c5e3f63",
+                "displaySize": "large",
+                "enlargeable": true
+              },
+              {
+                "sourceType": "internal",
+                "ref": "chocks2.jpg",
+                "caption": "Historical roadway closure",
+                "alt": "",
+                "id": "asset-8e3c063e-2102-45cd-870c-acb639c8a12e",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-caef211d-df3a-46c5-889e-4e1dc8e86332",
+            "type": "image-text",
+            "title": "Brittle Deformation",
+            "html": "<ul><li>Different rocks respond and deform differently based on their properties</li><li><p>A Polyhalite is more brittle and tends to deform elastically.&nbsp;</p></li><li><p>Polyhalite can take load before failing suddenly. This is why correct pillar design, survey control and mining to plan is important</p></li></ul>",
+            "images": [
+              {
+                "sourceType": "internal",
+                "ref": "poly-pillar-burst.jpg",
+                "caption": "Polyhalite pillar failure due to small pillar size",
+                "alt": "",
+                "id": "asset-56ec06a4-3316-4311-8b32-1dafb624d24f",
+                "displaySize": "large",
+                "enlargeable": true
+              }
+            ]
+          },
+          {
+            "id": "step-773910d0-8800-48be-b515-84c9f16214dc",
+            "type": "image-text",
+            "title": "Geology & Rock Strength",
+            "html": "<p><ul><li>Rock\nfailure is a result of the stress forces exceeding the rock strength. </li><li>For\na rock to fail the <b>stress\ncan be increased</b> beyond the strength or the rock <b>strength can be reduced</b> below\nthe typical stress.</li></ul></p>\n\n<p></p>\n\n<p><br></p>\n\n<p></p>\n\n<p><u>Geological features determine\nthe rock strength:</u></p>\n\n<p></p>\n\n•The\nmineral composition – some minerals are stronger than others due to crystal\nshape and structure.\n\n<p></p>\n\n•crystal/grain\nsize – larger grains can be harder to hold together and more easily fractured \n\n<p></p>\n\n•cohesion,\ncompaction and cementation of grains of mineral\n\n<p></p>\n\n•homogeneity\nvs heterogeneity – mixtures of minerals and features are generally weaker.\n\n<p></p>\n\n•Geological\nstructures including fractures, faults and bedding planes – shape, and infill&nbsp; &nbsp; &nbsp;&nbsp;",
+            "images": []
+          }
+        ],
+        "assessment": {
+          "passMark": 80,
+          "retryRule": "unlimited",
+          "shuffleQuestions": false,
+          "shuffleAnswers": false,
+          "questions": []
+        }
       }
     ],
-    "folderName": "Geology-Overseers-Refresher-Training",
+    "folderName": "Overseer-Geology-Refresher-Training",
     "status": "draft",
     "courseNumber": "",
     "coursePassMark": 80
